@@ -16,7 +16,7 @@ const SaleOrderReport = ({
   itemsPerPage = 10,
   onEdit,
   onDelete,
-  onConvertToInvoice,
+  onConvertToDelivery,
   rowActions = true,
 }) => {
 
@@ -340,9 +340,13 @@ const SaleOrderReport = ({
                           : ""
                           }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`}                            </td>
                       <td className="py-1.5 text-center">
-                        {dataObj?.SalesInvoice?.length > 0 ? (
+                        {dataObj?.deliveryStatus === "complete" ? (
                           <span className="bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-green-200">
-                            Sale Invoice Taken ({dataObj.SalesInvoice[0].docId.split('/').pop()})
+                            Sales Delivery Taken ({dataObj.SalesDelivery[0].docId.split('/').pop()})
+                          </span>
+                        ) : dataObj?.deliveryStatus === "partial" ? (
+                          <span className="bg-amber-100 text-amber-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-amber-200">
+                            Partially Delivered
                           </span>
                         ) : (
                           <span className="text-gray-400 text-[10px]">Pending</span>
@@ -362,7 +366,7 @@ const SaleOrderReport = ({
                                 </svg>
                               </button>
                             )}
-                            {onEdit && !(dataObj?.SalesInvoice?.length > 0) && (
+                            {onEdit && !(dataObj?.SalesDelivery?.length > 0) && (
                               <button
                                 className="text-green-600 gap-1 px-1   bg-green-50 rounded"
                                 onClick={() => onEdit(dataObj.id)}
@@ -372,7 +376,7 @@ const SaleOrderReport = ({
                                 </svg>
                               </button>
                             )}
-                            {onDelete && !(dataObj?.SalesInvoice?.length > 0) && (
+                            {onDelete && !(dataObj?.SalesDelivery?.length > 0) && (
                               <button
                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
                                 onClick={() => onDelete(dataObj.id, dataObj?._count)}
@@ -383,11 +387,11 @@ const SaleOrderReport = ({
                                 {/* <span className="text-xs">delete</span> */}
                               </button>
                             )}
-                            {/* {onConvertToInvoice && (
+                            {/* {onConvertToDelivery && (
                               <button
                                 className="text-indigo-600 gap-1 px-1 bg-indigo-50 rounded"
-                                onClick={(e) => { e.stopPropagation(); onConvertToInvoice(dataObj); }}
-                                title="Convert to Invoice"
+                                onClick={(e) => { e.stopPropagation(); onConvertToDelivery(dataObj); }}
+                                title="Convert to Delivery"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -417,15 +421,15 @@ const SaleOrderReport = ({
                                 >
                                   <div className="py-1">
 
-                                    {!(dataObj?.SalesInvoice?.length > 0) && (
+                                    {dataObj?.canConvertToDelivery && (
                                       <button
                                         className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2"
                                         onClick={() => {
-                                          onConvertToInvoice(dataObj);
+                                          onConvertToDelivery(dataObj);
                                           setActiveActionMenuId(null);
                                         }}
                                       >
-                                        <span className="font-semibold text-lg">💳</span> Convert To Sale Invoice
+                                        <span className="font-semibold text-lg">💳</span> Convert To Sales Delivery
                                       </button>
                                     )}
 

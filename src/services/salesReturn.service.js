@@ -1,6 +1,6 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
-import { exclude, getDateFromDateTime, getDateTimeRangeForCurrentYear, getYearShortCode } from '../utils/helper.js';
+import { getDateTimeRangeForCurrentYear, getYearShortCode } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 
 async function getNextDocId(branchId) {
@@ -11,331 +11,252 @@ async function getNextDocId(branchId) {
             AND: [
                 {
                     createdAt: {
-                        gte: startTime
-
-                    }
+                        gte: startTime,
+                    },
                 },
                 {
                     createdAt: {
-                        lte: endTime
-                    }
-                }
+                        lte: endTime,
+                    },
+                },
             ],
         },
         orderBy: {
-            id: 'desc'
-        }
+            id: 'desc',
+        },
     });
-    const branchObj = await getTableRecordWithId(branchId, "branch")
-    let newDocId = `${branchObj.branchCode}/${getYearShortCode(new Date())}/SR/1`
-
+    const branchObj = await getTableRecordWithId(branchId, "branch");
+    let newDocId = `${branchObj.branchCode}/${getYearShortCode(new Date())}/SR/1`;
 
     if (lastObject) {
-
-        newDocId = `${branchObj.branchCode}/${getYearShortCode(new Date())}/SR/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
-
-
+        newDocId = `${branchObj.branchCode}/${getYearShortCode(new Date())}/SR/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
     }
-    return newDocId
-}
 
-function manualFilterSearchData(searchBillDate, data) {
-    return data.filter(item =>
-        (searchBillDate ? String(getDateFromDateTime(item.createdAt)).includes(searchBillDate) : true)
-        // (searchSupplierDcDate ? String(getDateFromDateTime(item.dueDate)).includes(searchSupplierDcDate) : true) 
-        // (searchPurchaseBillNo ?String(item.purchaseBillId).includes(searchPurchaseBillNo) : true) 
-    )
+    return newDocId;
 }
 
 async function get(req) {
-    const { companyId, active, branchId, pagination, pageNumber, dataPerPage, searchDocId, searchBillDate, searchSupplierName, } = req.query
+    const { active } = req.query;
+
     let data = await prisma.salesReturn.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
-            docId: Boolean(searchDocId) ?
-                {
-                    contains: searchDocId
-                }
-                : undefined,
-
         },
         include: {
             Party: {
                 select: {
                     name: true,
-                    // branchId: true,
                     BranchType: {
                         select: {
-                            name: true
-                        }
+                            name: true,
+                        },
                     },
                     City: {
                         select: {
-                            name: true
-                        }
-                    }
+                            name: true,
+                        },
+                    },
                 },
-            }
-        }
+            },
+            SalesDelivery: {
+                select: {
+                    id: true,
+                    docId: true,
+                },
+            },
+        },
+        orderBy: {
+            id: "desc",
+        },
     });
-    data = manualFilterSearchData(searchBillDate, data)
-    const totalCount = data.length
-    console.log(data, 'data');
-    if (pagination) {
-        data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
-    }
-    let newDocId = await getNextDocId(branchId)
-    return { statusCode: 0, nextDocId: newDocId, data };
-}
 
+    return { statusCode: 0, data };
+}
 
 async function getOne(id) {
     const childRecord = 0;
     const data = await prisma.salesReturn.findUnique({
         where: {
-            id: parseInt(id)
+            id: parseInt(id),
         },
         include: {
-            SalesReturnItems: {
+            SalesReturnItems: true,
+            SalesDelivery: {
                 select: {
                     id: true,
-                    Product: {
-                        select: {
-                            name: true,
-                            ProductBrand: {
-                                select: {
-                                    name: true,
-                                }
-                            },
-                            ProductCategory: {
-                                select: {
-                                    name: true,
-                                }
-                            },
-                        }
-                    },
-                    Uom: {
-                        select: {
-                            name: true
-                        }
-                    },
-                    productId: true,
-                    qty: true,
-                    salesQty: true,
-                    stockQty: true,
-                    uomId: true,
-                    salesBillItemsId: true,
+                    docId: true,
+                },
+            },
+        },
+    });
 
+    if (!data) return NoRecordFound("Sales Return");
 
-                }
-            }
-        }
-    })
-    console.log(data, 'data');
-
-    if (!data) return NoRecordFound("salesReturn");
-
-    data["SalesReturnItems"] = await (async function getReturnQty() {
-        const promises = data["SalesReturnItems"].map(async (i) => {
-            const sql = `
-            SELECT COALESCE(SUM(QTY),0) as qty FROM SalesReturnItems WHERE salesBillItemsId=${i.salesBillItemsId}
-            `
-            console.log(sql);
-            let returnQty = await prisma.$queryRawUnsafe(sql);
-            i["alreadyReturnQty"] = returnQty[0]['qty']
-            return i
-        })
-        return Promise.all(promises);
-    })()
-    console.log(data, 's data');
-
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+    return { statusCode: 0, data: { ...data, childRecord } };
 }
 
 async function getSearch(req) {
-    const { searchKey } = req.params
-    const { companyId, active } = req.query
+    const { searchKey } = req.params;
+    const { active } = req.query;
+
     const data = await prisma.salesReturn.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
-            OR: [
-                {
-                    name: {
-                        contains: searchKey,
-                    },
+            docId: searchKey
+                ? {
+                    contains: searchKey,
+                }
+                : undefined,
+        },
+        include: {
+            Party: {
+                select: {
+                    name: true,
                 },
-            ],
-        }
-    })
-    return { statusCode: 0, data: data };
-}
+            },
+        },
+        orderBy: {
+            id: "desc",
+        },
+    });
 
-
-
-async function createSalesReturnItems(tx, salesReturnItems, salesReturn) {
-
-    const promises = salesReturnItems.map(async (item) => {
-        return await tx.salesReturnItems.create({
-            data: {
-                salesReturnId: parseInt(salesReturn.id),
-                productId: item?.productId ? parseInt(item.productId) : undefined,
-                qty: item?.qty ? parseFloat(item.qty) : 0.000,
-                salesQty: item?.salesQty ? parseFloat(item.salesQty) : 0.000,
-                stockQty: item?.stockQty ? parseFloat(item.stockQty) : 0.000,
-                salesBillItemsId: parseInt(item.salesBillItemsId),
-                uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-
-                Stock: {
-                    create: {
-                        inOrOut: "In",
-                        productId: item?.productId ? parseInt(item.productId) : undefined,
-                        qty: parseFloat(item.qty),
-                        branchId: parseInt(salesReturn.branchId),
-                        uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-
-                    }
-                }
-            }
-        })
-    }
-    )
-    return Promise.all(promises)
-}
-
-
-
-
-async function create(body) {
-    let data;
-    const { dueDate, address, place, salesReturnItems, salesBillId, companyId, active, branchId } = await body
-    let newDocId = await getNextDocId(branchId)
-    await prisma.$transaction(async (tx) => {
-        data = await tx.salesReturn.create(
-            {
-                data: {
-                    docId: newDocId,
-                    address, place,
-                    companyId: parseInt(companyId), active,
-                    dueDate: dueDate ? new Date(dueDate) : undefined,
-                    branchId: parseInt(branchId),
-                    salesBillId: parseInt(salesBillId),
-
-                }
-            })
-        await createSalesReturnItems(tx, salesReturnItems, data)
-
-    })
     return { statusCode: 0, data };
 }
 
+function mapSalesReturnItem(item = {}) {
+    return {
+        itemId: item.itemId ? parseInt(item.itemId) : null,
+        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+        colorId: item.colorId ? parseInt(item.colorId) : null,
+        uomId: item.uomId ? parseInt(item.uomId) : null,
+        hsnId: item.hsnId ? parseInt(item.hsnId) : null,
+        qty: item.qty ? item.qty.toString() : "0",
+        price: item.price ? item.price.toString() : "0",
+        discountType: item.discountType || "",
+        discountValue: item.discountValue ? item.discountValue.toString() : "",
+        taxMethod: item.taxMethod || "",
+        taxType: item.taxType || item.tax || "",
+    };
+}
 
+async function create(body) {
+    const {
+        customerId,
+        deliveryItems,
+        branchId,
+        salesDeliveryId,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    } = await body;
 
+    const docId = await getNextDocId(branchId);
 
-async function updateSalesReturnItems(tx, salesReturnItems, salesReturn) {
-    let removedItems = salesReturn.SalesReturnItems.filter(oldItem => {
-        let result = salesReturnItems.find(newItem => newItem.id === oldItem.id)
-        if (result) return false
-        return true
-    })
-
-    let removedItemsId = removedItems.map(item => parseInt(item.id))
-
-    await tx.SalesReturnItems.deleteMany({
-        where: {
-            id: {
-                in: removedItemsId
-            }
-        }
-    })
-
-    const promises = salesReturnItems.map(async (item) => {
-        if (item?.id) {
-            return await tx.salesReturnItems.update({
-                where: {
-                    id: parseInt(item.id)
-                },
-                data: {
-
-                    qty: item?.qty ? parseFloat(item.qty) : 0.000,
-
-                    stockQty: item?.stockQty ? parseFloat(item.stockQty) : 0.000,
-                    Stock: {
-                        update: {
-                            inOrOut: "In",
-                            productId: item?.productId ? parseInt(item.productId) : undefined,
-                            qty: parseFloat(item.qty),
-                            branchId: parseInt(salesReturn.branchId),
-                        }
+    const data = await prisma.salesReturn.create({
+        data: {
+            docId,
+            customerId: customerId ? parseInt(customerId) : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
+            salesDeliveryId: salesDeliveryId ? parseInt(salesDeliveryId) : undefined,
+            packingChargeEnabled: Boolean(packingChargeEnabled),
+            packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+            shippingChargeEnabled: Boolean(shippingChargeEnabled),
+            shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
+            SalesReturnItems: {
+                createMany: deliveryItems?.length > 0
+                    ? {
+                        data: deliveryItems.filter((item) => item?.itemId).map(mapSalesReturnItem),
                     }
-                }
-            })
-        } else {
-            return await tx.salesReturnItems.create({
-                data: {
-                    salesReturnId: parseInt(salesReturn.id),
+                    : undefined,
+            },
+        },
+    });
 
-                    productId: item?.productId ? parseInt(item.productId) : undefined,
-                    qty: item?.qty ? parseFloat(item.qty) : 0.000,
-                    salesQty: item?.salesQty ? parseFloat(item.salesQty) : 0.000,
-                    stockQty: item?.stockQty ? parseFloat(item.stockQty) : 0.000,
-                    salesBillItemsId: parseInt(item.salesBillItemsId),
-                    uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-
-                    Stock: {
-                        create: {
-                            inOrOut: "In",
-                            productId: item?.productId ? parseInt(item.productId) : undefined,
-                            qty: parseFloat(item.qty),
-                            branchId: parseInt(salesReturn.branchId),
-                            uomId: item?.uomId ? parseInt(item.uomId) : undefined,
-
-                        }
-                    }
-                }
-            })
-        }
-    })
-    return Promise.all(promises)
+    return { statusCode: 0, data };
 }
 
 async function update(id, body) {
-    let data
-    const { supplierId, dueDate, address, place, salesReturnItems, companyId, branchId, salesBillId, active } = await body
+    const {
+        customerId,
+        deliveryItems,
+        branchId,
+        salesDeliveryId,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    } = await body;
+
     const dataFound = await prisma.salesReturn.findUnique({
         where: {
-            id: parseInt(id)
-        }
-    })
-    if (!dataFound) return NoRecordFound("salesReturn");
+            id: parseInt(id),
+        },
+        include: {
+            SalesReturnItems: true,
+        },
+    });
+
+    if (!dataFound) return NoRecordFound("Sales Return");
+
+    const oldItemIds = dataFound.SalesReturnItems.map((item) => parseInt(item.id));
+    const currentItemIds = (deliveryItems || []).filter((item) => item?.id).map((item) => parseInt(item.id));
+    const removedItemIds = oldItemIds.filter((itemId) => !currentItemIds.includes(itemId));
+
+    let salesReturnData;
+
     await prisma.$transaction(async (tx) => {
-        data = await tx.salesReturn.update({
+        if (removedItemIds.length > 0) {
+            await tx.salesReturnItems.deleteMany({
+                where: {
+                    id: { in: removedItemIds },
+                },
+            });
+        }
+
+        salesReturnData = await tx.salesReturn.update({
             where: {
                 id: parseInt(id),
             },
             data: {
-                address, place, supplierId: parseInt(supplierId),
-                companyId: parseInt(companyId), active,
-                dueDate: dueDate ? new Date(dueDate) : undefined,
-                branchId: parseInt(branchId),
-                salesBillId: parseInt(salesBillId),
+                customerId: customerId ? parseInt(customerId) : undefined,
+                branchId: branchId ? parseInt(branchId) : undefined,
+                salesDeliveryId: salesDeliveryId ? parseInt(salesDeliveryId) : undefined,
+                packingChargeEnabled: Boolean(packingChargeEnabled),
+                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
             },
-            include: {
-                SalesReturnItems: true
+        });
+
+        for (const item of (deliveryItems || []).filter((entry) => entry?.itemId)) {
+            if (item.id) {
+                await tx.salesReturnItems.update({
+                    where: {
+                        id: parseInt(item.id),
+                    },
+                    data: mapSalesReturnItem(item),
+                });
+            } else {
+                await tx.salesReturnItems.create({
+                    data: {
+                        salesReturnId: salesReturnData.id,
+                        ...mapSalesReturnItem(item),
+                    },
+                });
             }
-        })
-        await updateSalesReturnItems(tx, salesReturnItems, data)
-    })
-    return { statusCode: 0, data };
-};
+        }
+    });
+
+    return { statusCode: 0, data: salesReturnData };
+}
 
 async function remove(id) {
     const data = await prisma.salesReturn.delete({
         where: {
-            id: parseInt(id)
+            id: parseInt(id),
         },
-    })
+    });
     return { statusCode: 0, data };
 }
 
@@ -345,5 +266,5 @@ export {
     getSearch,
     create,
     update,
-    remove
-}
+    remove,
+};

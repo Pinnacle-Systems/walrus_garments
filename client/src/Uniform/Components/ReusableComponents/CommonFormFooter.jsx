@@ -57,6 +57,7 @@ const CommonFormFooter = ({
   totalsRows,
   extraTotalsContent = null,
   extraTotalsContentColumn = "left",
+  chargeOptions = [],
   leftActions = null,
   rightActions = null,
   remarksPlaceholder = "Additional notes...",
@@ -74,6 +75,17 @@ const CommonFormFooter = ({
   const termsColumnClassName = "md:col-span-4";
   const remarksColumnClassName = "md:col-span-2";
   const totalsColumnClassName = "md:col-span-6";
+  const visibleChargeOptions = chargeOptions.filter((option) => {
+    if (!option) {
+      return false;
+    }
+
+    if (readOnly) {
+      return Boolean(option.checked);
+    }
+
+    return true;
+  });
 
   const handleTemplateSelection = (value) => {
     const normalizedValue = value ? String(value) : "";
@@ -111,7 +123,7 @@ const CommonFormFooter = ({
       <div
         key={row.key || row.label || index}
         className={[
-          "flex justify-between py-0.5 text-[12px]",
+          "flex items-center justify-between gap-2 py-0.5 text-[12px]",
           row.emphasized ? "border-t border-slate-100 pt-1.5" : "",
           row.className || "",
         ]
@@ -120,6 +132,7 @@ const CommonFormFooter = ({
       >
         <span
           className={[
+            "shrink-0",
             row.emphasized ? "font-semibold text-slate-700" : "text-slate-600",
             row.labelClassName || "",
           ]
@@ -128,18 +141,53 @@ const CommonFormFooter = ({
         >
           {row.label}
         </span>
-        <span
-          className={[
-            row.emphasized ? "font-semibold text-indigo-700" : "font-medium",
-            row.valueClassName || "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          {row.value}
-        </span>
+        {row.renderValue ? (
+          <div className={["flex items-center", row.valueContainerClassName || ""].filter(Boolean).join(" ")}>{row.renderValue()}</div>
+        ) : (
+          <span
+            className={[
+              row.emphasized ? "font-semibold text-indigo-700" : "font-medium",
+              row.valueClassName || "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {row.value}
+          </span>
+        )}
       </div>
     ));
+
+  const renderChargeOptions = () => {
+    if (visibleChargeOptions.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="border-t border-slate-100 pt-1.5">
+        <div className="space-y-1">
+          {visibleChargeOptions.map((option) => (
+            <label
+              key={option.key || option.label}
+              className={[
+                "flex items-center justify-between gap-2 text-[11px]",
+                readOnly ? "cursor-default" : "cursor-pointer",
+              ].join(" ")}
+            >
+              <span className="font-medium text-slate-600">{option.label}</span>
+              <input
+                type="checkbox"
+                checked={Boolean(option.checked)}
+                disabled={readOnly}
+                onChange={(event) => option.onToggle?.(event.target.checked)}
+                className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+            </label>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-1.5">
@@ -229,16 +277,15 @@ const CommonFormFooter = ({
           />
         </div>
 
-        <div className={`rounded-md bg-white p-1.5 shadow-sm ${totalsColumnClassName}`}>
-          <div className="grid grid-cols-1 gap-x-4 gap-y-1 md:grid-cols-2">
-            <div>
-              {renderSummaryRows(leftSummaryRows)}
-              {extraTotalsContent && extraTotalsContentColumn === "left" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
-            </div>
-            <div>
-              {renderSummaryRows(rightSummaryRows)}
-              {extraTotalsContent && extraTotalsContentColumn === "right" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
-            </div>
+        <div className={`grid grid-cols-1 gap-2 md:grid-cols-2 ${totalsColumnClassName}`}>
+          <div className="rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            {renderSummaryRows(leftSummaryRows)}
+            {renderChargeOptions()}
+            {extraTotalsContent && extraTotalsContentColumn === "left" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
+          </div>
+          <div className="rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            {renderSummaryRows(rightSummaryRows)}
+            {extraTotalsContent && extraTotalsContentColumn === "right" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
           </div>
         </div>
       </div>

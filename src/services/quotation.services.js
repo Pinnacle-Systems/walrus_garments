@@ -135,7 +135,22 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, quoteItems, finYearId, branchId, termId, remarks, termsAndCondition, minimumAdvancePayment } = await body
+    const {
+        customerId,
+        discountType,
+        discountValue,
+        quoteItems,
+        finYearId,
+        branchId,
+        termId,
+        remarks,
+        termsAndCondition,
+        minimumAdvancePayment,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    } = await body
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -153,6 +168,10 @@ async function create(body) {
                 docId: docId,
                 termId: termId ? parseInt(termId) : undefined,
                 minimumAdvancePayment: minimumAdvancePayment ? String(minimumAdvancePayment) : undefined,
+                packingChargeEnabled: Boolean(packingChargeEnabled),
+                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                 remarks: remarks ? remarks : undefined,
                 termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
                 QuotationItems: {
@@ -249,7 +268,21 @@ async function updateAllPInwardReturnItems(tx, directInwardReturnItems, directIn
 }
 
 async function update(id, body) {
-    const { customerId, discountType, discountValue, quoteItems, branchId, termId, remarks, termsAndCondition, minimumAdvancePayment } = await body
+    const {
+        customerId,
+        discountType,
+        discountValue,
+        quoteItems,
+        branchId,
+        termId,
+        remarks,
+        termsAndCondition,
+        minimumAdvancePayment,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    } = await body
 
     const dataFound = await prisma.quotation.findUnique({
         where: {
@@ -291,6 +324,10 @@ async function update(id, body) {
                 branchId: branchId ? parseInt(branchId) : undefined,
                 termId: termId ? parseInt(termId) : null,
                 minimumAdvancePayment: minimumAdvancePayment ? String(minimumAdvancePayment) : null,
+                packingChargeEnabled: Boolean(packingChargeEnabled),
+                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                 remarks: remarks || null,
                 termsAndCondition: termsAndCondition || null,
             },

@@ -4,6 +4,71 @@ import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 
+function parseQty(value) {
+    const parsed = parseFloat(value || 0);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function isSameSourceLine(saleOrderItem, deliveryItem) {
+    return String(saleOrderItem?.itemId || "") === String(deliveryItem?.itemId || "")
+        && String(saleOrderItem?.sizeId || "") === String(deliveryItem?.sizeId || "")
+        && String(saleOrderItem?.colorId || "") === String(deliveryItem?.colorId || "")
+        && String(saleOrderItem?.uomId || "") === String(deliveryItem?.uomId || "")
+        && String(saleOrderItem?.hsnId || "") === String(deliveryItem?.hsnId || "");
+}
+
+function resolveSaleOrderItemId(deliveryItem, saleOrderItems = []) {
+    if (deliveryItem?.saleOrderItemId) {
+        return parseInt(deliveryItem.saleOrderItemId);
+    }
+
+    const matchedItem = saleOrderItems.find((saleOrderItem) => isSameSourceLine(saleOrderItem, deliveryItem));
+    return matchedItem?.id ? parseInt(matchedItem.id) : null;
+}
+
+function buildRemainingSaleOrderItems(saleOrderItems = [], salesDeliveries = [], excludeSalesDeliveryId = null) {
+    const deliveredQtyBySaleOrderItemId = new Map();
+
+    for (const salesDelivery of salesDeliveries || []) {
+        if (excludeSalesDeliveryId && parseInt(salesDelivery?.id) === parseInt(excludeSalesDeliveryId)) {
+            continue;
+        }
+
+        for (const deliveryItem of salesDelivery?.SalesDeliveryItems || []) {
+            const saleOrderItemId = resolveSaleOrderItemId(deliveryItem, saleOrderItems);
+            if (!saleOrderItemId) continue;
+
+            deliveredQtyBySaleOrderItemId.set(
+                saleOrderItemId,
+                (deliveredQtyBySaleOrderItemId.get(saleOrderItemId) || 0) + parseQty(deliveryItem?.qty)
+            );
+        }
+    }
+
+    return (saleOrderItems || [])
+        .map((saleOrderItem) => {
+            const orderedQty = parseQty(saleOrderItem?.qty);
+            const deliveredQty = deliveredQtyBySaleOrderItemId.get(parseInt(saleOrderItem.id)) || 0;
+            const remainingQty = Math.max(0, orderedQty - deliveredQty);
+
+            return {
+                ...saleOrderItem,
+                saleOrderItemId: saleOrderItem?.id,
+                orderedQty: orderedQty.toFixed(3),
+                deliveredQty: deliveredQty.toFixed(3),
+                remainingQty: remainingQty.toFixed(3),
+                qty: remainingQty.toFixed(3),
+            };
+        })
+        .filter((saleOrderItem) => parseQty(saleOrderItem?.remainingQty) > 0);
+}
+
+function getTotalReceivedAmountForSaleOrder(saleOrder) {
+    return ((saleOrder?.Quotation?.paymentData || []).reduce(
+        (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+        0
+    ) || 0);
+}
 
 
 
@@ -62,15 +127,37 @@ async function get(req) {
                     }
                 },
             },
-            SalesInvoice: {
+            SaleOrderItems: {
                 select: {
                     id: true,
-                    docId: true
+                    itemId: true,
+                    sizeId: true,
+                    colorId: true,
+                    uomId: true,
+                    hsnId: true,
+                    qty: true,
+                }
+            },
+            SalesDelivery: {
+                select: {
+                    id: true,
+                    docId: true,
+                    SalesDeliveryItems: {
+                        select: {
+                            saleOrderItemId: true,
+                            itemId: true,
+                            sizeId: true,
+                            colorId: true,
+                            uomId: true,
+                            hsnId: true,
+                            qty: true,
+                        }
+                    }
                 }
             },
             _count: {
                 select: {
-                    SalesInvoice: true,
+                    SalesDelivery: true,
                 }
             }
 
@@ -79,7 +166,26 @@ async function get(req) {
             id: "desc"
         }
     });
-    return { statusCode: 0, data };
+
+    const enrichedData = data.map((saleOrder) => {
+        const remainingSaleOrderItems = buildRemainingSaleOrderItems(
+            saleOrder?.SaleOrderItems,
+            saleOrder?.SalesDelivery
+        );
+        const hasSalesDeliveries = (saleOrder?.SalesDelivery || []).length > 0;
+        const deliveryStatus = remainingSaleOrderItems.length === 0
+            ? (hasSalesDeliveries ? "complete" : "pending")
+            : (hasSalesDeliveries ? "partial" : "pending");
+
+        return {
+            ...saleOrder,
+            remainingSaleOrderItems,
+            canConvertToDelivery: remainingSaleOrderItems.length > 0,
+            deliveryStatus,
+        };
+    });
+
+    return { statusCode: 0, data: enrichedData };
 }
 
 async function getOne(id) {
@@ -89,6 +195,11 @@ async function getOne(id) {
         },
         include: {
             SaleOrderItems: true,
+            SalesDelivery: {
+                include: {
+                    SalesDeliveryItems: true,
+                }
+            },
             Quotation: {
                 select: {
                     docId: true,
@@ -114,7 +225,22 @@ async function getOne(id) {
         };
     }
 
-    return { statusCode: 0, data: { ...data, Quotation: quotationWithPayments } };
+    const remainingSaleOrderItems = buildRemainingSaleOrderItems(
+        data?.SaleOrderItems,
+        data?.SalesDelivery
+    );
+    const totalReceivedAmount = getTotalReceivedAmountForSaleOrder({ ...data, Quotation: quotationWithPayments });
+
+    return {
+        statusCode: 0,
+        data: {
+            ...data,
+            Quotation: quotationWithPayments,
+            remainingSaleOrderItems,
+            totalReceivedAmount,
+            canConvertToDelivery: remainingSaleOrderItems.length > 0,
+        }
+    };
 }
 
 async function getSearch(req) {
@@ -137,7 +263,19 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { customerId, discountType, discountValue, saleOrderItems, finYearId, branchId, quoteId } = await body
+    const {
+        customerId,
+        discountType,
+        discountValue,
+        saleOrderItems,
+        finYearId,
+        branchId,
+        quoteId,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    } = await body
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -151,6 +289,10 @@ async function create(body) {
                 discountValue: discountValue || "",
                 branchId: branchId ? parseInt(branchId) : undefined,
                 quotationId: quoteId ? parseInt(quoteId) : undefined,
+                packingChargeEnabled: Boolean(packingChargeEnabled),
+                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                 docId: docId,
                 SaleOrderItems: {
                     createMany: saleOrderItems?.length > 0 ? {
@@ -179,7 +321,17 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { customerId, discountType, discountValue, saleOrderItems, branchId } = await body
+    const {
+        customerId,
+        discountType,
+        discountValue,
+        saleOrderItems,
+        branchId,
+        packingChargeEnabled,
+        packingCharge,
+        shippingChargeEnabled,
+        shippingCharge,
+    } = await body
 
     const dataFound = await prisma.saleorder.findUnique({
         where: {
@@ -217,6 +369,10 @@ async function update(id, body) {
                 discountType: discountType || "",
                 discountValue: discountValue || "",
                 branchId: branchId ? parseInt(branchId) : undefined,
+                packingChargeEnabled: Boolean(packingChargeEnabled),
+                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
             },
         })
 
