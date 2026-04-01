@@ -57,6 +57,8 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
   const [active, setActive] = useState(true);
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [showColorModal, setShowColorModal] = useState(false);
+  // This only shapes the item structure edited inside the modal.
+  // Parent stock-entry field presence/requiredness comes from Stock Control Panel.
   const effectiveBarcodeGenerationMethod = barcodeGenerationMethod || "STANDARD";
 
   const [addItem] = useAddItemMasterMutation();

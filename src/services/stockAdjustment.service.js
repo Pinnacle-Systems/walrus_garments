@@ -242,15 +242,45 @@ async function getOne(id) {
 
 
 
-async function isLegacyLocation(storeId) {
-  if (!storeId) return false;
-  const location = await prisma.location.findUnique({
-    where: { id: parseInt(storeId) }
+async function getExistingStockQty(tx, stockDetail, branchId, storeId) {
+  const aggregate = await tx.stock.aggregate({
+    where: {
+      branchId: parseInt(branchId),
+      storeId: parseInt(storeId),
+      itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
+      sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
+      colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
+      uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
+    },
+    _sum: {
+      qty: true,
+    },
   });
-  if (location && (location.storeName.toLowerCase().includes('old'))) {
-    return true;
+
+  return aggregate?._sum?.qty || 0;
+}
+
+async function validateStockAdjustmentItems(tx, stockAdjustmentItems, branchId, storeId) {
+  for (const stockDetail of stockAdjustmentItems || []) {
+    if (!stockDetail?.itemId || stockDetail?.adjType !== "MINUS") continue;
+
+    const existingQty = await getExistingStockQty(tx, stockDetail, branchId, storeId);
+    if (existingQty <= 0) {
+      throw new Error("Negative adjustment is allowed only for stock combinations that already exist.");
+    }
   }
-  return false;
+}
+
+function getAdjustmentQty(stockDetail) {
+  if (stockDetail?.adjType === "PLUS") {
+    return stockDetail?.qty ? parseFloat(stockDetail.qty) : null;
+  }
+
+  if (stockDetail?.adjType === "MINUS") {
+    return stockDetail?.qty ? parseFloat(0 - stockDetail.qty) : null;
+  }
+
+  return null;
 }
 
 async function createStockAdjustmentItems(
@@ -283,46 +313,22 @@ async function createStockAdjustmentItems(
 
       },
     });
-    let qty = null;
-    if (stockDetail?.adjType == "PLUS") {
-      qty = stockDetail?.qty;
-    } else {
-      qty = -stockDetail?.qty;
-    }
-
-    const isLegacy = await isLegacyLocation(storeId);
-
-
-
+    const qty = getAdjustmentQty(stockDetail);
 
     const baseData = {
       inOrOut: "stockAdjustment",
-      // createdById: parseInt(userId),
+      transactionId: parseInt(createdItem.id),
       branchId: parseInt(branchId),
       storeId: parseInt(storeId),
       barcode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
       itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
       sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
       colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-
       uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-      // hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
-
       qty,
-
+      price: stockDetail?.price ? parseFloat(stockDetail.price) : undefined,
     };
-
-
-    console.log(baseData, "baseData", isLegacy)
-
-    if (isLegacy) {
-      await tx.legacyStock.create({ data: { ...baseData, } });
-
-
-    } else {
-
-      await tx.stock.create({ data: { ...baseData, } });
-    }
+    await tx.stock.create({ data: baseData });
 
     return createdItem;
   });
@@ -348,6 +354,7 @@ async function create(body) {
   let data;
 
   await prisma.$transaction(async (tx) => {
+    await validateStockAdjustmentItems(tx, stockAdjustmentItems, branchId, storeId);
     data = await tx.StockAdjustment.create({
       data: {
         docId: newDocId,
@@ -380,6 +387,7 @@ async function update(id, body) {
       StockAdjustmentItems: {
         select: {
           id: true,
+          barcode: true,
         },
       },
     },
@@ -393,16 +401,14 @@ async function update(id, body) {
       await tx.stockAdjustmentItems.deleteMany({
         where: { id: { in: removeItemsIds } },
       });
-      // Try deleting from stock where stockAdjustmentId matches
-      try { await tx.stock.deleteMany({ where: { stockAdjustmentId: { in: removeItemsIds } } }); } catch (e) { }
-      // Try deleting from legacyStock where docId matches and barcode is one of removed items
-      const removedBarcodes = removedItems.map(item => item.barcode).filter(Boolean);
-      try {
-        if (removedBarcodes.length > 0) {
-          await tx.legacyStock.deleteMany({ where: { docId: dataFound.docId, barcode: { in: removedBarcodes } } });
-        }
-      } catch (e) { }
+      await tx.stock.deleteMany({
+        where: {
+          inOrOut: "stockAdjustment",
+          transactionId: { in: removeItemsIds },
+        },
+      });
     }
+    await validateStockAdjustmentItems(tx, stockAdjustmentItems, branchId, storeId);
     data = await tx.stockAdjustment.update({
       where: {
         id: parseInt(id),
@@ -434,32 +440,66 @@ async function updateOpeningStockItems(
   storeId,
   docId
 ) {
-  const isLegacy = await isLegacyLocation(storeId);
-
-
   const promises = stockAdjustmentItems.map(async (stockDetail) => {
-    let qty = null;
-    if (stockDetail?.adjType === "PLUS") {
-      qty = stockDetail?.qty ? parseFloat(stockDetail.qty) : null;
-    } else if (stockDetail?.adjType === "MINUS") {
-      qty = stockDetail?.qty ? parseFloat(0 - stockDetail.qty) : null;
-    }
-
-    const baseData = {
-      inOrOut: "stockAdjustment",
-      branchId: parseInt(branchId),
-      storeId: parseInt(storeId),
+    const qty = getAdjustmentQty(stockDetail);
+    const itemPayload = {
       barcode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
       itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
       sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
       colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
       uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-      qty,
+      hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
+      qty: stockDetail?.qty ? String(stockDetail.qty) : null,
+      price: stockDetail?.price ? String(stockDetail.price) : null,
+      adjType: stockDetail?.adjType ? stockDetail?.adjType : undefined,
     };
 
+    const baseData = {
+      inOrOut: "stockAdjustment",
+      transactionId: stockDetail?.id ? parseInt(stockDetail.id) : undefined,
+      branchId: parseInt(branchId),
+      storeId: parseInt(storeId),
+      barcode: itemPayload.barcode,
+      itemId: itemPayload.itemId,
+      sizeId: itemPayload.sizeId,
+      colorId: itemPayload.colorId,
+      uomId: itemPayload.uomId,
+      qty,
+      price: stockDetail?.price ? parseFloat(stockDetail.price) : undefined,
+    };
 
+    if (stockDetail?.id) {
+      await tx.stockAdjustmentItems.update({
+        where: {
+          id: parseInt(stockDetail.id),
+        },
+        data: itemPayload,
+      });
 
+      await tx.stock.updateMany({
+        where: {
+          inOrOut: "stockAdjustment",
+          transactionId: parseInt(stockDetail.id),
+        },
+        data: baseData,
+      });
 
+      return;
+    }
+
+    const createdItem = await tx.stockAdjustmentItems.create({
+      data: {
+        stockAdjustmentId: parseInt(stockAdjustment.id),
+        ...itemPayload,
+      },
+    });
+
+    await tx.stock.create({
+      data: {
+        ...baseData,
+        transactionId: parseInt(createdItem.id),
+      },
+    });
   });
   return Promise.all(promises);
 }

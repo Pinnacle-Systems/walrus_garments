@@ -3,7 +3,7 @@ import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import { capitalizeFirstLetter, findFromList, getUniqueArrayByColor, getUniqueArrayBySize, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
+import { capitalizeFirstLetter, findFromList, getItemVariantColorOptions, getItemVariantSizeOptions, getStockMaintenanceConfig, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
@@ -57,6 +57,14 @@ const YarnPoItems = ({
     const { data: allData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
     const { data: itemControlData } = useGetItemControlPanelMasterQuery({ params });
     const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
+    const stockMaintenance = getStockMaintenanceConfig(allData?.data?.[0]);
+    const showSize = stockMaintenance.trackSize;
+    const showColor = stockMaintenance.trackColor;
+    const isUomReady = (row) => {
+        if (showColor) return Boolean(row.colorId);
+        if (showSize) return Boolean(row.sizeId);
+        return Boolean(row.itemId);
+    };
 
 
     const stockControldata = allData?.data?.[0]
@@ -65,12 +73,21 @@ const YarnPoItems = ({
 
 
     const getBarcodeFromList = (itemId, sizeId, colorId) => {
-        if (!itemPriceList?.data || !itemId || !sizeId) return null;
-        return itemPriceList.data.find(item =>
+        if (!itemPriceList?.data || !itemId) return null;
+        const itemRows = itemPriceList.data.filter(item => String(item.itemId) === String(itemId));
+        if (!itemRows.length) return null;
+        if (!sizeId) {
+            return itemRows.find(item => !item.sizeId && !item.colorId) || itemRows[0];
+        }
+        if (!colorId) {
+            return itemRows.find(item => String(item.sizeId) === String(sizeId) && !item.colorId) ||
+                itemRows.find(item => String(item.sizeId) === String(sizeId));
+        }
+        return itemRows.find(item =>
             String(item.itemId) === String(itemId) &&
             String(item.sizeId) === String(sizeId) &&
-            (colorId ? String(item.colorId) === String(colorId) : !item.colorId)
-        );
+            String(item.colorId) === String(colorId)
+        ) || null;
     };
 
 
@@ -128,7 +145,7 @@ const YarnPoItems = ({
             const currentSize = field === "sizeId" ? value : newBlend[index].sizeId;
             const currentColor = field === "colorId" ? value : newBlend[index].colorId;
 
-            if (currentItem && currentSize) {
+            if (currentItem && (!showSize || currentSize)) {
                 const foundPrice = getBarcodeFromList(currentItem, currentSize, currentColor);
 
                 if (foundPrice) {
@@ -224,7 +241,7 @@ const YarnPoItems = ({
                 ? (sizeList?.data || []).filter((item) => availableSizeIds.includes(String(item.id)))
                 : (id
                     ? sizeList?.data
-                    : getUniqueArrayBySize(itemList?.data, sizeList?.data, "sizeId", row?.itemId));
+                    : getItemVariantSizeOptions(itemList?.data, sizeList?.data, "sizeId", row?.itemId));
 
         return (source || []).map((item) => ({
             value: item.id,
@@ -248,7 +265,7 @@ const YarnPoItems = ({
                 ? (colorList?.data || []).filter((item) => availableColorIds.includes(String(item.id)))
                 : (id
                     ? colorList?.data
-                    : getUniqueArrayByColor(itemList?.data, colorList?.data, "colorId", row?.itemId));
+                    : getItemVariantColorOptions(itemList?.data, colorList?.data, "colorId", row?.itemId, row?.sizeId));
 
         return (source || []).map((item) => ({
             value: item.id,
@@ -315,8 +332,6 @@ const YarnPoItems = ({
                                         Color  <span className="text-red-500">*</span>
                                     </th>
                                 )}
-
-
 
                                 <th
 
@@ -418,8 +433,8 @@ const YarnPoItems = ({
                                             />
                                         </td>
                                     )}
-                                    {stockControldata?.sizeWise && (
-                                        <td className="border border-gray-300 p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                    {showSize && (
+                                        <td className="border border-gray-300 bg-white p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                                             <SearchableTableCellSelect
                                                 value={row.sizeId}
                                                 options={getSizeOptions(row)}
@@ -431,12 +446,12 @@ const YarnPoItems = ({
                                             />
                                         </td>
                                     )}
-                                    {stockControldata?.sizeColorWise && (
-                                        <td className="border border-gray-300 p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                    {showColor && (
+                                        <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                                             <SearchableTableCellSelect
                                                 value={row.colorId}
                                                 options={getColorOptions(row)}
-                                                disabled={readOnly || !row.sizeId || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
+                                                disabled={readOnly || !(showSize ? row.sizeId : row.itemId) || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
                                                 addNewModalWidth="w-[40%] h-[45%]"
                                                 // childComponent={ColorMaster}
@@ -452,7 +467,7 @@ const YarnPoItems = ({
                                         <SearchableTableCellSelect
                                             value={row.uomId}
                                             options={uomOptions}
-                                            disabled={readOnly || !row.itemId || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
+                                            disabled={readOnly || !isUomReady(row) || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
                                             onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
                                             addNewModalWidth="w-[40%] h-[45%]"
                                             childComponent={UomMaster}
