@@ -453,34 +453,47 @@ export const useIdleLogout = (
 };
 
 
-export function getUniqueArrayBySize(rowData, allData, key, itemId) {
+// Variant-option helpers intentionally use the item's configured price-list rows,
+// not barcode-generation mode, so field schema can stay owned by Stock Control Panel.
+export function getItemVariantSizeOptions(masterData, allData, key, itemId) {
+  const item = masterData?.find((entry) => String(entry.id) === String(itemId));
+  const availableOptionIds = [...new Set(
+    (item?.ItemPriceList || [])
+      .filter((priceRow) => priceRow?.[key])
+      .map((priceRow) => String(priceRow[key]))
+  )];
 
-  const item = rowData?.filter(i => i.id == itemId)?.[0]
-
-  if (getItemBarcodeGenerationMethod(item) == "STANDARD") {
-    return allData
-  } else {
-    return allData?.filter(all =>
-      item?.ItemPriceList?.some(item => item[key] == all?.id)
-    )
+  if (!availableOptionIds.length) {
+    return allData;
   }
+
+  return allData?.filter((option) => availableOptionIds.includes(String(option?.id)));
 }
 
+export function getItemVariantColorOptions(masterData, allData, key, itemId, sizeId = "") {
+  const item = masterData?.find((entry) => String(entry.id) === String(itemId));
+  const priceRows = (item?.ItemPriceList || []).filter((priceRow) => {
+    if (!priceRow?.[key]) return false;
+    if (!sizeId) return true;
+    return String(priceRow.sizeId) === String(sizeId);
+  });
 
-export function getUniqueArrayByColor(masterData, allData, key, itemId) {
+  const availableOptionIds = [...new Set(priceRows.map((priceRow) => String(priceRow[key])))];
 
-  const item = masterData?.filter(i => i.id == itemId)?.[0]
-
-  console.log(item, "item", masterData)
-
-
-  if (getItemBarcodeGenerationMethod(item) == "SIZE_COLOR") {
-    return allData?.filter(all =>
-      item?.ItemPriceList?.some(item => item[key] == all?.id)
-    )
-  } else {
-    return allData
+  if (!availableOptionIds.length) {
+    return allData;
   }
+
+  return allData?.filter((option) => availableOptionIds.includes(String(option?.id)));
+}
+
+// Backward-compatible aliases for older consumers.
+export function getUniqueArrayBySize(masterData, allData, key, itemId) {
+  return getItemVariantSizeOptions(masterData, allData, key, itemId);
+}
+
+export function getUniqueArrayByColor(masterData, allData, key, itemId, sizeId = "") {
+  return getItemVariantColorOptions(masterData, allData, key, itemId, sizeId);
 }
 
 
@@ -513,6 +526,21 @@ export function getItemPriceForBarcodeGenerationMode(item, barcodeGenerationMeth
   }
 
   return priceList?.[0]?.salesPrice || 0;
+}
+
+export function getStockMaintenanceConfig(stockReportControl) {
+  const config = stockReportControl || {};
+
+  return {
+    trackItem: Boolean(config.itemWise ?? true),
+    trackSize: Boolean(config.sizeWise || config.sizeColorWise),
+    trackColor: Boolean(config.sizeColorWise),
+  };
+}
+
+export function normalizeMasterValue(value) {
+  if (value === undefined || value === null) return "";
+  return value.toString().trim().toUpperCase();
 }
 
 

@@ -13,7 +13,6 @@ import { Check, X } from "lucide-react";
 import { ItemTypes } from "../../../Utils/DropdownData";
 import { dropDownListObject, multiSelectOption } from "../../../Utils/contructObject";
 import { MultiSelectDropdownNew, TextInputNew1 } from "../../../Inputs";
-import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import { useGetSectionMasterQuery } from "../../../redux/uniformService/SectionMasterService";
 import { useGetItemCategoryQuery } from "../../../redux/uniformService/ItemCategoryMasterService";
 import { capitalizeFirstLetter, findFromList } from "../../../Utils/helper";
@@ -42,7 +41,6 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
   const [name, setName] = useState(itemName || "");
   const [code, setCode] = useState(itemName || "");
   const [itemType, setItemType] = useState("");
-  const [hsnId, setHsnId] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [mainCategory, setMainCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
@@ -57,13 +55,14 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
   const [active, setActive] = useState(true);
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [showColorModal, setShowColorModal] = useState(false);
+  // This only shapes the item structure edited inside the modal.
+  // Parent stock-entry field presence/requiredness comes from Stock Control Panel.
   const effectiveBarcodeGenerationMethod = barcodeGenerationMethod || "STANDARD";
 
   const [addItem] = useAddItemMasterMutation();
   const [updateItem] = useUpdateItemMasterMutation();
   const { data: sizeData } = useGetSizeMasterQuery({ params });
   const { data: colorData } = useGetColorMasterQuery({ params });
-  const { data: hsnData } = useGetHsnMasterQuery({ params });
   const { data: sectionData } = useGetSectionMasterQuery({ params });
   const { data: itemCategoryData } = useGetItemCategoryQuery({ params });
   const { data: locationData } = useGetLocationMasterQuery({ params });
@@ -74,7 +73,6 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
       setName(itemToEdit.name || "");
       setCode(itemToEdit.code || "");
       setItemType(itemToEdit.itemType || "");
-      setHsnId(itemToEdit.hsnId || "");
       setSectionId(itemToEdit.sectionId || "");
       setMainCategory(itemToEdit.mainCategoryId || "");
       setSubCategory(itemToEdit.subCategoryId || "");
@@ -120,16 +118,6 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
       return;
     }
 
-    if (effectiveBarcodeGenerationMethod !== "STANDARD" && sizeList.length === 0) {
-      toast.info("Please select at least one size");
-      return;
-    }
-
-    if (effectiveBarcodeGenerationMethod === "SIZE_COLOR" && colorList.length === 0) {
-      toast.info("Please select at least one color");
-      return;
-    }
-
     const hasStockAlertErrors = (effectiveBarcodeGenerationMethod === "STANDARD" ? [itemPriceList?.[0]] : itemPriceList)
       .filter(Boolean)
       .some((priceRow) => validateLocationThresholdRows(priceRow?.MinimumStockQty || []).hasErrors);
@@ -165,7 +153,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
         name: name.toUpperCase(),
         code: code.toUpperCase(),
         itemType,
-        hsnId,
+        hsnId: itemToEdit?.hsnId || "",
         sectionId,
         mainCategoryId: mainCategory,
         subCategoryId: subCategory,
@@ -324,14 +312,6 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
                   required={true}
                 />
               </div>
-              <div className="col-span-2">
-                <DropdownInput
-                  name="HSN"
-                  options={dropDownListObject(hsnData?.data || [], "name", "id")}
-                  value={hsnId}
-                  setValue={setHsnId}
-                />
-              </div>
               <div className="col-span-3">
                 <DropdownInput
                   name="Section Type"
@@ -401,7 +381,6 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
                     <div className="flex-1">
                       <MultiSelectDropdownNew
                         name="Sizes"
-                        required={true}
                         options={multiSelectOption(sizeData?.data || [], "name", "id")}
                         selected={sizeList}
                         setSelected={setSizeList}
@@ -420,7 +399,6 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
                     <div className="flex-1">
                       <MultiSelectDropdownNew
                         name="Colors"
-                        required={true}
                         options={multiSelectOption(colorData?.data || [], "name", "id")}
                         selected={colorList}
                         setSelected={setColorList}

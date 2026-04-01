@@ -3,7 +3,7 @@ import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import { findFromList, getUniqueArrayByColor, getUniqueArrayBySize, sumArray } from "../../../Utils/helper";
+import { findFromList, getItemVariantColorOptions, getItemVariantSizeOptions, getStockMaintenanceConfig, sumArray } from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
@@ -45,6 +45,17 @@ const SalesReturnItems = ({
     const compactFocusCellClassName = transactionTableFocusCellClassName;
     const compactSelectClassName = transactionTableSelectInputClassName;
     const compactNumberInputClassName = transactionTableNumberInputClassName;
+    const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
+    const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
+    const showSize = stockMaintenance.trackSize;
+    const showColor = stockMaintenance.trackColor;
+    const isSizeReady = (row) => !showSize || Boolean(row.itemId);
+    const isColorReady = (row) => !showColor || Boolean(showSize ? row.sizeId : row.itemId);
+    const isUomReady = (row) => {
+        if (showColor) return Boolean(row.colorId);
+        if (showSize) return Boolean(row.sizeId);
+        return Boolean(row.itemId);
+    };
 
 
 
@@ -321,18 +332,20 @@ const SalesReturnItems = ({
                                 >
                                     Item
                                 </th>
+                                {showSize && (
                                 <th
-
                                     className={`${compactHeaderCellClassName} w-16`}
                                 >
                                     Size
                                 </th>
+                                )}
+                                {showColor && (
                                 <th
-
                                     className={`${compactHeaderCellClassName} w-32`}
                                 >
                                     Color
                                 </th>
+                                )}
                                 <th
 
                                     className={`${compactHeaderCellClassName} w-20`}
@@ -410,6 +423,7 @@ const SalesReturnItems = ({
                                     </td>
                                     {/* {console.log(row,"row")} */}
 
+                                    {showSize && (
                                     <td className={compactFocusCellClassName}>
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
@@ -420,17 +434,19 @@ const SalesReturnItems = ({
                                                 handleInputChange((e.target.value), index, "sizeId")
                                             }
                                             }
-                                            disabled={readOnly || !row.itemId}
+                                            disabled={readOnly || !isSizeReady(row)}
                                         >
                                             <option >
                                             </option>
-                                            {(id ? sizeList?.data : getUniqueArrayBySize(itemList?.data, sizeList?.data, "sizeId", row?.itemId))?.map((blend) =>
+                                            {(id ? sizeList?.data : getItemVariantSizeOptions(itemList?.data, sizeList?.data, "sizeId", row?.itemId))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>)}
                                         </select>
                                     </td>
+                                    )}
 
+                                    {showColor && (
                                     <td className={compactFocusCellClassName}>
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
@@ -440,18 +456,19 @@ const SalesReturnItems = ({
                                                 handleInputChange((e.target.value), index, "colorId")
                                             }
                                             }
-                                            disabled={readOnly || !row.sizeId}
+                                            disabled={readOnly || !isColorReady(row)}
 
                                         >
                                             <option hidden>
                                             </option>
-                                            {(id ? colorList?.data : (getUniqueArrayByColor(itemList?.data, colorList?.data, "colorId", row?.itemId)))?.map((blend) =>
+                                            {(id ? colorList?.data : (getItemVariantColorOptions(itemList?.data, colorList?.data, "colorId", row?.itemId, row?.sizeId)))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>
                                             )}
                                         </select>
                                     </td>
+                                    )}
 
 
                                     <td className={compactFocusCellClassName}>
@@ -463,7 +480,7 @@ const SalesReturnItems = ({
                                                 handleInputChange((e.target.value), index, "hsnId")
                                             }
                                             }
-                                            disabled={readOnly || !row.sizeId}
+                                            disabled={readOnly || !row.itemId}
 
                                         >
                                             <option hidden>
@@ -485,7 +502,7 @@ const SalesReturnItems = ({
                                                 handleInputChange((e.target.value), index, "uomId")
                                             }
                                             }
-                                            disabled={readOnly || !row.colorId}
+                                            disabled={readOnly || !isUomReady(row)}
 
                                         >
 

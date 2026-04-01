@@ -407,17 +407,6 @@ async function UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, bran
     });
 }
 
-async function isLegacyLocation(tx, storeId) {
-    if (!storeId) return false;
-    const location = await tx.location.findUnique({
-        where: { id: parseInt(storeId) }
-    });
-    if (location && (location.storeName.toLowerCase().includes('old'))) {
-        return true;
-    }
-    return false;
-}
-
 async function createLocationTransferStock(
     tx,
     branchId,
@@ -426,11 +415,8 @@ async function createLocationTransferStock(
     item,
     transactionId
 ) {
-    const isLegacyFrom = await isLegacyLocation(tx, fromStoreId);
-    const isLegacyTo = await isLegacyLocation(tx, toStoreId);
-
-    // ================= COMMON DATA =================
     const baseData = {
+        transactionId: transactionId ? Number(transactionId) : null,
         itemId: item?.itemId ? Number(item.itemId) : null,
         sizeId: item?.sizeId ? Number(item.sizeId) : null,
         colorId: item?.colorId ? Number(item.colorId) : null,
@@ -441,7 +427,6 @@ async function createLocationTransferStock(
         transactionId: transactionId ? transactionId : null,
     };
 
-    // ================= FROM (OUTWARD) =================
     const fromStockData = {
         ...baseData,
         inOrOut: "FromLocationTransferItems",
@@ -450,7 +435,6 @@ async function createLocationTransferStock(
         qty: item?.transferQty ? -Number(item.transferQty) : 0 // negative
     };
 
-    // ================= TO (INWARD) =================
     const toStockData = {
         ...baseData,
         inOrOut: "ToLocationTransferItems",
@@ -464,29 +448,8 @@ async function createLocationTransferStock(
         qty: item?.transferQty ? Number(item.transferQty) : 0 // positive
     };
 
-    // ================= LOGIC =================
-    if (isLegacyFrom) {
-        // FROM → legacy
-        await tx.legacyStock.create({ data: fromStockData });
-
-        // TO → stock
-        await tx.stock.create({ data: toStockData });
-
-    }
-    else if (isLegacyTo) {
-        // FROM → stock
-        await tx.stock.create({ data: fromStockData });
-
-        // TO → legacy
-        await tx.legacyStock.create({ data: toStockData });
-    }
-    else {
-        // FROM → stock
-        await tx.stock.create({ data: fromStockData });
-
-        // TO → stock
-        await tx.stock.create({ data: toStockData });
-    }
+    await tx.stock.create({ data: fromStockData });
+    await tx.stock.create({ data: toStockData });
 }
 
 
@@ -574,49 +537,24 @@ async function create(req) {
 
 
 async function UpdateFromLocationStock(tx, item, transactionId, storeId) {
-    const isLegacy = await isLegacyLocation(tx, storeId);
-
-    console.log(item, "item for update", isLegacy, "transactionId", transactionId)
-
     const updateData = {
         qty: item?.transferQty ? parseFloat(0 - item?.transferQty) : undefined,
     };
 
-    if (isLegacy) {
-        await tx.legacyStock.updateMany({
-            where: {
-                transactionId: parseInt(transactionId),
-                inOrOut: "FromLocationTransferItems"
-            },
-            data: updateData
-        });
-    } else {
-        await tx.stock.updateMany({
-            where: {
-                transactionId: parseInt(transactionId),
-                inOrOut: "FromLocationTransferItems"
-            },
-            data: updateData
-        });
-    }
+    await tx.stock.updateMany({
+        where: {
+            transactionId: parseInt(transactionId),
+            inOrOut: "FromLocationTransferItems"
+        },
+        data: updateData
+    });
 }
 
 async function UpdateToLocationStock(tx, item, transactionId, storeId) {
-    const isLegacy = await isLegacyLocation(tx, storeId);
-
     const updateData = {
         qty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
     };
 
-    // if (isLegacy) {
-    //     await tx.legacyStock.updateMany({
-    //         where: {
-    //             transactionId: parseInt(transactionId),
-    //             inOrOut: "ToLocationTransferItems"
-    //         },
-    //         data: updateData
-    //     });
-    // } else {
     await tx.stock.updateMany({
         where: {
             transactionId: parseInt(transactionId),
@@ -624,7 +562,6 @@ async function UpdateToLocationStock(tx, item, transactionId, storeId) {
         },
         data: updateData
     });
-    // }
 }
 
 async function updateOrCreateFrom(tx, item, fromLocationId, branchId) {
@@ -743,8 +680,6 @@ export {
     update,
     remove
 }
-
-
 
 
 

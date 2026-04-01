@@ -1,28 +1,33 @@
 import React, { useState } from "react";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
-import { useAddItemMasterMutation, useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
-import { useAddSizeMasterMutation, useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useAddColorMasterMutation, useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useAddLegacyStockMutation } from "../../../redux/uniformService/LegacyStockService";
-import { getCommonParams } from "../../../Utils/helper";
+import { getCommonParams, getStockMaintenanceConfig } from "../../../Utils/helper";
 import { toast } from "react-toastify";
 import { FiPlus, FiTrash, FiSave, FiSettings } from "react-icons/fi";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import { Check, X } from "lucide-react";
-import Modal from "../../../UiComponents/Modal";
-import { TextInput, DropdownInput } from "../../../Inputs";
-import { ItemTypes } from "../../../Utils/DropdownData";
-import { dropDownListObject } from "../../../Utils/contructObject";
 import Swal from "sweetalert2";
 import QuickAddItemModal from "./QuickAddItemModal";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 import { getItemBarcodeGenerationMethod, getItemPriceForBarcodeGenerationMode, resolveBarcodeGenerationMethod } from "../../../Utils/helper";
+import QuickAddSizeModal from "./QuickAddSizeModal";
+import QuickAddColorModal from "./QuickAddColorModal";
+import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import TransactionLineItemsSection, {
+  transactionTableActionButtonClassName,
+  transactionTableActionCellClassName,
+  transactionTableFocusCellClassName,
   transactionTableClassName,
   transactionTableHeadClassName,
+  transactionTableHeaderCellClassName,
+  transactionTableIndexCellClassName,
+  transactionTableNumberInputClassName,
+  transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
 
 const ManualAddStock = ({ params }) => {
@@ -40,13 +45,10 @@ const ManualAddStock = ({ params }) => {
     size: { open: false, rowId: null, value: "" },
     color: { open: false, rowId: null, value: "" },
   });
-
-  // --- Quick Add Form State ---
-  const [quickItem, setQuickItem] = useState({ name: "", code: "", type: "" });
-
   // --- Queries & Mutations ---
   const { data: itemList } = useGetItemMasterQuery({ params });
   const { data: itemControlData } = useGetItemControlPanelMasterQuery({ params });
+  const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
@@ -57,15 +59,13 @@ const ManualAddStock = ({ params }) => {
   const branchOptionsList = branchList?.data?.map((b) => ({ value: b.id, label: b.branchName })) || [];
   const locationOptionsList = locationList?.data?.map((l) => ({ value: l.id, label: l.storeName })) || [];
   const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
+  const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
 
   React.useEffect(() => {
     if (branchId) setSelectedBranchId(branchId);
   }, [branchId]);
 
   const [addStock] = useAddLegacyStockMutation();
-  const [addItem] = useAddItemMasterMutation();
-  const [addSize] = useAddSizeMasterMutation();
-  const [addColor] = useAddColorMasterMutation();
 
 
   React.useEffect(() => {
@@ -136,7 +136,6 @@ const ManualAddStock = ({ params }) => {
   // --- Modal Logic ---
   const openQuickAdd = (type, value, rowId, editItem = null) => {
     setModalState((prev) => ({ ...prev, [type]: { open: true, rowId, value, editItem } }));
-    if (type === "item") setQuickItem({ name: value, code: value, type: "" });
   };
 
   const closeQuickAdd = (type) => {
@@ -147,13 +146,24 @@ const ManualAddStock = ({ params }) => {
   const handleQuickSaveItem = (newItem) => {
     updateRow(modalState.item.rowId, "itemId", newItem.id, { item_name: newItem.name });
   };
+  const handleQuickSaveSize = (newSize) => {
+    updateRow(modalState.size.rowId, "sizeId", newSize.id, { size: newSize.name });
+  };
+  const handleQuickSaveColor = (newColor) => {
+    updateRow(modalState.color.rowId, "colorId", newColor.id, { color: newColor.name });
+  };
 
   // --- Save Logic (Batch Stock) ---
   const handleSaveStock = async () => {
     if (!selectedBranchId) { toast.warning("Please select a branch."); return; }
     if (!selectedLocationId) { toast.warning("Please select a location."); return; }
 
-    const valid = rows.every((r) => r.itemId && r.qty);
+    const valid = rows.every((r) => {
+      if (!r.itemId || !r.qty) return false;
+      if (stockMaintenance.trackSize && !r.sizeId) return false;
+      if (stockMaintenance.trackColor && !r.colorId) return false;
+      return true;
+    });
     if (!valid) { toast.warning("Fill Item and Qty for all rows"); return; }
     if (!window.confirm("Save stock?")) return;
     try {
@@ -237,17 +247,15 @@ const ManualAddStock = ({ params }) => {
         <table className={transactionTableClassName}>
           <thead className={transactionTableHeadClassName}>
             <tr>
-              <th className="border border-gray-400 text-sm py-1 w-12 text-center">S.No</th>
-              <th className="border border-gray-400 text-sm py-1 w-64 text-center px-2">Item Name</th>
-              <th className="border border-gray-400 text-sm py-1 w-32 text-center px-2">Size</th>
-              {/* <th className="border border-gray-400 text-sm py-1 w-32 text-left px-2">Color</th> */}
-              <th className="border border-gray-400 text-sm py-1 w-32 text-center px-2">UOM</th>
-
-              <th className="border border-gray-400 text-sm py-1 w-40 text-center px-2">Barcode</th>
-              <th className="border border-gray-400 text-sm py-1 w-40 text-center px-2">Price</th>
-
-              <th className="border border-gray-400 text-sm py-1 w-24 text-center px-2">Qty</th>
-              <th className="border border-gray-400 text-sm py-1 w-12 text-center">Action</th>
+              <th className={`${transactionTableHeaderCellClassName} w-12`}>S.No</th>
+              <th className={`${transactionTableHeaderCellClassName} w-64`}>Item Name</th>
+              {stockMaintenance.trackSize && <th className={`${transactionTableHeaderCellClassName} w-32`}>Size</th>}
+              {stockMaintenance.trackColor && <th className={`${transactionTableHeaderCellClassName} w-32`}>Color</th>}
+              <th className={`${transactionTableHeaderCellClassName} w-32`}>UOM</th>
+              <th className={`${transactionTableHeaderCellClassName} w-40`}>Barcode</th>
+              <th className={`${transactionTableHeaderCellClassName} w-40`}>Price</th>
+              <th className={`${transactionTableHeaderCellClassName} w-24`}>Qty</th>
+              <th className={`${transactionTableHeaderCellClassName} w-16`}>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -260,9 +268,9 @@ const ManualAddStock = ({ params }) => {
               const filteredColorOptions = validColorIds.length > 0 ? colorOptions.filter(o => validColorIds.includes(o.value)) : colorOptions;
 
               return (
-                <tr key={row.id} className="hover:bg-gray-50 border-b">
-                  <td className="border border-gray-400 px-2 py-1 text-center text-xs">{idx + 1}</td>
-                  <td className="border border-gray-400 px-1 py-0.5">
+                <tr key={row.id} className="border border-blue-gray-200">
+                  <td className={transactionTableIndexCellClassName}>{idx + 1}</td>
+                  <td className={transactionTableFocusCellClassName}>
                     <div className="flex items-center gap-1">
                       <div className="flex-1 uppercase">
                         <CreatableSelect isClearable placeholder="Item..." options={itemOptions} value={itemOptions.find(o => o.value === row.itemId)} styles={customSelectStyles}
@@ -294,30 +302,48 @@ const ManualAddStock = ({ params }) => {
                       )}
                     </div>
                   </td>
-                  <td className="border border-gray-400 px-1 py-0.5">
-                    <Select isClearable placeholder="Size..." options={filteredSizeOptions} value={filteredSizeOptions.find(o => o.value === row.sizeId)} styles={customSelectStyles}
-                      onChange={o => updateRow(row.id, "sizeId", o?.value || "", { size: o?.label || "" })}
-                    />
-                  </td>
-                  {/* <td className="border border-gray-400 px-1 py-0.5">
-                    <Select isClearable placeholder="Color..." options={filteredColorOptions} value={filteredColorOptions.find(o => o.value === row.colorId)} styles={customSelectStyles}
-                      onChange={o => updateRow(row.id, "colorId", o?.value || "", { color: o?.label || "" })}
-                    />
-                  </td> */}
-                  <td className="border border-gray-400 px-1 py-0.5">
+                  {stockMaintenance.trackSize && (
+                    <td className={transactionTableFocusCellClassName}>
+                      <CreatableSelect
+                        isClearable
+                        placeholder="Size..."
+                        options={filteredSizeOptions}
+                        value={filteredSizeOptions.find(o => o.value === row.sizeId)}
+                        styles={customSelectStyles}
+                        onChange={o => updateRow(row.id, "sizeId", o?.value || "", { size: o?.label || "" })}
+                        onCreateOption={v => openQuickAdd("size", v.toUpperCase(), row.id)}
+                        formatCreateLabel={(v) => `Create Size: "${v.toUpperCase()}"`}
+                      />
+                    </td>
+                  )}
+                  {stockMaintenance.trackColor && (
+                    <td className={transactionTableFocusCellClassName}>
+                      <CreatableSelect
+                        isClearable
+                        placeholder="Color..."
+                        options={filteredColorOptions}
+                        value={filteredColorOptions.find(o => o.value === row.colorId)}
+                        styles={customSelectStyles}
+                        onChange={o => updateRow(row.id, "colorId", o?.value || "", { color: o?.label || "" })}
+                        onCreateOption={v => openQuickAdd("color", v.toUpperCase(), row.id)}
+                        formatCreateLabel={(v) => `Create Color: "${v.toUpperCase()}"`}
+                      />
+                    </td>
+                  )}
+                  <td className={transactionTableFocusCellClassName}>
                     <Select isClearable placeholder="UOM..." options={uomOptions} value={uomOptions.find(o => o.value === row.uomId)} styles={customSelectStyles}
                       onChange={o => updateRow(row.id, "uomId", o?.value || "", { uom: o?.label || "" })}
                     />
                   </td>
-                  <td className="border border-gray-400 px-1 py-0.5">
-                    <input type="text" className="w-full px-2 py-1 text-xs border rounded outline-none uppercase" value={row.barcode} onChange={e => updateRow(row.id, "barcode", e.target.value)} />
+                  <td className={transactionTableFocusCellClassName}>
+                    <input type="text" className={`${transactionTableSelectInputClassName} uppercase`} value={row.barcode} onChange={e => updateRow(row.id, "barcode", e.target.value)} />
                   </td>
-                  <td className="border border-gray-400 px-1 py-0.5"><input type="number" className="w-full px-2 py-1 text-xs border rounded outline-none text-right" value={row.price} onChange={e => updateRow(row.id, "price", parseInt(e.target.value) || 0)} />
+                  <td className={transactionTableFocusCellClassName}><input type="number" className={transactionTableNumberInputClassName} value={row.price} onChange={e => updateRow(row.id, "price", parseInt(e.target.value) || 0)} />
                   </td>
-                  <td className="border border-gray-400 px-1 py-0.5"><input type="number" className="w-full px-2 py-1 text-xs border rounded outline-none text-right" value={row.qty} onChange={e => updateRow(row.id, "qty", parseInt(e.target.value) || 0)} />
+                  <td className={transactionTableFocusCellClassName}><input type="number" className={transactionTableNumberInputClassName} value={row.qty} onChange={e => updateRow(row.id, "qty", parseInt(e.target.value) || 0)} />
                   </td>
-                  <td className="border border-gray-400 px-1 py-0.5 text-center">
-                    <button onClick={() => removeRow(row.id)} className="text-red-500 hover:text-red-700"><FiTrash />
+                  <td className={transactionTableActionCellClassName}>
+                    <button onClick={() => removeRow(row.id)} className={`${transactionTableActionButtonClassName} text-red-500 hover:text-red-700`}><FiTrash />
                     </button>
                   </td>
                 </tr>
@@ -337,6 +363,22 @@ const ManualAddStock = ({ params }) => {
           itemToEdit={modalState.item.editItem}
           onCreated={handleQuickSaveItem}
           barcodeGenerationMethod={barcodeGenerationMethod}
+        />
+      )}
+      {modalState.size.open && (
+        <QuickAddSizeModal
+          isOpen={modalState.size.open}
+          onClose={() => closeQuickAdd("size")}
+          sizeName={modalState.size.value}
+          onCreated={handleQuickSaveSize}
+        />
+      )}
+      {modalState.color.open && (
+        <QuickAddColorModal
+          isOpen={modalState.color.open}
+          onClose={() => closeQuickAdd("color")}
+          colorName={modalState.color.value}
+          onCreated={handleQuickSaveColor}
         />
       )}
 

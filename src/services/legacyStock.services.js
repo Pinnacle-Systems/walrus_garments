@@ -109,10 +109,6 @@ async function isLegacyLocation(storeId) {
 async function create(body) {
     const { stockItems, storeId, branchId } = body;
 
-    const isLegacy = await isLegacyLocation(storeId);
-
-    console.log(isLegacy, "isLegacy")
-
     let data
 
 
@@ -136,11 +132,7 @@ async function create(body) {
         }));
 
         console.log(formattedData, "formattedData")
-        if (isLegacy) {
-            return data = await tx.legacyStock.createMany({ data: formattedData });
-        } else {
-            return data = await tx.stock.createMany({ data: formattedData });
-        }
+        return data = await tx.stock.createMany({ data: formattedData });
 
     });
     return { statusCode: 0, data: data };
