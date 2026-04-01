@@ -270,7 +270,6 @@ export default function Form() {
         console.log("Edit");
     };
 
-    const firstInputFocus = useRef(null);
     const formRef = useRef(null);
 
     const [pendingFile, setPendingFile] = useState(null);
@@ -282,21 +281,7 @@ export default function Form() {
     const saveNewBtnRef = useRef(null);
     const saveCloseBtnRef = useRef(null);
 
-    useEffect(() => {
-        if (form && firstInputFocus.current) {
-            firstInputFocus.current.focus();
-        }
-    }, [form]);
-
-    useEffect(() => {
-        if (form && formRef.current) {
-            const firstInput = formRef.current.querySelector('input');
-            if (firstInput) firstInput.focus();
-        }
-    }, [form]);
-
     const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
-
 
     useEffect(() => {
         if (form && nameRef.current) {

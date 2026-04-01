@@ -1195,6 +1195,7 @@ import {
   ToggleButton,
   ReusableTable,
   TextInputNew1,
+  TextAreaNew,
 } from "../../../Inputs";
 import {
   dropDownListObject,
@@ -1228,6 +1229,7 @@ import {
 } from "lucide-react";
 import imageDefault from "../../../assets/default-dp.png";
 import Swal from "sweetalert2";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 const MODEL = "Employee Master";
 
@@ -1290,6 +1292,9 @@ export default function Form() {
   const dispatch = useDispatch();
   const [dispatchInvalidate] = useInvalidateTags();
 
+
+
+
   const params = {
     companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
     finYearId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "currentFinYear"),
@@ -1303,6 +1308,16 @@ export default function Form() {
   const { data: employeeCategoryList } = useGetEmployeeCategoryQuery({ params: companyId, finYearId });
   const { data: departmentList } = useGetDepartmentQuery({ params });
   const { data: allData, isLoading, isFetching } = useGetEmployeeQuery({ params, searchParams: searchValue });
+
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+
+  const {
+    firstInputRef: countryNameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
 
   const isCurrentEmployeeDoctor = (employeeCategory) =>
     employeeCategoryList?.data
@@ -1423,6 +1438,8 @@ export default function Form() {
     if (!data.permCity) newErrors.permCity = "City is required";
     if (!data.permPincode) newErrors.permPincode = "Pincode is required";
     if (!data.aadharNo?.trim()) newErrors.aadharNo = "Aadhar No is required";
+    if (!data.maritalStatus?.trim()) newErrors.maritalStatus = "Marital Status is required";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -1443,16 +1460,17 @@ export default function Form() {
 
       setErrors({}); // ✅ clear errors on success
       dispatchInvalidate();
+      await Swal.fire({ title: text + " Successfully", icon: "success" }); // ✅ await first
 
       if (nextProcess === "new") {
         setId("");
         syncFormWithDb(undefined);
-        await Swal.fire({ title: text + " Successfully", icon: "success" }); // ✅ await first
         onNew(); // ✅ then onNew after swal
+        nameRef.current?.focus();
+
       } else {
         setId("");
         setForm(false);
-        await Swal.fire({ title: text + " Successfully", icon: "success" });
       }
 
       setSearchValue("");
@@ -1463,8 +1481,8 @@ export default function Form() {
         icon: 'error',
         title: 'Submission error',
         text: error.data?.message || 'Something went wrong!',
+        didClose: () => nameRef.current?.focus()
       });
-      nameRef.current?.focus();
     }
   };
 
@@ -1473,8 +1491,7 @@ export default function Form() {
     const finalData = { ...data, name: upperName };
 
     if (!validateData(finalData)) {
-      Swal.fire({ title: "Please fill all required fields...!", icon: "error" });
-      nameRef.current?.focus();
+      Swal.fire({ title: "Please fill all required fields...!", icon: "error", didClose: () => nameRef.current?.focus() });
       return;
     }
 
@@ -1565,6 +1582,8 @@ export default function Form() {
   // ✅ Reusable error border class
   const errorClass = (field) => errors[field] ? "border-red-500 bg-red-50" : "";
 
+
+
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between items-center">
@@ -1646,12 +1665,18 @@ export default function Form() {
                 )}
                 {!readOnly && (
                   <button type="button" onClick={() => saveData("close")}
+                    ref={saveCloseButtonRef} // ✅ Add ref
+                    tabIndex={0}
+                    onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                     className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs">
                     <Check size={14} /> {id ? "Update" : "Save & close"}
                   </button>
                 )}
                 {(!readOnly && !id) && (
                   <button type="button" onClick={() => saveData("new")}
+                    ref={saveNewButtonRef} // ✅ Add ref
+                    tabIndex={0}
+                    onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                     className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
                     <Check size={14} /> Save & New
                   </button>
@@ -1857,10 +1882,13 @@ export default function Form() {
                           name="Marital Status"
                           options={maritalStatusList}
                           value={maritalStatus}
-                          setValue={setMaritalStatus}
+                          setValue={(val) => { setMaritalStatus(val); clearError("maritalStatus"); }}
                           readOnly={readOnly}
+                          required={true}
                           disabled={childRecord.current > 0}
                         />
+                        {errors.maritalStatus && <span className="text-red-500 text-xs ml-1">{errors.maritalStatus}</span>}
+
                       </div>
 
                       {/* Aadhar No */}
@@ -1897,12 +1925,13 @@ export default function Form() {
                           value={degree}
                           setValue={setDegree}
                           readOnly={readOnly}
+
                         />
                       </div>
 
                       {/* Specialization */}
                       <div className="md:col-span-2">
-                        <TextArea
+                        <TextAreaNew
                           rows={2}
                           name="Specialization"
                           value={specialization}
@@ -1990,7 +2019,7 @@ export default function Form() {
                       </div>
 
                       {/* Address */}
-                      <TextArea
+                      <TextAreaNew
                         name="Address"
                         rows="2"
                         value={localAddress}
@@ -2035,6 +2064,8 @@ export default function Form() {
                             childComponent={CityMaster}
                             addNewModalWidth="w-[40%] h-[350px]"
                             className={errorClass("permCity")}
+                            ref={toggleButtonRef}
+                            nextRef={saveCloseButtonRef}
                           />
                           {errors.permCity && <span className="text-red-500 text-xs ml-1">{errors.permCity}</span>}
                         </div>

@@ -585,6 +585,7 @@ export const TextAreaNew = ({
   label = null,
   inputClass = "",
   onBlur = null,
+  onKeyDown = null,
 }) => {
   return (
     <div className=" w-full">
@@ -736,7 +737,7 @@ export const LongDisabledInput = ({
   );
 };
 
-export const TextArea = ({
+export const TextArea = forwardRef(({
   name,
   value,
   setValue,
@@ -749,7 +750,8 @@ export const TextArea = ({
   label = null,
   inputClass = "",
   onBlur = null,
-}) => {
+  onKeyDown
+}, ref) => {
   return (
     <div className="mb-1 w-full">
       {name && (
@@ -759,6 +761,7 @@ export const TextArea = ({
       )}
 
       <textarea
+        ref={ref}
         id={name}
         name={name}
         rows={rows}
@@ -770,6 +773,7 @@ export const TextArea = ({
         value={value}
         onChange={(e) => handleOnChange(e, setValue)}
         onBlur={onBlur}
+        onKeyDown={onKeyDown}
         placeholder={name}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
@@ -781,7 +785,7 @@ export const TextArea = ({
       ></textarea>
     </div>
   );
-};
+});
 
 
 // export const DropdownInput = ({
@@ -2729,7 +2733,7 @@ export const TextInputNew1 = forwardRef(({
       e.preventDefault();
       const allFocusable = Array.from(
         document.querySelectorAll(
-          'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled]), button:not([disabled])'
+          'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled]), textarea:not([disabled]):not([readonly]), button:not([disabled])'
         )
       ).filter((el) => el.offsetParent !== null);
       const idx = allFocusable.indexOf(e.target);
@@ -3300,7 +3304,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     const focusNext = (currentTarget) => {
       const allFocusable = Array.from(
         document.querySelectorAll(
-          'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled]), button:not([disabled])'
+          'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled]), textarea:not([disabled]):not([readonly]), button:not([disabled])'
         )
       ).filter((el) => el.offsetParent !== null);
       const idx = allFocusable.indexOf(currentTarget);

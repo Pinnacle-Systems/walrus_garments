@@ -518,11 +518,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                         onClick={() => {
                           saveData("new")
                         }}
-                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
-                  border border-green-600 flex items-center gap-1 text-xs"
+                        border border-green-600 flex items-center gap-1 text-xs"
                         ref={saveNewButtonRef} // ✅ Add ref
                         tabIndex={0}
+                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                       >
                         <Check size={14} />
                         {"Save & New"}

@@ -746,6 +746,11 @@ export default function Form() {
   }, [form, barcodeGenerationMethod, itemPriceList.length]);
 
 
+
+  const input1Ref = useRef(null);
+  const input2Ref = useRef(null);
+  const input3Ref = useRef(null);
+
   return (
     <div onKeyDown={handleKeyDown} className="p-1">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
@@ -901,6 +906,9 @@ export default function Form() {
                         childComponent={HsnMaster}
                         addNewModalWidth="w-[45%] h-[400px]"
                         searchable={true}
+                        ref={input1Ref}
+                        nextRef={input2Ref}
+
                       />
                     </div>
 
@@ -944,6 +952,8 @@ export default function Form() {
                         childComponent={ItemCategroyMaster}
                         addNewModalWidth="w-[45%] h-[400px]"
                         searchable={true}
+                        ref={input2Ref}
+                        nextRef={input3Ref}
                       />
                     </div>
                     <div className="col-span-2">
@@ -964,6 +974,7 @@ export default function Form() {
                         childComponent={SubCategoryMaster}
                         addNewModalWidth="w-[45%] h-[300px]"
                         searchable={true}
+                        ref={input3Ref}
                       />
                     </div>
 

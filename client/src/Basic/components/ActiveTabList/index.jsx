@@ -153,8 +153,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "POINT OF SALES": <PointOfSale />,
     "SALES RETURN": <SalesReturn />,
     "PAYMENTS": <Payment />,
-    "SUB CATEGROY": <SubCategoryMaster />,
-    // "": <SubCategoryMaster />,
+    "SUB CATEGORY": <SubCategoryMaster />,
 
 
 
