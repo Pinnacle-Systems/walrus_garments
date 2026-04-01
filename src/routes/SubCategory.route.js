@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch, create, update, remove } from '../controllers/subCategory.controller.js';
+import { get, getOne, getSearch, create, update, remove } from '../controllers/SubCategory.controller.js';
 
 
 router.post('/', create);
