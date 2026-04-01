@@ -92,8 +92,7 @@ export default function Form() {
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            // toast.success(text + "Successfully");
-            Swal.fire({
+            await Swal.fire({
                 title: text + "  " + "Successfully",
                 icon: "success",
 
@@ -101,14 +100,20 @@ export default function Form() {
             if (nextProcess == "new") {
                 syncFormWithDb(undefined)
                 onNew()
+                setId("")
+                nameRef?.current?.focus();
             } else {
                 setForm(false)
             }
-            setId("")
 
         } catch (error) {
-            console.log("handle");
-            nameRef.current?.focus();
+            await Swal.fire({
+                icon: 'error',
+                text: error.data?.message || 'Something went wrong!',
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
+            });
 
         }
     };
@@ -119,7 +124,9 @@ export default function Form() {
             Swal.fire({
                 title: "Please fill all required fields...!",
                 icon: "success",
-
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
             });
             return;
         }
@@ -136,7 +143,9 @@ export default function Form() {
             Swal.fire({
                 text: "The Terms & Condtions  already exists.",
                 icon: "warning",
-                showConfirmButton: false,
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
             });
             return false;
         }
@@ -404,36 +413,52 @@ export default function Form() {
 
 
                                             <div className="">
-                                                <TextInputNew1 name="Name" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} />
-
+                                                <TextInputNew1
+                                                    name="Name"
+                                                    type="text"
+                                                    value={name}
+                                                    setValue={handleNameChange}
+                                                    required={true}
+                                                    readOnly={readOnly}
+                                                    ref={nameRef}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            termsAndConditionRef.current?.focus(); // ✅ Enter on Name → focus textarea
+                                                        }
+                                                    }}
+                                                />
                                             </div>
-                                            <div className='  flex   col-span-2 flex-col'>
-                                                <label className='block text-xs font-bold text-gray-600 mt-3 mb-2'>Terms And Conditions  <span className="text-red-500">*</span></label>
+
+                                            <div className='flex col-span-2 flex-col'>
+                                                <label className='block text-xs font-bold text-gray-600 mt-3 mb-2'>
+                                                    Terms And Conditions <span className="text-red-500">*</span>
+                                                </label>
                                                 <textarea
                                                     className="w-96 h-28 overflow-auto p-2 text-xs border border-gray-300 rounded-lg
-  focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-  transition-all duration-150 shadow-sm"
-
+      focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+      transition-all duration-150 shadow-sm"
                                                     value={termsAndCondition}
                                                     disabled={readOnly}
                                                     onChange={(e) => setTermsAndCondition(e.target.value)}
                                                     ref={termsAndConditionRef}
                                                     onKeyDown={(e) => {
+                                                        // // ✅ Tab from textarea moves to Toggle button
+                                                        // if (e.key === "Enter") {
+                                                        //     e.preventDefault();
+                                                        //     toggleButtonRef.current?.focus();
+                                                        // }
+                                                        // ✅ Ctrl+Enter adds new line (existing behavior)
                                                         if (e.ctrlKey && e.key === "Enter") {
                                                             e.preventDefault();
-
                                                             const textarea = e.target;
                                                             const start = textarea.selectionStart;
                                                             const end = textarea.selectionEnd;
-
                                                             const newValue =
                                                                 termsAndCondition.substring(0, start) +
                                                                 "\n" +
                                                                 termsAndCondition.substring(end);
-
                                                             setTermsAndCondition(newValue);
-
-                                                            // Move cursor after new line
                                                             setTimeout(() => {
                                                                 textarea.selectionStart = textarea.selectionEnd = start + 1;
                                                             }, 0);

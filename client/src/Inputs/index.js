@@ -1746,9 +1746,12 @@ export const ToggleButton = forwardRef(({
   return (
     <div>
       <div className="">
-        <label className={`block  font-bold text-slate-700 mb-1 text-xs`}>
-          {required ? <RequiredLabel name={name} /> : `${name}`}
-        </label>
+        {name && (
+          <label className={`block  font-bold text-slate-700 mb-1 text-xs`}>
+            {required ? <RequiredLabel name={name} /> : `${name}`}
+          </label>
+        )}
+
         <div className="flex items-center mt-1">
           <label className="relative inline-flex items-center cursor-pointer"
             ref={labelRef}
@@ -2797,14 +2800,15 @@ export const DropdownInputNew = forwardRef(({
   addNewLabel = "+ Add New",
   childComponent = null,
   addNewModalWidth = "w-[40%] h-[45%]",
-  widthClass
+  widthClass,
+  nextRef = null,
 }, ref) => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [showAddNew, setShowAddNew] = useState(false);
   const [editingOption, setEditingOption] = useState(null);
-  const [deletingOption, setDeletingOption] = useState(null);
+  const [deletingOption, setDeletingOption] = useState(null)
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef(null);
@@ -2815,6 +2819,10 @@ export const DropdownInputNew = forwardRef(({
   const isMouseDownRef = useRef(false);
 
   const isDisabled = readOnly || disabled;
+
+  useImperativeHandle(ref, () => ({
+    focus: () => buttonRef.current?.focus(),
+  }));
 
   const handleAddNewSuccess = (newValue) => {
     beforeChange();
@@ -2840,7 +2848,16 @@ export const DropdownInputNew = forwardRef(({
   const updateDropdownPos = useCallback(() => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownPos({ top: rect.bottom, left: rect.left, width: rect.width });
+      const dropdownHeight = 280; // approx max height (search + list max-h-48 + padding)
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const openUpward = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+      setDropdownPos({
+        top: openUpward ? undefined : rect.bottom,
+        bottom: openUpward ? window.innerHeight - rect.top : undefined,
+        left: rect.left,
+        width: rect.width,
+      });
     }
   }, []);
 
@@ -2964,18 +2981,22 @@ export const DropdownInputNew = forwardRef(({
     setSearch("");
     if (onBlur) onBlur();
     if (fromKeyboard) {
-      // Move focus to the next focusable input/select after this dropdown button
       setTimeout(() => {
-        if (!buttonRef.current) return;
-        const allFocusable = Array.from(
-          document.querySelectorAll(
-            'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled])'
-          )
-        ).filter(el => el.offsetParent !== null);
-        const nextInput = allFocusable.find(
-          el => buttonRef.current.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING
-        );
-        if (nextInput) nextInput.focus();
+        if (nextRef?.current) {
+          nextRef.current.focus();
+        } else {
+          // Fallback: move focus to the next focusable input/select after this dropdown button
+          if (!buttonRef.current) return;
+          const allFocusable = Array.from(
+            document.querySelectorAll(
+              'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled])'
+            )
+          ).filter(el => el.offsetParent !== null);
+          const nextInput = allFocusable.find(
+            el => buttonRef.current.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING
+          );
+          if (nextInput) nextInput.focus();
+        }
       }, 0);
     }
   };
@@ -3044,7 +3065,7 @@ export const DropdownInputNew = forwardRef(({
       {isOpen && createPortal(
         <div
           ref={dropdownRef}
-          style={{ position: "fixed", top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 9999 }}
+          style={{ position: "fixed", top: dropdownPos.top, bottom: dropdownPos.bottom, left: dropdownPos.left, width: dropdownPos.width, zIndex: 9999 }}
           className="bg-white border border-gray-300 rounded-lg shadow-lg"
         >
           <div className="p-1.5 border-b border-gray-200">

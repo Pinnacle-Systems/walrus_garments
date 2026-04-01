@@ -1,23 +1,26 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
-import { toast } from "react-toastify";
-import { ReusableTable, ToggleButton, TextInputNew1 } from "../../../Inputs";
-import { useAddHsnMasterMutation, useDeleteHsnMasterMutation, useGetHsnMasterByIdQuery, useGetHsnMasterQuery, useUpdateHsnMasterMutation } from "../../../redux/services/HsnMasterServices";
-import { Check, Power } from "lucide-react";
-import Modal from "../../../UiComponents/Modal";
-import { statusDropdown } from "../../../Utils/DropdownData";
 import Swal from "sweetalert2";
-import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
-import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import { toast } from "react-toastify";
+import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
+import { Check, Power } from "lucide-react";
+import { DropdownInputNew, ReusableTable, TextInputNew1, ToggleButton } from "../../Inputs";
+import Modal from "../../UiComponents/Modal";
+import { statusDropdown } from "../../Utils/DropdownData";
+import ItemCategoryMasterApi, { useAddItemCategoryMutation, useDeleteItemCategoryMutation, useGetItemCategoryByIdQuery, useGetItemCategoryQuery, useUpdateItemCategoryMutation } from "../../redux/uniformService/ItemCategoryMasterService";
+import { useAddSubCategoryMutation, useDeleteSubCategoryMutation, useGetSubCategoryByIdQuery, useGetSubCategoryQuery, useUpdateSubCategoryMutation } from "../../redux/uniformService/SubCategoryMasterService";
+import { dropDownListObject } from "../../Utils/contructObject";
+import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
+import { ItemCategroyMaster } from "..";
 
-export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
+export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
     const [form, setForm] = useState(false);
     const [readOnly, setReadOnly] = useState(false);
     const [id, setId] = useState(editId || deleteId || "");
     const [name, setName] = useState("");
     const [active, setActive] = useState(true);
-    const [tax, setTax] = useState("");
     const [searchValue, setSearchValue] = useState("");
+    const [itemCategoryId, setItemCategoryId] = useState('')
 
     const childRecord = useRef(0);
     const formRef = useRef(null);
@@ -28,17 +31,21 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         ),
     };
 
-    const { data: allData } = useGetHsnMasterQuery({ params });
+
+
+    const { data: allData } = useGetSubCategoryQuery({ params, searchParams: searchValue });
     const {
         data: singleData,
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
-    } = useGetHsnMasterByIdQuery(id, { skip: !id });
+    } = useGetSubCategoryByIdQuery(id, { skip: !id });
 
-    const [addData] = useAddHsnMasterMutation();
-    const [updateData] = useUpdateHsnMasterMutation();
-    const [removeData] = useDeleteHsnMasterMutation();
+    const [addData] = useAddSubCategoryMutation();
+    const [updateData] = useUpdateSubCategoryMutation();
+    const [removeData] = useDeleteSubCategoryMutation();
     const [dispatchInvalidate] = useInvalidateTags();
+
+    const { data: itemCategoryData } = useGetItemCategoryQuery({ params, searchParams: searchValue });
 
     const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
     const {
@@ -48,17 +55,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         saveNewButtonRef,
     } = refs;
 
-
     const syncFormWithDb = useCallback((data) => {
         if (!id) {
             setName("");
             setActive(true);
-            setTax("");
+            setItemCategoryId("")
             childRecord.current = 0;
         } else {
             setName(data?.name || "");
+            setItemCategoryId(data?.itemCategoryId ? data?.itemCategoryId : "")
             setActive(id ? (data?.active ?? false) : true);
-            setTax(data?.tax ? data?.tax : "");
             childRecord.current = data?.childRecord ?? 0;
         }
     }, [id]);
@@ -68,11 +74,13 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        id, name, tax, active,
+        id,
+        itemCategoryId,
+        name, active,
         companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
     };
 
-    const validateData = (data) => data.name && data.tax;
+    const validateData = (data) => !!data.name;
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
@@ -96,6 +104,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         } catch (error) {
             await Swal.fire({
                 icon: "error",
+                title: "Submission error",
                 text: error.data?.message || "Something went wrong!",
                 didClose: () => {
                     nameRef?.current?.focus();
@@ -120,13 +129,13 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName && item.itemCategoryId == itemCategoryId);
         } else {
-            foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
+            foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName && item.itemCategoryId == itemCategoryId);
         }
         if (foundItem) {
             Swal.fire({
-                text: "The HSN Code already exists.", icon: "warning",
+                text: "The Sub Category already exists.", icon: "warning",
                 didClose: () => {
                     nameRef?.current?.focus();
                 }
@@ -148,17 +157,17 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         if (!id) return;
         if (!window.confirm("Are you sure to delete...?")) return;
         try {
-            await removeData(id).unwrap();
+            let deldata = await removeData(id).unwrap();
+            if (deldata?.statusCode == 1) {
+                toast.error(deldata?.message);
+                return;
+            }
             setId("");
             dispatchInvalidate();
             await Swal.fire({ title: "Deleted Successfully", icon: "success" });
             setForm(false);
         } catch (error) {
-            await Swal.fire({
-                icon: "error",
-                title: "Submission error",
-                text: error.data?.message || "Something went wrong!",
-            });
+            toast.error("Something went wrong");
         }
     };
 
@@ -173,6 +182,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const onNew = () => {
         setId("");
         setForm(true);
+        setSearchValue("");
         syncFormWithDb(undefined);
         setReadOnly(false);
         setTimeout(() => { nameRef.current?.focus(); }, 100);
@@ -194,8 +204,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
     const columns = [
         { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
-        { header: "HSN Code", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-36" },
-        { header: "Tax %", accessor: (item) => item?.tax, className: "font-medium text-gray-900 text-center w-28" },
+        { header: "Sub Category Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72" },
         { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
     ];
 
@@ -210,27 +219,42 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             <div className="grid grid-cols-1 gap-3 h-full">
                 <div className="lg:col-span-2 space-y-3">
                     <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-                        <div className="grid grid-cols-2 gap-4" ref={formRef}>
+                        <div className="grid grid-cols-2 gap-3" ref={formRef}>
+                            <div>
+                                <DropdownInputNew
+                                    name="Item Category"
+                                    options={dropDownListObject(
+                                        id
+                                            ? itemCategoryData?.data
+                                            : itemCategoryData?.data?.filter((item) => item?.active),
+                                        "name",
+                                        "id"
+                                    )}
+                                    value={itemCategoryId}
+                                    setValue={setItemCategoryId}
+                                    required={true}
+                                    readOnly={readOnly}
+                                    className={`w-[150px]`}
+                                    ref={nameRef}
+                                    openOnFocus={true}
+                                    disabled={childRecord.current > 0}
+                                    addNewLabel="+ Add New Category"
+                                    childComponent={ItemCategroyMaster}
+
+                                // addNewModalWidth="w-[40%] h-[45%]"
+                                />
+                            </div>
+
                             <TextInputNew1
-                                name="HSN Code"
+                                name="Sub Category Name"
                                 type="text"
                                 value={name}
                                 setValue={setName}
                                 required={true}
                                 readOnly={readOnly}
                                 disabled={childRecord.current > 0}
-                                ref={nameRef}
                             />
-                            <TextInputNew1
-                                name="Tax Percentage"
-                                type="number"
-                                max="100"
-                                value={tax}
-                                setValue={setTax}
-                                required={true}
-                                readOnly={readOnly}
-                                disabled={childRecord.current > 0}
-                            />
+
                         </div>
                         <div className="mt-5">
                             <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly}
@@ -275,7 +299,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         return (
             <div className="h-full flex flex-col bg-gray-200">
                 <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
-                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">Delete HSN</h2>
+                    <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">Delete Item Category</h2>
                 </div>
                 <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 bg-white mx-3 mt-3 rounded">
                     {isLoadingRecord ? (
@@ -289,8 +313,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 <p className="text-sm font-semibold text-red-600">Cannot Delete</p>
                                 <p className="text-xs text-gray-600 text-center">
                                     <span className="font-semibold">"{deleteLabel}"</span> has{" "}
-                                    <span className="font-semibold text-red-600">{childCount} linked record{childCount > 1 ? "s" : ""}</span>.
-                                    Remove them first before deleting this HSN.
+                                    <span className="font-semibold text-red-600">{childCount} linked item{childCount > 1 ? "s" : ""}</span>.
+                                    Remove them first before deleting this category.
                                 </p>
                             </div>
                             <button type="button" onClick={onClose}
@@ -327,11 +351,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             <div onKeyDown={handleKeyDown} className="h-full flex flex-col bg-gray-200">
                 <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                     <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                        {editId ? "Edit HSN" : "Add New HSN"}
+                        {editId ? "Edit Sub Category" : "Add New Sub Category"}
                     </h2>
                     <button
                         type="button"
                         onClick={() => saveData("close")}
+                        ref={saveCloseButtonRef}
                         tabIndex={0} // ✅ Add tabIndex
                         onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
@@ -349,12 +374,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     return (
         <div onKeyDown={handleKeyDown} className="p-1">
             <div className="w-full flex bg-white p-1 justify-between items-center">
-                <h5 className="text-2xl font-bold text-gray-800">HSN Master</h5>
+                <h5 className="text-2xl font-bold text-gray-800">Sub Category Master</h5>
                 <button
                     onClick={() => { setForm(true); onNew(); }}
                     className="bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
                 >
-                    + Add New HSN
+                    + Add New Sub Category
                 </button>
             </div>
 
@@ -374,7 +399,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     <div className="h-full flex flex-col bg-gray-200">
                         <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
                             <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-                                {id ? (!readOnly ? "Edit HSN" : "HSN") : "Add New HSN"}
+                                {id ? (!readOnly ? "Edit Item Category" : "Item Category") : "Add New Item Category"}
                             </h2>
                             <div className="flex gap-2">
                                 {readOnly && (

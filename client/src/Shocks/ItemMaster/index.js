@@ -23,6 +23,9 @@ import QuickAddColorModal from "./QuickAddColorModal";
 import HsnMaster from "../../Basic/components/HsnMaster";
 import ItemCategroyMaster from "../ItemCategroyMaster";
 import LocationStockEditor, { createEmptyLocationThreshold, getConfiguredLocationAlertCount, validateLocationThresholdRows } from "./LocationStockEditor";
+import { useGetSubCategoryQuery } from "../../redux/uniformService/SubCategoryMasterService";
+import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
+import { SubCategoryMaster } from "..";
 
 const createStandardPriceRow = () => ({
   sizeId: null,
@@ -79,6 +82,16 @@ export default function Form() {
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
 
+
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef: nameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
+
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -132,6 +145,10 @@ export default function Form() {
   const {
     data: itemCategoryData,
   } = useGetItemCategoryQuery({ params, searchParams: searchValue });
+
+  const {
+    data: subCategoryData,
+  } = useGetSubCategoryQuery({ params, searchParams: searchValue });
 
 
   const {
@@ -847,7 +864,7 @@ export default function Form() {
                         required
                         readOnly={readOnly}
                         disabled={childRecord.current > 0}
-                        ref={firstInputFocus}
+                        ref={nameRef}
                       />
                     </div>
 
@@ -929,21 +946,26 @@ export default function Form() {
                         searchable={true}
                       />
                     </div>
-                    {/* <div className="col-span-2">
-                      <DropdownInput
+                    <div className="col-span-2">
+                      <DropdownInputNew
                         name="Sub Category"
                         options={dropDownListObject(
-                          id ? itemCategoryData?.data?.filter(item => item.id != mainCategory) : itemCategoryData?.data?.filter(item => item.active && item.id != mainCategory),
+                          id ? subCategoryData?.data?.filter(item => item.itemCategoryId == mainCategory) : subCategoryData?.data?.filter(item => item.active && item.itemCategoryId == mainCategory),
                           "name",
                           "id"
                         )}
                         value={subCategory}
                         setValue={setSubCategory}
+
                         required
                         readOnly={readOnly || !mainCategory}
                         disabled={childRecord.current > 0}
+                        addNewLabel="+ Add New  Sub Category"
+                        childComponent={SubCategoryMaster}
+                        addNewModalWidth="w-[45%] h-[300px]"
+                        searchable={true}
                       />
-                    </div> */}
+                    </div>
 
 
 

@@ -14,7 +14,7 @@ import FormReport from "../FormReportTemplate";
 import { toast } from "react-toastify";
 import { TextInput, CheckBox, DropdownInput, DisabledInput, ToggleButton, ReusableTable, TextInputNew1, DropdownInputNew } from "../../../Inputs";
 import ReportTemplate from "../ReportTemplate";
-import { dropDownListObject } from '../../../Utils/contructObject';
+import { dropDownListMergedObjectStateCity, dropDownListObject } from '../../../Utils/contructObject';
 import Loader from "../Loader";
 import { useDispatch } from "react-redux";
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
@@ -43,7 +43,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const [state, setState] = useState("")
 
     const [searchValue, setSearchValue] = useState("");
-    const nameRef = useRef(null);
+    // const nameRef = useRef(null);
     const formRef = useRef(null);
     const [errors, setErrors] = useState({});
 
@@ -81,7 +81,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
     const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
     const {
-        firstInputRef: countryNameRef,
+        firstInputRef: nameRef,
         toggleButtonRef,
         saveCloseButtonRef,
         saveNewButtonRef,
@@ -158,10 +158,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         } catch (error) {
             await Swal.fire({
                 icon: 'error',
-                title: 'Submission error',
                 text: error.data?.message || 'Something went wrong!',
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
             });
-            nameRef.current?.focus();
         }
     };
 
@@ -182,8 +183,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             Swal.fire({
                 title: "Please fill all required fields...!",
                 icon: "error",
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
             });
-            nameRef.current?.focus();
             return;
         }
         let foundItem;
@@ -203,8 +206,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             Swal.fire({
                 text: "The City Name already exists.",
                 icon: "warning",
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
             });
-            nameRef.current?.focus();
             return false;
         }
         if (id) {
@@ -370,7 +375,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 name="State"
                                 options={
                                     Array.isArray(stateList?.data)
-                                        ? dropDownListObject(
+                                        ? dropDownListMergedObjectStateCity(
                                             id
                                                 ? stateList?.data
                                                 : stateList?.data?.filter((item) => item?.active),
@@ -395,6 +400,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 type="text"
                                 value={countryFromState()}
                                 disabled={true}
+                                onKeyDown={handlers.handleLastInputKeyDown}
 
                             />
                         </div>
@@ -406,8 +412,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 setActive={setActive}
                                 required={true}
                                 readOnly={readOnly}
-                                onKeyDown={handlers.handleToggleKeyDown}
                                 ref={toggleButtonRef}
+                                onKeyDown={handlers.handleToggleKeyDown}
                             />
                         </div>
                     </div>

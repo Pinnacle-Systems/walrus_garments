@@ -118,6 +118,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       if (nextProcess == "new") {
         syncFormWithDb(undefined)
         onNew()
+        nameRef.current.focus();
       } else {
         setForm(false)
       }
@@ -126,10 +127,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     } catch (error) {
       await Swal.fire({
         icon: 'error',
-        title: 'Submission error',
         text: error.data?.message || 'Something went wrong!',
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       setForm(false);
 
     }
@@ -151,8 +153,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "error",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return;
     }
     let foundItem;
@@ -168,8 +172,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       Swal.fire({
         text: "The Branch Type already exists.",
         icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return false;
     }
     if (id) {

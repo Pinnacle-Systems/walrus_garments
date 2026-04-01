@@ -369,6 +369,9 @@ model Employee {
   createdAt          DateTime?         @default(now())
   updatedAt          DateTime?         @updatedAt
   aadharNo           String?
+  bankName           String?
+  designation        String?
+  employeeId         String?
   User               User[]
 }
 

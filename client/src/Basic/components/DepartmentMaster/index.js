@@ -101,6 +101,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       if (nextProcess == "new") {
         syncFormWithDb(undefined);
         onNew();
+        nameRef.current.focus();
       } else {
         setForm(false);
       }
@@ -109,10 +110,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     } catch (error) {
       await Swal.fire({
         icon: 'error',
-        title: 'Submission error',
         text: error.data?.message || 'Something went wrong!',
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
     }
   };
 
@@ -123,8 +125,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const finalData = { ...data, name: upperName, code: upperCode };
 
     if (!validateData(finalData)) {
-      Swal.fire({ title: "Please fill all required fields...!", icon: "error" });
-      nameRef.current?.focus();
+      Swal.fire({
+        title: "Please fill all required fields...!", icon: "error",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
+      });
       return;
     }
 
@@ -135,8 +141,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
     }
     if (foundItem) {
-      Swal.fire({ text: "The Department Name already exists.", icon: "warning" });
-      nameRef.current?.focus();
+      Swal.fire({
+        text: "The Department Name already exists.", icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
+      });
       return false;
     }
     if (id) {

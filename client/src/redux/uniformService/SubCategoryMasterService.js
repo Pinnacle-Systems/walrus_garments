@@ -1,20 +1,20 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { ITEM_SUB_CATEGORY_API } from "../../Api";
+import { SUB_CATEGORY_API } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
-const ItemSubCategoryMasterApi = createApi({
-    reducerPath: "ItemSubCategoryMaster",
+const SubCategoryMasterApi = createApi({
+    reducerPath: "SubCategoryMaster",
     baseQuery: fetchBaseQuery({
         baseUrl: BASE_URL,
     }),
-    tagTypes: ["ItemSubCategoryMaster"],
+    tagTypes: ["SubCategoryMaster"],
     endpoints: (builder) => ({
-        getItemSubCategory: builder.query({
+        getSubCategory: builder.query({
             query: ({ params, searchParams }) => {
                 if (searchParams) {
                     return {
-                        url: ITEM_SUB_CATEGORY_API + "/search/" + searchParams,
+                        url: SUB_CATEGORY_API + "/search/" + searchParams,
                         method: "GET",
                         headers: {
                             "Content-type": "application/json; charset=UTF-8",
@@ -23,7 +23,7 @@ const ItemSubCategoryMasterApi = createApi({
                     };
                 }
                 return {
-                    url: ITEM_SUB_CATEGORY_API,
+                    url: SUB_CATEGORY_API,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
@@ -31,58 +31,58 @@ const ItemSubCategoryMasterApi = createApi({
                     params
                 };
             },
-            providesTags: ["ItemSubCategoryMaster"],
+            providesTags: ["SubCategoryMaster"],
         }),
-        getItemSubCategoryById: builder.query({
+        getSubCategoryById: builder.query({
             query: (id) => {
                 return {
-                    url: `${ITEM_SUB_CATEGORY_API}/${id}`,
+                    url: `${SUB_CATEGORY_API}/${id}`,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
                     },
                 };
             },
-            providesTags: ["ItemSubCategoryMaster"],
+            providesTags: ["SubCategoryMaster"],
         }),
-        addItemSubCategory: builder.mutation({
+        addSubCategory: builder.mutation({
             query: (payload) => ({
-                url: ITEM_SUB_CATEGORY_API,
+                url: SUB_CATEGORY_API,
                 method: "POST",
                 body: payload,
                 headers: {
                     "Content-type": "application/json; charset=UTF-8",
                 },
             }),
-            invalidatesTags: ["ItemSubCategoryMaster"],
+            invalidatesTags: ["SubCategoryMaster"],
         }),
-        updateItemSubCategory: builder.mutation({
+        updateSubCategory: builder.mutation({
             query: (payload) => {
                 const { id, ...body } = payload;
                 return {
-                    url: `${ITEM_SUB_CATEGORY_API}/${id}`,
+                    url: `${SUB_CATEGORY_API}/${id}`,
                     method: "PUT",
                     body,
                 };
             },
-            invalidatesTags: ["ItemSubCategoryMaster"],
+            invalidatesTags: ["SubCategoryMaster"],
         }),
-        deleteItemSubCategory: builder.mutation({
+        deleteSubCategory: builder.mutation({
             query: (id) => ({
-                url: `${ITEM_SUB_CATEGORY_API}/${id}`,
+                url: `${SUB_CATEGORY_API}/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: ["ItemSubCategoryMaster"],
+            invalidatesTags: ["SubCategoryMaster"],
         }),
     }),
 });
 
 export const {
-    useGetItemSubCategoryQuery,
-    useGetItemSubCategoryByIdQuery,
-    useAddItemSubCategoryMutation,
-    useUpdateItemSubCategoryMutation,
-    useDeleteItemSubCategoryMutation,
-} = ItemSubCategoryMasterApi;
+    useGetSubCategoryQuery,
+    useGetSubCategoryByIdQuery,
+    useAddSubCategoryMutation,
+    useUpdateSubCategoryMutation,
+    useDeleteSubCategoryMutation,
+} = SubCategoryMasterApi;
 
-export default ItemSubCategoryMasterApi;
+export default SubCategoryMasterApi;

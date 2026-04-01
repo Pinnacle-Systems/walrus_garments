@@ -13,7 +13,7 @@ const SingleImageFileUploadComponent = ({ image, disabled, setWebCam, editProfil
         return null
     }
     const imageWidth = "150px"
-    const imageHeight = "150px";
+    const imageHeight = "220px";
     return (
         <div className='flex gap-1 flex-col items-center'>
             <div>

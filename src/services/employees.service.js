@@ -233,11 +233,12 @@ async function create(req) {
     const image = req.file
     const { branchId, name, email, chamberNo, joiningDate, fatherName, dob, gender, maritalStatus, bloodGroup,
         panNo, consultFee, salaryPerMonth, commissionCharges, mobile, accountNo, ifscNo, branchName, degree,
-        specialization, localAddress, localCity, localPincode, permAddress, permCity, regNo,
-        permPincode, department, employeeCategoryId, permanent, active, aadharNo } = await req.body
+        specialization, localAddress, localCity, localPincode, permAddress, permCity,
+        permPincode, department, employeeCategoryId, permanent, active, aadharNo, designation, bankName, employeeId, finYearId } = await req.body
 
-
-    console.log(permPincode, "permPincode")
+    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    let regNo = finYearDate ? (await getEmployeeId(branchId, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime)) : "";
+    console.log("regNoregNo", regNo)
 
     const data = await prisma.employee.create(
         {
@@ -275,6 +276,10 @@ async function create(req) {
                 image: image ? image.buffer : undefined,
                 permanent: permanent ? JSON.parse(permanent) : undefined,
                 aadharNo: aadharNo ? String(aadharNo) : undefined,
+                bankName: bankName ? bankName : undefined,
+                designation: designation ? designation : undefined,
+                employeeId: employeeId ? employeeId : undefined
+
             }
         }
     )
@@ -286,7 +291,7 @@ async function update(id, req) {
     const { name, email, regNo, chamberNo, joiningDate, fatherName, dob, gender, maritalStatus, bloodGroup,
         panNo, consultFee, salaryPerMonth, commissionCharges, mobile, accountNo, ifscNo, branchName, degree,
         specialization, localAddress, localCity, localPincode, permAddress, permCity, permPincode, department, employeeCategoryId, active,
-        leavingReason, leavingDate, canRejoin, rejoinReason, isDeleteImage, aadharNo } = await req.body
+        leavingReason, leavingDate, canRejoin, rejoinReason, isDeleteImage, aadharNo, designation, bankName, employeeId } = await req.body
     const dataFound = await prisma.employee.findFirst({
         where: {
             id: parseInt(id),
@@ -313,6 +318,9 @@ async function update(id, req) {
             leavingDate: leavingDate ? new Date(leavingDate) : undefined, leavingReason, rejoinReason,
             canRejoin: canRejoin ? JSON.parse(canRejoin) : undefined,
             aadharNo: aadharNo ? String(aadharNo) : undefined,
+            bankName: bankName ? bankName : undefined,
+            designation: designation ? designation : undefined,
+            employeeId: employeeId ? employeeId : undefined
 
         },
     })

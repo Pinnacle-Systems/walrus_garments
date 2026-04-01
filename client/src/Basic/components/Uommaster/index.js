@@ -15,7 +15,7 @@ import { Check, Power } from "lucide-react";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import Swal from "sweetalert2";
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
-const MODEL = "Uom Master";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 export default function Form() {
   const [form, setForm] = useState(false);
@@ -28,7 +28,7 @@ export default function Form() {
 
 
   const [searchValue, setSearchValue] = useState("");
-  const nameRef = useRef(null);
+  // const nameRef = useRef(null);
   const childRecord = useRef(0);
   const formRef = useRef(null);
 
@@ -39,13 +39,23 @@ export default function Form() {
     ),
   };
   const { data: allData, isLoading, isFetching } = useGetUnitOfMeasurementMasterQuery({ params, searchParams: searchValue });
-  console.log(allData, "allData")
+
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetUnitOfMeasurementMasterByIdQuery
       (id, { skip: !id });
+
+
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef: nameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
 
 
   const [addData] = useAddUnitOfMeasurementMasterMutation();
@@ -98,7 +108,9 @@ export default function Form() {
         icon: "success",
       });
       if (nextProcess == "new") {
+        syncFormWithDb(undefined)
         onNew()
+        nameRef.current?.focus();
       } else {
         setForm(false)
       }
@@ -106,10 +118,11 @@ export default function Form() {
     } catch (error) {
       await Swal.fire({
         icon: 'error',
-        title: 'Submission error',
         text: error.data?.message || 'Something went wrong!',
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
     }
   };
 
@@ -124,8 +137,10 @@ export default function Form() {
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "error",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return;
     }
     let foundItem;
@@ -139,8 +154,10 @@ export default function Form() {
       Swal.fire({
         text: "The Uom Name already exists.",
         icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return false;
     }
     if (id) {
@@ -330,6 +347,9 @@ export default function Form() {
                         onClick={() => {
                           saveData("close")
                         }}
+                        ref={saveCloseButtonRef}
+                        tabIndex={0} // ✅ Add tabIndex
+                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
                            border border-blue-600 flex items-center gap-1 text-xs"
                       >
@@ -345,7 +365,9 @@ export default function Form() {
                         onClick={() => {
                           saveData("new")
                         }}
-
+                        ref={saveNewButtonRef}
+                        tabIndex={0}
+                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                            border border-green-600 flex items-center gap-1 text-xs"
                       >
@@ -377,7 +399,10 @@ export default function Form() {
                               />
                             </div>
                             <div>
-                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                              <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}
+                                onKeyDown={handlers.handleToggleKeyDown}
+                                ref={toggleButtonRef}
+                              />
                             </div>
 
 

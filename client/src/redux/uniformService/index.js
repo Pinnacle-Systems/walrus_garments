@@ -56,6 +56,4 @@ export { default as priceTemplateApi } from "./priceTemplateService"
 export { default as salesInvoiceApi } from "./salesInvoiceServices"
 export { default as salesDeliveryApi } from "./salesDeliveryServices"
 export { default as pointOfSalesApi } from "./PointOfSalesService"
-
-
-
+export { default as SubCategoryMasterApi } from "./SubCategoryMasterService"

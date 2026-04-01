@@ -43,7 +43,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [gstNo, setGstNo] = useState("");
 
   const [searchValue, setSearchValue] = useState("");
-  const nameRef = useRef(null);
+  // const nameRef = useRef(null);
   const formRef = useRef(null);
 
   const childRecord = useRef(0);
@@ -66,7 +66,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
   const {
-    firstInputRef: countryNameRef,
+    firstInputRef: nameRef,
     toggleButtonRef,
     saveCloseButtonRef,
     saveNewButtonRef,
@@ -132,20 +132,24 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       if (nextProcess == "new") {
         syncFormWithDb(undefined)
         onNew()
+        nameRef?.current?.focus(); // ✅ focus called directly
+        setId("")
       } else {
         setForm(false)
+        setId("")
       }
-      setId("")
+      // 
 
 
     } catch (error) {
       console.log(error, "error for state master")
       Swal.fire({
         icon: 'error',
-        title: 'Submission error',
         text: error.data?.message || 'Something went wrong!',
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
     }
   };
 
@@ -164,9 +168,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     if (!validateData(finalData)) {
       Swal.fire({
         title: "Please fill all required fields...!",
-        icon: "error",
+        icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return;
     }
 
@@ -183,8 +189,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       Swal.fire({
         text: "The State Name already exists.",
         icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return false;
     }
 
@@ -245,9 +253,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     setReadOnly(false);
     setForm(true);
     setSearchValue("");
+
     setTimeout(() => {
       nameRef.current?.focus();
-    }, 100);
+    }, 200);
   };
 
 

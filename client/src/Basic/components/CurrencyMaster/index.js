@@ -129,7 +129,10 @@ export default function Form() {
       });
       if (nextProcess === "new") {
         syncFormWithDb(undefined);
+        setId("")
         onNew();
+        nameRef.current.focus();
+
       } else {
         setForm(false);
       }
@@ -137,10 +140,11 @@ export default function Form() {
     } catch (error) {
       await Swal.fire({
         icon: 'error',
-        title: 'Submission error',
         text: error.data?.message || 'Something went wrong!',
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
     }
   };
 
@@ -158,8 +162,10 @@ export default function Form() {
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "error",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return;
     }
 
@@ -174,8 +180,10 @@ export default function Form() {
       Swal.fire({
         text: "The Currency Name already exists.",
         icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return false;
     }
     if (id) {
@@ -199,7 +207,6 @@ export default function Form() {
         if (deldata?.statusCode == 1) {
           await Swal.fire({
             icon: 'error',
-            title: 'Submission error',
             text: deldata?.message || 'Something went wrong!',
           });
           return

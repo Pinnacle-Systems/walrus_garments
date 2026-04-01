@@ -50,10 +50,11 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, code, companyId, active } = await body
+    const { name, code, companyId, active, itemCategoryId } = await body
     const data = await prisma.subCategory.create(
         {
             data: {
+                itemCategoryId: itemCategoryId ? parseInt(itemCategoryId) : undefined,
                 name, code, active
             }
         }
@@ -62,7 +63,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, code, active } = await body
+    const { name, code, active, itemCategoryId } = await body
     const dataFound = await prisma.subCategory.findUnique({
         where: {
             id: parseInt(id)
@@ -75,7 +76,9 @@ async function update(id, body) {
         },
         data:
         {
-            name, code, active
+            name, code, active,
+            itemCategoryId: itemCategoryId ? parseInt(itemCategoryId) : undefined,
+
         },
     })
     return { statusCode: 0, data };

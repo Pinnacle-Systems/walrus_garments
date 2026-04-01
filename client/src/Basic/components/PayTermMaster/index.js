@@ -123,12 +123,12 @@ export default function Form() {
             });
             if (nextProcess === "new") {
                 syncFormWithDb(undefined);
+                setId("")
+
                 onNew();
             } else {
                 setForm(false);
             }
-            setId("")
-
 
         } catch (error) {
             await Swal.fire({
@@ -154,8 +154,21 @@ export default function Form() {
             Swal.fire({
                 title: "Please fill all required fields...!",
                 icon: "error",
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
             });
-            nameRef.current?.focus();
+            return;
+        }
+
+        if (!years && !months && !days) {
+            Swal.fire({
+                title: "Please fill at least one of the Pay Term Period fields...",
+                icon: "error",
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
+            });
             return;
         }
         let foundItem;
@@ -169,8 +182,10 @@ export default function Form() {
             Swal.fire({
                 text: "The PayTerm already exists.",
                 icon: "warning",
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
             });
-            nameRef.current?.focus();
             return false;
         }
         if (id) {

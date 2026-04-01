@@ -113,16 +113,19 @@ export default function Form() {
       if (nextProcess == "new") {
         syncFormWithDb(undefined)
         onNew()
+        nameRef.current?.focus();
+
       } else {
         setForm(false)
       }
     } catch (error) {
       await Swal.fire({
         icon: 'error',
-        title: 'Submission error',
         text: error.data?.message || 'Something went wrong!',
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
     }
     setId("")
 
@@ -141,8 +144,10 @@ export default function Form() {
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "error",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return;
     }
 
@@ -165,14 +170,19 @@ export default function Form() {
       Swal.fire({
         text: "The Color Name already exists.",
         icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return false;
     }
     if (foundItemColor) {
       Swal.fire({
         text: "The Color Code  already exists.",
         icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
       });
       return false;
     }

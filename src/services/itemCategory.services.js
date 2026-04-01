@@ -14,7 +14,8 @@ async function get(req) {
                     MainCategory: true,
                     SubCategory: true
                 }
-            }
+            },
+            SubCategory: true
         }
 
     });
@@ -26,6 +27,9 @@ async function getOne(id) {
     const data = await prisma.itemCategory.findUnique({
         where: {
             id: parseInt(id)
+        },
+        include: {
+            SubCategory: true
         }
     })
     if (!data) return NoRecordFound("Country");

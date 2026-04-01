@@ -8,6 +8,7 @@ import { ReusableTable, TextInputNew1, ToggleButton } from "../../Inputs";
 import Modal from "../../UiComponents/Modal";
 import { statusDropdown } from "../../Utils/DropdownData";
 import { useAddItemCategoryMutation, useDeleteItemCategoryMutation, useGetItemCategoryByIdQuery, useGetItemCategoryQuery, useUpdateItemCategoryMutation } from "../../redux/uniformService/ItemCategoryMasterService";
+import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
 
 export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
     const [form, setForm] = useState(false);
@@ -17,7 +18,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const [active, setActive] = useState(true);
     const [searchValue, setSearchValue] = useState("");
 
-    const nameRef = useRef(null);
     const childRecord = useRef(0);
     const formRef = useRef(null);
 
@@ -51,6 +51,15 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         }
     }, [id]);
 
+
+    const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+    const {
+        firstInputRef: nameRef,
+        toggleButtonRef,
+        saveCloseButtonRef,
+        saveNewButtonRef,
+    } = refs;
+
     useEffect(() => {
         syncFormWithDb(singleData?.data);
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
@@ -75,6 +84,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             if (nextProcess === "new") {
                 syncFormWithDb(undefined);
                 onNew();
+                nameRef.current?.focus();
             } else {
                 setForm(false);
             }
@@ -85,8 +95,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 icon: "error",
                 title: "Submission error",
                 text: error.data?.message || "Something went wrong!",
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
             });
-            nameRef.current?.focus();
         }
     };
 
@@ -95,8 +107,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         const finalData = { ...data, name: upperName };
 
         if (!validateData(finalData)) {
-            Swal.fire({ title: "Please fill all required fields...!", icon: "error" });
-            nameRef.current?.focus();
+            Swal.fire({
+                title: "Please fill all required fields...!", icon: "error",
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
+            });
             return;
         }
 
@@ -107,8 +123,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             foundItem = allData?.data?.some(item => item.name.toUpperCase() === upperName);
         }
         if (foundItem) {
-            Swal.fire({ text: "The Item Category already exists.", icon: "warning" });
-            nameRef.current?.focus();
+            Swal.fire({
+                text: "The Item Category already exists.", icon: "warning",
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
+            });
             return false;
         }
         if (id) {
@@ -202,7 +222,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
                         </div>
                         <div className="mt-5">
-                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly} />
+                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} readOnly={readOnly}
+                                onKeyDown={handlers.handleToggleKeyDown}
+                                ref={toggleButtonRef}
+                            />
                         </div>
                     </div>
                 </div>
@@ -298,6 +321,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     <button
                         type="button"
                         onClick={() => saveData("close")}
+                        ref={saveCloseButtonRef}
+                        tabIndex={0} // ✅ Add tabIndex
+                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                         className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
                     >
                         <Check size={14} />
@@ -329,7 +355,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={deleteData}
-                    itemsPerPage={10}
+                    itemsPerPage={15}
                 />
             </div>
 
@@ -350,6 +376,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 )}
                                 {!readOnly && (
                                     <button type="button" onClick={() => saveData("close")}
+                                        ref={saveCloseButtonRef}
+                                        tabIndex={0} // ✅ Add tabIndex
+                                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
                                         className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs">
                                         <Check size={14} />
                                         {id ? "Update" : "Save & Close"}
@@ -357,6 +386,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 )}
                                 {!readOnly && !id && (
                                     <button type="button" onClick={() => saveData("new")}
+                                        ref={saveNewButtonRef}
+                                        tabIndex={0}
+                                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
                                         className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
                                         <Check size={14} />
                                         Save & New

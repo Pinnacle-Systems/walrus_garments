@@ -49,4 +49,13 @@ export const multiSelectOptionSelectedApiData = (data) => {
 
 
 
+export const dropDownListMergedObjectStateCity = (data) => {
+    let Data = data ? data : []
 
+    console.log(data, "datatata")
+    const outputData = []
+    for (let i of Data) {
+        outputData.push({ show: i?.name + " / " + i?.country?.name, value: i["id"] })
+    }
+    return outputData
+}

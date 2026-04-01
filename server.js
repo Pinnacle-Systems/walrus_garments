@@ -240,7 +240,7 @@ app.use("/stockAdjustment", stockAdjustment);
 app.use("/priceTemplate", priceTemplate);
 app.use('/payment', payments)
 app.use("/pointOfSales", pointOfSales)
-app.use("/SubCategory", subCategory)
+app.use("/subCategory", subCategory)
 
 
 
