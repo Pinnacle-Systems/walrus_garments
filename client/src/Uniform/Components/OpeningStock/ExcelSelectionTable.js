@@ -4,7 +4,8 @@ import { convertSpaceToUnderScore, getCommonParams } from "../../../Utils/helper
 import { useGetItemMasterQuery, useAddItemMasterMutation } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery, useAddSizeMasterMutation } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-import { FiSave } from "react-icons/fi";
+import { FiDownload, FiSave } from "react-icons/fi";
+import { FaQuestionCircle } from "react-icons/fa";
 import { useAddLegacyStockMutation } from "../../../redux/uniformService/LegacyStockService";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -12,6 +13,32 @@ import { useGetUnitOfMeasurementMasterQuery, useAddUnitOfMeasurementMasterMutati
 import Select from "react-select";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
+
+const OPENING_STOCK_HEADERS = [
+  "Item Name",
+  "Size",
+  "Uom",
+  "Barcode No",
+  "Price",
+  "Qty"
+];
+
+const OPENING_STOCK_TEMPLATE_ROW = {
+  "Item Name": "Classic T-Shirt",
+  "Size": "XL",
+  "Uom": "PCS",
+  "Barcode No": "TSHIRT-XL-0001",
+  "Price": "499",
+  "Qty": "10"
+};
+
+const escapeCsvValue = (value) => {
+  const stringValue = value?.toString() ?? "";
+  if (/[",\n]/.test(stringValue)) {
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+  return stringValue;
+};
 
 const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems, setStockItems }) => {
   const { branchId, companyId, finYearId, userId } = getCommonParams();
@@ -292,23 +319,29 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
     reader.readAsArrayBuffer(file);
   };
 
+  const downloadTemplate = () => {
+    const csvRows = [
+      OPENING_STOCK_HEADERS.map(escapeCsvValue).join(","),
+      OPENING_STOCK_HEADERS.map((header) => escapeCsvValue(OPENING_STOCK_TEMPLATE_ROW[header])).join(",")
+    ];
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
 
-
-  const header = [
-    "Item Name",
-    "Size",
-    // "Color",
-    "Uom",
-    "Barcode No",
-    "Price",
-    "Qty"
-  ]
+    link.href = url;
+    link.setAttribute("download", "opening-stock-template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="w-full ">
       <div className="w-full flex flex-col gap-5">
         <div className="mt-3 flex flex-col justify-start items-start gap-4">
-          <div className="w-full flex flex-row justify-between items-end">
+          <div className="w-full flex flex-col gap-3 xl:flex-row xl:justify-between xl:items-end">
             <div className="flex flex-wrap items-end gap-5">
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-gray-600">Select Branch</label>
@@ -340,7 +373,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
               <div className="flex flex-col gap-1">
                 <h1 className="text-xs font-bold text-gray-600">Upload File</h1>
                 <div className='flex items-center border border-lime-500 hover:bg-lime-500 transition rounded-md h-8 px-3 cursor-pointer group'>
-                  <input type="file" id="profileImage" className='hidden' onChange={handleFileChange} />
+                  <input type="file" id="profileImage" accept=".csv,.xlsx,.xls" className='hidden' onChange={handleFileChange} />
                   <label htmlFor="profileImage" className="text-xs w-full font-bold text-center cursor-pointer group-hover:text-white transition">Browse</label>
                 </div>
               </div>
@@ -350,8 +383,30 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
               >
                 Upload
               </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={downloadTemplate}
+                  className="h-8 px-4 py-1.5 rounded-md border border-indigo-500 text-indigo-600 hover:bg-indigo-500 hover:text-white text-xs font-bold transition-colors inline-flex items-center gap-2"
+                >
+                  <FiDownload className="w-3.5 h-3.5" />
+                  Download Template
+                </button>
+                <div className="relative z-30 group">
+                  <button
+                    type="button"
+                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label="Opening stock import template help"
+                  >
+                    <FaQuestionCircle className="text-sm cursor-help" />
+                  </button>
+                  <div className="pointer-events-none absolute top-full right-0 z-[80] mt-2 w-56 rounded-md bg-slate-800 px-3 py-2 text-[11px] leading-4 text-white shadow-lg opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                    Download the CSV template, fill it in Excel, then upload the completed file here.
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex flex-row w-52 mt-1">
+            <div className="flex flex-row mt-1 xl:w-52">
               <button
                 onClick={saveData}
                 className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm font-semibold shadow-sm transition-all"
@@ -379,7 +434,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
               <thead className='bg-gray-200 sticky top-0'>
                 <tr>
                   <th className="border border-gray-400 text-sm py-1 w-12 text-center">S.No</th>
-                  {header.map((columnName, index) => (
+                  {OPENING_STOCK_HEADERS.map((columnName, index) => (
                     <th className="border border-gray-400 text-sm py-1 capitalize px-2 text-center" key={index}>
                       {columnName}</th>
                   ))}
@@ -409,7 +464,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                     return (
                       <tr key={row._rowId || rowIndex} className="border-b hover:bg-gray-50">
                         <td className="border border-gray-400 text-center text-xs py-1">{rowIndex + 1}</td>
-                        {header.map((columnName, columnIndex) => {
+                        {OPENING_STOCK_HEADERS.map((columnName, columnIndex) => {
                           const key = convertSpaceToUnderScore(columnName);
                           const val = row[key];
                           const isEmpty = !val || val.toString().trim() === "";
