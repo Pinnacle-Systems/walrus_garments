@@ -54,6 +54,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     saveNewButtonRef,
   } = refs;
 
+  useEffect(() => {
+    if ((form || onSuccess) && countryNameRef.current) {
+      countryNameRef.current.focus();
+    }
+  }, [form, onSuccess]);
+
   const params = {
     companyId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -253,7 +259,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     syncFormWithDb(undefined)
     setReadOnly(false);
     setForm(true);
-    setSearchValue("");
+    // setSearchValue("");
     setTimeout(() => {
       countryNameRef.current?.focus();
     }, 100);
@@ -311,11 +317,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     setForm(true);
   }
 
-  useEffect(() => {
-    if ((form || onSuccess) && countryNameRef.current) {
-      countryNameRef.current.focus();
-    }
-  }, [form, onSuccess]);
+
 
   const formBody = (
     <div className="flex-1 p-3">
@@ -537,7 +539,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                         type="button"
                         onClick={() => {
                           setForm(false);
-                          setSearchValue("");
+                          // setSearchValue("");
                           setId(false);
                         }}
                         className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"

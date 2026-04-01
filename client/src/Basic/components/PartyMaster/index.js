@@ -1935,8 +1935,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           className="bg-gray-100 p-1 rounded-lg"
                           activeClass="bg-[#f1f1f0] shadow-sm text-blue-600"
                           inactiveClass="text-gray-500"
-                        // onKeyDown={handlers.handleToggleKeyDown}
-                        // ref={toggleButtonRef}
+
                         />
                       </div>
 
