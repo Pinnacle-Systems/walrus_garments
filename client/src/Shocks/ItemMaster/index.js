@@ -189,7 +189,8 @@ export default function Form() {
         setSku("")
         setBarcode("")
         setItemPriceList(barcodeGenerationMethod === "STANDARD" ? [createStandardPriceRow()] : [])
-
+        setMainCategory(data?.mainCategoryId ? data?.mainCategoryId : "")
+        setSubCategory(data?.subCategoryId ? data?.subCategoryId : "")
       } else {
         setName(data?.name ? data?.name : "")
         setCode(data?.code ? data?.code : "")
