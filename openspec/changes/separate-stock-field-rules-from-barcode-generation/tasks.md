@@ -11,11 +11,14 @@
 ## 3. Screen Alignment
 
 - [x] 3.1 Align Opening Stock and Stock Adjustment flows so item barcode-generation mode does not determine stock-entry field presence or requiredness.
-- [x] 3.2 Align purchase and sales transaction item-entry screens that currently rely on item-level barcode mode for size/color behavior, preserving valid variant filtering without letting it control field schema.
+- [x] 3.2 Align stock-writing and stock-assisted operational screens that currently rely on item-level barcode mode for size/color behavior, preserving valid variant filtering without letting it control field schema.
 - [x] 3.3 Review quick-add item modal usage in runtime stock/transaction screens and constrain barcode-mode branching to item-structure editing behavior only.
 
 ## 4. Verification
 
-- [ ] 4.1 Verify Stock Control Panel settings alone control whether Size and Color fields appear and are required in stock-entry flows.
-- [ ] 4.2 Verify item barcode-generation mode still drives price lookup, barcode lookup, and valid variant-combination filtering where appropriate.
-- [ ] 4.3 Verify transaction screens no longer drift into using barcode-generation mode as an implicit source of field requiredness.
+- [x] 4.1 Verify Stock Control Panel settings alone control whether Size and Color fields appear and are required in stock-entry flows.
+- [x] 4.2 Verify item barcode-generation mode still drives price lookup, barcode lookup, and valid variant-combination filtering where appropriate.
+- [x] 4.3 Verify transaction screens no longer drift into using barcode-generation mode as an implicit source of field requiredness.
+- [x] 4.4 Verify stock-writing surfaces block save when any Stock Control tracked field is still missing, even when rows begin from partial barcode or import prefills.
+- [x] 4.5 Verify stock-writing surfaces do not reject rows solely because multiple tracked stock combinations share the same barcode.
+- [x] 4.6 Reconciliation note: catalog-driven sales screens do not use Stock Control as their visible-column authority.

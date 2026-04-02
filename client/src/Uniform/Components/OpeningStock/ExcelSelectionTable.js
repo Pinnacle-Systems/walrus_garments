@@ -1,12 +1,12 @@
 import React from "react";
 import { read, utils } from "xlsx";
-import { convertSpaceToUnderScore, getCommonParams, getStockMaintenanceConfig, normalizeMasterValue } from "../../../Utils/helper";
+import { getCommonParams, getStockMaintenanceConfig, normalizeMasterValue } from "../../../Utils/helper";
 import { useGetItemMasterQuery, useAddItemMasterMutation } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery, useAddSizeMasterMutation } from "../../../redux/uniformService/SizeMasterService";
 import { useAddColorMasterMutation, useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { FiDownload, FiSave, FiUploadCloud, FiFileText, FiX } from "react-icons/fi";
 import { FaQuestionCircle } from "react-icons/fa";
-import { useAddLegacyStockMutation } from "../../../redux/uniformService/LegacyStockService";
+import { useAddOpeningStockMutation } from "../../../redux/services/StockService";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { useGetUnitOfMeasurementMasterQuery, useAddUnitOfMeasurementMasterMutation } from "../../../redux/uniformService/UnitOfMeasurementServices";
@@ -26,26 +26,12 @@ import TransactionLineItemsSection, {
   transactionTableIndexCellClassName,
   transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
-
-const OPENING_STOCK_HEADERS = [
-  "Item Name",
-  "Size",
-  "Color",
-  "Uom",
-  "Barcode No",
-  "Price",
-  "Qty"
-];
-
-const OPENING_STOCK_TEMPLATE_ROW = {
-  "Item Name": "Classic T-Shirt",
-  "Size": "XL",
-  "Color": "NAVY",
-  "Uom": "PCS",
-  "Barcode No": "TSHIRT-XL-0001",
-  "Price": "499",
-  "Qty": "10"
-};
+import {
+  createOpeningStockRowDefaults,
+  getOpeningStockFieldDefinitions,
+  getOpeningStockHeaderMap,
+  getOpeningStockTemplateRow,
+} from "./openingStockSchema";
 
 const escapeCsvValue = (value) => {
   const stringValue = value?.toString() ?? "";
@@ -100,12 +86,25 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
   const locationOptions = locationList?.data?.map(l => ({ value: l.id, label: l.storeName })) || [];
 
 
-  const [addData] = useAddLegacyStockMutation();
+  const [addData] = useAddOpeningStockMutation();
   const [addItem] = useAddItemMasterMutation();
   const [addSize] = useAddSizeMasterMutation();
   const [addColor] = useAddColorMasterMutation();
   const [addUom] = useAddUnitOfMeasurementMasterMutation();
-  const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
+  const stockReportControl = stockReportControlData?.data?.[0];
+  const stockMaintenance = getStockMaintenanceConfig(stockReportControl);
+  const openingStockFields = React.useMemo(
+    () => getOpeningStockFieldDefinitions(stockReportControl),
+    [stockReportControl]
+  );
+  const openingStockHeaderMap = React.useMemo(
+    () => getOpeningStockHeaderMap(openingStockFields),
+    [openingStockFields]
+  );
+  const openingStockTemplateRow = React.useMemo(
+    () => getOpeningStockTemplateRow(openingStockFields),
+    [openingStockFields]
+  );
 
   const uomOptions = (uomList?.data || []).map(u => ({ value: u.id, label: u.name }));
 
@@ -118,6 +117,21 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
       ),
     [colorList]
   );
+
+  const isFieldValueMissing = React.useCallback((row, field) => {
+    const value = row?.[field.key];
+
+    if (field.key === "qty") {
+      return !value || Number(value) <= 0;
+    }
+
+    if (field.key === "uom") {
+      const selectedUomId = row?.uomId || row?._uomId || findFromList(row?.uom, uomList?.data, "id");
+      return !selectedUomId;
+    }
+
+    return !value?.toString().trim();
+  }, [uomList]);
 
   const closeMissingMasterReview = () => {
     setMissingMasterReview({
@@ -158,6 +172,17 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
     }, {});
   };
 
+  const getMissingRequiredRowMessage = () => {
+    for (const field of openingStockFields.filter((entry) => entry.required)) {
+      const missingRowIndex = stockItems.findIndex((row) => isFieldValueMissing(row, field));
+      if (missingRowIndex !== -1) {
+        return `${field.label} is required at row ${missingRowIndex + 1}`;
+      }
+    }
+
+    return "";
+  };
+
   const processStockSave = async ({
     missingItems = [],
     missingSizes = [],
@@ -172,27 +197,9 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
       return;
     }
 
-    const missingBarcodesRow = stockItems.findIndex(r => !r.barcode_no?.toString().trim());
-    if (missingBarcodesRow !== -1) {
-      toast.warning(`Barcode is missing at row ${missingBarcodesRow + 1}`);
-      return;
-    }
-
-    // --- Barcode Duplicate Check ---
-    const barcodeMap = {};
-    const barcodeConflicts = [];
-    stockItems.forEach((row) => {
-      const bc = row.barcode_no?.toString().trim();
-      if (!bc) return;
-      const identifier = `${normalizeMasterValue(row.item_name)}|${normalizeMasterValue(row.size)}|${stockMaintenance.trackColor ? normalizeMasterValue(row.color) : ""}`.toLowerCase();
-      if (barcodeMap[bc] && barcodeMap[bc] !== identifier) {
-        barcodeConflicts.push(`Barcode "${bc}" is used for multiple stock combinations.`);
-      }
-      barcodeMap[bc] = identifier;
-    });
-    if (barcodeConflicts.length > 0) {
-      const uniqueConflicts = [...new Set(barcodeConflicts)];
-      Swal.fire({ icon: "error", title: "Barcode Conflict", text: uniqueConflicts[0], footer: "Same barcode cannot be assigned to different stock combinations." });
+    const missingRequiredRowMessage = getMissingRequiredRowMessage();
+    if (missingRequiredRowMessage) {
+      toast.warning(missingRequiredRowMessage);
       return;
     }
 
@@ -283,7 +290,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
         companyId,
         finYearId,
         userId,
-        stockItems: mappedStockItems.map(({ _rowId, item_name, size, color, uom, ...rest }) => rest)
+        stockItems: mappedStockItems.map(({ _rowId, item_name, size, color, uom, _uomId, ...rest }) => rest)
       };
 
       const returnData = await addData(payload).unwrap();
@@ -308,10 +315,14 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
     )];
 
     const missingSizes = [...new Set(
-      stockItems.filter(r => normalizeMasterValue(r.size) && !findFromList(r.size, sizeList?.data, "id")).map(r => normalizeMasterValue(r.size))
+      stockMaintenance.trackSize
+        ? stockItems.filter(r => normalizeMasterValue(r.size) && !findFromList(r.size, sizeList?.data, "id")).map(r => normalizeMasterValue(r.size))
+        : []
     )];
     const missingColors = [...new Set(
-      stockItems.filter(r => normalizeMasterValue(r.color) && !findFromList(r.color, colorList?.data, "id")).map(r => normalizeMasterValue(r.color))
+      stockMaintenance.trackColor
+        ? stockItems.filter(r => normalizeMasterValue(r.color) && !findFromList(r.color, colorList?.data, "id")).map(r => normalizeMasterValue(r.color))
+        : []
     )];
 
     if (missingItems.length > 0 || missingSizes.length > 0 || missingColors.length > 0) {
@@ -384,9 +395,10 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
       let transformedData = jsonData
         .filter(row => row.some(cell => cell !== undefined && cell !== null && cell.toString().trim() !== ""))
         .map((row) => {
-          const obj = { _rowId: Date.now() + Math.random() };
+          const obj = { _rowId: Date.now() + Math.random(), ...createOpeningStockRowDefaults(openingStockFields) };
           headerNames.forEach((header, index) => {
-            const key = convertSpaceToUnderScore(header);
+            const key = openingStockHeaderMap.get(header?.toString().trim().toLowerCase());
+            if (!key) return;
             obj[key] = row[index];
           });
 
@@ -429,8 +441,8 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
 
   const downloadTemplate = () => {
     const csvRows = [
-      OPENING_STOCK_HEADERS.map(escapeCsvValue).join(","),
-      OPENING_STOCK_HEADERS.map((header) => escapeCsvValue(OPENING_STOCK_TEMPLATE_ROW[header])).join(",")
+      openingStockFields.map((field) => escapeCsvValue(field.label)).join(","),
+      openingStockFields.map((field) => escapeCsvValue(openingStockTemplateRow[field.label])).join(",")
     ];
     const csvContent = csvRows.join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -536,7 +548,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                     <FaQuestionCircle className="text-sm cursor-help" />
                   </button>
                   <div className="pointer-events-none absolute top-full right-0 z-[80] mt-2 w-56 rounded-md bg-slate-800 px-3 py-2 text-[11px] leading-4 text-white shadow-lg opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                    Download the CSV template, fill it in Excel, then upload the completed file here.
+                    Download the CSV template that matches your current stock-control fields, fill it in Excel, then upload it here.
                   </div>
                 </div>
               </div>
@@ -581,9 +593,9 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                 <thead className={transactionTableHeadClassName}>
                   <tr>
                     <th className={`${transactionTableHeaderCellClassName} w-12`}>S.No</th>
-                    {OPENING_STOCK_HEADERS.map((columnName, index) => (
-                      <th className={transactionTableHeaderCellClassName} key={index}>
-                        {columnName}
+                    {openingStockFields.map((field) => (
+                      <th className={`${transactionTableHeaderCellClassName} ${field.widthClass || ""}`} key={field.key}>
+                        {field.label}
                       </th>
                     ))}
                     <th className={`${transactionTableHeaderCellClassName} w-16`}>Action</th>
@@ -591,15 +603,6 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                 </thead>
                 <tbody>
                   {(() => {
-                    const barcodeCounts = {};
-                    stockItems?.forEach(row => {
-                      const bc = row.barcode_no?.toString().trim().toLowerCase();
-                      if (!bc) return;
-                      const iden = `${row.item_name}|${row.size || ""}`.toLowerCase();
-                      if (!barcodeCounts[bc]) barcodeCounts[bc] = new Set();
-                      barcodeCounts[bc].add(iden);
-                    });
-
                     return stockItems?.map((row, rowIndex) => {
                       const itemId = row.itemId || findFromList(row.item_name, itemList?.data, "id");
                       const sizeId = row.sizeId || findFromList(row.size, sizeList?.data, "id");
@@ -609,25 +612,22 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                       return (
                         <tr key={row._rowId || rowIndex} className="border border-blue-gray-200">
                           <td className={transactionTableIndexCellClassName}>{rowIndex + 1}</td>
-                          {OPENING_STOCK_HEADERS.map((columnName, columnIndex) => {
-                            const key = convertSpaceToUnderScore(columnName);
+                          {openingStockFields.map((field) => {
+                            const key = field.key;
                             const val = row[key];
-                            const isEmpty = !val || val.toString().trim() === "";
+                            const isEmpty = !val?.toString().trim();
                             let isInvalid = false;
-                            if (key === "item_name" && isEmpty) isInvalid = true;
+                            if (field.required && isFieldValueMissing(row, field)) isInvalid = true;
                             if (key === "item_name" && !isEmpty && !itemId) isInvalid = true;
-                            if (key === "size" && isEmpty) isInvalid = true;
                             if (key === "size" && !isEmpty && !sizeId) isInvalid = true;
-                            if (key === "uom" && isEmpty && !row._uomId) isInvalid = true;
-                            if (key === "uom" && !isEmpty && !uomId) isInvalid = true;
+                            if (key === "uom" && !uomId) isInvalid = true;
                             if (key === "color" && !isEmpty && !colorId) isInvalid = true;
-                            if (key === "barcode_no" && isEmpty) isInvalid = true;
 
                             if (key === "uom") {
                               const pcsDefaultId = findFromList("PCS", uomList?.data, "id") || "";
                               const selectedUomId = row._uomId || findFromList(row.uom, uomList?.data, "id") || pcsDefaultId;
                               return (
-                                <td key={columnIndex} className={!selectedUomId ? `${transactionTableFocusCellClassName} bg-red-100` : transactionTableFocusCellClassName}>
+                                <td key={field.key} className={!selectedUomId ? `${transactionTableFocusCellClassName} bg-red-100` : transactionTableFocusCellClassName}>
                                   <select
                                     value={selectedUomId}
                                     onChange={(e) => {
@@ -650,7 +650,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
 
                             return (
                               <td
-                                key={columnIndex}
+                                key={field.key}
                                 className={isInvalid ? `${transactionTableCellClassName} bg-red-100 text-red-700 font-semibold` : transactionTableCellClassName}
                                 onDoubleClick={() => setEditingCell({ rowId: rowKey, key })}
                               >
@@ -662,7 +662,16 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
                                     onChange={(e) => {
                                       const newValue = e.target.value;
                                       setStockItems(prev => prev.map((r, idx) =>
-                                        (r._rowId || idx) === rowKey ? { ...r, [key]: newValue } : r
+                                        (r._rowId || idx) === rowKey
+                                          ? {
+                                            ...r,
+                                            [key]: newValue,
+                                            ...(key === "item_name" ? { itemId: "" } : {}),
+                                            ...(key === "size" ? { sizeId: "" } : {}),
+                                            ...(key === "color" ? { colorId: "" } : {}),
+                                            ...(key === "uom" ? { _uomId: "" } : {}),
+                                          }
+                                          : r
                                       ));
                                     }}
                                     onBlur={() => setEditingCell(null)}

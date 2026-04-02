@@ -1,5 +1,23 @@
 ## ADDED Requirements
 
+### Requirement: Opening stock SHALL act as the compatibility intake path for legacy stock
+Opening stock SHALL be used to bring pre-existing stock into the unified stock model when that stock may carry historical, coarse, or otherwise non-canonical barcode labels. The workflow SHALL treat those barcodes as compatibility inputs rather than as proof that the stock follows the current barcode-generation method used for new operational inward flows.
+
+#### Scenario: User captures historical stock through opening stock
+- **WHEN** a user needs to inward stock that already existed before the current barcode-generation approach or does not follow the current canonical barcode structure
+- **THEN** the workflow allows that stock to be captured through Opening Stock
+- **AND** treats the barcode as compatibility-oriented stock-row data rather than as a canonical new-barcode definition
+
+#### Scenario: Opening stock does not replace routine inward for new canonical stock
+- **WHEN** the business is receiving newly inwarded stock that follows the current item-master and canonical barcode-generation rules
+- **THEN** that intake belongs to routine inward workflows such as Purchase Inward
+- **AND** Opening Stock is not treated as the primary operational inward path for those new canonical barcode flows
+
+#### Scenario: Legacy barcode intake stays out of Purchase Inward
+- **WHEN** stock is identified by a historical or otherwise coarse barcode that does not follow the current canonical barcode-generation method
+- **THEN** that stock must enter through Opening Stock as the compatibility intake workflow
+- **AND** Purchase Inward is not used for that legacy-barcode intake because it is the path that prints new canonical barcode labels
+
 ### Requirement: Opening stock SHALL hydrate structural item master data
 The opening-stock workflow SHALL allow users to resolve an existing item or create a missing item while capturing stock. The workflow SHALL support hydration only of `item name` and the structural variant fields required by the effective centralized barcode-generation mode. For `STANDARD`, the core item field is `item name`. For `SIZE`, the core item fields are `item name` and `size`. For `SIZE_COLOR`, the core item fields are `item name`, `size`, and `color`. The workflow SHALL NOT create canonical barcode definitions or item price-list rows as part of stock save.
 
@@ -40,19 +58,29 @@ When bulk opening-stock import detects missing items, sizes, or colors, the work
 - **THEN** the workflow creates the reviewed master records as a batch
 - **AND** continues the import without prompting separately for each affected row
 
-### Requirement: Opening stock SHALL hydrate item size and color associations
-The opening-stock workflow SHALL create the item size or item size-color associations required by the effective centralized barcode-generation semantics for the resolved item. The workflow SHALL use those semantics only to determine required associations and SHALL NOT use them to decide stock-entry column visibility.
+### Requirement: Opening stock SHALL NOT hydrate sellable variant associations
+The opening-stock workflow SHALL NOT create item size, item color, item size-color, or other sellable variant-association data when saving stock rows. In the current system, downstream option availability is derived from `ItemPriceList`, so association hydration from opening stock would implicitly create sellable catalog combinations and exceed the approved scope of stock-row hydration.
 
-#### Scenario: Size mode adds missing size association
-- **WHEN** the effective barcode-generation mode for the resolved item is `SIZE`
-- **AND** the opening-stock row uses a size that is not yet associated with the item
-- **THEN** the workflow creates the missing item-size association before saving the stock row
+#### Scenario: Opening stock resolves a stock row with a new size or color combination
+- **WHEN** a user captures or imports an opening-stock row whose size or size-color combination is not yet represented as a sellable item option
+- **THEN** the workflow may still save the stock row using the resolved masters and tracked stock dimensions
+- **AND** it does not auto-create sellable item variant associations as part of that stock save
 
-#### Scenario: Size and color mode adds missing size-color association
-- **WHEN** the effective barcode-generation mode for the resolved item is `SIZE_COLOR`
-- **AND** the opening-stock row uses a size-color combination that is not yet associated with the item
-- **THEN** the workflow creates the missing association before saving the stock row
+#### Scenario: Opening stock skips commercial association creation
+- **WHEN** opening stock enriches an item with approved core fields and standalone master values
+- **THEN** the workflow stops short of creating `ItemPriceList`-backed combination rows
+- **AND** leaves future sellable option definition to dedicated item-master workflows
 
-#### Scenario: Standard mode skips variant association hydration
-- **WHEN** the effective barcode-generation mode for the resolved item is `STANDARD`
-- **THEN** opening stock does not require new size or size-color associations solely because variant values were captured for stock purposes
+### Requirement: Opening stock SHALL allow coarse barcodes under finer stock tracking
+When opening stock captures imported stock rows whose barcode values are less specific than the dimensions required by current stock-maintenance settings, the workflow SHALL allow the same barcode to appear on multiple stock rows. Opening stock SHALL treat those barcode values as stock-row data or lookup aids in this workflow, not as canonical uniqueness keys for item-variant combinations.
+
+#### Scenario: Shared barcode across multiple stock combinations
+- **WHEN** opening stock import includes multiple rows with the same barcode
+- **AND** those rows differ by stock dimensions that are currently required by stock-maintenance settings
+- **THEN** the workflow allows those rows to proceed without raising a barcode-conflict error solely because the barcode is shared
+- **AND** still requires the tracked stock dimensions to be completed before those rows are persisted to `Stock`
+
+#### Scenario: Import does not infer canonical barcode uniqueness from legacy stock
+- **WHEN** opening stock import validates rows captured from legacy or coarse barcode labels
+- **THEN** the workflow does not require one barcode to map to exactly one size or size-color combination within the import batch
+- **AND** it does not treat the imported barcode as defining canonical future barcode-generation policy

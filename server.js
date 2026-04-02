@@ -59,7 +59,6 @@ import {
   section,
   itemControlPanel,
   quotation,
-  legacy,
   saleOrder,
   itemCategory,
   salesDelivery,
@@ -230,7 +229,6 @@ app.use("/accessoryTemplate", accessoryTemplate)
 app.use("/section", section);
 app.use("/itemControlPanel", itemControlPanel);
 app.use("/quotation", quotation);
-app.use("/legacyStock", legacy);
 app.use("/saleOrder", saleOrder);
 app.use("/itemCategory", itemCategory);
 app.use("/salesDelivery", salesDelivery)
@@ -265,4 +263,3 @@ const PORT = process.env.PORT || 9999;
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
-

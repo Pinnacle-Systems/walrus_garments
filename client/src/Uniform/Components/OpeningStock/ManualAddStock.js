@@ -4,7 +4,7 @@ import CreatableSelect from "react-select/creatable";
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-import { useAddLegacyStockMutation } from "../../../redux/uniformService/LegacyStockService";
+import { useAddOpeningStockMutation } from "../../../redux/services/StockService";
 import { getCommonParams, getStockMaintenanceConfig } from "../../../Utils/helper";
 import { toast } from "react-toastify";
 import { FiPlus, FiTrash, FiSave, FiSettings } from "react-icons/fi";
@@ -29,6 +29,10 @@ import TransactionLineItemsSection, {
   transactionTableNumberInputClassName,
   transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
+import {
+  createOpeningStockRowDefaults,
+  getOpeningStockFieldDefinitions,
+} from "./openingStockSchema";
 
 const ManualAddStock = ({ params }) => {
   const { branchId, companyId, finYearId, userId } = getCommonParams();
@@ -59,36 +63,35 @@ const ManualAddStock = ({ params }) => {
   const branchOptionsList = branchList?.data?.map((b) => ({ value: b.id, label: b.branchName })) || [];
   const locationOptionsList = locationList?.data?.map((l) => ({ value: l.id, label: l.storeName })) || [];
   const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
-  const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
+  const stockReportControl = stockReportControlData?.data?.[0];
+  const stockMaintenance = getStockMaintenanceConfig(stockReportControl);
+  const openingStockFields = React.useMemo(
+    () => getOpeningStockFieldDefinitions(stockReportControl),
+    [stockReportControl]
+  );
 
   React.useEffect(() => {
     if (branchId) setSelectedBranchId(branchId);
   }, [branchId]);
 
-  const [addStock] = useAddLegacyStockMutation();
+  const [addStock] = useAddOpeningStockMutation();
+
+  const createManualRow = React.useCallback(() => {
+    const pcsId = uomList?.data?.find((u) => u.name?.toUpperCase() === "PCS")?.id || "";
+    return {
+      id: Date.now(),
+      ...createOpeningStockRowDefaults(openingStockFields),
+      uomId: pcsId,
+      uom: pcsId ? "PCS" : "",
+    };
+  }, [openingStockFields, uomList]);
 
 
   React.useEffect(() => {
     if (uomList?.data && rows.length === 0) {
-      const pcsId = uomList?.data?.find(u => u.name?.toUpperCase() === 'PCS')?.id || "";
-      setRows([
-        {
-          id: Date.now(),
-          itemId: "",
-          item_name: "",
-          sizeId: "",
-          size: "",
-          colorId: "",
-          color: "",
-          qty: 0,
-          barcode: "",
-          uomId: pcsId,
-          uom: pcsId ? "PCS" : "",
-          price: ""
-        },
-      ]);
+      setRows([createManualRow()]);
     }
-  }, [uomList]);
+  }, [createManualRow, rows.length, uomList]);
 
   // --- Options Mapping ---
   const itemOptions = itemList?.data?.map((i) => ({ value: i.id, label: i.name })) || [];
@@ -98,8 +101,7 @@ const ManualAddStock = ({ params }) => {
 
   // --- Row Logic ---
   const addRow = () => {
-    const pcsId = uomList?.data?.find(u => u.name?.toUpperCase() === 'PCS')?.id || "";
-    setRows([...rows, { id: Date.now(), itemId: "", item_name: "", sizeId: "", size: "", colorId: "", color: "", qty: 0, barcode: "", uomId: pcsId, uom: pcsId ? "PCS" : "", price: "" }]);
+    setRows([...rows, createManualRow()]);
   };
 
   const removeRow = (id) => {
@@ -153,18 +155,28 @@ const ManualAddStock = ({ params }) => {
     updateRow(modalState.color.rowId, "colorId", newColor.id, { color: newColor.name });
   };
 
+  const isManualFieldMissing = (row, field) => {
+    if (field.key === "item_name") return !row.itemId;
+    if (field.key === "size") return stockMaintenance.trackSize && !row.sizeId;
+    if (field.key === "color") return stockMaintenance.trackColor && !row.colorId;
+    if (field.key === "uom") return !row.uomId;
+    if (field.key === "qty") return !row.qty || Number(row.qty) <= 0;
+
+    return !row[field.key]?.toString().trim();
+  };
+
   // --- Save Logic (Batch Stock) ---
   const handleSaveStock = async () => {
     if (!selectedBranchId) { toast.warning("Please select a branch."); return; }
     if (!selectedLocationId) { toast.warning("Please select a location."); return; }
 
-    const valid = rows.every((r) => {
-      if (!r.itemId || !r.qty) return false;
-      if (stockMaintenance.trackSize && !r.sizeId) return false;
-      if (stockMaintenance.trackColor && !r.colorId) return false;
-      return true;
-    });
-    if (!valid) { toast.warning("Fill Item and Qty for all rows"); return; }
+    for (const field of openingStockFields.filter((entry) => entry.required)) {
+      const missingRowIndex = rows.findIndex((row) => isManualFieldMissing(row, field));
+      if (missingRowIndex !== -1) {
+        toast.warning(`${field.label} is required at row ${missingRowIndex + 1}`);
+        return;
+      }
+    }
     if (!window.confirm("Save stock?")) return;
     try {
       const payload = {
@@ -176,7 +188,7 @@ const ManualAddStock = ({ params }) => {
 
       if (resp.statusCode === 0) {
         Swal.fire({ icon: "success", title: "Saved", timer: 1500, showConfirmButton: false });
-        setRows([{ id: Date.now(), itemId: "", item_name: "", sizeId: "", size: "", colorId: "", color: "", qty: 0, barcode: "", price: "" }]);
+        setRows([createManualRow()]);
       }
     } catch (e) { toast.error("Save failed"); }
   };
@@ -200,7 +212,7 @@ const ManualAddStock = ({ params }) => {
             <button
               onClick={() => {
                 if (window.confirm("Clear all rows?")) {
-                  setRows([{ id: Date.now(), itemId: "", item_name: "", sizeId: "", size: "", colorId: "", color: "", qty: 0, barcode: "", price: "" }]);
+                  setRows([createManualRow()]);
                 }
               }}
               className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm flex items-center gap-1 border border-gray-300 hover:bg-gray-200"
@@ -248,13 +260,11 @@ const ManualAddStock = ({ params }) => {
           <thead className={transactionTableHeadClassName}>
             <tr>
               <th className={`${transactionTableHeaderCellClassName} w-12`}>S.No</th>
-              <th className={`${transactionTableHeaderCellClassName} w-64`}>Item Name</th>
-              {stockMaintenance.trackSize && <th className={`${transactionTableHeaderCellClassName} w-32`}>Size</th>}
-              {stockMaintenance.trackColor && <th className={`${transactionTableHeaderCellClassName} w-32`}>Color</th>}
-              <th className={`${transactionTableHeaderCellClassName} w-32`}>UOM</th>
-              <th className={`${transactionTableHeaderCellClassName} w-40`}>Barcode</th>
-              <th className={`${transactionTableHeaderCellClassName} w-40`}>Price</th>
-              <th className={`${transactionTableHeaderCellClassName} w-24`}>Qty</th>
+              {openingStockFields.map((field) => (
+                <th key={field.key} className={`${transactionTableHeaderCellClassName} ${field.widthClass || ""}`}>
+                  {field.label}
+                </th>
+              ))}
               <th className={`${transactionTableHeaderCellClassName} w-16`}>Action</th>
             </tr>
           </thead>
@@ -270,78 +280,112 @@ const ManualAddStock = ({ params }) => {
               return (
                 <tr key={row.id} className="border border-blue-gray-200">
                   <td className={transactionTableIndexCellClassName}>{idx + 1}</td>
-                  <td className={transactionTableFocusCellClassName}>
-                    <div className="flex items-center gap-1">
-                      <div className="flex-1 uppercase">
-                        <CreatableSelect isClearable placeholder="Item..." options={itemOptions} value={itemOptions.find(o => o.value === row.itemId)} styles={customSelectStyles}
-                          onChange={o => {
-                            const selectedItem = itemList?.data?.find(i => i.id === (o?.value || ""));
-                            updateRow(row.id, "itemId", o?.value || "", {
-                              item_name: o?.label || "",
-                              sizeId: "",
-                              size: "",
-                              colorId: "",
-                              color: "",
-                              price: getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod) === "STANDARD"
-                                ? selectedItem?.ItemPriceList?.[0]?.salesPrice || 0
-                                : ""
-                            });
-                          }}
-                          onInputChange={(v) => v.toUpperCase()}
-                          onCreateOption={v => openQuickAdd("item", v.toUpperCase(), row.id)}
-                          formatCreateLabel={(v) => `Create Item: "${v.toUpperCase()}"`} />
-                      </div>
-                      {row.itemId && (
-                        <button
-                          title="Manage Item"
-                          onClick={() => openQuickAdd("item", row.item_name, row.id, selectedItemData)}
-                          className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded border border-indigo-100"
-                        >
-                          <FiSettings className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                  {stockMaintenance.trackSize && (
-                    <td className={transactionTableFocusCellClassName}>
-                      <CreatableSelect
-                        isClearable
-                        placeholder="Size..."
-                        options={filteredSizeOptions}
-                        value={filteredSizeOptions.find(o => o.value === row.sizeId)}
-                        styles={customSelectStyles}
-                        onChange={o => updateRow(row.id, "sizeId", o?.value || "", { size: o?.label || "" })}
-                        onCreateOption={v => openQuickAdd("size", v.toUpperCase(), row.id)}
-                        formatCreateLabel={(v) => `Create Size: "${v.toUpperCase()}"`}
-                      />
-                    </td>
-                  )}
-                  {stockMaintenance.trackColor && (
-                    <td className={transactionTableFocusCellClassName}>
-                      <CreatableSelect
-                        isClearable
-                        placeholder="Color..."
-                        options={filteredColorOptions}
-                        value={filteredColorOptions.find(o => o.value === row.colorId)}
-                        styles={customSelectStyles}
-                        onChange={o => updateRow(row.id, "colorId", o?.value || "", { color: o?.label || "" })}
-                        onCreateOption={v => openQuickAdd("color", v.toUpperCase(), row.id)}
-                        formatCreateLabel={(v) => `Create Color: "${v.toUpperCase()}"`}
-                      />
-                    </td>
-                  )}
-                  <td className={transactionTableFocusCellClassName}>
-                    <Select isClearable placeholder="UOM..." options={uomOptions} value={uomOptions.find(o => o.value === row.uomId)} styles={customSelectStyles}
-                      onChange={o => updateRow(row.id, "uomId", o?.value || "", { uom: o?.label || "" })}
-                    />
-                  </td>
-                  <td className={transactionTableFocusCellClassName}>
-                    <input type="text" className={`${transactionTableSelectInputClassName} uppercase`} value={row.barcode} onChange={e => updateRow(row.id, "barcode", e.target.value)} />
-                  </td>
-                  <td className={transactionTableFocusCellClassName}><input type="number" className={transactionTableNumberInputClassName} value={row.price} onChange={e => updateRow(row.id, "price", parseInt(e.target.value) || 0)} />
-                  </td>
-                  <td className={transactionTableFocusCellClassName}><input type="number" className={transactionTableNumberInputClassName} value={row.qty} onChange={e => updateRow(row.id, "qty", parseInt(e.target.value) || 0)} />
-                  </td>
+                  {openingStockFields.map((field) => {
+                    if (field.key === "item_name") {
+                      return (
+                        <td key={field.key} className={transactionTableFocusCellClassName}>
+                          <div className="flex items-center gap-1">
+                            <div className="flex-1 uppercase">
+                              <CreatableSelect isClearable placeholder="Item..." options={itemOptions} value={itemOptions.find(o => o.value === row.itemId)} styles={customSelectStyles}
+                                onChange={o => {
+                                  const selectedItem = itemList?.data?.find(i => i.id === (o?.value || ""));
+                                  updateRow(row.id, "itemId", o?.value || "", {
+                                    item_name: o?.label || "",
+                                    sizeId: "",
+                                    size: "",
+                                    colorId: "",
+                                    color: "",
+                                    price: getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod) === "STANDARD"
+                                      ? selectedItem?.ItemPriceList?.[0]?.salesPrice || 0
+                                      : ""
+                                  });
+                                }}
+                                onInputChange={(v) => v.toUpperCase()}
+                                onCreateOption={v => openQuickAdd("item", v.toUpperCase(), row.id)}
+                                formatCreateLabel={(v) => `Create Item: "${v.toUpperCase()}"`} />
+                            </div>
+                            {row.itemId && (
+                              <button
+                                title="Manage Item"
+                                onClick={() => openQuickAdd("item", row.item_name, row.id, selectedItemData)}
+                                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded border border-indigo-100"
+                              >
+                                <FiSettings className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      );
+                    }
+
+                    if (field.key === "size") {
+                      return (
+                        <td key={field.key} className={transactionTableFocusCellClassName}>
+                          <CreatableSelect
+                            isClearable
+                            placeholder="Size..."
+                            options={filteredSizeOptions}
+                            value={filteredSizeOptions.find(o => o.value === row.sizeId)}
+                            styles={customSelectStyles}
+                            onChange={o => updateRow(row.id, "sizeId", o?.value || "", { size: o?.label || "" })}
+                            onCreateOption={v => openQuickAdd("size", v.toUpperCase(), row.id)}
+                            formatCreateLabel={(v) => `Create Size: "${v.toUpperCase()}"`}
+                          />
+                        </td>
+                      );
+                    }
+
+                    if (field.key === "color") {
+                      return (
+                        <td key={field.key} className={transactionTableFocusCellClassName}>
+                          <CreatableSelect
+                            isClearable
+                            placeholder="Color..."
+                            options={filteredColorOptions}
+                            value={filteredColorOptions.find(o => o.value === row.colorId)}
+                            styles={customSelectStyles}
+                            onChange={o => updateRow(row.id, "colorId", o?.value || "", { color: o?.label || "" })}
+                            onCreateOption={v => openQuickAdd("color", v.toUpperCase(), row.id)}
+                            formatCreateLabel={(v) => `Create Color: "${v.toUpperCase()}"`}
+                          />
+                        </td>
+                      );
+                    }
+
+                    if (field.key === "uom") {
+                      return (
+                        <td key={field.key} className={transactionTableFocusCellClassName}>
+                          <Select isClearable placeholder="UOM..." options={uomOptions} value={uomOptions.find(o => o.value === row.uomId)} styles={customSelectStyles}
+                            onChange={o => updateRow(row.id, "uomId", o?.value || "", { uom: o?.label || "" })}
+                          />
+                        </td>
+                      );
+                    }
+
+                    if (field.key === "price" || field.key === "qty") {
+                      return (
+                        <td key={field.key} className={transactionTableFocusCellClassName}>
+                          <input
+                            type="number"
+                            className={transactionTableNumberInputClassName}
+                            value={row[field.key]}
+                            onChange={e => updateRow(row.id, field.key, e.target.value)}
+                          />
+                        </td>
+                      );
+                    }
+
+                    return (
+                      <td key={field.key} className={transactionTableFocusCellClassName}>
+                        <input
+                          type="text"
+                          className={transactionTableSelectInputClassName}
+                          value={row[field.key] || ""}
+                          onChange={e => updateRow(row.id, field.key, e.target.value)}
+                        />
+                      </td>
+                    );
+                  })}
                   <td className={transactionTableActionCellClassName}>
                     <button onClick={() => removeRow(row.id)} className={`${transactionTableActionButtonClassName} text-red-500 hover:text-red-700`}><FiTrash />
                     </button>

@@ -26,12 +26,13 @@ The Item Master SHALL render its pricing and barcode entry UI from the centraliz
 - **THEN** the screen does not use `barcodeGenerationMethod` as the source of truth for field visibility
 
 ### Requirement: Inventory workflows use centralized barcode generation mode
-Workflows that depend on canonical item barcode definitions, item variant associations, or barcode row shape SHALL use the centralized `barcodeGenerationMethod` instead of item-level `priceMethod` data. Stock-entry visibility and required dimensions SHALL be governed by stock-maintenance controls, while opening-stock hydration MAY use the centralized mode only to determine which item size or item size-color associations must exist for the resolved item.
+Workflows that depend on canonical item barcode definitions or barcode row shape SHALL use the centralized `barcodeGenerationMethod` instead of item-level `priceMethod` data. Stock-entry visibility and required dimensions SHALL be governed by stock-maintenance controls. Opening-stock hydration MAY use the centralized mode to understand which core variant fields are relevant for item enrichment, but SHALL NOT create downstream sellable-association data from stock capture alone.
 
-#### Scenario: Opening stock uses centralized mode for association hydration only
+#### Scenario: Opening stock uses centralized mode for core-field hydration only
 - **WHEN** a user resolves an item in opening stock
-- **THEN** the system may use the centralized `barcodeGenerationMethod` to determine whether the item requires size or size-color associations
+- **THEN** the system may use the centralized `barcodeGenerationMethod` to determine whether `size` or `color` are relevant core item fields for that item
 - **AND** it does not use that mode to decide whether the opening-stock UI shows size or color columns
+- **AND** it does not create sellable size or size-color associations from stock capture alone
 
 #### Scenario: Stock adjustment uses stock-maintenance controls for dimensions
 - **WHEN** a user captures a stock adjustment row

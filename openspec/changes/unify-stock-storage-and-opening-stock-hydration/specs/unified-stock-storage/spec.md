@@ -19,7 +19,7 @@ The system SHALL persist all new operational stock movements in the `stock` tabl
 - **AND** does not split the transfer between `stock` and `legacyStock`
 
 ### Requirement: Unified stock lookups SHALL resolve from stock table snapshots
-Barcode-assisted and stock-query workflows SHALL use stock rows in the `stock` table as the operational inventory snapshot. The system MAY read `legacyStock` only during migration cutover, but the steady-state lookup contract SHALL be based on `stock`.
+Barcode-assisted and stock-query workflows SHALL use stock rows in the `stock` table as the operational inventory snapshot. The system MAY read `legacyStock` only during migration cutover, but the steady-state lookup contract SHALL be based on `stock`. These stock snapshot lookup rules apply to stock-assisted workflows and SHALL NOT redefine sellable catalog options on catalog-driven sales screens.
 
 #### Scenario: Barcode lookup returns stock row snapshot
 - **WHEN** a user scans or enters a barcode for a stock-assisted workflow
@@ -30,6 +30,19 @@ Barcode-assisted and stock-query workflows SHALL use stock rows in the `stock` t
 - **WHEN** the system is in the migration window before `legacyStock` is retired
 - **THEN** unified lookup may include migrated compatibility reads from `legacyStock`
 - **AND** the workflow still presents the result as a stock-row snapshot for downstream completion
+
+### Requirement: Legacy barcode handling SHALL remain compatibility-only
+Legacy or otherwise coarse barcodes SHALL be treated as compatibility lookup inputs for stock-assisted workflows. The system MUST NOT use them as canonical sellable-catalog definitions, and it MUST NOT rely on the current barcode-generation configuration to infer the semantic granularity of historical barcode values.
+
+#### Scenario: Historical barcode is scanned in a stock-assisted workflow
+- **WHEN** a user scans or enters a historical barcode whose original generation methodology may differ from the current app configuration
+- **THEN** the system treats that barcode as a compatibility lookup input for resolving a stock-row snapshot
+- **AND** does not assume the barcode encodes the same dimensions as the current canonical barcode-generation method
+
+#### Scenario: Legacy barcode granularity is coarser than current stock dimensions
+- **WHEN** a historical barcode resolves only part of the stock-row identity needed by the current workflow
+- **THEN** the system may prefill the dimensions it can resolve
+- **AND** requires the user to complete any remaining required dimensions instead of treating the barcode as a canonical full-variant identifier
 
 ### Requirement: Legacy stock SHALL be retired as an active runtime boundary
 The system SHALL phase out `legacyStock` as a location-based runtime routing mechanism and SHALL remove active dependency on location names such as `old` or `warehouse` to choose the stock table.

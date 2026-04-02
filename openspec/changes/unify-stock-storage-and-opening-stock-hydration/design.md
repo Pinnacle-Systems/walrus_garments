@@ -2,7 +2,11 @@
 
 The current stock model splits operational inventory across `stock` and `legacyStock`, with runtime routing based on location names such as `old`. That split no longer reflects actual behavior because stock transfer already allows legacy-style and new-style stock rows to coexist in the main `stock` table. At the same time, opening stock, stock adjustment, and related stock-entry flows currently use item barcode-generation semantics to influence row behavior even though stock-entry visibility and required dimensions should be controlled by stock-maintenance settings.
 
-Opening stock is also evolving from a pure import screen into a stock-row hydration surface. Users need to resolve stock rows against existing items when possible, create missing item/size/color master records when needed, and link size/color associations that match current barcode-generation semantics, while intentionally avoiding canonical barcode-definition or price-list hydration. The approved core item fields for this hydration flow are `item name` and the structural variant fields required by the effective barcode-generation mode: `size` for `SIZE`, `size` and `color` for `SIZE_COLOR`, and neither `size` nor `color` for `STANDARD`.
+Opening stock is also evolving from a pure import screen into a stock-row hydration surface. Users need to resolve stock rows against existing items when possible and create missing item/size/color master records when needed, while intentionally avoiding canonical barcode-definition or price-list hydration. The approved core item fields for this hydration flow are `item name` and the structural variant fields required by the effective barcode-generation mode: `size` for `SIZE`, `size` and `color` for `SIZE_COLOR`, and neither `size` nor `color` for `STANDARD`.
+
+This change governs stock-writing and stock-assisted workflows. Pre-fulfillment sales-document shape is governed separately by the catalog-driven sales authority model.
+
+Within stock-writing flows, Purchase Inward and Opening Stock serve different intake roles. Purchase Inward is the normal operational path for new stock that follows the current item-master and canonical barcode-generation rules, and it is the path where new canonical barcodes are printed for inwarded stock. Opening Stock is the transition and compatibility path for bringing pre-existing stock into the unified model, including legacy or otherwise coarse barcode labels that may not encode the same granularity as new canonical barcodes.
 
 ## Goals / Non-Goals
 
@@ -11,7 +15,7 @@ Opening stock is also evolving from a pure import screen into a stock-row hydrat
 - Remove location-name-driven legacy routing from runtime stock behavior.
 - Use stock-maintenance settings as the only source of truth for stock-entry field visibility and required dimensions.
 - Keep item control-panel barcode-generation settings focused on new barcode definitions and item variant structure.
-- Support opening-stock hydration of core item fields, missing size/color masters, and size/color associations needed to save valid stock rows.
+- Support opening-stock hydration of core item fields and missing size/color masters needed to save valid stock rows.
 - Allow barcode-assisted workflows to prefill known stock dimensions and prompt users for missing required dimensions when stock maintenance is more granular than barcode resolution.
 
 **Non-Goals:**
@@ -45,21 +49,40 @@ Alternative considered:
 ### Treat barcode lookup as stock-row prefill, not generation detection
 Barcode-assisted flows SHALL first try to resolve a usable stock-row snapshot and then prompt for any dimensions still required by stock-maintenance settings. The system does not need to classify a barcode as legacy or new as a first-class concept during runtime if it can resolve the row and complete missing dimensions.
 
+Legacy or otherwise coarse barcodes SHALL be treated as compatibility lookup inputs for stock-assisted workflows rather than as canonical item-variant definitions. The system SHALL NOT rely on the current app-wide `barcodeGenerationMethod` to infer how a historical barcode was generated or what granularity it encoded.
+
+Opening-stock validation SHALL NOT enforce a one-barcode-per-combination uniqueness rule when imported stock rows represent legacy or otherwise coarse barcode values that are less specific than current stock-maintenance settings.
+
 Why:
 - Operational workflows care about obtaining a valid stock row, not about lineage.
 - This keeps the transition model simple and avoids adding legacy barcode options to item settings.
+- Historical barcodes can follow mixed or unknown conventions, so inference from today's configured generation method is not trustworthy enough to act as a catalog-definition rule.
 
 Alternative considered:
 - Persist explicit provenance or barcode-generation markers on every stock row. Rejected for now because the business concern is compatibility, not audit provenance.
+- Infer the semantic granularity of every historical barcode from the current barcode-generation setting. Rejected because global configuration is forward-looking and cannot safely reverse-engineer mixed historical barcode conventions.
 
-### Limit opening-stock hydration to structural master data
-Opening stock SHALL be allowed to hydrate only `item name` and the structural variant fields required by the effective barcode-generation mode. It may create missing size and color master records and create item size/color associations required by the configured barcode-generation semantics. It SHALL NOT create or mutate canonical barcode definitions or item price-list rows.
+### Limit opening-stock hydration to core item fields and standalone masters
+Opening stock SHALL be allowed to hydrate only `item name` and the structural variant fields required by the effective barcode-generation mode. It may create missing size and color master records. It SHALL NOT create or mutate canonical barcode definitions, item price-list rows, or association data that is currently encoded through `ItemPriceList`.
 
 Why:
 - This gives users a practical one-screen way to resolve imported stock while avoiding unintended commercial master-data changes.
+- In the current data model, size and color availability for downstream sales screens is derived from `ItemPriceList`, so auto-creating associations would immediately behave like adding sellable catalog variants.
 
 Alternative considered:
 - Allow opening stock to fully hydrate item price/barcode definitions. Rejected because imported stock rows are transitional and should not silently become canonical future barcode or pricing policy.
+- Auto-create item size or item size-color associations from opening stock. Rejected for now because the system currently models those associations through `ItemPriceList`, which would cross the boundary from structural stock capture into sellable commercial option creation.
+
+### Distinguish legacy-stock intake from new-stock intake
+Opening stock SHALL remain the compatibility intake path for pre-existing stock, including stock identified by historical or coarse barcode labels. Purchase Inward SHALL remain the normal intake path for newly received stock that follows current item-master and canonical barcode-generation behavior, including the printing of new canonical barcode labels.
+
+Why:
+- The system needs one path that can absorb historical stock without forcing it into current canonical barcode semantics.
+- The system also needs a clean operational inward path for new stock that does follow current item-master structure and is eligible for canonical barcode printing.
+
+Alternative considered:
+- Treat Opening Stock and Purchase Inward as interchangeable stock-intake surfaces. Rejected because the transition workflow for legacy stock has different barcode and hydration requirements than routine inwarding of new stock.
+- Allow Purchase Inward to accept historical or coarse legacy barcode stock while also acting as the canonical barcode-printing path. Rejected because it would blur compatibility onboarding with the workflow that formalizes new stock under the current barcode regime.
 
 ### Use batch review for bulk opening-stock hydration
 Bulk opening-stock import SHALL collect all missing items, sizes, and colors first, present them in a review step, and create them only after a single user confirmation for the batch. The import flow SHALL NOT force row-by-row intervention for each missing master record.
@@ -115,7 +138,7 @@ Alternative considered:
 
 1. Add runtime support for unified stock reads and writes against `stock` only, while keeping compatibility reads from `legacyStock`.
 2. Update stock-entry behavior so visibility and required dimensions come from stock-maintenance controls, not item barcode-generation mode.
-3. Implement opening-stock hydration for item, size, color, and required size/color associations.
+3. Implement opening-stock hydration for item, size, and color master resolution only.
 4. Change opening stock, stock adjustment, and stock transfer to write only to `stock`.
 5. Backfill active `legacyStock` rows into `stock` and verify report and lookup parity.
 6. Remove `legacyStock` reads from application flows and retire location-name-based legacy routing.

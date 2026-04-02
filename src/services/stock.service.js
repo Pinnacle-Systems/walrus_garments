@@ -420,6 +420,36 @@ async function create(body) {
     return { statusCode: 0, data };
 }
 
+export async function createOpeningStock(body) {
+    const { stockItems = [], storeId, branchId } = body;
+
+    let data;
+
+    await prisma.$transaction(async (tx) => {
+        const formattedData = stockItems.map((item) => ({
+            inOrOut: "OpeningStock",
+            itemId: item?.itemId ? parseInt(item.itemId) : undefined,
+            sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
+            colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+            uomId: item?.uomId ? parseInt(item.uomId) : undefined,
+            price: item?.price ? parseFloat(item.price) : undefined,
+            qty: item?.qty ? parseFloat(item.qty) : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
+            storeId: storeId ? parseInt(storeId) : undefined,
+            barcode: item?.barcode_no ? String(item.barcode_no) : item?.barcode ? String(item.barcode) : undefined,
+            field6: item?.field6 ? String(item.field6) : undefined,
+            field7: item?.field7 ? String(item.field7) : undefined,
+            field8: item?.field8 ? String(item.field8) : undefined,
+            field9: item?.field9 ? String(item.field9) : undefined,
+            field10: item?.field10 ? String(item.field10) : undefined,
+        }));
+
+        data = await tx.stock.createMany({ data: formattedData });
+    });
+
+    return { statusCode: 0, data };
+}
+
 async function update(id, body) {
     const { aliasName, accessoryItemId, hsn, accessoryCategory, active, companyId } = await body
     const dataFound = await prisma.stock.findUnique({
@@ -1018,7 +1048,6 @@ export {
     update,
     remove,
 }
-
 
 
 

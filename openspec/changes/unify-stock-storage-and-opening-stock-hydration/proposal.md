@@ -7,8 +7,10 @@ Stock behavior is currently split across `stock` and `legacyStock`, while operat
 - Consolidate operational inventory handling around a single `stock` table and phase out `legacyStock` as an active runtime dependency.
 - Clarify that item-master barcode-generation settings apply only to new barcode definitions and item variant structure, not to stock-entry column visibility.
 - Drive stock-entry field visibility from stock-maintenance controls so stock can be captured at item, item+size, or item+size+color granularity independent of barcode behavior.
-- Add opening-stock hydration flows that can resolve or create core item data, create missing size/color master records, and link required size/color associations without hydrating barcode definitions or price lists.
+- Clarify that Purchase Inward is the operational intake path for newly barcoded stock, while Opening Stock is the compatibility intake path for legacy or coarse-barcode stock brought into the unified stock model.
+- Add opening-stock hydration flows that can resolve or create core item data and create missing size/color master records without hydrating barcode definitions, price lists, or sellable variant associations.
 - Update stock-entry and barcode-assisted workflows so barcode lookup can prefill a stock row snapshot, then prompt for missing dimensions when stock-maintenance rules require more detail than the barcode provides.
+- Clarify that legacy or coarse barcodes are compatibility lookup inputs for stock-assisted workflows only, and are not treated as canonical sellable-catalog definitions.
 
 ## Capabilities
 
