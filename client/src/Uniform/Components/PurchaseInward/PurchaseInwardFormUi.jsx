@@ -471,7 +471,7 @@ const PurchaseInwardForm = ({
                   id
                     ? storeOptions
                     : storeOptions?.filter(
-                      (item) => item.storeName.includes("NEW") && item.active,
+                      (item) => item.storeName.includes("WAREHOUSE") && item.active,
                     ),
                   "storeName",
                   "id",

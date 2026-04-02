@@ -207,9 +207,10 @@ async function getOne(id) {
                         qty: true
                     }
                 });
+                console.log(stockResult, "stockResult", stockResult._sum.qty + item?.transferQty)
                 return {
                     ...item,
-                    stockQty: stockResult._sum.qty + item?.qty || 0
+                    stockQty: stockResult._sum.qty + item?.transferQty
                 };
             })
         );
@@ -437,6 +438,7 @@ async function createLocationTransferStock(
         barcode: item?.barcode ? String(item.barcode) : null,
         branchId: branchId ? Number(branchId) : null,
         price: item?.discountPrice ? String(item?.discountPrice) : undefined,
+        transactionId: transactionId ? transactionId : null,
     };
 
     // ================= FROM (OUTWARD) =================
@@ -537,7 +539,7 @@ async function createStocktransferItems(
 async function create(req) {
 
     const { userId, branchId, fromOrderId, toLocationId, fromLocationId, finYearId, draftSave, toCustomerId,
-        storeId, stockItems, } = req.body
+        storeId, stockItems, deliveryChallanNo } = req.body
 
 
     let inOrOut = "StockTransfer"
@@ -557,6 +559,7 @@ async function create(req) {
                 docId,
                 fromLocationId: fromLocationId ? parseInt(fromLocationId) : undefined,
                 toLocationId: toLocationId ? parseInt(toLocationId) : undefined,
+                deliveryChallanNo: deliveryChallanNo ? deliveryChallanNo : undefined,
 
             },
         });
@@ -572,6 +575,8 @@ async function create(req) {
 
 async function UpdateFromLocationStock(tx, item, transactionId, storeId) {
     const isLegacy = await isLegacyLocation(tx, storeId);
+
+    console.log(item, "item for update", isLegacy, "transactionId", transactionId)
 
     const updateData = {
         qty: item?.transferQty ? parseFloat(0 - item?.transferQty) : undefined,
@@ -603,23 +608,23 @@ async function UpdateToLocationStock(tx, item, transactionId, storeId) {
         qty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
     };
 
-    if (isLegacy) {
-        await tx.legacyStock.updateMany({
-            where: {
-                transactionId: parseInt(transactionId),
-                inOrOut: "ToLocationTransferItems"
-            },
-            data: updateData
-        });
-    } else {
-        await tx.stock.updateMany({
-            where: {
-                transactionId: parseInt(transactionId),
-                inOrOut: "ToLocationTransferItems"
-            },
-            data: updateData
-        });
-    }
+    // if (isLegacy) {
+    //     await tx.legacyStock.updateMany({
+    //         where: {
+    //             transactionId: parseInt(transactionId),
+    //             inOrOut: "ToLocationTransferItems"
+    //         },
+    //         data: updateData
+    //     });
+    // } else {
+    await tx.stock.updateMany({
+        where: {
+            transactionId: parseInt(transactionId),
+            inOrOut: "ToLocationTransferItems"
+        },
+        data: updateData
+    });
+    // }
 }
 
 async function updateOrCreateFrom(tx, item, fromLocationId, branchId) {
@@ -678,13 +683,13 @@ async function updatToLocationTransferItemsItems(tx, stockItems, toLocationId, b
 }
 
 const update = async (id, body) => {
-    const { branchId, poType, storeId, orderItems, stockItems, toLocationId, fromLocationId,
+    const { branchId, poType, storeId, orderItems, stockItems, toLocationId, fromLocationId, deliveryChallanNo
     } = body;
 
 
 
 
-    const dataFound = await prisma.StockTransfer.findUnique({ where: { id: parseInt(id) } });
+    const dataFound = await prisma.stockTransfer.findUnique({ where: { id: parseInt(id) } });
 
     if (!dataFound) return { statusCode: 404, message: "No record found for StockTransfer" };
 
@@ -692,22 +697,30 @@ const update = async (id, body) => {
 
     let data;
 
+    const updateData = {};
+    if (deliveryChallanNo !== undefined) {
+        updateData.deliveryChallanNo = deliveryChallanNo;
+    }
     await prisma.$transaction(async (tx) => {
-        data = await tx.StockTransfer.update({
+        data = await tx.stockTransfer.update({
             where: {
                 id: parseInt(id),
-
             },
-
-
+            data: updateData,
 
         });
 
+
+        console.log(data, "data for update")
+
         await updatFromLocationTransferItemsItems(tx, stockItems, fromLocationId, branchId)
 
-        await updatToLocationTransferItemsItems(tx, stockItems, toLocationId, branchId)
+        // await updatToLocationTransferItemsItems(tx, stockItems, toLocationId, branchId)
 
     });
+
+
+
 
     return { statusCode: 0, data };
 };

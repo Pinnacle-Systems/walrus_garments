@@ -418,7 +418,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                 setValue={(value) => { setLocationId(value); setStoreId("") }}
                                 required={true} readOnly={id || readOnly} />
                             <DropdownInput name="Location"
-                                options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item?.storeName == "NEW WAREHOUSE"), "storeName", "id")}
+                                options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item.storeName.includes("WAREHOUSE")), "storeName", "id")}
                                 value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
 
                         </TransactionHeaderSection>

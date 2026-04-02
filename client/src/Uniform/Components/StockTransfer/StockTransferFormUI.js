@@ -147,7 +147,7 @@ const StockTransferForm = ({
         toLocationId,
         fromLocationId,
         branchId,
-
+        deliveryChallanNo
 
     }
 
@@ -165,12 +165,14 @@ const StockTransferForm = ({
             setFromLocationId(data?.fromLocationId ? data?.fromLocationId : "")
             setToLocationId(data?.toLocationId ? data?.toLocationId : "")
             setStockItems(data?.FromLocationTransferItems ? data?.FromLocationTransferItems : [])
+            setDeliveryChallanNo(data?.deliveryChallanNo ? data?.deliveryChallanNo : "")
 
         } else {
 
             setFromLocationId(data?.fromLocationId ? data?.fromLocationId : "")
             setToLocationId(data?.toLocationId ? data?.toLocationId : "")
             setStockItems(data?.ToLocationTransferTtems ? data?.ToLocationTransferTtems : [])
+            setDeliveryChallanNo(data?.deliveryChallanNo ? data?.deliveryChallanNo : "")
 
         }
 
@@ -257,7 +259,7 @@ const StockTransferForm = ({
 
 
     const validateData = (data) => {
-        if (data?.fromLocationId && data?.toLocationId) {
+        if (data?.fromLocationId && data?.toLocationId && data?.deliveryChallanNo) {
             return true;
         }
 

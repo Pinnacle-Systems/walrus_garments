@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
 import { Check, Power } from "lucide-react";
-import { ReusableTable, TextInputNew1, ToggleButton } from "../../Inputs";
+import { childRecordCountTotal, ReusableTable, TextInputNew1, ToggleButton } from "../../Inputs";
 import Modal from "../../UiComponents/Modal";
 import { statusDropdown } from "../../Utils/DropdownData";
 import { useAddItemCategoryMutation, useDeleteItemCategoryMutation, useGetItemCategoryByIdQuery, useGetItemCategoryQuery, useUpdateItemCategoryMutation } from "../../redux/uniformService/ItemCategoryMasterService";
@@ -17,8 +17,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const [name, setName] = useState("");
     const [active, setActive] = useState(true);
     const [searchValue, setSearchValue] = useState("");
+    const [childRecord, setChildRecord] = useState("")
 
-    const childRecord = useRef(0);
     const formRef = useRef(null);
 
     const params = {
@@ -43,11 +43,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         if (!id) {
             setName("");
             setActive(true);
-            childRecord.current = 0;
+            setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
         } else {
             setName(data?.name || "");
             setActive(id ? (data?.active ?? false) : true);
-            childRecord.current = data?.childRecord ?? 0;
+            setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
         }
     }, [id]);
 
@@ -216,7 +216,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 setValue={setName}
                                 required={true}
                                 readOnly={readOnly}
-                                disabled={childRecord.current > 0}
+                                disabled={childRecord > 0}
                                 ref={nameRef}
                             />
 

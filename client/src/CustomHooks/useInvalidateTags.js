@@ -86,6 +86,15 @@ const useInvalidateTags = () => {
             type: `priceTemplate/invalidateTags`,
             payload: ["priceTemplate"],
         },
+        {
+            type: `ItemCategoryMaster/invalidateTags`,
+            payload: ["ItemCategoryMaster"],
+        }, {
+            type: `SubCategoryMaster/invalidateTags`,
+            payload: ["SubCategoryMaster"],
+        },
+
+
 
 
         {

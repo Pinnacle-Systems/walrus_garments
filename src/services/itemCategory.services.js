@@ -39,18 +39,23 @@ async function get(req) {
 
 
 async function getOne(id) {
-    const childRecord = await prisma.item.count({ where: { mainCategoryId: parseInt(id) } });
 
     const data = await prisma.itemCategory.findUnique({
         where: {
             id: parseInt(id)
         },
         include: {
+            _count: {
+                select: {
+                    MainCategory: true,
+                    SubCategory: true
+                }
+            },
             SubCategory: true
         }
     })
     if (!data) return NoRecordFound("Country");
-    return { statusCode: 0, data: { ...data, childRecord } };
+    return { statusCode: 0, data: { ...data } };
 }
 
 async function getSearch(req) {
