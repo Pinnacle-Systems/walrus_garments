@@ -25,6 +25,7 @@ import {
   ReusableTable,
   TextInputNew1,
   childRecordCount,
+  childRecordCountTotal,
 } from "../../../Inputs";
 import CityMaster from "../CityMaster";
 import BranchTypeMaster from "../../../Uniform/Components/BranchTypeMaster";
@@ -142,15 +143,14 @@ export default function Form({ partyId, show, openModelForAddress }) {
   const [department, setDepartment] = useState("")
   const [contactId, setContactId] = useState("")
   const [contactPersonEmail, setContactPersonEmail] = useState("")
+  const [childRecord, setChildRecord] = useState(0);
+
+  console.log(childRecord, 'childRecord')
 
 
 
 
 
-
-
-
-  const childRecord = useRef(0);
   const dispatch = useDispatch();
   const [country, setCountry] = useState("")
 
@@ -297,7 +297,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
       setMaterialActive(data?.materialActive ?? true);
       setProcessDetails(data?.processDetails || []);
       setAadharNo(data?.aadharNo || "");
-
+      setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
       setStep(1);
     },
 
@@ -518,10 +518,10 @@ export default function Form({ partyId, show, openModelForAddress }) {
       Swal.fire({
         icon: 'warning',
         title: `Please fill all required fields...!`,
-        showConfirmButton: false,
-        timer: 3000
+        didClose: () => {
+          nameRef.current?.focus();
+        }
       });
-      nameRef.current?.focus();
       return;
     }
 
@@ -529,6 +529,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
       Swal.fire({
         title: 'Please Select Customer or Supplier',
         icon: 'error',
+        didClose: () => {
+          nameRef.current?.focus();
+        }
       });
       return;
     }
@@ -537,6 +540,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
         icon: 'error',
         title: 'Required Field Missing',
         text: 'Please fill in at least one: GST, PAN, or Aadhar number.',
+        didClose: () => {
+          nameRef.current?.focus();
+        }
       });
       return false;
     }
@@ -546,6 +552,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
         icon: 'error',
         title: 'Invalid PAN Number',
         text: 'PAN must be 10 characters: 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F).',
+        didClose: () => {
+          nameRef.current?.focus();
+        }
       });
       return false;
     }
@@ -555,6 +564,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
         icon: 'error',
         title: 'Invalid Aadhar Number',
         text: 'Aadhar must be exactly 12 digits.',
+        didClose: () => {
+          nameRef.current?.focus();
+        }
       });
       return false;
     }
@@ -587,9 +599,11 @@ export default function Form({ partyId, show, openModelForAddress }) {
           icon: "warning",
           customClass: {
             popup: 'swal-custom-height'
+          },
+          didClose: () => {
+            nameRef.current?.focus();
           }
         });
-        nameRef.current?.focus();
         return false;
       }
     }
@@ -600,9 +614,11 @@ export default function Form({ partyId, show, openModelForAddress }) {
           icon: "warning",
           customClass: {
             popup: 'swal-custom-height'
+          },
+          didClose: () => {
+            nameRef.current?.focus();
           }
         });
-        nameRef.current?.focus();
         return false;
       }
     }
@@ -1784,7 +1800,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                             type="checkbox"
                             checked={isClient}
                             onChange={(e) => setClient(e.target.checked)}
-                            disabled={readOnly}
+                            disabled={childRecord > 0}
                           />
                           <label className="block text-xs font-bold text-gray-600">
                             Customer
@@ -1796,7 +1812,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
                             type="checkbox"
                             checked={isSupplier}
                             onChange={(e) => setSupplier(e.target.checked)}
-                            disabled={readOnly}
+                            disabled={childRecord > 0}
+
                           />
                           <label className="block text-xs font-bold text-gray-600">
                             Supplier
@@ -1814,7 +1831,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                               }
                               setIsBranch(e.target.checked)
                             }}
-                            disabled={readOnly}
+                            disabled={childRecord > 0}
                           />
                           <label className="block text-xs font-bold text-gray-600">
                             Add Branch
@@ -1830,9 +1847,18 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           options={dropDownListObject(
                             id
                               ? allData?.data?.filter(i => i.id != id && !i.parentId && i.gstNo)
-                              : allData?.data?.filter(
-                                (item) => item.active && item.id != id && !item.parentId && item.gstNo
-                              ),
+                              : allData?.data?.filter((item) =>
+                                item.active &&
+                                item.id !== id &&
+                                !item.parentId &&
+                                item.gstNo &&
+                                (
+                                  (isClient && isSupplier) ||
+                                  (isClient && item.isClient) ||
+                                  (isSupplier && item.isSupplier)
+                                )
+                              )
+                            ,
                             "name",
                             "id"
                           )}
@@ -1846,7 +1872,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           // setValue={setParentId}
                           readOnly={readOnly}
                           required={true}
-                          disabled={childRecord.current > 0 || !isBranch}
+                          disabled={childRecord > 0 || !isBranch}
                         />
 
 
@@ -1871,7 +1897,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           }}
                           required={true}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0 || !isBranch || !parentId}
+                          disabled={childRecord > 0 || !isBranch || !parentId}
                           addNewLabel="+ Add New Branch Type"
                           childComponent={BranchTypeMaster}
                           addNewModalWidth="w-[40%] h-[45%]"
@@ -1889,7 +1915,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                             setValue={setName}
                             required={true}
                             readOnly={readOnly}
-                            disabled={childRecord.current > 0}
+                            disabled={childRecord > 0}
                             onBlur={(e) => {
                               if (aliasName) return;
                               setAliasName(e.target.value);
@@ -1907,7 +1933,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                             inputClass="h-10" value={name}
                             setValue={setName} required={true}
                             readOnly={readOnly}
-                            disabled={(childRecord.current > 0)} />
+                            disabled={(childRecord > 0)} />
                         </div>
                       )}
 

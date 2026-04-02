@@ -3359,7 +3359,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       if (!partyList?.data) return;
 
       if (!search.trim()) {
-        setFilteredPages(partyList?.data?.filter(i => i[show]));
+        setFilteredPages(partyList?.data?.filter(i => i[show] && (i.gstNo || i.parentId)));
         return;
       }
 

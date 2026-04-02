@@ -581,7 +581,8 @@ model Party {
   mailId                     String?
   BranchType                 BranchType?                  @relation(fields: [branchTypeId], references: [id])
   branchTypeId               Int?
-  parentId                   String?
+  Parent                     Party?                       @relation("Parent", fields: [parentId], references: [id])
+  parentId                   Int?
   isB2B                      Boolean?                     @default(false)
   isB2C                      Boolean?                     @default(false)
   Pos                        Pos[]
@@ -644,6 +645,8 @@ model Party {
   SalesInvoice             SalesInvoice[]
   SalesReturn              SalesReturn[]
   Payment                  Payment[]
+
+  children Party[] @relation("Parent")
 }
 
 model PartyBranch {

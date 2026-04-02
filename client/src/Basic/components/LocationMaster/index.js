@@ -267,7 +267,7 @@ export default function Form() {
 
         {
             header: "Company/Branch - Location",
-            accessor: (item) => item?.Location?.company?.name + " -" + item?.storeName,
+            accessor: (item) => item?.Location?.branchName + " -" + item?.storeName,
             //   cellClass: () => "font-medium  text-gray-900",
             className: "font-medium text-gray-900 text-left uppercase w-72",
         },

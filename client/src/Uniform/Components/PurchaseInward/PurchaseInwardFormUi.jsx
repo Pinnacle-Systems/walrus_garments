@@ -99,8 +99,8 @@ const PurchaseInwardForm = ({
 
   const storeOptions = locationData
     ? locationData?.data?.filter(
-        (item) => parseInt(item.locationId) === parseInt(branchId),
-      )
+      (item) => parseInt(item.locationId) === parseInt(branchId),
+    )
     : [];
 
   const { data: itemPriceList } = useGetItemPriceListQuery({
@@ -315,10 +315,10 @@ const PurchaseInwardForm = ({
   const handleCloseContextMenu = () => setContextMenu(null);
 
   const summaryItems = [
-    { label: "No", value: docId },
-    { label: "Date", value: date },
-    { label: "Type", value: poInwardOrDirectInward },
-    { label: "Branch", value: branchName },
+    { label: "Purchase Inward No", value: docId },
+    { label: "Purchase Inward Date", value: date },
+    // { label: "Type", value: poInwardOrDirectInward },
+    // { label: "Branch", value: branchName },
     { label: "Location", value: locationName },
     { label: "Supplier", value: supplierName },
     { label: "DC No", value: dcNo },
@@ -449,12 +449,12 @@ const PurchaseInwardForm = ({
                 options={
                   branchList
                     ? dropDownListObject(
-                        id
-                          ? branchList?.data
-                          : branchList?.data?.filter((item) => item.active),
-                        "branchName",
-                        "id",
-                      )
+                      id
+                        ? branchList?.data
+                        : branchList?.data?.filter((item) => item.active),
+                      "branchName",
+                      "id",
+                    )
                     : []
                 }
                 value={branchId}
@@ -471,8 +471,8 @@ const PurchaseInwardForm = ({
                   id
                     ? storeOptions
                     : storeOptions?.filter(
-                        (item) => item.storeName.includes("NEW") && item.active,
-                      ),
+                      (item) => item.storeName.includes("NEW") && item.active,
+                    ),
                   "storeName",
                   "id",
                 )}
@@ -544,26 +544,26 @@ const PurchaseInwardForm = ({
             )}
             {(poInwardOrDirectInward === "PurchaseInward" ||
               poInwardOrDirectInward === "GeneralInward") && (
-              <YarnInwardPoItems
-                inwardItems={directInwardReturnItems}
-                setInwardItems={setDirectInwardReturnItems}
-                removeItem={removeItem}
-                transType={transType}
-                purchaseInwardId={id}
-                params={params}
-                supplierId={partyId}
-                readOnly={readOnly}
-                isSupplierOutside={isSupplierOutside()}
-                setInwardItemSelection={setInwardItemSelection}
-                id={id}
-                handleRightClick={handleRightClick}
-                contextMenu={contextMenu}
-                handleCloseContextMenu={handleCloseContextMenu}
-                yarnList={yarnList}
-                colorList={colorList}
-                uomList={uomList}
-              />
-            )}
+                <YarnInwardPoItems
+                  inwardItems={directInwardReturnItems}
+                  setInwardItems={setDirectInwardReturnItems}
+                  removeItem={removeItem}
+                  transType={transType}
+                  purchaseInwardId={id}
+                  params={params}
+                  supplierId={partyId}
+                  readOnly={readOnly}
+                  isSupplierOutside={isSupplierOutside()}
+                  setInwardItemSelection={setInwardItemSelection}
+                  id={id}
+                  handleRightClick={handleRightClick}
+                  contextMenu={contextMenu}
+                  handleCloseContextMenu={handleCloseContextMenu}
+                  yarnList={yarnList}
+                  colorList={colorList}
+                  uomList={uomList}
+                />
+              )}
           </fieldset>
         </div>
       </TransactionEntryShell>

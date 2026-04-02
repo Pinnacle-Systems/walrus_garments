@@ -199,7 +199,7 @@ const YarnPoItems = ({
     const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
     const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined }, });
 
-    const itemOptions = (itemList?.data || []).map((item) => ({
+    const itemOptions = (id ? itemList?.data : itemList?.data?.filter(i => i.active) || []).map((item) => ({
         value: item.id,
         label: item?.name || "",
     }));

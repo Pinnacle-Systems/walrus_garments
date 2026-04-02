@@ -20,7 +20,7 @@ async function get(req) {
             },
             Location: {
                 select: {
-                    company: true
+                    branchName: true
                 }
             }
         }

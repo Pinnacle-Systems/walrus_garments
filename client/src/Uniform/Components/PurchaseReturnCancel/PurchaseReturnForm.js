@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 import { toast } from "react-toastify";
-import { DropdownInput, DateInput, TextInput, ReusableSearchableInput, DateInputNew } from "../../../Inputs";
+import { DropdownInput, DateInput, TextInput, ReusableSearchableInput, DateInputNew, ReusableSearchableInputNewCustomerwithBranches } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
 // eslint-disable-next-line no-unused-vars
@@ -271,15 +271,15 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     let deliveryTo = deliveryType === "ToParty" ? deliveryToSupplier?.data : deliveryToBranch?.data;
 
     const summaryItems = [
-        { label: "No", value: docId },
-        { label: "Date", value: date },
-        { label: "Branch", value: branchList?.data?.find(item => String(item.id) === String(locationId))?.branchName },
+        { label: "Purchase Return No", value: docId },
+        { label: "Purchase Return Date", value: date },
+        // { label: "Branch", value: branchList?.data?.find(item => String(item.id) === String(locationId))?.branchName },
         { label: "Location", value: storeOptions?.find(item => String(item.id) === String(storeId))?.storeName },
         {
             label: "Supplier",
             value: supplierList?.data?.find(item => String(item.id) === String(supplierId))?.name
         },
-        { label: "Inward", value: purchaseInwardData?.data?.find(i => String(i.id) === String(purchaseInwardId))?.docId },
+        { label: "Purchase Inward No", value: purchaseInwardData?.data?.find(i => String(i.id) === String(purchaseInwardId))?.docId },
     ];
 
     const footerContent = (
@@ -427,7 +427,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                             <div className="col-span-3">
 
-                                <ReusableSearchableInput
+                                {/* <ReusableSearchableInput
                                     label="Supplier Id"
                                     component="PartyMaster"
                                     placeholder="Search Supplier Id..."
@@ -436,6 +436,17 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     searchTerm={supplierId}
                                     show={"isSupplier"}
                                     required={true}
+                                    disabled={id}
+                                /> */}
+                                <ReusableSearchableInputNewCustomerwithBranches
+                                    label="Supplier Name"
+                                    component="PartyMaster"
+                                    placeholder="Search Supplier Name..."
+                                    optionList={supplierList?.data}
+                                    setSearchTerm={(value) => setSupplierId(value)}
+                                    searchTerm={supplierId}
+                                    show="isSupplier"
+                                    required
                                     disabled={id}
                                 />
                             </div>

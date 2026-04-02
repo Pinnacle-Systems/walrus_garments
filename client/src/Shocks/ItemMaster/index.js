@@ -27,6 +27,7 @@ import { useGetSubCategoryQuery } from "../../redux/uniformService/SubCategoryMa
 import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
 import { SubCategoryMaster } from "..";
 
+
 const createStandardPriceRow = () => ({
   sizeId: null,
   colorId: null,
@@ -91,6 +92,8 @@ export default function Form() {
     saveCloseButtonRef,
     saveNewButtonRef,
   } = refs;
+
+
 
   const params = {
     companyId: secureLocalStorage.getItem(

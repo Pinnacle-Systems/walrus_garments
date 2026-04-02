@@ -37,7 +37,8 @@ async function get(req) {
                     Quotation: true,
                     Saleorder: true,
                     SalesDelivery: true,
-                    SalesReturn: true
+                    SalesReturn: true,
+                    children: true
 
                 }
             }
@@ -112,7 +113,10 @@ async function getOne(id) {
                     Quotation: true,
                     Saleorder: true,
                     SalesDelivery: true,
-                    SalesReturn: true
+                    SalesReturn: true,
+                    children: true
+
+
 
                 }
             }
@@ -123,9 +127,8 @@ async function getOne(id) {
         }
     })
     if (!data) return NoRecordFound("party");
-    const { _count, ...rest } = data;
 
-    return { statusCode: 0, data: { ...rest, childRecord: Object.values(_count) } };
+    return { statusCode: 0, data };
 }
 
 async function getSearch(req) {
@@ -274,7 +277,7 @@ async function create(body) {
                 contactPersonEmail: contactPersonEmail ? contactPersonEmail : null,
                 contactPersonNumber: contactNumber ? contactNumber : null,
                 branchTypeId: branchTypeId ? parseInt(branchTypeId) : undefined,
-                parentId: parentId ? parentId : "",
+                parentId: parentId ? parseInt(parentId) : undefined,
 
                 isB2C: isB2C ? JSON.parse(isB2C) : false,
                 isB2B: isB2B ? JSON.parse(isB2B) : false,
@@ -421,7 +424,7 @@ async function update(id, body) {
             data: {
                 isClient: isClient ? JSON.parse(isClient) : false,
                 isSupplier: isSupplier ? JSON.parse(isSupplier) : false,
-                parentId: parentId ? String(parentId) : null,
+                parentId: parentId ? parseInt(parentId) : undefined,
                 name,
                 aliasName,
                 code: partyCode,

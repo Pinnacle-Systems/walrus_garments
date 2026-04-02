@@ -440,7 +440,7 @@ async function update(id, body) {
                 hsnId: hsnId ? parseInt(hsnId) : undefined,
                 code: code ? code : undefined,
                 sectionId: sectionId ? parseInt(sectionId) : undefined,
-                active: active ? active : undefined,
+                active: active ? active : false,
                 mainCategoryId: mainCategory ? parseInt(mainCategory) : undefined,
                 subCategoryId: subCategory ? parseInt(subCategory) : undefined,
                 field1: fields?.[0] ?? "",
