@@ -55,7 +55,6 @@ import {
   SectionMasterApi,
   ItemControlPanelApi,
   QuotataionApi,
-  LegacyStockApi,
   saleOrderApi,
   ItemCategoryMasterApi,
   StockAdjustmentApi,
@@ -204,7 +203,6 @@ const commonReducers = {
   SectionMaster: SectionMasterApi.reducer,
   ItemControlPanel: ItemControlPanelApi.reducer,
   Quotation: QuotataionApi.reducer,
-  LegacyStock: LegacyStockApi.reducer,
   saleOrder: saleOrderApi.reducer,
   ItemCategoryMaster: ItemCategoryMasterApi.reducer,
   salesReturn: salesReturnApi.reducer,
@@ -331,7 +329,6 @@ AccessoryTemplateMasterApi.middleware,
 SectionMasterApi.middleware,
 ItemControlPanelApi.middleware,
 QuotataionApi.middleware,
-LegacyStockApi.middleware,
 saleOrderApi.middleware,
 ItemCategoryMasterApi.middleware,
 salesReturnApi.middleware,
@@ -358,5 +355,4 @@ const store = configureStore({
 });
 
 export default store;
-
 

@@ -18,15 +18,14 @@
 - [ ] 3.1 Extend opening-stock workflows to resolve or create missing items using only the approved core item fields: `item name` and the mode-dependent `size` / `color` fields.
 - [x] 3.2 Add opening-stock support for creating missing size master records and reusing them within the current hydration flow when the effective barcode-generation mode requires size.
 - [x] 3.3 Add opening-stock support for creating missing color master records and reusing them within the current hydration flow when the effective barcode-generation mode requires color.
-- [ ] 3.4 Implement item size and size-color association hydration driven by the effective centralized barcode-generation semantics.
-- [ ] 3.5 Ensure opening stock explicitly skips canonical barcode-definition hydration and item price-list hydration.
+- [ ] 3.4 Ensure opening stock explicitly skips canonical barcode-definition hydration, item price-list hydration, and sellable association hydration, and document why association hydration is deferred.
 - [x] 3.6 Add a bulk-import review step that summarizes missing item/size/color masters and creates them only after one batch confirmation.
 
 ## 4. Barcode-Assisted Flow Updates
 
 - [ ] 4.1 Update barcode lookup services and UI flows to treat barcode results as stock-row snapshots rather than legacy/new classification.
 - [ ] 4.2 Implement partial-resolution behavior that prompts users for missing size/color dimensions when stock maintenance requires more detail than barcode lookup provides.
-- [x] 4.3 Rework opening-stock import validation so barcode conflict rules align with unified stock-row behavior instead of hard-coded legacy item-size assumptions.
+- [x] 4.3 Rework opening-stock import validation so shared legacy or coarse barcodes are allowed across multiple stock combinations when stock maintenance is more granular than barcode resolution, instead of enforcing hard-coded barcode uniqueness assumptions.
 
 ## 5. Verification and Retirement
 

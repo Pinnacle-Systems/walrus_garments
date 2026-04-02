@@ -21,6 +21,9 @@
 - [x] 3.4 Persist source sale-order-line references on converted delivery items and derive remaining quantities from saved delivery history.
 - [x] 3.5 Update sale order reporting/conversion availability so partially delivered orders remain convertible until all line quantities are exhausted.
 - [x] 3.6 Enforce a conversion-time save rule that blocks sales delivery save when total received payment is less than the delivery net amount.
+- [ ] 3.7 Update delivery payment validation so repeated conversions use remaining payment capacity after prior saved deliveries.
+- [ ] 3.8 Define and persist fulfillment-allocation records for converted delivery execution.
+- [ ] 3.9 Revalidate chosen fulfillment allocation against current stock and record stock-out movement atomically with delivery save.
 
 ## 4. Verify the narrowed workflow change
 
@@ -30,3 +33,6 @@
 - [ ] 4.4 Verify a partially delivered sale order prepopulates only remaining lines and remaining quantities on the next conversion.
 - [ ] 4.5 Verify users can still reduce quantities or remove remaining lines during conversion before save.
 - [ ] 4.6 Verify the system blocks converted delivery save when received payment is below the delivery net amount and allows save once payment coverage is sufficient.
+- [ ] 4.7 Verify Sale Order -> Sales Delivery conversion preserves visible source line shape while allowing stock-side allocation underneath.
+- [ ] 4.8 Verify repeated conversions subtract prior saved delivery value from available payment capacity.
+- [ ] 4.9 Verify Sales Delivery save rejects stale stock allocation when current inventory changed after the user chose the allocation.

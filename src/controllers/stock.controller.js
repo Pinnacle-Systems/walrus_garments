@@ -6,6 +6,7 @@ import {
     _getAccessory,
     getMinStockAlertReport as _getMinStockAlertReport,
     _getOneAccessory, getStockReport as _getStockReport,
+    createOpeningStock as _createOpeningStock,
     getUnifiedStock as _getUnifiedStock,
     getUnifiedStockReport as _getUnifiedStockReport,
     getUnifiedStockWithLegacyByBarcode as _getUnifiedStockWithLegacyByBarcode
@@ -82,6 +83,16 @@ async function create(req, res, next) {
         } else {
             res.json({ statusCode: 1, message: error.message })
         }
+    }
+}
+
+export async function createOpeningStock(req, res, next) {
+    try {
+        res.json(await _createOpeningStock(req.body));
+        console.log(res.statusCode);
+    } catch (error) {
+        console.error(`Error`, error.message);
+        res.json({ statusCode: 1, message: error.message });
     }
 }
 

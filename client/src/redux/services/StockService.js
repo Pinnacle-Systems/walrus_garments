@@ -138,6 +138,17 @@ const stockApi = createApi({
       }),
       invalidatesTags: ["Stock"],
     }),
+    addOpeningStock: builder.mutation({
+      query: (payload) => ({
+        url: `${STOCK_API}/opening`,
+        method: "POST",
+        body: payload,
+        headers: {
+          "Content-type": "application/json; charset=UTF-8",
+        },
+      }),
+      invalidatesTags: ["Stock"],
+    }),
     updateStock: builder.mutation({
       query: (payload) => {
         const { id, ...body } = payload;
@@ -165,6 +176,7 @@ export const {
   useGetStockQuery,
   useGetStockByIdQuery,
   useAddStockMutation,
+  useAddOpeningStockMutation,
   useUpdateStockMutation,
   useDeleteStockMutation,
   useGetPcsStockQuery,

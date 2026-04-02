@@ -50,8 +50,13 @@ This was rejected because it would leave delivery records pointing to a document
 4. Use Sale Order item data as the delivery prefill source.
 When opening a converted delivery, the screen should copy sale order header fields and `SaleOrderItems` into the editable delivery state, matching the way other conversions currently prefill from their immediate source.
 
+Sales Delivery is a hybrid fulfillment screen. During Sale Order to Sales Delivery conversion, the visible delivery line should preserve the source sale-order business shape while stock-side allocation may occur underneath.
+
 Alternative considered: derive delivery items indirectly by first creating or loading an invoice-shaped payload.
 This was rejected because it adds a redundant transformation layer once invoice is no longer part of the path.
+
+Alternative considered: make converted delivery lines adopt stock-only visible granularity.
+This was rejected because conversion should preserve the source sales-document shape.
 
 5. Track conversion progress at the sale-order-line level instead of treating delivery as a one-time state.
 The sale order report currently hides conversion once an invoice exists, and the first round of this change shifts that gating to delivery existence. Partial conversion changes the requirement again: the system must know which order lines and quantities have already been delivered so later conversions can prefill only the remaining quantities.
@@ -76,6 +81,18 @@ Converted sales deliveries should save only when total received payment for the 
 
 Alternative considered: require payment to cover the entire sale order before any delivery.
 This was rejected because it would be stricter than requested and would block partial fulfilment even when the specific delivery being shipped is covered.
+
+9. Use remaining payment capacity rather than raw received payment on repeated conversions.
+When prior saved deliveries already consumed part of the paid delivery value, the next conversion should allow new delivery only up to the payment capacity still remaining for the sale-order flow. The user may choose any subset of remaining lines within that remaining payment envelope.
+
+Alternative considered: recalculate each conversion against the full received payment amount without subtracting prior saved delivery value.
+This was rejected because it would allow over-delivery across multiple partial conversions.
+
+10. Revalidate fulfillment allocation against current stock at save time.
+Any stock allocation chosen during Sales Delivery should remain provisional until final save. The server should revalidate current availability before persisting the delivery and recording the stock movement.
+
+Alternative considered: trust the client-side allocation chosen earlier in the session without a final stock recheck.
+This was rejected because concurrent stock changes could leave the saved delivery out of sync with inventory.
 
 ## Risks / Trade-offs
 

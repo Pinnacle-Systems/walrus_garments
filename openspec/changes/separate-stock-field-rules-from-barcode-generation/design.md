@@ -15,15 +15,17 @@ Item barcode-generation settings:
   decide how item variants, price lookup, and barcode lookup behave
 ```
 
+The original phrasing of this rule was too broad when read as applying to every transaction screen. The intended scope is stock-writing and stock-assisted operational workflows, not pre-fulfillment sales documents such as Quotation and Sale Order.
+
 That boundary is already followed in parts of Opening Stock and Stock Adjustment, but not everywhere. In particular, some shared helpers and quick-add flows still use barcode-generation mode in ways that shape field behavior rather than variant behavior.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Make Stock Control Panel the only runtime authority for stock-entry and transaction field presence/requiredness.
+- Make Stock Control Panel the only runtime authority for stock-writing and stock-assisted operational field presence/requiredness.
 - Preserve barcode-generation mode for variant-aware operations such as barcode lookup, price lookup, and valid size/color combination resolution.
 - Remove ambiguous logic paths where barcode-generation mode implicitly changes whether a field is treated as part of the transaction schema.
-- Keep the behavior consistent across stock-entry and line-entry surfaces.
+- Keep the behavior consistent across stock-entry and stock-assisted operational surfaces without leaking the rule into catalog-driven sales documents.
 
 **Non-Goals:**
 - Redesign Item Master itself.
@@ -32,8 +34,8 @@ That boundary is already followed in parts of Opening Stock and Stock Adjustment
 
 ## Decisions
 
-### Use Stock Control Panel as the only source of field schema
-All runtime transaction and stock-entry screens must derive field presence and requiredness for item dimensions from Stock Control Panel configuration, not from item-level barcode-generation mode.
+### Use Stock Control Panel as the only source of field schema for stock-writing and stock-assisted operational screens
+All runtime stock-writing and stock-assisted operational screens must derive field presence and requiredness for item dimensions from Stock Control Panel configuration, not from item-level barcode-generation mode.
 
 This includes decisions such as:
 - whether a `Size` column exists
@@ -43,9 +45,32 @@ This includes decisions such as:
 Why:
 - These are operational capture rules, not barcode-structure rules.
 - It keeps the UI schema stable and centrally explainable.
+- It ensures every persisted stock row carries the complete stock key defined by stock-maintenance policy.
 
 Alternative considered:
 - Continue letting barcode-generation mode imply required dimensions. Rejected because it mixes master-data semantics with transaction-capture policy.
+
+Catalog-driven sales documents such as Quotation and Sale Order are out of scope for this visible-column rule because they follow item-master-driven document shape instead.
+
+### Require complete stock-tracking fields before stock writes
+Any runtime surface that writes rows to the `Stock` table SHALL require every dimension enabled by Stock Control Panel to be populated before save. A workflow may begin with partial data from barcode lookup, import, or user entry, but it must progressively collect the missing tracked fields before persisting the stock row.
+
+Why:
+- The stock table should store complete operational stock identities, not partially resolved rows.
+- This preserves a clean separation where Stock Control defines the stock key and barcode behavior only helps resolution.
+
+Alternative considered:
+- Allow stock-writing surfaces to save rows with missing tracked dimensions and rely on downstream interpretation. Rejected because it creates ambiguous inventory rows and weakens reporting and reconciliation.
+
+### Shared barcodes do not invalidate stock rows by themselves
+Stock-writing surfaces SHALL treat barcode values as operational stock-row data or lookup aids, not as canonical uniqueness keys for stock combinations. When stock-maintenance settings require more dimensions than a barcode can resolve, multiple stock rows may legitimately share the same barcode as long as the required tracked fields are completed before save.
+
+Why:
+- Legacy or coarse barcodes can still support valid stock capture under finer-grained stock-maintenance rules.
+- Canonical barcode uniqueness belongs to item/barcode-definition workflows, not operational stock-row validation.
+
+Alternative considered:
+- Enforce one-barcode-per-stock-combination on every stock-writing surface. Rejected because it leaks item-master barcode policy into stock-entry behavior and blocks legitimate transitional stock capture.
 
 ### Treat barcode-generation mode as variant behavior, not field-schema behavior
 Barcode-generation mode may still affect:
@@ -96,12 +121,12 @@ Alternative considered:
 
 ## Implementation Outline
 
-1. Identify all transaction and stock-entry screens that currently use Stock Control Panel versus item barcode-generation helpers.
+1. Identify all stock-writing and stock-assisted operational screens that currently use Stock Control Panel versus item barcode-generation helpers.
 2. Update shared helper semantics so they no longer imply field presence/requiredness from item barcode mode.
 3. Refactor affected screens to:
    - derive field presence and requiredness from Stock Control Panel
    - use item variant data only for valid option filtering and price/barcode resolution
-4. Verify that stock-entry and transaction screens behave consistently across opening stock, stock adjustment, inward, quotation, and sales flows.
+4. Verify that stock-entry and stock-assisted operational screens behave consistently across opening stock, stock adjustment, inward, and fulfillment-oriented flows.
 
 ## Open Questions
 
