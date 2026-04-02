@@ -9,7 +9,7 @@ import {
 } from "../../../redux/uniformService/UnitOfMeasurementServices";
 
 import { toast } from "react-toastify";
-import { TextInput, ToggleButton, ReusableTable, TextInputNew1 } from "../../../Inputs";
+import { TextInput, ToggleButton, ReusableTable, TextInputNew1, childRecordCountTotal } from "../../../Inputs";
 import Modal from "../../../UiComponents/Modal";
 import { Check, Power } from "lucide-react";
 import { statusDropdown } from "../../../Utils/DropdownData";
@@ -25,11 +25,11 @@ export default function Form() {
   const [name, setName] = useState("");
   const [accessory, setAccessory] = useState(false)
   const [active, setActive] = useState(true);
+  const [childRecord, setChildRecord] = useState(0);
 
 
   const [searchValue, setSearchValue] = useState("");
   // const nameRef = useRef(null);
-  const childRecord = useRef(0);
   const formRef = useRef(null);
 
 
@@ -68,13 +68,13 @@ export default function Form() {
       if (!id) {
         setName("");
         setActive(true);
-        childRecord.current = 0;
+        setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
 
       } else {
         // if (id) setReadOnly(true);
         setName(data?.name ? data.name : "");
         setActive(id ? (data?.active ? data.active : false) : true);
-        childRecord.current = data?.childRecord ? data?.childRecord : 0;
+        setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
       }
     },
     [id]
@@ -394,7 +394,7 @@ export default function Form() {
                                 setValue={setName}
                                 required={true}
                                 readOnly={readOnly}
-                                disabled={(childRecord.current > 0)}
+                                disabled={(childRecord > 0)}
                                 ref={nameRef}
                               />
                             </div>

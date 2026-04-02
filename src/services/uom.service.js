@@ -55,6 +55,21 @@ async function getOne(id) {
     const data = await prisma.unitOfMeasurement.findUnique({
         where: {
             id: parseInt(id)
+        },
+        include: {
+            _count: {
+                select: {
+                    DirectItems: true,
+                    DirectReturnItems: true,
+                    LegacyStock: true,
+                    Stock: true,
+                    QuotationItems: true,
+                    SaleOrderItems: true,
+                    SalesInvoiceItems: true,
+                    SalesDeliveryItems: true,
+                    SalesReturnItems: true,
+                }
+            }
         }
     })
     if (!data) return NoRecordFound("unitOfMeasurement");

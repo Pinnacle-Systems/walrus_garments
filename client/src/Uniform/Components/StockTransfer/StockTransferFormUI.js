@@ -2,7 +2,7 @@ import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
-import { DateInputNew, DropdownInput, DropdownWithSearch, ReusableSearchableInput, TextInput, TextInputNew1 } from "../../../Inputs";
+import { DateInputNew, DropdownInput, DropdownInputNew, DropdownWithSearch, ReusableSearchableInput, TextInput, TextInputNew1 } from "../../../Inputs";
 import { HiOutlineRefresh, HiPlus, HiX } from "react-icons/hi";
 import { stockTransferType } from "../../../Utils/DropdownData";
 import { useGetOrderByIdQuery, useGetStockValidationByIdQuery } from "../../../redux/uniformService/OrderService";
@@ -38,7 +38,7 @@ const StockTransferForm = ({
     const [searchItem, setSearchItem] = useState("")
     const [searchColor, setSearchColor] = useState("")
     const [searchSize, setSearchSize] = useState("")
-
+    const [deliveryChallanNo, setDeliveryChallanNo] = useState("")
 
     const [fromLocationId, setFromLocationId] = useState("")
     const [toLocationId, setToLocationId] = useState("")
@@ -387,7 +387,7 @@ const StockTransferForm = ({
                                 <div className="grid grid-cols-10 gap-x-3 gap-y-1">
                                     <div className="col-span-2">
 
-                                        <DropdownInput name="From Location"
+                                        <DropdownInputNew name="From Location"
                                             options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
                                             value={fromLocationId} setValue={setFromLocationId} required={true}
                                             readOnly={id || readOnly} clear={true}
@@ -395,7 +395,7 @@ const StockTransferForm = ({
                                     </div>
                                     <div className="col-span-2">
 
-                                        <DropdownInput name="To Location"
+                                        <DropdownInputNew name="To Location"
                                             options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item.id != fromLocationId), "storeName", "id")}
                                             value={toLocationId} setValue={setToLocationId} required={true}
                                             disabled={!fromLocationId}
@@ -403,6 +403,18 @@ const StockTransferForm = ({
                                             clear={true}
                                         />
                                     </div>
+                                    <div className="col-span-2">
+                                        <TextInputNew1
+                                            name="Delivery Challan No"
+                                            type="text"
+                                            value={deliveryChallanNo}
+                                            setValue={setDeliveryChallanNo}
+                                            readOnly={readOnly}
+                                            required={true}
+                                        // disabled={childRecord.current > 0}
+                                        />
+                                    </div>
+
 
                                     {/* <div className="ml-3 col-span-3 flex items-center justify-between">
 
@@ -437,8 +449,8 @@ const StockTransferForm = ({
                                             onChange={(e) => setBarcode(e.target.value)}
                                             onKeyDown={handleBarcodeSearch}
                                             // onBlur={handleBarcodeSearch}
-                                            placeholder="Scan..."
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            placeholder="Scan the Barcode"
+                                            className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                         />
                                     </div>
                                     {/* <div className="col-span-1">

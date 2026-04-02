@@ -38,13 +38,15 @@ async function get(req) {
 
 
 async function getOne(id) {
+    const childRecord = await prisma.item.count({ where: { subCategoryId: parseInt(id) } });
+
     const data = await prisma.subCategory.findUnique({
         where: {
             id: parseInt(id)
         }
     })
     if (!data) return NoRecordFound("Country");
-    return { statusCode: 0, data: { ...data } };
+    return { statusCode: 0, data: { ...data, childRecord } };
 }
 
 async function getSearch(req) {

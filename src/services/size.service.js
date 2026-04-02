@@ -60,6 +60,22 @@ async function getOne(id) {
     const data = await prisma.size.findUnique({
         where: {
             id: parseInt(id)
+        }, include: {
+            _count: {
+                select: {
+                    ItemPriceList: true,
+                    DirectItems: true,
+                    DirectReturnItems: true,
+                    LegacyStock: true,
+                    Stock: true,
+                    SaleOrderItems: true,
+                    SalesDeliveryItems: true,
+                    QuotationItems: true,
+                }
+
+            }
+
+
         }
     })
     if (!data) return NoRecordFound("size");

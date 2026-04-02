@@ -9,7 +9,7 @@ import {
     useUpdateSizeMasterMutation
 } from '../../../redux/uniformService/SizeMasterService';
 import toast from 'react-hot-toast';
-import { ReusableTable, TextInput, TextInputNew1, ToggleButton } from '../../../Inputs';
+import { childRecordCountTotal, ReusableTable, TextInput, TextInputNew1, ToggleButton } from '../../../Inputs';
 import { statusDropdown } from '../../../Utils/DropdownData';
 import { Check, Power } from 'lucide-react';
 import Modal from '../../../UiComponents/Modal';
@@ -29,10 +29,10 @@ export default function Form() {
     const [accessory, setAccessory] = useState(false)
     const [active, setActive] = useState(false);
     const [errors, setErrors] = useState({});
+    const [childRecord, setChildRecord] = useState(0);
 
 
     // const nameRef = useRef(null);
-    const childRecord = useRef(0);
     const formRef = useRef(null);
 
 
@@ -75,14 +75,14 @@ export default function Form() {
                 setName("");
                 // setAccessory(data?.isAccessory || false);
                 setActive(true);
-                childRecord.current = 0;
+                setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
 
             } else {
                 // setReadOnly(true);
                 setName(data?.name || "");
                 // setAccessory(data?.isAccessory || false);
                 setActive(id ? (data?.active ?? false) : true);
-                childRecord.current = data?.childRecord ? data?.childRecord : 0;
+                setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
             }
         },
         [id]
@@ -401,7 +401,7 @@ export default function Form() {
                                                 <div className="grid grid-cols-2  gap-3  h-full" ref={formRef}>
                                                     <fieldset className=' rounded mt-2'>
                                                         <div className='mb-3'>
-                                                            <TextInputNew1 name="Size" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)}
+                                                            <TextInputNew1 name="Size" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} disabled={(childRecord > 0)}
                                                                 ref={nameRef}
                                                             />
                                                         </div>

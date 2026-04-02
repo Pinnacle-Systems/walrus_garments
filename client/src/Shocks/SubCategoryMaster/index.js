@@ -22,7 +22,7 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
     const [searchValue, setSearchValue] = useState("");
     const [itemCategoryId, setItemCategoryId] = useState('')
 
-    const childRecord = useRef(0);
+    const [childRecord, setChildRecord] = useState(0);
     const formRef = useRef(null);
 
     const params = {
@@ -60,12 +60,13 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
             setName("");
             setActive(true);
             setItemCategoryId("")
-            childRecord.current = 0;
+            setChildRecord(0);
         } else {
+            setChildRecord(data?.childRecord ?? 0);
+
             setName(data?.name || "");
             setItemCategoryId(data?.itemCategoryId ? data?.itemCategoryId : "")
             setActive(id ? (data?.active ?? false) : true);
-            childRecord.current = data?.childRecord ?? 0;
         }
     }, [id]);
 
@@ -185,11 +186,15 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
         setSearchValue("");
         syncFormWithDb(undefined);
         setReadOnly(false);
-        setTimeout(() => { nameRef.current?.focus(); }, 100);
+        setTimeout(() => { nameRef.current?.focus(); }, 500);
     };
 
     const handleView = (id) => { setId(id); setForm(true); setReadOnly(true); };
-    const handleEdit = (id) => { setId(id); setForm(true); setReadOnly(false); };
+    const handleEdit = (id) => {
+        setId(id);
+        setForm(true);
+        setReadOnly(false);
+    };
 
     const ACTIVE = (
         <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
@@ -208,11 +213,21 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
         { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
     ];
 
-    useEffect(() => {
-        if ((form || onSuccess) && nameRef.current) {
-            nameRef.current.focus();
-        }
-    }, [form, onSuccess]);
+    // useEffect(() => {
+    //     if (form || onSuccess) {
+    //         if (id) {
+    //             // Wait for data to be fetched and childRecord state to be updated
+    //             if (!isSingleFetching && !isSingleLoading && singleData) {
+    //                 if (childRecord === 0 && nameRef.current) {
+    //                     nameRef.current.focus();
+    //                 }
+    //             }
+    //         } else {
+    //             // New record, focus immediately
+    //             nameRef.current?.focus();
+    //         }
+    //     }
+    // }, [handleEdit, form, onSuccess, id, isSingleFetching, isSingleLoading, singleData, childRecord]);
 
     const formBody = (
         <div className="flex-1 overflow-auto p-3">
@@ -235,9 +250,15 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
                                     required={true}
                                     readOnly={readOnly}
                                     className={`w-[150px]`}
-                                    ref={nameRef}
-                                    openOnFocus={true}
-                                    disabled={childRecord.current > 0}
+                                    ref={(el) => {
+                                        if (childRecord > 0) {
+                                            if (nameRef.current === el) nameRef.current = null;
+                                        } else {
+                                            nameRef.current = el;
+                                        }
+                                    }}
+                                    // openOnFocus={childRecord > 0 ? false : true}
+                                    disabled={childRecord > 0}
                                     addNewLabel="+ Add New Category"
                                     childComponent={ItemCategroyMaster}
 
@@ -252,7 +273,7 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
                                 setValue={setName}
                                 required={true}
                                 readOnly={readOnly}
-                                disabled={childRecord.current > 0}
+                                disabled={childRecord > 0}
                             />
 
                         </div>
