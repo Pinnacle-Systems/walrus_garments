@@ -449,8 +449,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           onView={handleView}
           onEdit={handleEdit}
           onDelete={deleteData}
-          itemsPerPage={10}
-          childRecordLabel="State Master"
+          itemsPerPage={15}
         />
       </div>
 

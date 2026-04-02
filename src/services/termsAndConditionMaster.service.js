@@ -3,12 +3,36 @@ import { prisma } from '../lib/prisma.js';
 
 async function get(req) {
     const { companyId, active, poType } = req.query
-    const data = await prisma.termsAndConditionsNew.findMany({
+    let data = await prisma.termsAndConditionsNew.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         },
-
+        include: {
+            _count: {
+                select: {
+                    Quotation: true,
+                    Saleorder: true,
+                    SalesDelivery: true
+                }
+            }
+        }
     });
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.Quotation) types.push("Quotation");
+        if (item._count.Saleorder) types.push("Saleorder");
+        if (item._count.SalesDelivery) types.push("SalesDelivery");
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
+
     return { statusCode: 0, data };
 }
 

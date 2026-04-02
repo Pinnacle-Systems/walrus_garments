@@ -5,7 +5,7 @@ import secureLocalStorage from "react-secure-storage";
 import Swal from "sweetalert2";
 import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
 import { Check, Power, Plus } from "lucide-react";
-import { DropdownInput, PriceInputWithTax, ReusableTable, TextInputNew1, ToggleButton, MultiSelectDropdownNew, childRecordCount, DropdownInputNew } from "../../Inputs";
+import { DropdownInput, PriceInputWithTax, ReusableTable, TextInputNew1, ToggleButton, MultiSelectDropdownNew, childRecordCount, DropdownInputNew, childRecordCountTotal } from "../../Inputs";
 import Modal from "../../UiComponents/Modal";
 import { ItemTypes, statusDropdown } from "../../Utils/DropdownData";
 import { dropDownListObject, multiSelectOption } from "../../Utils/contructObject";
@@ -69,7 +69,7 @@ export default function Form() {
   const [searchValue, setSearchValue] = useState("");
   const [sizeList, setSizeList] = useState([])
   const [colorList, setColorList] = useState([])
-  const childRecord = useRef(0);
+  // const childRecord = useRef(0);
   const [itemPriceList, setItemPriceList] = useState([])
   const [sectionId, setSectionId] = useState('')
   const [gridIndex, setGridIndex] = useState();
@@ -81,7 +81,7 @@ export default function Form() {
   const [showColorModal, setShowColorModal] = useState(false);
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
-
+  const [childRecord, setChildRecord] = useState("")
 
 
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
@@ -192,6 +192,7 @@ export default function Form() {
         setMainCategory(data?.mainCategoryId ? data?.mainCategoryId : "")
         setSubCategory(data?.subCategoryId ? data?.subCategoryId : "")
       } else {
+
         setName(data?.name ? data?.name : "")
         setCode(data?.code ? data?.code : "")
         setItemType(data?.itemType ? data?.itemType : "")
@@ -217,6 +218,7 @@ export default function Form() {
         })
 
         setFields(initialState)
+        setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
 
 
 
@@ -264,6 +266,8 @@ export default function Form() {
     },
     [barcodeGenerationMethod, id, itemControlData?.data, sizeData?.data, colorData?.data]
   );
+
+  console.log(childRecord, "childRecord")
 
   useEffect(() => {
     syncFormWithDb(singleData?.data);
@@ -869,7 +873,7 @@ export default function Form() {
                         setValue={handleNameChange}
                         required
                         readOnly={readOnly}
-                        disabled={childRecord.current > 0}
+                        disabled={childRecord > 0}
                         ref={nameRef}
                       />
                     </div>
@@ -880,7 +884,7 @@ export default function Form() {
                         value={code}
                         setValue={setCode}
                         readOnly={readOnly}
-                        disabled={childRecord.current > 0}
+                        disabled={childRecord > 0}
                         required={true}
                       />
                     </div>
@@ -902,7 +906,7 @@ export default function Form() {
                         setValue={setHsnId}
                         required
                         readOnly={readOnly}
-                        disabled={childRecord.current > 0}
+                        disabled={childRecord > 0}
                         addNewLabel="+ Add New HSN"
                         childComponent={HsnMaster}
                         addNewModalWidth="w-[45%] h-[400px]"
@@ -927,7 +931,7 @@ export default function Form() {
                             setValue={setSectionId}
                             required
                             readOnly={readOnly}
-                            disabled={childRecord.current > 0}
+                            disabled={childRecord > 0}
                           />
                         </div>
 
@@ -948,7 +952,7 @@ export default function Form() {
                         setValue={setMainCategory}
                         required
                         readOnly={readOnly}
-                        disabled={childRecord.current > 0}
+                        disabled={childRecord > 0}
                         addNewLabel="+ Add New Category"
                         childComponent={ItemCategroyMaster}
                         addNewModalWidth="w-[45%] h-[400px]"
@@ -970,7 +974,7 @@ export default function Form() {
 
                         required
                         readOnly={readOnly || !mainCategory}
-                        disabled={childRecord.current > 0}
+                        disabled={childRecord > 0}
                         addNewLabel="+ Add New  Sub Category"
                         childComponent={SubCategoryMaster}
                         addNewModalWidth="w-[45%] h-[300px]"

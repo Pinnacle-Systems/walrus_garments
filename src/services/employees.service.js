@@ -124,7 +124,7 @@ async function getEmployeeId(branchId, startTime, endTime) {
 }
 async function get(req) {
     const { branchId, active, employeeCategory, finYearId } = req.query
-    const data = await xprisma.Employee.findMany({
+    let data = await xprisma.Employee.findMany({
         where: {
             branchId: branchId ? parseInt(branchId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -147,6 +147,20 @@ async function get(req) {
 
         }
     })
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.User) types.push("User Master");
+
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     console.log("Regno", finYearDate)
     let Regno = finYearDate ? (await getEmployeeId(branchId, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime)) : "";

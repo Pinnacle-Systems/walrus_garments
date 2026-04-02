@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma.js";
 
 async function get(req) {
     const { companyId, active } = req.query
-    const data = await prisma.state.findMany({
+    let data = await prisma.state.findMany({
         where: {
             country: {
                 companyId: companyId ? parseInt(companyId) : undefined,
@@ -19,6 +19,20 @@ async function get(req) {
             }
         }
     });
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.city) types.push("City Master");
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
+
     return { statusCode: 0, data };
 }
 

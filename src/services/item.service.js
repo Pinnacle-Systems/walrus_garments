@@ -80,17 +80,44 @@ async function syncMinimumStockQty(tx, itemPriceListId, minimumStockQtyRows = []
 }
 
 async function get(req) {
-    const data = await prisma.item.findMany({
+    let data = await prisma.item.findMany({
         include: {
             ItemPriceList: true,
             _count: {
                 select: {
                     DirectItems: true,
+                    DirectReturnItems: true,
+                    QuotationItems: true,
+                    SaleOrderItems: true,
+                    SalesDeliveryItems: true,
+                    SalesReturnItems: true,
+                    Stock: true,
                 }
             }
         },
 
     });
+
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.DirectItems) types.push("Purchase Inward Items");
+        if (item._count.DirectReturnItems) types.push("Purchase Return Items");
+        if (item._count.QuotationItems) types.push("Quotation Items");
+        if (item._count.SaleOrderItems) types.push("Sale Order Items");
+        if (item._count.SalesDeliveryItems) types.push("Sales Delivery Items");
+        if (item._count.SalesReturnItems) types.push("Sales Return Items");
+        if (item._count.Stock) types.push("Stock");
+
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
     return { statusCode: 0, data };
 }
 
@@ -128,8 +155,19 @@ async function getOne(id) {
 
 
                 }
+            },
+            _count: {
+                select: {
+                    DirectItems: true,
+                    DirectReturnItems: true,
+                    QuotationItems: true,
+                    SaleOrderItems: true,
+                    SalesDeliveryItems: true,
+                    SalesReturnItems: true,
+                    Stock: true,
+                }
             }
-        }
+        },
 
     })
     if (!data) return NoRecordFound("item");
@@ -202,18 +240,18 @@ async function create(body) {
                         ...(function () {
                             const minimumStockQtyRows = validateAndNormalizeMinimumStockQtyRows(item?.MinimumStockQty);
                             return {
-                        colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                        sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
-                        offerPrice: item?.offerPrice || undefined,
-                        salesPrice: item?.salesPrice || undefined,
-                        sku: item?.sku ? item?.sku : undefined,
-                        barcode: item?.barcode ? item?.barcode : undefined,
+                                colorId: item?.colorId ? parseInt(item.colorId) : undefined,
+                                sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
+                                offerPrice: item?.offerPrice || undefined,
+                                salesPrice: item?.salesPrice || undefined,
+                                sku: item?.sku ? item?.sku : undefined,
+                                barcode: item?.barcode ? item?.barcode : undefined,
 
-                        MinimumStockQty: minimumStockQtyRows.length > 0
-                            ? {
-                                create: minimumStockQtyRows,
-                            }
-                            : undefined,
+                                MinimumStockQty: minimumStockQtyRows.length > 0
+                                    ? {
+                                        create: minimumStockQtyRows,
+                                    }
+                                    : undefined,
                             };
                         })()
                     })),

@@ -4,7 +4,7 @@ import { prisma } from '../lib/prisma.js';
 async function get(req) {
     const { companyId, active } = req.query
 
-    const data = await prisma.unitOfMeasurement.findMany({
+    let data = await prisma.unitOfMeasurement.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         },
@@ -24,6 +24,27 @@ async function get(req) {
             }
         }
     });
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.DirectItems) types.push("Purchase Inard Items");
+        if (item._count.DirectReturnItems) types.push("Purchase Return Items");
+        if (item._count.QuotationItems) types.push("QuotationItems");
+        if (item._count.SaleOrderItems) types.push("SaleOrderItems");
+        if (item._count.SalesInvoiceItems) types.push("SalesInvoiceItems");
+        if (item._count.SalesDeliveryItems) types.push("SalesDeliveryItems");
+        if (item._count.SalesReturnItems) types.push("SalesReturnItems");
+        if (item._count.Stock) types.push("Stock");
+
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
     return { statusCode: 0, data };
 }
 

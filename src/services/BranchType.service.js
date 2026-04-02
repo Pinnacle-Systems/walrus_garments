@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma.js';
 
 async function get(req) {
     const { companyId, active } = req.query
-    const data = await prisma.branchType.findMany({
+    let data = await prisma.branchType.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         },
@@ -15,6 +15,18 @@ async function get(req) {
             }
         }
 
+    });
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.Party) types.push("Customer/Supplier Master");
+
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
     });
     return { statusCode: 0, data };
 }

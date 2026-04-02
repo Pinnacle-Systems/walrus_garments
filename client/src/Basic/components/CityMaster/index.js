@@ -315,7 +315,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         },
         {
             header: "City Name",
-            accessor: (item) => item?.name,
+            accessor: (item) => item?._count?.name || item?.name,
             className: "font-medium text-gray-900 text-left uppercase w-64",
         },
         {
@@ -548,7 +548,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={deleteData}
-                    itemsPerPage={10}
+                    itemsPerPage={15}
+                    childRecordLabel="Customer/Supplier Master"
+
                 />
             </div>
 

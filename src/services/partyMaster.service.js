@@ -56,6 +56,24 @@ async function get(req) {
 
     }
 
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.DirectInwardOrReturn) types.push("Purchase Inward");
+        if (item._count.DirectReturnOrPoReturn) types.push("Purchase Return");
+        if (item._count.Quotation) types.push("Quotation");
+        if (item._count.Saleorder) types.push("Sale Order");
+        if (item._count.SalesDelivery) types.push("Sales Delivery");
+        if (item._count.SalesReturn) types.push("Sales Return");
+
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
     return { statusCode: 0, data };
 }
 

@@ -4,7 +4,7 @@ import { prisma } from '../lib/prisma.js';
 async function get(req) {
     const { companyId, active } = req.query
 
-    const data = await prisma.itemCategory.findMany({
+    let data = await prisma.itemCategory.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         },
@@ -19,6 +19,21 @@ async function get(req) {
         }
 
     });
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.MainCategory) types.push("Item Master");
+        if (item._count.SubCategory) types.push("Sub Category Master");
+
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
     return { statusCode: 0, data };
 }
 

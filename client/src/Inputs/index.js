@@ -1818,7 +1818,8 @@ export const ReusableTable = ({
   onDelete,
   emptyStateMessage = 'No data available',
   rowActions = true,
-  width
+  width,
+  childRecordLabel = ""
 }) => {
 
   const itemsPerPage = 15;
@@ -2030,13 +2031,19 @@ export const ReusableTable = ({
                                   </button>
                                 )}
                                 {console.log(childRecordCount(item?._count > 0), "childRecord")}
-                                {hasChildRecords && hoveredDeleteId === item.id && (
-                                  <div className="absolute z-10 top-full left-0 mt-1 w-96 bg-gray-800 text-white text-xs rounded p-2 shadow">
-                                    {hasChildRecords
-                                      ? "Cannot delete : Child records exist"
-                                      : "Click to delete"}
-                                  </div>
-                                )}
+                                {hasChildRecords &&
+                                  hoveredDeleteId === item.id && (
+                                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-[12px] rounded shadow-lg w-64 z-50">
+                                      Cannot delete. Child records exist.
+                                      {/* <span className="font-semibold">
+                                        {item?.referencedIn ? "in " + item?.referencedIn : ""}
+                                      </span>
+                                      . Please Remove them First.
+                                      <div className="absolute right-full top-1/2 transform -translate-y-1/2 mr-1">
+                                        <div className="border-4 border-transparent border-r-gray-900"></div>
+                                      </div> */}
+                                    </div>
+                                  )}
 
                               </div>
 
@@ -2779,6 +2786,11 @@ export function childRecordCount(count) {
 
 }
 
+export function childRecordCountTotal(count) {
+  if (!count) return 0;
+
+  return Object.values(count).reduce((sum, v) => sum + (v || 0), 0);
+}
 
 
 export const DropdownInputNew = forwardRef(({

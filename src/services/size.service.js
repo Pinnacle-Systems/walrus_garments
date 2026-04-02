@@ -31,34 +31,24 @@ async function get(req) {
         }
     });
 
-    // const sortNumbersWithSuffix = (arr) => {
-    //     return arr.sort((a, b) => {
-    //       const extractParts = (str) => {
-    //         const match = str.match(/^(\d+)([A-Za-z']*)$/);
-    //         return match ? [parseInt(match[1]), match[2] || ""] : [Infinity, ""];
-    //       };
+    data = data.map((item) => {
+        const types = [];
 
-    //       const [numA, suffixA] = extractParts(a.name.toString()); 
-    //       const [numB, suffixB] = extractParts(b.name.toString()); 
+        if (item._count.ItemPriceList) types.push("Item Master");
+        if (item._count.DirectItems) types.push("Purchase Inward Items");
+        if (item._count.DirectReturnItems) types.push("Purchase Return Items");
+        if (item._count.QuotationItems) types.push("Quotation Items");
+        if (item._count.SaleOrderItems) types.push("Sale Order Items");
+        if (item._count.SalesDeliveryItems) types.push("Sales Delivery Items");
+        if (item._count.Stock) types.push("Stock");
 
-    //       if (numA !== numB) return numA - numB;
-    //       return suffixA.localeCompare(suffixB);
-    //     });
-    //   };
 
-    //   let tempArray = [];
+        return {
+            ...item,
+            referencedIn: types.join(", ")
 
-    //   data.forEach((item, index) => {  
-    //     let newObj = {
-    //       id: item.id,
-    //       name: item.name,
-    //       companyId: item.companyId,
-    //       active: item.active
-    //     };
-    //     tempArray.push(newObj);
-    //   });
-
-    //   data = sortNumbersWithSuffix(tempArray);
+        };
+    });
 
 
     return { statusCode: 0, data };

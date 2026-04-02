@@ -1649,7 +1649,7 @@ export default function Form() {
       </div>
 
       {form && (
-        <Modal isOpen={form} form={form} widthClass={"w-[95%] max-w-6xl h-[95vh]"}
+        <Modal isOpen={form} form={form} widthClass={"w-[95%]  h-[95vh]"}
           onClose={() => { setForm(false); setErrors({}); }}>
           <div className="h-full flex flex-col bg-gray-200">
             <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-2">

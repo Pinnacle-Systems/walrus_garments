@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma.js';
 
 async function get(req) {
     const { companyId, active } = req.query
-    const data = await prisma.location.findMany({
+    let data = await prisma.location.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -25,6 +25,24 @@ async function get(req) {
             }
         }
     });
+
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.DirectInwardOrReturn) types.push("Purchase Inward");
+        if (item._count.DirectReturnOrPoReturn) types.push("Purchase Return");
+        if (item._count.StockAdjustment) types.push("Stock Adjustment");
+        if (item._count.FromLocation) types.push("Stock Transfer");
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
+
     return { statusCode: 0, data };
 }
 

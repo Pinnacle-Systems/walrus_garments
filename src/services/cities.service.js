@@ -3,7 +3,9 @@ import { prisma } from '../lib/prisma.js';
 
 async function get(req) {
     const { companyId, active } = req.query
-    const data = await prisma.city.findMany({
+
+    let data
+    data = await prisma.city.findMany({
         where: {
             state: {
                 country: {
@@ -13,7 +15,7 @@ async function get(req) {
             active: active ? Boolean(active) : undefined,
         },
         select: {
-            name: true, code: true, active: true, id: true,stateId : true,
+            name: true, code: true, active: true, id: true, stateId: true,
             state: {
                 select: {
                     name: true,
@@ -26,13 +28,27 @@ async function get(req) {
             },
             _count: {
                 select: {
-                    doctorLocalCity: true,
+                    doctorPermCity: true,
                     Party: true
                 }
             }
         },
 
     });
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.doctorPermCity) types.push("Employee Master");
+        if (item._count.Party) types.push("Customer/Supplier Master");
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
     return { statusCode: 0, data };
 }
 
@@ -82,6 +98,12 @@ async function getSearch(req) {
         },
         select: {
             name: true, code: true, active: true, id: true,
+            _count: {
+                select: {
+                    doctorLocalCity: true,
+                    Party: true
+                }
+            },
             state: {
                 select: {
                     name: true,
@@ -91,6 +113,15 @@ async function getSearch(req) {
                         }
                     }
                 }
+            }
+        }
+    })
+    data = data.map((item) => {
+        return {
+            ...item,
+            _count: {
+                ...item._count,
+                name: item._count.doctorLocalCity ? "Employee (" + item.name + ")" : (item._count.Party ? "Customer/Supplier Master (" + item.name + ")" : item.name)
             }
         }
     })

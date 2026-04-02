@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma.js';
 
 async function get(req) {
     const { companyId, active, isGrey } = req.query
-    const data = await prisma.color.findMany({
+    let data = await prisma.color.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
         },
@@ -13,10 +13,24 @@ async function get(req) {
                     ItemPriceList: true,
                     DirectItems: true,
                     Stock: true,
-                    LegacyStock: true
                 }
             }
         }
+    });
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.ItemPriceList) types.push("Item Master");
+        if (item._count.DirectItems) types.push("Purchase Inward Items");
+        if (item._count.Stock) types.push("Stock");
+
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
     });
     return { statusCode: 0, data };
 }

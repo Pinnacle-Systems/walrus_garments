@@ -4,19 +4,33 @@ import { prisma } from '../lib/prisma.js';
 async function get(req) {
     const { companyId, active } = req.query
 
-    const data = await prisma.country.findMany({
+    let data = await prisma.country.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
         },
-        include : {
-            _count : {
-                select : {
-                    state : true
+        include: {
+            _count: {
+                select: {
+                    state: true
                 }
             }
         }
     });
+
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.state) types.push("State Master");
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
     return { statusCode: 0, data };
 }
 

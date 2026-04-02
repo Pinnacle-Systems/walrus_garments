@@ -372,10 +372,20 @@ const Sidebar = ({ isOpen, setIsOpen, isMainDropdownOpen, setIsMainDropdownOpen 
     "ITEM GROUP"
   ]
 
+
+  const masterGroupNew = [
+    "LOCATION & GEOGRAPHY",
+    "BUSINESS & PARTIES",
+    "PEOPLE MANAGEMENT",
+    "ITEM MANAGEMENT",
+    "PRICING"
+  ]
+
+
   const sorted = order.map(name => transactionsGroup?.find(item => item.name === name))
     .filter(Boolean);
 
-  const masterGroupSorted = masterGroup.map(name => mastersGroup?.find(item => item.name === name))
+  const masterGroupSorted = masterGroupNew.map(name => mastersGroup?.find(item => item.name === name))
     .filter(Boolean);
 
 

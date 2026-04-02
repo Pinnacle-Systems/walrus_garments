@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma.js';
 
 async function get(req) {
     const { companyId, active } = req.query
-    const data = await prisma.hsn.findMany({
+    let data = await prisma.hsn.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
@@ -15,15 +15,25 @@ async function get(req) {
                     // DirectReturnItems: true,
                     // LegacyStock: true,
                     Item: true,
-                    QuotationItems: true,
-                    SaleOrderItems: true,
-                    SalesInvoiceItems: true,
-                    SalesDeliveryItems: true,
-                    SalesReturnItems: true,
                 }
             }
         }
     });
+
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.Item) types.push("Item Master");
+
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
     return { statusCode: 0, data };
 }
 

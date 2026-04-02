@@ -314,6 +314,7 @@ export default function Form() {
                     onEdit={handleEdit}
                     onDelete={deleteData}
                     itemsPerPage={15}
+
                 />
             </div>
 
