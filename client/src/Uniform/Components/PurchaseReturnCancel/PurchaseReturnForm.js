@@ -78,7 +78,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [printModalOpen, setPrintModalOpen] = useState(false);
 
 
-    const firstInputRef = useRef(null);
 
 
     const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
@@ -142,8 +141,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     });
 
     useEffect(() => {
-        if (firstInputRef.current) firstInputRef.current.focus();
-    }, []);
+        focusFirstInput();
+    }, [focusFirstInput]);
 
     useEffect(() => {
         if (id) {
@@ -309,39 +308,59 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     ];
 
     const footerContent = (
-        <div className="flex flex-col md:flex-row gap-2 justify-between">
-            <div className="flex gap-2 flex-wrap">
-                <button
-                    onClick={() => hasPermission(() => saveData("new"), "create")}
-                    className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                    <FiSave className="w-4 h-4 mr-2" />
-                    Save & New
-                </button>
+        <div className="flex flex-col justify-between gap-2 md:flex-row">
+            <div className="flex flex-wrap gap-2">
+
                 <button
                     onClick={() => hasPermission(() => saveData("close"), "create")}
-                    className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                    <HiOutlineRefresh className="w-4 h-4 mr-2" />
+                    ref={saveCloseButtonRef}
+                    tabIndex={0}
+                    onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
+                    className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+                >
+                    <HiOutlineRefresh className="mr-2 h-4 w-4" />
                     Save & Close
                 </button>
+                <button
+                    onClick={() => hasPermission(() => saveData("new"), "create")}
+                    ref={saveNewButtonRef}
+                    onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
+                    className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+                >
+                    <FiSave className="mr-2 h-4 w-4" />
+                    Save & New
+                </button>
             </div>
-            <div className="flex gap-2 flex-wrap">
-                <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+            <div className="flex flex-wrap gap-2">
+                <button
+                    className="flex items-center rounded-md bg-yellow-600 px-4 py-1 text-sm text-white hover:bg-yellow-700"
                     onClick={() => hasPermission(() => setReadOnly(false), "edit")}
                 >
-                    <FiEdit2 className="w-4 h-4 mr-2" />
+                    <FiEdit2 className="mr-2 h-4 w-4" />
                     Edit
                 </button>
-                <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                <button
+                    className="flex items-center rounded-md bg-blue-600 px-4 py-1 text-sm text-white hover:bg-blue-700"
                     onClick={() => {
-                        setPrintModalOpen(true)
+                        if (
+                            directInwardReturnItems?.filter((i) => i.itemId)?.length === 0
+                        ) {
+                            Swal.fire({
+                                icon: "warning",
+                                title: "Please Fill At Least One Inward Item",
+                            });
+                            return;
+                        }
+                        setBarcodePrintOpen(true);
                     }}
                 >
-                    <FiPrinter className="w-4 h-4 mr-2" />
-                    Print
+                    <FiPrinter className="mr-2 h-4 w-4" />
+                    Barcode
                 </button>
             </div>
         </div>
     );
+
 
 
 
@@ -451,7 +470,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                 value={locationId}
                                 setValue={(value) => { setLocationId(value); setStoreId("") }}
                                 required={true} readOnly={id || readOnly}
-                                ref={firstInputRef}
+                                ref={nameRef}
                             />
                             <DropdownInput name="Location"
                                 options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item.storeName.includes("WAREHOUSE")), "storeName", "id")}
@@ -489,7 +508,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                             <DropdownInput name="Purchase Inward No"
                                 options={dropDownListObject(id ? purchaseInwardData?.data : purchaseInwardData?.data?.filter(i => i.supplierId == supplierId), "docId", "id")}
-                                value={purchaseInwardId} setValue={setPurchaseInwardId} required={true} readOnly={id || readOnly} />
+                                value={purchaseInwardId} setValue={setPurchaseInwardId} required={true} readOnly={id || readOnly}
+
+                            />
 
                             <div className="w-28 mt-6">
                                 <button
@@ -545,7 +566,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
                         supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
                         branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} id={id} sizeList={sizeList}
-                        purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList} headerOpen={isHeaderOpen} movedToNextSaveNewRef={movedToNextSaveNewRef}
+                        purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList} headerOpen={isHeaderOpen} movedToNextSaveNewRef={movedToNextSaveNewRef} handlers={handlers}
                     />
                 </div>
             </TransactionEntryShell>

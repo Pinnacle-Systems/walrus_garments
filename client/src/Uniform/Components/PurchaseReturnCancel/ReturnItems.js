@@ -11,7 +11,7 @@ import { useGetStockReportControlQuery } from '../../../redux/uniformService/Sto
 export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDirectInward, storeId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection,
 
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, itemList, colorList, uomList, sizeList, purchaseInwardId, itemPriceList, headerOpen, movedToNextSaveNewRef
+    branchdata, itemList, colorList, uomList, sizeList, purchaseInwardId, itemPriceList, headerOpen, movedToNextSaveNewRef, handlers
 
 }) {
     const { branchId, userId, finYearId } = getCommonParams();
@@ -165,6 +165,7 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
                         branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} sizeList={sizeList}
                         supplierId={supplierId} stockControlData={stockControlData} setInwardItemSelection={setInwardItemSelection}
                         itemPriceList={itemPriceList} headerOpen={headerOpen} movedToNextSaveNewRef={movedToNextSaveNewRef}
+                        handlers={handlers}
                     />
 
 

@@ -13,7 +13,7 @@ import Swal from 'sweetalert2'
 const YarnDirectItem = ({ itemList, uomList,
     colorList, sizeList, designList, gsmList,
     loopLengthList, storeId,
-    diaList, index, handleInputChange, readOnly, handleRightClick, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo, stockControlData, movedToNextSaveNewRef }) => {
+    diaList, index, handleInputChange, readOnly, handleRightClick, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo, stockControlData, movedToNextSaveNewRef, handlers }) => {
     const [lotGrid, setLotGrid] = useState(false)
 
 
@@ -125,12 +125,19 @@ const YarnDirectItem = ({ itemList, uomList,
                 <td className='border border-gray-300 bg-white py-0.5 text-[11px]'>
                     <input
                         type="number"
-                        onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "qty") } }}
+                        // onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "qty") } }}
                         onFocus={(e) => e.target.select()}
                         className="text-right rounded py-1 w-full px-1 table-data-input"
                         value={(!item.qty) ? "" : item.qty}
                         disabled={readOnly}
                         ref={movedToNextSaveNewRef}
+                        onKeyDown={(e) => {
+                            if (e.key == "Tab") {
+                                handlers.handleTabKeyDown(e)
+                            }
+                            if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
+
+                        }}
                         onChange={(event) => {
                             if (!event.target.value) {
                                 handleInputChange(0, index, "qty");

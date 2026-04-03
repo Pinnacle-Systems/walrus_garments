@@ -10,7 +10,7 @@ import TransactionLineItemsSection, {
 
 
 const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardReturnItems,
-    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList, stockControlData, storeId, setInwardItemSelection, supplierId, purchaseInwardId, itemPriceList, headerOpen, movedToNextSaveNewRef
+    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList, stockControlData, storeId, setInwardItemSelection, supplierId, purchaseInwardId, handlers, headerOpen, movedToNextSaveNewRef
 
 }) => {
 
@@ -188,6 +188,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 item={item} index={index} handleInputChange={handleInputChange}
                                 readOnly={readOnly}
                                 handleRightClick={handleRightClick} addNewRow={addNewRow} stockControlData={stockControlData} movedToNextSaveNewRef={index === 0 ? movedToNextSaveNewRef : undefined}
+                                handlers={handlers}
                             />)}
                             {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - directInwardReturnItems?.length) }).map(i =>
                                 <tr className='w-12 border border-gray-300 bg-white text-[11px] h-8 text-center p-0.5'>
