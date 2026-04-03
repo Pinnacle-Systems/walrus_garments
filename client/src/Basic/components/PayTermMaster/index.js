@@ -161,16 +161,16 @@ export default function Form() {
             return;
         }
 
-        if (!years && !months && !days) {
-            Swal.fire({
-                title: "Please fill at least one of the Pay Term Period fields...",
-                icon: "error",
-                didClose: () => {
-                    nameRef?.current?.focus();
-                }
-            });
-            return;
-        }
+        // if (!years && !months && !days) {
+        //     Swal.fire({
+        //         title: "Please fill at least one of the Pay Term Period fields...",
+        //         icon: "error",
+        //         didClose: () => {
+        //             nameRef?.current?.focus();
+        //         }
+        //     });
+        //     return;
+        // }
         let foundItem;
         if (id) {
             foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.name?.trim().toUpperCase() == name.trim());
