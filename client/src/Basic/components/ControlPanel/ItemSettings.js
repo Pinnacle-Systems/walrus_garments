@@ -135,7 +135,7 @@ const ItemSettings = () => {
                 <div className="grid grid-cols-12 gap-2">
                     <div className="col-span-4 p-5 space-y-9 w-full  ">
                         <h1 className="border-b border-gray-400 p-2">Item Settings </h1>
-                        <div className="flex flex-row gap-5 ">
+                        {/* <div className="flex flex-row gap-5 ">
                             <input
                                 className="border border-gray-500 py-1 px-1"
                                 type="checkbox"
@@ -144,7 +144,7 @@ const ItemSettings = () => {
                             />
                             <span className="font-bold ">Section Type</span>
 
-                        </div>
+                        </div> */}
                         <div>
                             <p className="text-sm font-semibold text-gray-600 mb-5  ">
                                 Barcode Generation Method

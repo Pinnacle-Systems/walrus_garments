@@ -3470,6 +3470,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
             editingItem={editingItem}
             childId={childId}
             onCloseForm={() => setOpenModel(false)}
+            show={show}
           />
         </Modal>
 
@@ -3631,14 +3632,14 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
                         className="text-indigo-600 hover:text-indigo-800 p-1"
                         // onClick={(e) => handleEdit(item?.parentId ? item?.parentId : item?.id, e, item?.parentId ? item.id : null)}
                         onClick={(e) => handleEdit(item.id, e)}
-                        title="Edit Customer"
+                        title={`Edit ${show == "isClient" ? "Customer" : "Supplier"}`}
                       >
                         <FaEdit className="text-sm" />
                       </button>
                       <button
                         className="text-red-600 hover:text-red-800 p-1"
                         onClick={(e) => handleDelete(item?.id, item)}
-                        title="Delete Customer"
+                        title={`Delete ${show == "isClient" ? "Customer" : "Supplier"}`}
                       >
                         <FaTrash className="text-sm" />
                       </button>

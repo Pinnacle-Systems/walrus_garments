@@ -64,7 +64,7 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 
 
 async function get(req) {
-    const { branchId, active, poInwardOrDirectInward, pageNumber, dataPerPage,
+    const { branchId, active, poInwardOrDirectInward, pageNumber, dataPerPage, serachDocNo, searchDate, supplier,
         searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId } = req.query
     let data;
     let totalCount;
@@ -90,13 +90,13 @@ async function get(req) {
                 branchId: branchId ? parseInt(branchId) : undefined,
                 active: active ? Boolean(active) : undefined,
                 poInwardOrDirectInward,
-                docId: Boolean(searchDocId) ?
+                docId: Boolean(serachDocNo) ?
                     {
-                        contains: searchDocId
+                        contains: serachDocNo
                     }
                     : undefined,
                 supplier: {
-                    aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
+                    aliasName: Boolean(supplier) ? { contains: supplier } : undefined
                 }
             },
             orderBy: {
@@ -121,7 +121,7 @@ async function get(req) {
                 }
             }
         });
-        data = manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
+        data = manualFilterSearchData(searchDate, searchDueDate, searchPoType, data)
         // totalCount = data.length
         // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     } else {
@@ -188,7 +188,7 @@ async function getOne(id) {
             directReturnItems: {
                 select: {
                     id: true,
-
+                    barcode: true,
                     itemId: true,
                     Accessory: true,
                     accessoryId: true,
@@ -221,7 +221,6 @@ async function getOne(id) {
                     noOfBags: true,
                     noOfRolls: true,
                     qty: true,
-
                     poNo: true,
                     poQty: true,
                     returnLotDetails: {
@@ -599,7 +598,7 @@ async function createAccessoryStock(tx, poType, poInwardOrDirectInward, branchId
 
     await tx.stock.create({
         data: {
-            itemType: poType,
+            // itemType: poType,
             inOrOut: poInwardOrDirectInward,
             branchId: parseInt(branchId),
             sizeId: item?.sizeId ? parseInt(item?.sizeId) : undefined,
@@ -619,7 +618,7 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
 
     await tx.stock.create({
         data: {
-            itemType: poType,
+            // itemType: poType,
             inOrOut: poInwardOrDirectInward,
             transactionId: directReturnOrPoReturnId ? parseInt(directReturnOrPoReturnId) : undefined,
             itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
@@ -662,6 +661,7 @@ async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, direc
                 price: item["price"] ? parseFloat(item["price"]) : undefined,
                 directItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
                 poNo: item["poNo"] ? item["poNo"] : "",
+                barcode: item["barcode"] ? item["barcode"] : "",
 
             }
         })
@@ -792,6 +792,7 @@ async function updateOrCreate(tx, item, directReturnOrPoReturnId, poType, poInwa
                 orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
                 orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
                 requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
+                barcode: item["barcode"] ? item["barcode"] : "",
 
             }
         })
@@ -829,6 +830,7 @@ async function updateOrCreate(tx, item, directReturnOrPoReturnId, poType, poInwa
                     orderId: item["orderId"] ? parseInt(item["orderId"]) : undefined,
                     orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
                     requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
+                    barcode: item["barcode"] ? item["barcode"] : "",
 
 
                 }

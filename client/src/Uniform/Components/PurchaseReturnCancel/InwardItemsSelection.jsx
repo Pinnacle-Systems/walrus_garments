@@ -9,20 +9,13 @@ import AccessoryPoItemSelection from './AccessoryPoItemSelection';
 import YarnInwardItemSelection from './YarnInwardItemSelection';
 import AccessoryInwardItemSelection from './AccessoryInwardItemSelection';
 
-const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection, storeId ,purchaseInwardId }) => {
+const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardItems, setInwardItemSelection, storeId, purchaseInwardId, movedToNextSaveNewRef }) => {
 
 
 
-    // const [localInwardItems, setLocalInwardItems] = useState(inwardItems);
-    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId).map(i => i.poItemsId));    // const [localInwardItems, setLocalInwardItems] = useState(
-
-    const companyId = secureLocalStorage.getItem(
-        sessionStorage.getItem("sessionId") + "userCompanyId"
-    )
+    const [localInwardItems, setLocalInwardItems] = useState(inwardItems.filter(i => i.poItemsId).map(i => i.poItemsId));    // 
 
 
-
-    // if (supplierFetching || supplierLoading) return <Loader />
 
     function addItem(id) {
         console.log(id, "id")
@@ -77,6 +70,9 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
             return [...oldInwardItems, ...newInwardItems.map(i => { return { poItemsId: i } })]
         });
         setInwardItemSelection(false);
+        setTimeout(() => {
+            movedToNextSaveNewRef.current?.focus();
+        }, 100);
     }
 
     function handleCancel() {
@@ -89,7 +85,7 @@ const InwardItemsSelection = ({ transtype, supplierId, setInwardItems, inwardIte
 
 
                 <YarnInwardItemSelection getSelectAll={getSelectAll} handleSelectAllChange={handleSelectAllChange} poType={transtype} isItemAdded={isItemAdded} handleChange={handleChange} supplierId={supplierId} storeId={storeId} handleDone={handleDone}
-                purchaseInwardId={purchaseInwardId}
+                    purchaseInwardId={purchaseInwardId} inwardItems={inwardItems} localInwardItems={localInwardItems}
                 />
 
 

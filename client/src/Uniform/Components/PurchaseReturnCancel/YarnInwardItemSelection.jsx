@@ -6,9 +6,10 @@ import { showEntries } from '../../../Utils/DropdownData';
 import ReactPaginate from 'react-paginate';
 import { getDateFromDateTimeToDisplay, pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 import { useGetDirectInwardOrReturnQuery, useGetDirectItemsQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
+import Swal from 'sweetalert2';
 
 
-const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, storeId, handleDone, readOnly, purchaseInwardId }) => {
+const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, storeId, handleDone, readOnly, purchaseInwardId, localInwardItems }) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
     const [searchDueDate, setDueDate] = useState("");
@@ -42,7 +43,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
 
     const isLoadingIndicator = isPoItemsFetching || isPoItemsLoading
 
-
+    console.log(localInwardItems, "localInwardItems")
     return (
 
         <div className='border border-gray-200  shadow-sm bg-[#f1f1f0] h-full'>
@@ -57,7 +58,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
 
                     </div>
                     <div className="flex gap-2">
-                        <div>
+                        {/* <div>
                             <button
                                 type="button"
                                 onClick={() => {
@@ -69,12 +70,25 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                             >
                                 Cancel
                             </button>
-                        </div>
+                        </div> */}
                         <div className="flex gap-2">
                             {!readOnly && (
                                 <button
                                     type="button"
-                                    onClick={handleDone}
+                                    // onClick={handleDone}
+                                    onClick={() => {
+                                        if (localInwardItems.length === 0) {
+                                            // toast.error("Please select at least one item");
+                                            Swal.fire({
+                                                icon: "error",
+                                                title: "Error",
+                                                text: "Please select at least one item",
+
+                                            });
+                                            return;
+                                        }
+                                        handleDone();
+                                    }}
                                     className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
                                                         border border-green-600 flex items-center gap-1 text-xs"
                                 >

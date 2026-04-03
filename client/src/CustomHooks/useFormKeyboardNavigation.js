@@ -5,6 +5,7 @@ export const useFormKeyboardNavigation = () => {
   const secondInputRef = useRef(null);
   const thirdInputRef = useRef(null);
   const toggleButtonRef = useRef(null);
+  const movedToNextSaveNewRef = useRef(null);
   const saveCloseButtonRef = useRef(null);
   const saveNewButtonRef = useRef(null);
 
@@ -16,7 +17,9 @@ export const useFormKeyboardNavigation = () => {
   }, []);
 
   const handleToggleKeyDown = useCallback((e) => {
-    if (e.key === 'Tab' && !e.shiftKey) {
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+      console.log("reciev the forem evenet ,", e.key, !e.shiftKey)
       e.preventDefault();
       saveCloseButtonRef.current?.focus();
     }
@@ -49,12 +52,22 @@ export const useFormKeyboardNavigation = () => {
     }, 100);
   }, []);
 
+
+  const handleTabKeyDown = useCallback((e) => {
+
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      saveCloseButtonRef.current?.focus();
+    }
+  }, []);
+
   return {
     refs: {
       firstInputRef,
       secondInputRef,
       thirdInputRef,
       toggleButtonRef,
+      movedToNextSaveNewRef,
       saveCloseButtonRef,
       saveNewButtonRef,
     },
@@ -63,6 +76,7 @@ export const useFormKeyboardNavigation = () => {
       handleToggleKeyDown,
       handleSaveCloseKeyDown,
       handleSaveNewKeyDown,
+      handleTabKeyDown
     },
     focusFirstInput,
   };

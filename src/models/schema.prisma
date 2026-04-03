@@ -1546,6 +1546,7 @@ model DirectItems {
   field8                     String?
   field9                     String?
   field10                    String?
+  barcode                    String?
   BillEntryItems             BillEntryItems[]
   DirectReturnItems          DirectReturnItems[]
   inwardLotDetails           InwardLotDetails[]
@@ -4554,6 +4555,7 @@ model DirectReturnItems {
   field9                     String?
   field10                    String?
   sectionId                  Int?
+  barcode                    String?
 }
 
 model AccessoryReturn {
@@ -4914,6 +4916,7 @@ model Item {
   Size                      Size?                       @relation(fields: [sizeId], references: [id])
   sizeId                    Int?
   name                      String?
+  aliasName                 String?
   code                      String?
   sku                       String?
   itemType                  String?

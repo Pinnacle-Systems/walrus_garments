@@ -841,17 +841,17 @@ export async function getUnifiedStockReport(req) {
 }
 
 export async function getUnifiedStockWithLegacyByBarcode(req) {
-    const { barcode, branchId } = req.query;
+    const { barcode, branchId, storeId } = req.query;
 
     if (!barcode) {
         return { statusCode: 1, message: "Barcode is required" };
     }
 
-    // 1. Fetch from regular Stock
     const stockRecords = await prisma.stock.findMany({
         where: {
             barcode: String(barcode),
-            branchId: branchId ? Number(branchId) : undefined
+            branchId: branchId ? Number(branchId) : undefined,
+            storeId: storeId ? Number(storeId) : undefined,
         },
         include: {
             Item: {
@@ -863,7 +863,6 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
         }
     });
 
-    // 2. Fetch from LegacyStock
     const legacyRecords = await prisma.legacyStock.findMany({
         where: {
             barcode: String(barcode),
@@ -884,12 +883,17 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
     }
     console.log(stockRecords, "stockRecords")
 
-    // Calculate total quantities
     const stockQty = stockRecords.reduce((sum, r) => sum + (r.qty || 0), 0);
     const legacyQty = legacyRecords.reduce((sum, r) => sum + (r.qty || 0), 0);
     const totalQty = stockQty + legacyQty;
 
-    // Use metadata from stockRecords if available, otherwise fallback to legacyRecords
+    console.log(stockQty, "stockQty", legacyQty, "legacyQty")
+
+    if (stockQty <= 0) {
+        return { statusCode: 1, message: "No stock found in this Barcode" };
+
+    }
+
     const first = stockRecords.length > 0 ? stockRecords[0] : legacyRecords[0];
 
     return {

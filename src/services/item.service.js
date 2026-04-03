@@ -216,7 +216,7 @@ async function getSearch(req) {
     return { statusCode: 0, data };
 }
 async function create(body) {
-    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, purchaseTaxType, itemPriceList, active,
+    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, aliasName, itemPriceList, active,
         sectionId, sectionType, subCategory, mainCategory
     } = body
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
@@ -231,6 +231,7 @@ async function create(body) {
             sectionId: sectionId ? parseInt(sectionId) : undefined,
             mainCategoryId: mainCategory ? parseInt(mainCategory) : undefined,
             subCategoryId: subCategory ? parseInt(subCategory) : undefined,
+            aliasName: aliasName ? aliasName : undefined,
 
             active: active ? active : undefined,
 
@@ -404,7 +405,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 
 
 async function update(id, body) {
-    const { styleId, sizeId, name, hsnId, code, active, itemPriceList, sectionId, fields, mainCategory, subCategory } = body
+    const { styleId, sizeId, name, hsnId, code, active, itemPriceList, sectionId, fields, mainCategory, subCategory, aliasName } = body
 
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
     validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList);
@@ -443,6 +444,8 @@ async function update(id, body) {
                 active: active ? active : false,
                 mainCategoryId: mainCategory ? parseInt(mainCategory) : undefined,
                 subCategoryId: subCategory ? parseInt(subCategory) : undefined,
+                aliasName: aliasName ? aliasName : undefined,
+
                 field1: fields?.[0] ?? "",
                 field2: fields?.[1] ?? "",
                 field3: fields?.[2] ?? "",

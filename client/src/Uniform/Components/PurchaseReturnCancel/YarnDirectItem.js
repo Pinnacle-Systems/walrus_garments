@@ -13,11 +13,16 @@ import Swal from 'sweetalert2'
 const YarnDirectItem = ({ itemList, uomList,
     colorList, sizeList, designList, gsmList,
     loopLengthList, storeId,
-    diaList, index, handleInputChange, readOnly, handleRightClick, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo, stockControlData }) => {
+    diaList, index, handleInputChange, readOnly, handleRightClick, item, purchaseInwardId, handleInputChangeLotNo, addNewLotNo, removeLotNo, stockControlData, movedToNextSaveNewRef }) => {
     const [lotGrid, setLotGrid] = useState(false)
 
 
     const { data, isLoading, isFetching } = useGetDirectItemByIdQuery({ id: item.poItemsId, purchaseInwardId, storeId: storeId }, { skip: !item.poItemsId })
+    useEffect(() => {
+        if (!readOnly && item?.itemId && index === 0 && !isLoading && !isFetching && movedToNextSaveNewRef?.current) {
+            movedToNextSaveNewRef.current.focus();
+        }
+    }, [item?.itemId, index, isLoading, isFetching, readOnly]);
 
 
 
@@ -47,6 +52,8 @@ const YarnDirectItem = ({ itemList, uomList,
         }
         setLotGrid(false)
     }
+    const gross = ((item.price ?? 0) * (item.qty ?? 0)).toFixed(2);
+
 
 
     return (
@@ -123,6 +130,7 @@ const YarnDirectItem = ({ itemList, uomList,
                         className="text-right rounded py-1 w-full px-1 table-data-input"
                         value={(!item.qty) ? "" : item.qty}
                         disabled={readOnly}
+                        ref={movedToNextSaveNewRef}
                         onChange={(event) => {
                             if (!event.target.value) {
                                 handleInputChange(0, index, "qty");
@@ -160,25 +168,11 @@ const YarnDirectItem = ({ itemList, uomList,
                     </div>
                 </td>
                 <td className='border border-gray-300 bg-white py-0.5 text-[11px] text-right'>
-                    {item.price * item.qty ? parseFloat(item.price * item.qty || 0).toFixed(2) : ""}
+                    {/* {item?.itemId ? (item.price * item.qty ? parseFloat(item.price * item.qty).toFixed(2) : 0.00) : ""} */}
+                    {item?.itemId ? gross : ""}
 
                 </td>
 
-                {/* <td className="w-16 px-1 py-1 text-center border border-gray-300">
-                    {!readOnly && (
-                        <div className="flex items-center justify-center gap-1">
-                            <button
-                                type="button"
-                                // onClick={addNewRow}
-                                className="text-blue-500 hover:text-blue-700 transition-colors p-1"
-                                title="Add New Row"
-                            >
-                                <FaPlus className="w-3 h-3 mx-auto" />
-                            </button>
-
-                        </div>
-                    )}
-                </td> */}
 
 
 

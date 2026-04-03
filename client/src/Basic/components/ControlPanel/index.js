@@ -21,7 +21,7 @@ const UserRoles = () => {
                 return <StockReport />
             case "ITEM":
                 return <ItemSettings />
-    
+
             default:
                 return ""
         }
@@ -33,7 +33,7 @@ const UserRoles = () => {
                 Control Panel
             </div>
             <div className='row-span-6 grid grid-cols-8 overflow-clip flex-1'>
-                <div className='border-2 bg-white'>
+                <div className='border-2 bg-white text-md'>
                     <div>
                         {subMenus.map((item, index) =>
                             <div key={index} onClick={() => setActiveNavBar(item)} className={`${activeNavBar === item ? "bg-gray-500" : "bg-white"} text-center cursor-pointer`}>{item}</div>

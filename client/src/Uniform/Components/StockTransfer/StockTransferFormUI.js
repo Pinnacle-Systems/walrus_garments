@@ -392,7 +392,7 @@ const StockTransferForm = ({
                                         <DropdownInputNew name="From Location"
                                             options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
                                             value={fromLocationId} setValue={setFromLocationId} required={true}
-                                            readOnly={id || readOnly} clear={true}
+                                            readOnly={id || readOnly} clear={true} disabled={id}
                                         />
                                     </div>
                                     <div className="col-span-2">
@@ -400,7 +400,7 @@ const StockTransferForm = ({
                                         <DropdownInputNew name="To Location"
                                             options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item.id != fromLocationId), "storeName", "id")}
                                             value={toLocationId} setValue={setToLocationId} required={true}
-                                            disabled={!fromLocationId}
+                                            disabled={!fromLocationId || id}
                                             readOnly={readOnly || !fromLocationId}
                                             clear={true}
                                         />
@@ -451,8 +451,8 @@ const StockTransferForm = ({
                                             onChange={(e) => setBarcode(e.target.value)}
                                             onKeyDown={handleBarcodeSearch}
                                             // onBlur={handleBarcodeSearch}
-                                            placeholder="Scan the Barcode"
-                                            className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="Scan the Barcode ..."
+                                            className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                         />
                                     </div>
                                     {/* <div className="col-span-1">

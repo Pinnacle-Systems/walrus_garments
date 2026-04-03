@@ -17,6 +17,8 @@ import TransactionLineItemsSection, {
     transactionTableClassName,
     transactionTableHeadClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
+import { ItemMaster } from "../../../Shocks";
+import { ColorMaster, SizeMaster, UomMaster } from "../../../Basic/components";
 
 const YarnPoItems = ({
     id,
@@ -36,7 +38,10 @@ const YarnPoItems = ({
     itemList,
     sizeList,
     headerOpen,
-    itemPriceList
+    itemPriceList,
+    movedToNextSaveNewRef,
+    saveNewButtonRef,
+    handlers
 }) => {
     const formatThreeDecimals = (value) => {
         const parsed = parseFloat(value);
@@ -52,6 +57,12 @@ const YarnPoItems = ({
     const { data: allData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
     const { data: itemControlData } = useGetItemControlPanelMasterQuery({ params });
     const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
+
+
+    const stockControldata = allData?.data?.[0]
+
+    console.log(stockControldata, "stockControldata")
+
 
     const getBarcodeFromList = (itemId, sizeId, colorId) => {
         if (!itemPriceList?.data || !itemId || !sizeId) return null;
@@ -199,7 +210,7 @@ const YarnPoItems = ({
     const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
     const { data: colorList, isLoading: isColorLoading, isFetching: isColorFetching, } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined }, });
 
-    const itemOptions = (id ? itemList?.data : itemList?.data?.filter(i => i.active) || []).map((item) => ({
+    const itemOptions = (id ? itemList?.data : itemList?.data?.filter(i => i.active) || [])?.map((item) => ({
         value: item.id,
         label: item?.name || "",
     }));
@@ -282,24 +293,34 @@ const YarnPoItems = ({
                                 >
                                     S.No
                                 </th>
-                                <th
+                                {stockControldata?.itemWise && (
 
-                                    className={`w-52 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                >
-                                    Item  <span className="text-red-500">*</span>
-                                </th>
-                                <th
+                                    <th
 
-                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                >
-                                    Size  <span className="text-red-500">*</span>
-                                </th>
-                                <th
+                                        className={`w-52 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                    >
+                                        Item  <span className="text-red-500">*</span>
+                                    </th>
+                                )}
+                                {stockControldata?.sizeWise && (
+                                    <th
 
-                                    className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
-                                >
-                                    Color  <span className="text-red-500">*</span>
-                                </th>
+                                        className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                    >
+                                        Size  <span className="text-red-500">*</span>
+                                    </th>
+                                )}
+                                {stockControldata?.sizeColorWise && (
+                                    <th
+
+                                        className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                    >
+                                        Color  <span className="text-red-500">*</span>
+                                    </th>
+                                )}
+
+
+
                                 <th
 
                                     className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
@@ -377,33 +398,48 @@ const YarnPoItems = ({
                                     }}
                                 >
                                     <td className="w-12 border border-gray-300 text-[11px] text-center p-0">{index + 1}</td>
-                                    <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
-                                        <SearchableTableCellSelect
-                                            value={row.itemId}
-                                            options={itemOptions}
-                                            disabled={readOnly}
-                                            onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
-                                        />
-                                    </td>
-                                    {/* {console.log(row,"row")} */}
 
-                                    <td className="border border-gray-300 bg-white p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
-                                        <SearchableTableCellSelect
-                                            value={row.sizeId}
-                                            options={getSizeOptions(row)}
-                                            disabled={readOnly || !row.itemId}
-                                            onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
-                                        />
-                                    </td>
-
-                                    <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
-                                        <SearchableTableCellSelect
-                                            value={row.colorId}
-                                            options={getColorOptions(row)}
-                                            disabled={readOnly || !row.sizeId}
-                                            onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
-                                        />
-                                    </td>
+                                    {stockControldata?.itemWise && (
+                                        <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                            <SearchableTableCellSelect
+                                                value={row.itemId}
+                                                options={itemOptions}
+                                                disabled={readOnly || id ? row.stockQty < row?.qty : false}
+                                                onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
+                                                addNewModalWidth="w-[90%] h-[95%]"
+                                                childComponent={ItemMaster}
+                                                addNewLabel="+ Add New Item"
+                                                handlers={handlers}
+                                                movedToNextSaveNewRef={movedToNextSaveNewRef}
+                                            />
+                                        </td>
+                                    )}
+                                    {stockControldata?.sizeWise && (
+                                        <td className="border border-gray-300 bg-white p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                            <SearchableTableCellSelect
+                                                value={row.sizeId}
+                                                options={getSizeOptions(row)}
+                                                disabled={readOnly || !row.itemId || id ? row.stockQty < row?.qty : false}
+                                                onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
+                                                addNewModalWidth="w-[40%] h-[45%]"
+                                                childComponent={SizeMaster}
+                                                addNewLabel="+ Add New Size"
+                                            />
+                                        </td>
+                                    )}
+                                    {stockControldata?.sizeColorWise && (
+                                        <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                            <SearchableTableCellSelect
+                                                value={row.colorId}
+                                                options={getColorOptions(row)}
+                                                disabled={readOnly || !row.sizeId || id ? row.stockQty < row?.qty : false}
+                                                onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
+                                                addNewModalWidth="w-[40%] h-[45%]"
+                                                childComponent={ColorMaster}
+                                                addNewLabel="+ Add New Color"
+                                            />
+                                        </td>
+                                    )}
 
 
 
@@ -412,8 +448,11 @@ const YarnPoItems = ({
                                         <SearchableTableCellSelect
                                             value={row.uomId}
                                             options={uomOptions}
-                                            disabled={readOnly}
+                                            disabled={readOnly || !row.itemId || id ? row.stockQty < row?.qty : false}
                                             onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
+                                            addNewModalWidth="w-[40%] h-[45%]"
+                                            childComponent={UomMaster}
+                                            addNewLabel="+ Add New Uom"
                                         />
                                     </td>
                                     <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right">
@@ -437,18 +476,17 @@ const YarnPoItems = ({
                                                         onFocus={(e) => e.target.select()}
                                                         // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                                         value={row[i]}
-                                                        // disabled={readOnly || !row.uomId}
+                                                        disabled={readOnly || !row.uomId || id ? row.stockQty < row?.qty : false}
                                                         onChange={(e) =>
                                                             handleInputChange(e.target.value, index, i)
                                                         }
                                                         onBlur={(e) => {
-                                                            handleInputChange(e.target.value.toFixed(3), index, i);
+                                                            handleInputChange(e.target.value, index, i);
                                                         }
                                                         }
                                                     />
                                                 </td>
-                                                {console.log(element?.[i], 'element')}
-                                                {console.log(i, 'iiiiiiiiiiii')}
+
                                             </>
                                         ))
                                     ))}
@@ -473,13 +511,25 @@ const YarnPoItems = ({
                                             value={(row?.qty)}
                                             disabled={readOnly || !row.uomId || id ? row.stockQty < row?.qty : false}
                                             onChange={(e) => {
-                                                if (id) {
-                                                    if (row?.stockQty)
-                                                        handleInputChange(e.target.value, index, "qty")
-                                                } else {
-                                                    handleInputChange(e.target.value, index, "qty")
 
-                                                }
+                                                handleInputChange(e.target.value, index, "qty")
+                                                // if (id) {
+                                                //     if (parseFloat(item?.stockQty) < parseFloat(e.target.value)) {
+                                                //         Swal.fire({
+                                                //             title: "cannot enter below the Stock Qty",
+                                                //             icon: "warning",
+                                                //         });
+                                                //         return
+                                                //     }
+                                                //     else {
+                                                //         handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
+                                                //     }
+                                                // } else {
+                                                //     handleInputChange(e.target.value, index, "qty");
+
+                                                // }
+
+
 
                                             }}
                                             onBlur={(e) => {
@@ -489,7 +539,7 @@ const YarnPoItems = ({
                                         />
                                     </td>
 
-                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
+                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100 ">
                                         <input
                                             onKeyDown={e => {
                                                 if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -500,7 +550,7 @@ const YarnPoItems = ({
                                             className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
                                             onFocus={(e) => e.target.select()}
                                             value={(row?.price)}
-                                            disabled={readOnly || !row.qty}
+                                            disabled={readOnly || !row.qty || id ? row.stockQty < row?.qty : false}
                                             onChange={(e) =>
                                                 handleInputChange(e.target.value, index, "price")
                                             }
@@ -542,7 +592,7 @@ const YarnPoItems = ({
                                 </tr>
                             )}
                         </tbody>
-                        <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300  font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
+                        {/* <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300  font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
                             <tr>
                                 <td
                                     colSpan={6 + (id ? 1 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
@@ -559,14 +609,14 @@ const YarnPoItems = ({
                                 </td>
                                 <td className="px-1 py-1 bg-gray-100"></td>
                             </tr>
-                        </tfoot>
+                        </tfoot> */}
                     </table>
                 </div>
                 {contextMenu && (
                     <div
                         style={{
                             position: "absolute",
-                            top: `${contextMenu.mouseY - 55}px`,
+                            top: `${contextMenu.mouseY - 355}px`,
                             left: `${contextMenu.mouseX - 40}px`,
 
                             // background: "gray",

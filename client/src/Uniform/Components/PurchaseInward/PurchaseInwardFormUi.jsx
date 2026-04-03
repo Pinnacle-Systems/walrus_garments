@@ -33,7 +33,7 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
-import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 const PurchaseInwardForm = ({
   hasPermission,
@@ -96,6 +96,18 @@ const PurchaseInwardForm = ({
   const branchRef = useRef(null);
   const locationRef = useRef(null);
   const partyRef = useRef(null);
+
+
+
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef: nameRef,
+    movedToNextSaveNewRef,
+    saveNewButtonRef,
+    saveCloseButtonRef,
+  } = refs;
+
 
   const storeOptions = locationData
     ? locationData?.data?.filter(
@@ -263,6 +275,19 @@ const PurchaseInwardForm = ({
       });
       return;
     }
+
+
+    const hasDuplicate = (arr) =>
+      new Set(arr.map(i => i.barcode)).size !== arr.length;
+
+    if (hasDuplicate(data?.directInwardReturnItems)) {
+      Swal.fire({
+        title: "Same Barcode Found in Multiple Lines",
+        icon: "warning",
+      });
+      return;
+    }
+
     if (
       !isGridDatasValid(
         data?.directInwardReturnItems?.filter((i) => i.itemId),
@@ -328,19 +353,25 @@ const PurchaseInwardForm = ({
   const footerContent = (
     <div className="flex flex-col justify-between gap-2 md:flex-row">
       <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => hasPermission(() => saveData("new"), "create")}
-          className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
-        >
-          <FiSave className="mr-2 h-4 w-4" />
-          Save & New
-        </button>
+
         <button
           onClick={() => hasPermission(() => saveData("close"), "create")}
+          ref={saveCloseButtonRef}
+          tabIndex={0}
+          onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
           className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
         >
           <HiOutlineRefresh className="mr-2 h-4 w-4" />
           Save & Close
+        </button>
+        <button
+          onClick={() => hasPermission(() => saveData("new"), "create")}
+          ref={saveNewButtonRef}
+          onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
+          className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+        >
+          <FiSave className="mr-2 h-4 w-4" />
+          Save & New
         </button>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -540,6 +571,9 @@ const PurchaseInwardForm = ({
                 sizeList={sizeList}
                 headerOpen={headerOpen}
                 itemPriceList={itemPriceList}
+                movedToNextSaveNewRef={movedToNextSaveNewRef}
+                saveNewButtonRef={saveNewButtonRef}
+                handlers={handlers}
               />
             )}
             {(poInwardOrDirectInward === "PurchaseInward" ||

@@ -34,15 +34,15 @@ import YarnPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx";
 import useTaxDetailsHook from "../../../CustomHooks/TaxHookDetails/index.js";
 import { groupBy } from "lodash";
 import { useGetDirectInwardOrReturnQuery } from "../../../redux/uniformService/DirectInwardOrReturnServices.js";
-import useInvalidateTags from "../../../CustomHooks/useInvalidateTags.js";
 import { useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService.js";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell.jsx";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection.jsx";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList, hasPermission
+    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList, hasPermission, invalidateTagsDispatch
 
 }) => {
 
@@ -78,8 +78,17 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [printModalOpen, setPrintModalOpen] = useState(false);
 
 
+    const firstInputRef = useRef(null);
 
-    const [invalidateTagsDispatch] = useInvalidateTags();
+
+    const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+    const {
+        firstInputRef: nameRef,
+        movedToNextSaveNewRef,
+        saveCloseButtonRef,
+        saveNewButtonRef,
+    } = refs;
+
 
 
     const {
@@ -133,6 +142,10 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     });
 
     useEffect(() => {
+        if (firstInputRef.current) firstInputRef.current.focus();
+    }, []);
+
+    useEffect(() => {
         if (id) {
             syncFormWithDb(singleData?.data);
         } else {
@@ -177,10 +190,17 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const handleSubmitCustom = async (callback, payload, text, nextProcess) => {
         try {
             const returnData = await callback(payload).unwrap();
+            invalidateTagsDispatch()
             if (returnData.statusCode === 1) {
-                toast.error(returnData.message);
+
+                await Swal.fire({
+                    icon: "error",
+                    title: returnData.message,
+                    showConfirmButton: false,
+
+                });
             } else {
-                Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, showConfirmButton: false });
+                await Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, showConfirmButton: false });
                 if (returnData.statusCode === 0) {
                     if (nextProcess === "new") {
                         syncFormWithDb(undefined)
@@ -189,7 +209,13 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     }
 
                 } else {
-                    toast.error(returnData?.message);
+                    // toast.error(returnData?.message);
+                    Swal.fire({
+                        icon: "error",
+                        title: returnData.message,
+                        showConfirmButton: false,
+
+                    });
                 }
             }
         } catch (error) {
@@ -317,11 +343,17 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         </div>
     );
 
+
+
+
+
     if (isTaxHookDetailsLoading) return <Loader />
 
     return (
         <>
-            <Modal isOpen={inwardItemSelection} onClose={() => setInwardItemSelection(false)} widthClass={"w-[95%] h-[90%] py-10"}>
+            <Modal isOpen={inwardItemSelection}
+                onClose={() => setInwardItemSelection(false)}
+                widthClass={"w-[95%] h-[90%] py-10"}>
                 {
                     (poInwardOrDirectInward == "PurchaseReturn" || poInwardOrDirectInward == "GeneralReturn") ?
                         <PoItemsSelection setInwardItemSelection={setInwardItemSelection} transtype={transType}
@@ -335,7 +367,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             supplierId={supplierId}
                             storeId={storeId} poInwardOrDirectInward={poInwardOrDirectInward}
                             inwardItems={directInwardReturnItems}
-                            setInwardItems={setDirectInwardReturnItems} purchaseInwardId={purchaseInwardId}
+                            setInwardItems={setDirectInwardReturnItems} purchaseInwardId={purchaseInwardId} movedToNextSaveNewRef={movedToNextSaveNewRef}
 
                         />
                 }
@@ -404,7 +436,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         <TransactionHeaderSection title="Return Details" className="col-span-1" bodyClassName="grid-cols-2 md:grid-cols-[minmax(0,2fr)_minmax(0,2.4fr)]">
                             <ReusableInput label="Purchase Return No" value={docId} required={true} readOnly
                             />
-                            <DateInputNew name="Purchase Return Date" value={date} type={"date"} required={true} readOnly={readOnly} />
+                            <DateInputNew name="Purchase Return Date" value={date} type={"date"} required={true} readOnly={readOnly}
+                                disabled={true}
+                            />
                         </TransactionHeaderSection>
                         <TransactionHeaderSection title="Location Details" className="col-span-2" bodyClassName="grid-cols-2 gap-2">
                             {/* <DropdownInput name="Return Type"
@@ -416,7 +450,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                 options={branchList ? (dropDownListObject(id ? branchList.data : branchList.data.filter(item => item.active), "branchName", "id")) : []}
                                 value={locationId}
                                 setValue={(value) => { setLocationId(value); setStoreId("") }}
-                                required={true} readOnly={id || readOnly} />
+                                required={true} readOnly={id || readOnly}
+                                ref={firstInputRef}
+                            />
                             <DropdownInput name="Location"
                                 options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item.storeName.includes("WAREHOUSE")), "storeName", "id")}
                                 value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
@@ -509,7 +545,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
                         supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
                         branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} id={id} sizeList={sizeList}
-                        purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList} headerOpen={isHeaderOpen}
+                        purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList} headerOpen={isHeaderOpen} movedToNextSaveNewRef={movedToNextSaveNewRef}
                     />
                 </div>
             </TransactionEntryShell>

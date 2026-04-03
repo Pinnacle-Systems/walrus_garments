@@ -10,7 +10,7 @@ import TransactionLineItemsSection, {
 
 
 const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardReturnItems,
-    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList, stockControlData, storeId, setInwardItemSelection, supplierId, purchaseInwardId, itemPriceList, headerOpen
+    setDirectInwardReturnItems, readOnly, sizeList, itemList, colorList, uomList, stockControlData, storeId, setInwardItemSelection, supplierId, purchaseInwardId, itemPriceList, headerOpen, movedToNextSaveNewRef
 
 }) => {
 
@@ -187,7 +187,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 key={item.poItemsId} storeId={storeId}
                                 item={item} index={index} handleInputChange={handleInputChange}
                                 readOnly={readOnly}
-                                handleRightClick={handleRightClick} addNewRow={addNewRow} stockControlData={stockControlData}
+                                handleRightClick={handleRightClick} addNewRow={addNewRow} stockControlData={stockControlData} movedToNextSaveNewRef={index === 0 ? movedToNextSaveNewRef : undefined}
                             />)}
                             {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - directInwardReturnItems?.length) }).map(i =>
                                 <tr className='w-12 border border-gray-300 bg-white text-[11px] h-8 text-center p-0.5'>
@@ -220,8 +220,8 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                     <div
                         style={{
                             position: "absolute",
-                            top: `${contextMenu.mouseY - 50}px`,
-                            left: `${contextMenu.mouseX - 30}px`,
+                            top: `${contextMenu.mouseY - 345}px`,
+                            left: `${contextMenu.mouseX - 65}px`,
 
                             // background: "gray",
                             boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",

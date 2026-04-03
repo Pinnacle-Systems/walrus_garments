@@ -37,6 +37,7 @@ export default function Form() {
   const [panelId, setPanelId] = useState([]);
   const [hsnId, setHsnId] = useState("");
   const [mainCategoryId, setMainCategoryId] = useState("");
+  const [aliasName, setAliasName] = useState("");
 
   const [searchValue, setSearchValue] = useState("");
   const nameRef = useRef(null);
@@ -75,6 +76,7 @@ export default function Form() {
       setItemDescription(data?.itemDescription ? data?.itemDescription : "");
       setHsnId(data?.hsnId ? String(data.hsnId) : "");
       setMainCategoryId(data?.mainCategoryId ? String(data.mainCategoryId) : "");
+      setAliasName(data?.aliasName ? data.aliasName : "");
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
     [id]
@@ -98,6 +100,7 @@ export default function Form() {
     itemTypeId,
     hsnId: hsnId ? parseInt(hsnId) : undefined,
     mainCategoryId: mainCategoryId ? parseInt(mainCategoryId) : undefined,
+    aliasName
   };
 
   const validateData = (data) => {
@@ -343,6 +346,16 @@ export default function Form() {
                       readOnly={readOnly}
                       disabled={childRecord.current > 0}
                       ref={nameRef}
+                    />
+                    <TextInput
+                      name="Alias Name"
+                      type="text"
+                      value={aliasName}
+                      setValue={setAliasName}
+                      required={true}
+                      readOnly={readOnly}
+                      disabled={childRecord.current > 0}
+                    // ref={aliasNameRef}
                     />
                     <DropdownInputNew
                       name="HSN Code"

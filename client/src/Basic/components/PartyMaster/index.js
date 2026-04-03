@@ -805,14 +805,19 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
 
   useEffect(() => {
+    console.log(show, "showshow", partyId)
+
     if (!partyId) return
     if (partyId == "new") {
-      onNew()
+      setClient(show == "isClient" ? true : false)
+      setSupplier(show == "isSupplier" ? true : false)
     }
     else {
       setId(partyId);
     }
     setForm(true);
+
+
     if (openModelForAddress) {
       setIsAddressExpanded(true);
     }
@@ -981,7 +986,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           type="checkbox"
                           checked={isClient}
                           onChange={(e) => setClient(e.target.checked)}
-                          disabled={readOnly}
+                          disabled={childRecord > 0}
                         />
                         <label className="block text-xs font-bold text-gray-600">
                           Customer
@@ -993,7 +998,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           type="checkbox"
                           checked={isSupplier}
                           onChange={(e) => setSupplier(e.target.checked)}
-                          disabled={readOnly}
+                          disabled={childRecord > 0}
+
                         />
                         <label className="block text-xs font-bold text-gray-600">
                           Supplier
@@ -1011,7 +1017,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                             }
                             setIsBranch(e.target.checked)
                           }}
-                          disabled={readOnly}
+                          disabled={childRecord > 0}
                         />
                         <label className="block text-xs font-bold text-gray-600">
                           Add Branch
@@ -1027,9 +1033,18 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         options={dropDownListObject(
                           id
                             ? allData?.data?.filter(i => i.id != id && !i.parentId && i.gstNo)
-                            : allData?.data?.filter(
-                              (item) => item.active && item.id != id && !item.parentId && item.gstNo
-                            ),
+                            : allData?.data?.filter((item) =>
+                              item.active &&
+                              item.id !== id &&
+                              !item.parentId &&
+                              item.gstNo &&
+                              (
+                                (isClient && isSupplier) ||
+                                (isClient && item.isClient) ||
+                                (isSupplier && item.isSupplier)
+                              )
+                            )
+                          ,
                           "name",
                           "id"
                         )}
@@ -1043,7 +1058,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         // setValue={setParentId}
                         readOnly={readOnly}
                         required={true}
-                        disabled={childRecord.current > 0 || !isBranch}
+                        disabled={childRecord > 0 || !isBranch}
                       />
 
 
@@ -1068,7 +1083,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         }}
                         required={true}
                         readOnly={readOnly}
-                        disabled={childRecord.current > 0 || !isBranch || !parentId}
+                        disabled={childRecord > 0 || !isBranch || !parentId}
                         addNewLabel="+ Add New Branch Type"
                         childComponent={BranchTypeMaster}
                         addNewModalWidth="w-[40%] h-[45%]"
@@ -1086,7 +1101,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           setValue={setName}
                           required={true}
                           readOnly={readOnly}
-                          disabled={childRecord.current > 0}
+                          disabled={childRecord > 0}
                           onBlur={(e) => {
                             if (aliasName) return;
                             setAliasName(e.target.value);
@@ -1104,7 +1119,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                           inputClass="h-10" value={name}
                           setValue={setName} required={true}
                           readOnly={readOnly}
-                          disabled={(childRecord.current > 0)} />
+                          disabled={(childRecord > 0)} />
                       </div>
                     )}
 
@@ -1116,12 +1131,12 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         required={true}
                         setValue={setPartyCode}
                         readOnly={readOnly}
-                        disabled={childRecord.current > 0}
+                        // disabled={childRecord.current > 0}
                         className="focus:ring-2 focus:ring-blue-100 w-10"
                       />
                     </div>
 
-                    <div className=" ml-2">
+                    <div className=" ml-2 mt-1">
                       <ToggleButton
                         name="Status"
                         options={statusDropdown}
@@ -1132,6 +1147,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         className="bg-gray-100 p-1 rounded-lg"
                         activeClass="bg-[#f1f1f0] shadow-sm text-blue-600"
                         inactiveClass="text-gray-500"
+
                       />
                     </div>
 
@@ -1159,8 +1175,9 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         <TextArea name="Address"
                           inputClass="h-10" value={address}
                           setValue={setAddress} required={true}
-                          readOnly={readOnly} d
-                          isabled={(childRecord.current > 0)} />
+                          readOnly={readOnly}
+                        // disabled={(childRecord.current > 0)}
+                        />
                       </div>
                       <div className="col-span-2">
                         <div className="grid grid-cols-5 gap-2">
@@ -1335,7 +1352,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                         value={panNo}
                         setValue={setPanNo}
                         readOnly={readOnly || parentId || isBranch}
-                        disabled={childRecord.current > 0}
+                        disabled={parentId || isBranch}
                         className="focus:ring-2 focus:ring-blue-100"
                       />
                       <TextInput
@@ -1490,6 +1507,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                                   onChange={(e) =>
                                     handleInputChange(e.target.value, index, "name")
                                   }
+                                  disabled={readOnly}
 
                                 />
                               </td>
@@ -1564,6 +1582,8 @@ export default function Form({ partyId, show, openModelForAddress }) {
                                         addNewComments();
                                       }
                                     }}
+                                    disabled={readOnly}
+
                                     onClick={addNewComments}
                                     className="flex items-center px-1 bg-blue-50 rounded"
                                   >
@@ -1573,6 +1593,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
                                   {/* Delete Button */}
                                   <button
                                     className="flex items-center px-1 bg-red-50 rounded"
+                                    disabled={readOnly}
                                     onClick={() => deleteRow(index)}
                                   >
                                     <svg
@@ -1614,7 +1635,6 @@ export default function Form({ partyId, show, openModelForAddress }) {
 
             </div>
           </div>
-
 
         </div>
       </>

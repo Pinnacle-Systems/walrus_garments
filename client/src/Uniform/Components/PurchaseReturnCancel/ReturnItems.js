@@ -11,7 +11,7 @@ import { useGetStockReportControlQuery } from '../../../redux/uniformService/Sto
 export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDirectInward, storeId, readOnly, directInwardReturnItems, setDirectInwardReturnItems, id, supplierId, setInwardItemSelection,
 
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, itemList, colorList, uomList, sizeList, purchaseInwardId, itemPriceList, headerOpen
+    branchdata, itemList, colorList, uomList, sizeList, purchaseInwardId, itemPriceList, headerOpen, movedToNextSaveNewRef
 
 }) {
     const { branchId, userId, finYearId } = getCommonParams();
@@ -44,13 +44,12 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
 
 
 
-
+    console.log(directInwardReturnItems, 'directInwardReturnItems')
 
 
     const handleInputChange = (value, index, field, balanceQty, poItem = undefined) => {
         const newBlend = structuredClone(directInwardReturnItems);
 
-        console.log(newBlend, 'newBlend', directInwardReturnItems, 'directInwardReturnItems')
 
 
         if (poItem) {
@@ -165,7 +164,7 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
                         supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
                         branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} sizeList={sizeList}
                         supplierId={supplierId} stockControlData={stockControlData} setInwardItemSelection={setInwardItemSelection}
-                        itemPriceList={itemPriceList} headerOpen={headerOpen}
+                        itemPriceList={itemPriceList} headerOpen={headerOpen} movedToNextSaveNewRef={movedToNextSaveNewRef}
                     />
 
 

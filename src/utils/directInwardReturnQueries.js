@@ -406,21 +406,21 @@ export async function getPurchaseReturnItemsAlreadyData(directReturnOrPoReturnId
         //     stockQty = stockQty
         // }
 
-        allowedReturnQty = directItem?.qty  + allowedReturnQty
+        allowedReturnQty = directItem?.qty + allowedReturnQty
 
 
 
-            let obj = {
-                ...directItem,
-                alreadyReturnedQty,
-                alreadyReturnedRolls,
-                alreadyInwardedQty,
-                alreadyInwardedRolls,
-                allowedReturnRolls,
-                allowedReturnQty,
-                // returnLotDetails,
-                stockQty
-            }
+        let obj = {
+            ...directItem,
+            alreadyReturnedQty,
+            alreadyReturnedRolls,
+            alreadyInwardedQty,
+            alreadyInwardedRolls,
+            allowedReturnRolls,
+            allowedReturnQty,
+            // returnLotDetails,
+            stockQty: stockQty + directItem?.qty
+        }
 
 
 

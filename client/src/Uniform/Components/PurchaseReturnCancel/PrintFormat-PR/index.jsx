@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   poRefLabel: {
     fontSize: 7.5,
     color: COLOR.textMuted,
-    width: 55,
+    width: 75,
   },
   poRefSep: {
     fontSize: 7.5,
@@ -324,7 +324,7 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
 
           {/* ── Header ── */}
           <View style={styles.header}>
-            <View style={styles.headerLeft}>
+            {/* <View style={styles.headerLeft}>
               <Text style={styles.addressText}>{branchData.address}</Text>
               <View style={styles.companyInfoRow}>
                 <Text style={styles.companyInfoLabel}>Mobile</Text>
@@ -338,7 +338,7 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
                 <Text style={styles.companyInfoLabel}>GST No</Text>
                 <Text style={styles.companyInfoValue}>: {branchData.gstNo}</Text>
               </View>
-            </View>
+            </View> */}
 
             <View style={styles.headerCenter}>
               <Text style={styles.companyName}>{branchData.branchName}</Text>
@@ -359,9 +359,9 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
           {/* ── Reference row ── */}
           <View style={styles.poRefRow}>
             {[
-              { label: "Return No", value: poNumber },
-              { label: "Return Date", value: getDateFromDateTimeToDisplay(poDate) },
-              { label: "Branch GST", value: branchData?.gstNo },
+              { label: "Purchase Return No", value: poNumber },
+              { label: "Purchase Return Date", value: getDateFromDateTimeToDisplay(poDate) },
+              // { label: "Branch GST", value: branchData?.gstNo },
             ].map(({ label, value }) => (
               <View key={label} style={styles.poRefBox}>
                 <Text style={styles.poRefLabel}>{label}</Text>
@@ -377,11 +377,19 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
               <Text style={styles.addressSectionLabel}>From</Text>
               <Text style={styles.addressName}>{branchData.branchName}</Text>
               <Text style={styles.addressText}>{branchData.address}</Text>
+
+              <View style={styles.companyInfoRow}>
+                <Text style={styles.companyInfoLabel}>Mobile</Text>
+                <Text style={styles.companyInfoValue}>: {branchData.contactMobile}</Text>
+              </View>
               <View style={styles.addressRow}>
                 <Text style={styles.addressLabel}>GST No</Text>
                 <Text style={styles.addressValue}>: {branchData?.gstNo}</Text>
               </View>
-            </View>
+              <View style={styles.companyInfoRow}>
+                <Text style={styles.companyInfoLabel}>Email</Text>
+                <Text style={styles.companyInfoValue}>: {branchData.contactEmail}</Text>
+              </View>            </View>
 
             <View style={styles.addressDivider} />
 
@@ -392,7 +400,7 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
               {[
                 { label: "Mobile No", value: supplierDetails?.contactPersonNumber },
                 { label: "GST No", value: supplierDetails?.gstNo },
-                { label: "Email", value: supplierDetails?.email },
+                { label: "Email", value: supplierDetails?.contactPersonEmail },
               ].map(({ label, value }) => (
                 <View key={label} style={styles.addressRow}>
                   <Text style={styles.addressLabel}>{label}</Text>
@@ -479,7 +487,7 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
             </View>
             <View style={{ flex: 1.4, padding: 8 }}>
               <Text style={{ fontSize: 7.5, fontWeight: "bold", color: COLOR.navy, marginBottom: 4 }}>TERMS & CONDITIONS</Text>
-              <Text style={{ fontSize: 7.5, color: COLOR.textMuted }}>Items Once Sold Cannot Be Taken Back.</Text>
+              <Text style={{ fontSize: 7.5, color: COLOR.textMuted }}></Text>
             </View>
           </View>
 
