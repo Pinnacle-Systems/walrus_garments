@@ -351,7 +351,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             });
                             return;
                         }
-                        setBarcodePrintOpen(true);
+                        setPrintModalOpen(true);
                     }}
                 >
                     <FiPrinter className="mr-2 h-4 w-4" />

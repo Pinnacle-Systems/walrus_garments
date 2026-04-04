@@ -1928,6 +1928,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
 
 
+            </div>
           </>}
         </Modal >
       )}
