@@ -289,47 +289,44 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     return !value?.toString().trim();
   }, [getResolvedUom]);
 
-  const getRowStatus = React.useCallback((row) => {
-    const requiredField = openingStockFields.find((field) => field.required && isFieldValueMissing(row, field));
-    if (requiredField) {
+  const getFieldAttentionState = React.useCallback((row, field) => {
+    if (field.required && isFieldValueMissing(row, field)) {
       return {
         tone: "missing",
-        label: "Missing Fields",
-        detail: requiredField.label,
+        message: `${field.label} is required`,
       };
     }
 
-    const resolvedItem = getResolvedItem(row);
-    if (normalizeLookupValue(row?.item_name) && !resolvedItem) {
+    if (field.key === "item_name" && normalizeLookupValue(row?.item_name) && !getResolvedItem(row)) {
       return {
         tone: "pending",
-        label: "Pending Item",
-        detail: row.item_name,
+        message: `Item ${normalizeMasterValue(row.item_name)} will be created during save`,
       };
     }
 
-    if (stockMaintenance.trackSize && normalizeLookupValue(row?.size) && !getResolvedSize(row)) {
+    if (field.key === "size" && stockMaintenance.trackSize && normalizeLookupValue(row?.size) && !getResolvedSize(row)) {
       return {
         tone: "pending",
-        label: "Pending Size",
-        detail: row.size,
+        message: `Size ${normalizeMasterValue(row.size)} will be created during save`,
       };
     }
 
-    if (stockMaintenance.trackColor && normalizeLookupValue(row?.color) && !getResolvedColor(row)) {
+    if (field.key === "color" && stockMaintenance.trackColor && normalizeLookupValue(row?.color) && !getResolvedColor(row)) {
       return {
         tone: "pending",
-        label: "Pending Color",
-        detail: row.color,
+        message: `Color ${normalizeMasterValue(row.color)} will be created during save`,
       };
     }
 
-    return {
-      tone: "ready",
-      label: "Ready",
-      detail: "",
-    };
-  }, [getResolvedColor, getResolvedItem, getResolvedSize, isFieldValueMissing, openingStockFields, stockMaintenance.trackColor, stockMaintenance.trackSize]);
+    return null;
+  }, [
+    getResolvedColor,
+    getResolvedItem,
+    getResolvedSize,
+    isFieldValueMissing,
+    stockMaintenance.trackColor,
+    stockMaintenance.trackSize,
+  ]);
 
   const getColorReviewErrors = React.useCallback((reviewColors = missingMasterReview.colors) => {
     const codeCounts = reviewColors.reduce((accumulator, color) => {
@@ -902,22 +899,27 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                         {field.label}
                       </th>
                     ))}
-                    <th className={`${transactionTableHeaderCellClassName} w-32`}>Status</th>
                     <th className={`${transactionTableHeaderCellClassName} w-16`}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {stockItems.map((row, rowIndex) => {
-                    const rowStatus = getRowStatus(row);
-
                     return (
                       <tr key={row._rowId || rowIndex} className="border border-blue-gray-200">
                         <td className={transactionTableIndexCellClassName}>{rowIndex + 1}</td>
                         {openingStockFields.map((field) => {
-                          const isInvalid = field.required && isFieldValueMissing(row, field);
-                          const cellClassName = isInvalid
-                            ? `${transactionTableFocusCellClassName} bg-red-100`
-                            : transactionTableFocusCellClassName;
+                          const attentionState = getFieldAttentionState(row, field);
+                          const cellClassName = attentionState?.tone === "missing"
+                            ? `${transactionTableFocusCellClassName} bg-red-50`
+                            : attentionState?.tone === "pending"
+                              ? `${transactionTableFocusCellClassName} bg-amber-50`
+                              : transactionTableFocusCellClassName;
+                          const inputClassName = field.type === "number"
+                            ? transactionTableNumberInputClassName
+                            : transactionTableSelectInputClassName;
+                          const emphasizedInputClassName = attentionState
+                            ? `${inputClassName} ${attentionState.tone === "missing" ? "text-red-700 placeholder:text-red-300" : "text-amber-800 placeholder:text-amber-300"}`
+                            : inputClassName;
 
                           if (field.key === "uom") {
                             const resolvedUomId = getResolvedUom(row)?.id || "";
@@ -940,8 +942,17 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                                     );
                                   }}
                                   placeholder="UOM..."
+                                  title={attentionState?.message || ""}
                                   styles={{
-                                    control: (base) => ({ ...base, minHeight: "30px", height: "30px", fontSize: "12px" }),
+                                    control: (base) => ({
+                                      ...base,
+                                      minHeight: "30px",
+                                      height: "30px",
+                                      fontSize: "12px",
+                                      backgroundColor: "transparent",
+                                      borderColor: "transparent",
+                                      boxShadow: "none",
+                                    }),
                                     indicatorsContainer: (base) => ({ ...base, height: "30px" }),
                                   }}
                                 />
@@ -950,9 +961,6 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                           }
 
                           const inputType = field.type === "number" ? "number" : "text";
-                          const inputClassName = field.type === "number"
-                            ? transactionTableNumberInputClassName
-                            : transactionTableSelectInputClassName;
 
                           return (
                             <td key={field.key} className={cellClassName}>
@@ -960,24 +968,12 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                                 type={inputType}
                                 value={normalizeNumericValue(row[field.key])}
                                 onChange={(event) => updateRowField(row._rowId, field.key, event.target.value)}
-                                className={inputClassName}
+                                className={emphasizedInputClassName}
+                                title={attentionState?.message || ""}
                               />
                             </td>
                           );
                         })}
-                        <td className={transactionTableActionCellClassName}>
-                          <span
-                            className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${
-                              rowStatus.tone === "ready"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : rowStatus.tone === "missing"
-                                  ? "bg-red-100 text-red-700"
-                                  : "bg-amber-100 text-amber-700"
-                            }`}
-                          >
-                            {rowStatus.label}
-                          </span>
-                        </td>
                         <td className={transactionTableActionCellClassName}>
                           <button
                             onClick={() => updateRows((previousRows) => previousRows.filter((entry) => entry._rowId !== row._rowId))}
