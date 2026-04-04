@@ -4,8 +4,12 @@ import {
   buildFulfillmentAllocations,
   buildStockOutEntries,
   calculateDeliveryNetAmount,
+  extractResolvedAllocations,
+  getHybridFulfillmentResolutionError,
   getRemainingPaymentCapacity,
   getRemainingQtyBySaleOrderItemId,
+  lookupCandidateStockBuckets,
+  resolveHybridFulfillmentLines,
   validateConvertedDelivery,
   validateFulfillmentAllocations,
 } from "./salesDeliveryConversionRules.js";
@@ -110,6 +114,149 @@ test("stale fulfillment allocation is rejected when current stock changed", asyn
 
   const message = await validateFulfillmentAllocations(tx, [
     { itemId: 1, sizeId: 1, colorId: 2, uomId: 3, storeId: 7, branchId: 9, allocatedQty: 4 },
+  ]);
+
+  assert.equal(
+    message,
+    "Current stock no longer supports the chosen fulfillment allocation. Please reallocate before saving."
+  );
+});
+
+test("candidate lookup groups stock rows by explicit bucket without pooling ambiguous matches", async () => {
+  const tx = {
+    stock: {
+      findMany: async () => [
+        { itemId: 1, sizeId: 1, colorId: 2, uomId: 3, storeId: 7, branchId: 9, barcode: "LOT-A", qty: 2 },
+        { itemId: 1, sizeId: 1, colorId: 2, uomId: 3, storeId: 7, branchId: 9, barcode: "LOT-A", qty: 1 },
+        { itemId: 1, sizeId: 1, colorId: 2, uomId: 3, storeId: 7, branchId: 9, barcode: "LOT-B", qty: 4 },
+      ],
+    },
+  };
+
+  const buckets = await lookupCandidateStockBuckets(tx, { itemId: 1, sizeId: 1, colorId: 2, uomId: 3 }, {
+    storeId: 7,
+    branchId: 9,
+  });
+
+  assert.deepEqual(buckets, [
+    { lineIndex: undefined, itemId: 1, sizeId: 1, colorId: 2, uomId: 3, storeId: 7, branchId: 9, barcode: "LOT-A", availableQty: 3 },
+    { lineIndex: undefined, itemId: 1, sizeId: 1, colorId: 2, uomId: 3, storeId: 7, branchId: 9, barcode: "LOT-B", availableQty: 4 },
+  ]);
+});
+
+test("hybrid fulfillment auto-selects a single candidate bucket when the match is unambiguous", async () => {
+  const tx = {
+    stock: {
+      findMany: async () => [
+        { itemId: 1, sizeId: 1, colorId: 2, uomId: 3, storeId: 7, branchId: 9, barcode: "LOT-A", qty: 5 },
+      ],
+    },
+  };
+
+  const resolution = await resolveHybridFulfillmentLines(tx, [
+    { itemId: 1, sizeId: 1, colorId: 2, uomId: 3, qty: 4 },
+  ], { storeId: 7, branchId: 9 });
+
+  assert.equal(resolution[0].matchType, "single");
+  assert.deepEqual(extractResolvedAllocations(resolution), [
+    {
+      lineIndex: 0,
+      salesDeliveryItemId: null,
+      saleOrderItemId: null,
+      itemId: 1,
+      sizeId: 1,
+      colorId: 2,
+      uomId: 3,
+      storeId: 7,
+      branchId: 9,
+      barcode: "LOT-A",
+      allocatedQty: 4,
+    },
+  ]);
+});
+
+test("hybrid fulfillment reports candidate buckets when a line matches multiple stock buckets", async () => {
+  const tx = {
+    stock: {
+      findMany: async () => [
+        { itemId: 1, sizeId: 1, colorId: 2, uomId: 3, storeId: 7, branchId: 9, barcode: "LOT-A", qty: 2 },
+        { itemId: 1, sizeId: 1, colorId: 2, uomId: 3, storeId: 7, branchId: 9, barcode: "LOT-B", qty: 3 },
+      ],
+    },
+  };
+
+  const resolution = await resolveHybridFulfillmentLines(tx, [
+    { itemId: 1, sizeId: 1, colorId: 2, uomId: 3, qty: 2 },
+  ], { storeId: 7, branchId: 9 });
+
+  assert.equal(resolution[0].matchType, "multiple");
+  assert.equal(extractResolvedAllocations(resolution).length, 0);
+
+  const error = getHybridFulfillmentResolutionError(resolution);
+  assert.equal(
+    error?.message,
+    "One or more lines match multiple stock buckets. Please select the stock bucket before saving."
+  );
+  assert.equal(error?.fulfillmentResolution?.[0]?.candidateBuckets?.length, 2);
+});
+
+test("hybrid fulfillment accepts explicit split allocations under one visible line", async () => {
+  const tx = {
+    stock: {
+      findMany: async () => [],
+    },
+  };
+
+  const resolution = await resolveHybridFulfillmentLines(tx, [
+    {
+      itemId: 1,
+      qty: 5,
+      fulfillmentAllocations: [
+        { itemId: 1, barcode: "LOT-A", storeId: 7, branchId: 9, allocatedQty: 2 },
+        { itemId: 1, barcode: "LOT-B", storeId: 7, branchId: 9, allocatedQty: 3 },
+      ],
+    },
+  ], { storeId: 7, branchId: 9 });
+
+  assert.equal(resolution[0].matchType, "selected");
+  assert.equal(getHybridFulfillmentResolutionError(resolution), null);
+  assert.equal(extractResolvedAllocations(resolution).length, 2);
+});
+
+test("hybrid fulfillment rejects explicit allocations that do not cover the requested quantity", async () => {
+  const tx = {
+    stock: {
+      findMany: async () => [],
+    },
+  };
+
+  const resolution = await resolveHybridFulfillmentLines(tx, [
+    {
+      itemId: 1,
+      qty: 5,
+      fulfillmentAllocations: [
+        { itemId: 1, barcode: "LOT-A", storeId: 7, branchId: 9, allocatedQty: 2 },
+      ],
+    },
+  ], { storeId: 7, branchId: 9 });
+
+  const error = getHybridFulfillmentResolutionError(resolution);
+  assert.equal(
+    error?.message,
+    "Selected stock buckets must exactly cover the requested quantity before save."
+  );
+});
+
+test("allocation revalidation aggregates split selections against the same bucket", async () => {
+  const tx = {
+    stock: {
+      findMany: async () => [{ qty: 4 }],
+    },
+  };
+
+  const message = await validateFulfillmentAllocations(tx, [
+    { itemId: 1, barcode: "LOT-A", storeId: 7, branchId: 9, allocatedQty: 2 },
+    { itemId: 1, barcode: "LOT-A", storeId: 7, branchId: 9, allocatedQty: 3 },
   ]);
 
   assert.equal(
