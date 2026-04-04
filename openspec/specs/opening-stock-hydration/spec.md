@@ -100,7 +100,7 @@ When a resolved opening-stock row includes a size or color value that does not e
 - **AND** the affected row remains linked to the pending color until the shared review flow completes
 
 ### Requirement: Bulk opening-stock import SHALL review missing masters before creation
-When the current Opening Stock table contains rows that depend on missing legacy items, sizes, or colors, the workflow SHALL present one shared review step showing the pending master records to be created and SHALL proceed only after a single confirmation flow from the user. This review rule SHALL apply to mixed table batches containing both imported rows and manually added rows. The workflow SHALL validate all configured stock-tracking fields from the active opening-stock schema before stock rows are written.
+When the current Opening Stock table contains rows that depend on missing legacy items, sizes, or colors, the workflow SHALL present one shared review step showing the pending master records to be created and SHALL proceed only after a single confirmation flow from the user. This review rule SHALL apply to mixed table batches containing both imported rows and manually added rows. The workflow SHALL validate the fixed operational fields required for legacy opening-stock capture before stock rows are written, while leaving optional stock-granularity fields permissive.
 
 #### Scenario: Shared review shows missing masters before save
 - **WHEN** a user attempts to save an Opening Stock table that includes missing legacy items, sizes, or colors
@@ -113,11 +113,11 @@ When the current Opening Stock table contains rows that depend on missing legacy
 - **THEN** the workflow creates the reviewed master records as a batch
 - **AND** continues the Opening Stock save without prompting separately for each affected row
 
-#### Scenario: Configured stock-tracking fields are required before stock save
-- **WHEN** the active opening-stock schema includes tracked fields required by Stock Control, including configured additional fields
-- **AND** a row in the current Opening Stock table is still missing one or more of those fields
-- **THEN** the workflow blocks the save for that row
-- **AND** highlights the missing configured fields that must be completed before the stock row is persisted
+#### Scenario: Configured stock-tracking fields remain optional for coarse legacy rows
+- **WHEN** the active opening-stock schema includes size, color, or configured stock-defined runtime fields from Stock Control
+- **AND** a coarse legacy row omits one or more of those fields
+- **THEN** the workflow may still save that row if its fixed operational fields are complete
+- **AND** it does not treat the omitted stock-granularity fields as unconditional save blockers solely because they are present in the schema
 
 ### Requirement: Opening stock SHALL NOT hydrate sellable variant associations
 The opening-stock workflow SHALL NOT create canonical item size, item color, item size-color, or other canonical sellable variant-association data when saving stock rows. In the current system, downstream canonical option availability is derived from `ItemPriceList`, so association hydration from opening stock would implicitly create canonical sellable catalog combinations and exceed the approved scope of stock-row hydration. Legacy items are the exception only in the sense that they SHALL use exactly one flat `ItemPriceList` row with `sizeId = null` and `colorId = null`.
@@ -151,4 +151,3 @@ When opening stock captures imported stock rows whose barcode values are less sp
 - **WHEN** opening stock import validates rows captured from legacy or coarse barcode labels
 - **THEN** the workflow does not require one barcode to map to exactly one size or size-color combination within the import batch
 - **AND** it does not treat the imported barcode as defining canonical future barcode-generation policy
-

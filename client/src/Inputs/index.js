@@ -1845,7 +1845,7 @@ export const ReusableTable = ({
     // if (totalPages <= 1) return null;
 
     return (
-      <div className=" w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
+      <div className="shrink-0 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
         <div className="text-sm text-gray-600 mb-2 sm:mb-0">
           Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, data?.length)} of {data?.length} entries
         </div>
@@ -1922,11 +1922,10 @@ export const ReusableTable = ({
 
   return (
     <>
-      <div className="bg-[#F1F1F0] shadow-sm h-[71vh]">
-        <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[68vh]">
-            <table className="">
-              <thead className="bg-gray-200 text-gray-800 ">
+      <div className="flex h-full min-h-0 flex-col rounded-lg bg-[#F1F1F0] shadow-sm">
+        <div className="min-h-0 flex-1 overflow-auto">
+            <table className="table-auto">
+              <thead className="sticky top-0 z-10 bg-gray-200 text-gray-800">
 
                 <tr>
                   {columns?.map((column, index) => (
@@ -2061,9 +2060,6 @@ export const ReusableTable = ({
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-      <div className="h-[10vh]">
         <Pagination />
       </div>
 

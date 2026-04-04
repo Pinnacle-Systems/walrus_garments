@@ -759,9 +759,13 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                       setSelectedLocationId("");
                     }}
                     placeholder="Branch..."
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
                     styles={{
                       control: (base) => ({ ...base, minHeight: "30px", height: "30px", fontSize: "12px" }),
                       indicatorsContainer: (base) => ({ ...base, height: "30px" }),
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      menu: (base) => ({ ...base, zIndex: 9999 }),
                     }}
                   />
                 </div>
@@ -775,9 +779,13 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                     onChange={(option) => setSelectedLocationId(option?.value || "")}
                     placeholder="Location..."
                     isClearable
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
                     styles={{
                       control: (base) => ({ ...base, minHeight: "30px", height: "30px", fontSize: "12px" }),
                       indicatorsContainer: (base) => ({ ...base, height: "30px" }),
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      menu: (base) => ({ ...base, zIndex: 9999 }),
                     }}
                   />
                 </div>

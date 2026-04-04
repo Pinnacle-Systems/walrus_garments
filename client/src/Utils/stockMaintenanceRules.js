@@ -68,7 +68,9 @@ export function getConfiguredStockDrivenFields(stockReportControl) {
     fields.push({
       key,
       label,
-      required: true,
+      // Shared stock-field metadata describes supported stock axes.
+      // Flow-specific save rules decide whether a value is mandatory.
+      required: false,
       type: "custom",
       widthClass: "w-32",
       sampleValue: `VALUE-${index + 1}`,

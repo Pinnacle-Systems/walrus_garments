@@ -18,7 +18,7 @@ The system SHALL present Opening Stock as one editable row-based workspace rathe
 - **AND** the UI does not require a persistent imported-versus-manual distinction for normal editing and save behavior
 
 ### Requirement: Opening Stock SHALL use one shared row contract
-The system SHALL define one ordered Opening Stock row contract that drives manual entry rendering, import header matching, downloadable template generation, row validation, and save payload mapping. The shared row contract SHALL include `item name`, `item code`, `price`, `qty`, `uom`, and every stock-writing field required by Stock Control for Opening Stock.
+The system SHALL define one ordered Opening Stock row contract that drives manual entry rendering, import header matching, downloadable template generation, row validation, and save payload mapping. The shared row contract SHALL include `item name`, `item code`, `price`, `qty`, `uom`, and any stock-granularity fields exposed by Stock Control for Opening Stock.
 
 #### Scenario: Shared row contract drives all row paths
 - **WHEN** Opening Stock renders manual rows, parses imported rows, or generates the downloadable template
@@ -27,8 +27,8 @@ The system SHALL define one ordered Opening Stock row contract that drives manua
 
 #### Scenario: Stock-writing save uses the shared row contract
 - **WHEN** a user saves Opening Stock rows
-- **THEN** each row must satisfy the required fields in the shared row contract
-- **AND** the workflow blocks save until the missing row values are completed
+- **THEN** each row must satisfy the fixed operational fields required for legacy Opening Stock capture
+- **AND** the workflow does not block a coarse legacy row solely because optional stock-granularity fields remain blank
 
 ### Requirement: Opening Stock SHALL reuse shared row values for legacy-item hydration
 When Opening Stock creates or enriches a legacy item, the workflow SHALL reuse shared row values instead of asking the user to enter duplicate identity and price values. `item code` SHALL hydrate both the legacy item code and the legacy barcode identity, and row `price` SHALL hydrate the legacy item's flat sales price.
@@ -61,4 +61,3 @@ Once rows exist in the Opening Stock table, the workflow SHALL collect missing i
 - **WHEN** a user attempts to save an Opening Stock table that still contains pending missing masters
 - **THEN** the workflow opens the shared table-level review flow at that time
 - **AND** the system does not require a separate pre-save review action to trigger missing-master creation
-

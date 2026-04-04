@@ -64,9 +64,9 @@ describe("stockMaintenanceRules", () => {
         field10: "Bin",
       })
     ).toEqual([
-      expect.objectContaining({ key: "field2", label: "Shade", required: true }),
-      expect.objectContaining({ key: "field7", label: "Batch", required: true }),
-      expect.objectContaining({ key: "field10", label: "Bin", required: true }),
+      expect.objectContaining({ key: "field2", label: "Shade", required: false }),
+      expect.objectContaining({ key: "field7", label: "Batch", required: false }),
+      expect.objectContaining({ key: "field10", label: "Bin", required: false }),
     ]);
   });
 });

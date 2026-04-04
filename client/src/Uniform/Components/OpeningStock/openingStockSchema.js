@@ -59,7 +59,7 @@ export function getOpeningStockFieldDefinitions(stockReportControl) {
     fieldDefinitions.push({
       key: "size",
       label: "Size",
-      required: true,
+      required: false,
       type: "size",
       widthClass: "w-32",
       sampleValue: "XL",
@@ -70,7 +70,7 @@ export function getOpeningStockFieldDefinitions(stockReportControl) {
     fieldDefinitions.push({
       key: "color",
       label: "Color",
-      required: true,
+      required: false,
       type: "color",
       widthClass: "w-32",
       sampleValue: "NAVY",

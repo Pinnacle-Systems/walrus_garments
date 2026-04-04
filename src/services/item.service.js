@@ -5,6 +5,7 @@ import {
     getBarcodeGenerationMethod,
     validateVariantRows,
 } from './itemVariantValidation.js';
+import { resolveItemAliasName } from './itemAliasRules.js';
 
 const OPENING_STOCK_CREATION_SOURCE = "OPENING_STOCK";
 
@@ -36,6 +37,14 @@ function parseIntOrUndefined(value) {
     }
 
     return parseInt(value);
+}
+
+function normalizePriceString(value) {
+    if (value === undefined || value === null || value === "") {
+        return undefined;
+    }
+
+    return String(value);
 }
 
 function normalizeItemName(name) {
@@ -170,11 +179,12 @@ async function syncMinimumStockQty(tx, itemPriceListId, minimumStockQtyRows = []
 
 async function get(req) {
     const active = parseOptionalBoolean(req.query?.active);
-    const data = await prisma.item.findMany({
+    const items = await prisma.item.findMany({
         where: {
             active,
         },
         include: {
+            Hsn: true,
             ItemPriceList: true,
             _count: {
                 select: {
@@ -192,7 +202,7 @@ async function get(req) {
     });
 
 
-    data = data.map((item) => {
+    const data = items.map((item) => {
         const types = [];
 
         if (item._count.DirectItems) types.push("Purchase Inward Items");
@@ -206,6 +216,7 @@ async function get(req) {
 
         return {
             ...item,
+            hsn: item.Hsn ?? null,
             referencedIn: types.join(", ")
 
         };
@@ -304,10 +315,17 @@ async function getSearch(req) {
             ]
         },
         include: {
+            Hsn: true,
             ItemPriceList: true,
         }
     })
-    return { statusCode: 0, data };
+    return {
+        statusCode: 0,
+        data: data.map((item) => ({
+            ...item,
+            hsn: item.Hsn ?? null,
+        })),
+    };
 }
 async function create(body) {
     const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, aliasName, itemPriceList, active,
@@ -316,6 +334,12 @@ async function create(body) {
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
     const normalizedName = normalizeItemName(name);
     const normalizedIsLegacy = parseOptionalBoolean(isLegacy) ?? false;
+    const normalizedAliasName = resolveItemAliasName({
+        aliasName,
+        normalizedName,
+        isLegacy: normalizedIsLegacy,
+        creationSource,
+    });
     await ensureUniqueItemName(normalizedName);
     await validateLegacyItemPayload({
         itemName: normalizedName,
@@ -340,7 +364,7 @@ async function create(body) {
             sectionId: parseIntOrUndefined(sectionId),
             mainCategoryId: parseIntOrUndefined(mainCategory),
             subCategoryId: parseIntOrUndefined(subCategory),
-            aliasName: aliasName ? aliasName : undefined,
+            aliasName: normalizedAliasName,
             isLegacy: normalizedIsLegacy,
             active: parseOptionalBoolean(active),
 
@@ -352,8 +376,8 @@ async function create(body) {
                             return {
                                 colorId: parseIntOrUndefined(item?.colorId),
                                 sizeId: parseIntOrUndefined(item?.sizeId),
-                                offerPrice: item?.offerPrice || undefined,
-                                salesPrice: item?.salesPrice || undefined,
+                                offerPrice: normalizePriceString(item?.offerPrice),
+                                salesPrice: normalizePriceString(item?.salesPrice),
                                 sku: item?.sku ? item?.sku : undefined,
                                 barcode: normalizeLegacyBarcode(item?.barcode),
 
@@ -479,9 +503,9 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                 data: {
                     itemId: priceItem?.itemId ? parseInt(priceItem?.itemId) : undefined,
                     sizeId: parseIntOrUndefined(priceItem?.sizeId),
-                    offerPrice: priceItem?.offerPrice ? priceItem?.offerPrice : undefined,
+                    offerPrice: normalizePriceString(priceItem?.offerPrice),
                     colorId: parseIntOrUndefined(priceItem?.colorId),
-                    salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
+                    salesPrice: normalizePriceString(priceItem?.salesPrice),
                     sku: priceItem?.sku ? priceItem?.sku : undefined,
                     barcode: normalizeLegacyBarcode(priceItem?.barcode),
 
@@ -495,10 +519,10 @@ async function updateItemPriceList(tx, itemPriceList, item) {
             return await tx.ItemPriceList.create({
                 data: {
                     itemId: parseInt(item?.id),
-                    offerPrice: priceItem?.offerPrice ? priceItem?.offerPrice : undefined,
+                    offerPrice: normalizePriceString(priceItem?.offerPrice),
                     sizeId: parseIntOrUndefined(priceItem?.sizeId),
                     colorId: parseIntOrUndefined(priceItem?.colorId),
-                    salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
+                    salesPrice: normalizePriceString(priceItem?.salesPrice),
                     sku: priceItem?.sku ? priceItem?.sku : undefined,
                     barcode: normalizeLegacyBarcode(priceItem?.barcode),
 

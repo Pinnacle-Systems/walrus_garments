@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation } from "../../redux/uniformService/ItemMasterService";
 import secureLocalStorage from "react-secure-storage";
 import Swal from "sweetalert2";
@@ -24,6 +24,7 @@ import HsnMaster from "../../Basic/components/HsnMaster";
 import ItemCategroyMaster from "../ItemCategroyMaster";
 import SectionMaster from "../SectionMaster";
 import LocationStockEditor, { createEmptyLocationThreshold, getConfiguredLocationAlertCount, validateLocationThresholdRows } from "./LocationStockEditor";
+import { shouldDisableLinkedRecordField } from "./legacyEditPermissions";
 import { useGetSubCategoryQuery } from "../../redux/uniformService/SubCategoryMasterService";
 import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
 import { SubCategoryMaster } from "..";
@@ -48,6 +49,8 @@ function sanitizePriceRowsForSave(priceRows = []) {
 
 export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
   const [form, setForm] = useState(onSuccess ? true : false);
+  const pageContainerRef = useRef(null);
+  const [availableViewportHeight, setAvailableViewportHeight] = useState(null);
 
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState(editId || deleteId || "");
@@ -91,6 +94,49 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     saveNewButtonRef,
   } = refs;
   const [isLegacyItem, setIsLegacyItem] = useState(false);
+
+  const syncAvailableViewportHeight = useCallback(() => {
+    if (typeof window === "undefined" || !pageContainerRef.current) {
+      return;
+    }
+
+    const { top } = pageContainerRef.current.getBoundingClientRect();
+    const nextHeight = Math.max(window.innerHeight - Math.max(top, 0), 320);
+
+    setAvailableViewportHeight((currentHeight) =>
+      currentHeight === nextHeight ? currentHeight : nextHeight
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    syncAvailableViewportHeight();
+
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const scheduleSync = () => {
+      window.requestAnimationFrame(syncAvailableViewportHeight);
+    };
+
+    window.addEventListener("resize", scheduleSync);
+
+    let resizeObserver;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(scheduleSync);
+
+      if (pageContainerRef.current?.parentElement) {
+        resizeObserver.observe(pageContainerRef.current.parentElement);
+      }
+
+      resizeObserver.observe(document.body);
+    }
+
+    return () => {
+      window.removeEventListener("resize", scheduleSync);
+      resizeObserver?.disconnect();
+    };
+  }, [syncAvailableViewportHeight]);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -169,6 +215,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const AccessItemsColums = itemControlData?.data?.[0];
   const barcodeGenerationMethod = resolveBarcodeGenerationMethod(AccessItemsColums);
   const effectivePricingMode = isLegacyItem ? "STANDARD" : barcodeGenerationMethod;
+  const disableLinkedRecordField = shouldDisableLinkedRecordField({
+    childRecord,
+    isLegacyItem,
+  });
 
 
   const syncFormWithDb = useCallback(
@@ -829,13 +879,20 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-3">
-        <div ref={formRef} className="bg-gray-50 p-2 rounded-lg h-full space-y-4">
-          <fieldset className="border border-gray-300 rounded-lg p-2 bg-white h-full">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3">
+        <div ref={formRef} className="bg-gray-50 p-2 rounded-lg h-full min-h-0">
+          <fieldset className="flex h-full min-h-0 flex-col overflow-hidden border border-gray-300 rounded-lg p-2 bg-white">
             <legend className="px-2 text-sm font-semibold text-gray-700">
-              Item Information
+              <span className="inline-flex items-center gap-2">
+                <span>Item Information</span>
+                {isLegacyItem && (
+                  <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-700">
+                    Legacy item
+                  </span>
+                )}
+              </span>
             </legend>
-            <div className="grid grid-cols-12 gap-4 ">
+            <div className="grid flex-1 min-h-0 grid-cols-12 gap-4 content-start overflow-y-auto overflow-x-hidden pr-1">
               <div className="col-span-4">
                 <TextInputNew1
                   name="Item Name"
@@ -843,7 +900,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   setValue={handleNameChange}
                   required
                   readOnly={readOnly}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                   ref={nameRef}
                 />
               </div>
@@ -855,7 +912,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   setValue={setAliasName}
                   required={true}
                   readOnly={readOnly}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                 />
               </div>
               <div className="col-span-2">
@@ -864,11 +921,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   value={code}
                   setValue={setCode}
                   readOnly={readOnly}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                   required={true}
                 />
               </div>
-              <div className="col-span-1">
+              <div className="col-span-2">
                 <DropdownInputNew
                   name="HSN"
                   options={hsnData?.data?.filter(item => id || item.active).map(item => ({
@@ -880,7 +937,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   setValue={setHsnId}
                   required
                   readOnly={readOnly}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                   addNewLabel="+ Add New HSN"
                   childComponent={HsnMaster}
                   addNewModalWidth="w-[45%] h-[400px]"
@@ -902,7 +959,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     setValue={setSectionId}
                     required
                     readOnly={readOnly}
-                    disabled={childRecord > 0}
+                    disabled={disableLinkedRecordField}
                     addNewLabel="+ Add New Section"
                     childComponent={SectionMaster}
                     addNewModalWidth="w-[45%] h-[400px]"
@@ -922,7 +979,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   setValue={setMainCategory}
                   required
                   readOnly={readOnly}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                   addNewLabel="+ Add New Category"
                   childComponent={ItemCategroyMaster}
                   addNewModalWidth="w-[45%] h-[400px]"
@@ -943,7 +1000,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   setValue={setSubCategory}
                   required
                   readOnly={readOnly || !mainCategory}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                   addNewLabel="+ Add New  Sub Category"
                   childComponent={SubCategoryMaster}
                   addNewModalWidth="w-[45%] h-[300px]"
@@ -972,140 +1029,152 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
               <div className="col-span-1 ">
                 <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
               </div>
-              <fieldset className="col-span-12 border border-gray-300 rounded-lg h-[380px]">
+              <fieldset className="col-span-12 flex min-h-0 max-h-[380px] flex-col overflow-hidden border border-gray-300 rounded-lg">
                 <legend className="px-2 text-sm font-semibold text-gray-700">
-                  Pricing Information
+                  {isLegacyItem ? "Legacy Pricing Information" : "Pricing Information"}
                 </legend>
-                <div>
-                  <div className="grid grid-cols-12 gap-4 px-2">
-                    {barcodeGenerationMethod == "STANDARD" && (
-                      <>
-                        <div className="col-span-2">
-                          <TextInputNew1
-                            name="Barcode"
-                            value={barcode}
-                            setValue={setBarcode}
-                            readOnly={readOnly}
-                            disabled={id ? childRecord > 0 : false}
-                            required={true}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <TextInputNew1
-                            name="Sku"
-                            value={sku}
-                            setValue={setSku}
-                            readOnly={readOnly}
-                            disabled={id ? childRecord > 0 : false}
-                            required={true}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <TextInputNew1
-                            name="Sales Price"
-                            value={salesPrice}
-                            setValue={setSalesPrice}
-                            readOnly={readOnly}
-                            disabled={id ? childRecord > 0 : false}
-                            required={true}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <TextInputNew1
-                            name="Offer Price"
-                            value={offerPrice}
-                            setValue={setOfferPrice}
-                            readOnly={readOnly}
-                            disabled={id ? childRecord > 0 : false}
-                          />
-                        </div>
-                        <div className="col-span-3 mt-5">
-                          <button
-                            type="button"
-                            onClick={() => setGridIndex((prev) => (prev === 0 ? null : 0))}
-                            className="w-full rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-left text-xs font-medium text-indigo-700 hover:bg-indigo-100"
-                          >
-                            Stock Alerts: {getLowStockSummary(itemPriceList?.[0])}
-                          </button>
-                        </div>
-                      </>
-                    )}
-                    {(barcodeGenerationMethod == "SIZE" || barcodeGenerationMethod == "SIZE_COLOR") && (
-                      <div className="col-span-3">
-                        <div className="flex items-end gap-1">
-                          <div className="flex-1">
-                            <MultiSelectDropdownNew
-                              name="Sizes"
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                  {effectivePricingMode == "STANDARD" && (
+                    <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 px-2 pb-2">
+                      <div className="col-span-8 min-h-0">
+                        <div className="grid grid-cols-9 items-start gap-4">
+                          <div className="col-span-2">
+                            <TextInputNew1
+                              name="Barcode"
+                              value={barcode}
+                              setValue={setBarcode}
+                              readOnly={readOnly}
+                              disabled={id ? disableLinkedRecordField : false}
                               required={true}
-                              disabled={readOnly}
-                              options={multiSelectOption(id ? sizeData?.data : sizeData?.data?.filter(i => i.active) || [], "name", "id")}
-                              selected={sizeList}
-                              setSelected={(value) => {
-                                setSizeList(value)
-                              }}
                             />
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setShowSizeModal(true)}
-                            className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
-                            title="Add New Size"
-                          >
-                            <Plus size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {(barcodeGenerationMethod == "SIZE_COLOR") && (
-                      <div className="col-span-3">
-                        <div className="flex items-end gap-1">
-                          <div className="flex-1">
-                            <MultiSelectDropdownNew
-                              name="Colors"
+                          <div className="col-span-2">
+                            <TextInputNew1
+                              name="Sku"
+                              value={sku}
+                              setValue={setSku}
+                              readOnly={readOnly}
+                              disabled={id ? disableLinkedRecordField : false}
                               required={true}
-                              disabled={readOnly}
-                              options={multiSelectOption(id ? colorData?.data : colorData?.data?.filter(i => i.active) || [], "name", "id")}
-                              selected={colorList}
-                              setSelected={(value) => {
-                                setColorList(value)
-                              }}
                             />
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setShowColorModal(true)}
-                            className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
-                            title="Add New Color"
-                          >
-                            <Plus size={16} />
-                          </button>
+                          <div className="col-span-1">
+                            <TextInputNew1
+                              name="Sales Price"
+                              value={salesPrice}
+                              setValue={setSalesPrice}
+                              readOnly={readOnly}
+                              disabled={id ? disableLinkedRecordField : false}
+                              required={true}
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            <TextInputNew1
+                              name="Offer Price"
+                              value={offerPrice}
+                              setValue={setOfferPrice}
+                              readOnly={readOnly}
+                              disabled={id ? disableLinkedRecordField : false}
+                            />
+                          </div>
+                          <div className="col-span-3 col-start-7 max-w-[230px]">
+                            <button
+                              type="button"
+                              onClick={() => setGridIndex((prev) => (prev === 0 ? null : 0))}
+                              className="mt-5 w-full whitespace-nowrap rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-left text-[11px] font-medium leading-tight text-indigo-700 hover:bg-indigo-100"
+                            >
+                              Stock Alerts: {getLowStockSummary(itemPriceList?.[0])}
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    )}
-                    {(barcodeGenerationMethod == "SIZE" || barcodeGenerationMethod == "SIZE_COLOR") && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setItems()
-                        }}
-                        className="px-3 py-1 rounded items-center gap-1 text-xs h-8 w-14 mt-4 bg-gray-200"
-                      >
-                        Add
-                      </button>
-                    )}
-                  </div>
-                  {barcodeGenerationMethod == "STANDARD" && gridIndex === 0 && itemPriceList[0] && (
-                    <div className="px-2 pt-3 h-[280px] min-h-0">
-                      <LocationStockEditor
-                        rows={itemPriceList[0]?.MinimumStockQty || []}
-                        onChange={(rows) => handleMinimumStockRowsChange(0, rows)}
-                        locationOptions={id ? storeOptions : storeOptions?.filter((i) => i.active)}
-                        readOnly={readOnly}
-                        title="Stock Alerts"
-                      />
+                      <div className="col-span-4 h-[220px] min-h-0">
+                        {gridIndex === 0 && itemPriceList[0] ? (
+                          <LocationStockEditor
+                            rows={itemPriceList[0]?.MinimumStockQty || []}
+                            onChange={(rows) => handleMinimumStockRowsChange(0, rows)}
+                            locationOptions={id ? storeOptions : storeOptions?.filter((i) => i.active)}
+                            readOnly={readOnly}
+                            title="Stock Alerts"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 text-center text-xs text-gray-500">
+                            Select the stock alerts button to edit location-wise stock alerts.
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
-                  {barcodeGenerationMethod != "STANDARD" && (
+                  {effectivePricingMode != "STANDARD" && (
+                    <>
+                      <div className="grid grid-cols-12 gap-4 px-2 pb-3">
+                        {(effectivePricingMode == "SIZE" || effectivePricingMode == "SIZE_COLOR") && (
+                          <div className="col-span-3">
+                            <div className="flex items-end gap-1">
+                              <div className="flex-1">
+                                <MultiSelectDropdownNew
+                                  name="Sizes"
+                                  required={true}
+                                  disabled={readOnly || isLegacyItem}
+                                  options={multiSelectOption(id ? sizeData?.data : sizeData?.data?.filter(i => i.active) || [], "name", "id")}
+                                  selected={sizeList}
+                                  setSelected={(value) => {
+                                    setSizeList(value)
+                                  }}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setShowSizeModal(true)}
+                                className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
+                                title="Add New Size"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {(effectivePricingMode == "SIZE_COLOR") && (
+                          <div className="col-span-3">
+                            <div className="flex items-end gap-1">
+                              <div className="flex-1">
+                                <MultiSelectDropdownNew
+                                  name="Colors"
+                                  required={true}
+                                  disabled={readOnly || isLegacyItem}
+                                  options={multiSelectOption(id ? colorData?.data : colorData?.data?.filter(i => i.active) || [], "name", "id")}
+                                  selected={colorList}
+                                  setSelected={(value) => {
+                                    setColorList(value)
+                                  }}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setShowColorModal(true)}
+                                className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
+                                title="Add New Color"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {(effectivePricingMode == "SIZE" || effectivePricingMode == "SIZE_COLOR") && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setItems()
+                            }}
+                            className="px-3 py-1 rounded items-center gap-1 text-xs h-8 w-14 mt-4 bg-gray-200"
+                          >
+                            Add
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {effectivePricingMode != "STANDARD" && (
                       <div className="grid grid-cols-12 gap-3 ">
                         <div className={`col-span-8 w-full h-[280px]`}>
                           <div className={`relative overflow-y-auto py-1 h-full`}>
@@ -1114,7 +1183,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 <tr>
                                   <th className={`w-10 px-2 py-2 text-center font-medium text-[12px] `}>S.No</th>
                                   <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Size Name</th>
-                                  {barcodeGenerationMethod == "SIZE_COLOR" && (
+                                  {effectivePricingMode == "SIZE_COLOR" && (
                                     <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Color Name</th>
                                   )}
                                   <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Barcode</th>
@@ -1138,7 +1207,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                     <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
                                       {findFromList(item?.sizeId, sizeData?.data, "name")}
                                     </td>
-                                    {barcodeGenerationMethod == "SIZE_COLOR" && (
+                                    {effectivePricingMode == "SIZE_COLOR" && (
                                       <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
                                         {findFromList(item?.colorId, colorData?.data, "name")}
                                       </td>
@@ -1151,7 +1220,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                         onFocus={e => e.target.select()}
                                         className="text-right rounded w-full px-1 py-1 text-xs"
                                         value={item.barcode}
-                                        disabled={readOnly}
+                                        disabled={readOnly || isLegacyItem}
                                         onChange={e => handleInputChange(e.target.value, index, "barcode")}
                                         onBlur={e => handleInputChange(e.target.value, index, "barcode")}
                                       />
@@ -1164,7 +1233,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                         onFocus={e => e.target.select()}
                                         className="text-right rounded w-full px-1 py-1 text-xs"
                                         value={item.sku}
-                                        disabled={readOnly}
+                                        disabled={readOnly || isLegacyItem}
                                         onChange={e => handleInputChange(e.target.value, index, "sku")}
                                         onBlur={e => handleInputChange(e.target.value, index, "sku")}
                                       />
@@ -1177,7 +1246,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                         onFocus={e => e.target.select()}
                                         className="text-right rounded w-full px-1 py-1 text-xs"
                                         value={item.salesPrice}
-                                        disabled={readOnly}
+                                        disabled={readOnly || isLegacyItem}
                                         onChange={e => handleInputChange(e.target.value, index, "salesPrice")}
                                         onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
                                       />
@@ -1190,7 +1259,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                         onFocus={e => e.target.select()}
                                         className="text-right rounded w-full px-1 py-1 text-xs"
                                         value={item.offerPrice}
-                                        disabled={readOnly}
+                                        disabled={readOnly || isLegacyItem}
                                         onChange={e => handleInputChange(e.target.value, index, "offerPrice")}
                                         onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
                                       />
@@ -1245,7 +1314,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                             onChange={(rows) => handleMinimumStockRowsChange(gridIndex, rows)}
                             locationOptions={id ? storeOptions : storeOptions?.filter((i) => i.active)}
                             readOnly={readOnly}
-                            title={`Stock Alerts${barcodeGenerationMethod == "SIZE_COLOR"
+                            title={`Stock Alerts${effectivePricingMode == "SIZE_COLOR"
                               ? ` - ${findFromList(itemPriceList[gridIndex]?.sizeId, sizeData?.data, "name")} / ${findFromList(itemPriceList[gridIndex]?.colorId, colorData?.data, "name")}`
                               : ` - ${findFromList(itemPriceList[gridIndex]?.sizeId, sizeData?.data, "name")}`
                               }`}
@@ -1352,7 +1421,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   }
 
   return (
-    <div onKeyDown={handleKeyDown} className="p-1">
+    <div
+      ref={pageContainerRef}
+      onKeyDown={handleKeyDown}
+      className="flex min-h-0 flex-col p-1"
+      style={availableViewportHeight ? { height: `${availableViewportHeight}px` } : undefined}
+    >
       <div className="w-full flex bg-white p-1 justify-between  items-center">
         <h5 className="text-xl font-bold font-segoe text-gray-800 ">
           Item Master
@@ -1369,7 +1443,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           </button>
         </div>
       </div>
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+      <div className="mt-3 min-h-0 flex-1 overflow-hidden rounded-xl bg-white shadow-sm">
         <ReusableTable
           columns={columns}
           data={allData?.data || []}

@@ -12,26 +12,24 @@ The opening-stock workflow SHALL derive its visible columns, import headers, val
 - **AND** combines that field set with the fixed Opening Stock row fields into one shared row contract
 - **AND** uses that same contract for table rendering, template generation, import parsing, hydration review rendering, validation, and save payload mapping
 
-### Requirement: Configured additional stock fields SHALL be rendered and required
-When Stock Control configures one or more additional stock-tracking fields through `field6` to `field10`, opening stock SHALL render those fields and require values for them before saving stock rows.
+### Requirement: Configured additional stock fields SHALL be rendered without becoming universal save blockers
+When Stock Control configures one or more stock-driven runtime fields across `field1` to `field10`, opening stock SHALL render those fields in the dynamic schema and persist their values when the row captures them.
 
-#### Scenario: Configured additional field appears in opening stock
-- **WHEN** Stock Control defines a label for an additional stock field such as `field6`
-- **THEN** opening stock shows a matching column for that field in the unified Opening Stock table
-- **AND** includes the same field in the import template and parser
+#### Scenario: Configured stock-driven field appears in opening stock
+- **WHEN** Stock Control defines a label for a stock-driven runtime field such as `field1` or `field6`
+- **THEN** opening stock shows a matching column for that field in the import workflow
 - **AND** maps the captured value to the corresponding stock field when saving
 
-#### Scenario: Configured additional field blocks save when blank
-- **WHEN** a configured additional stock field is present in the opening-stock schema
+#### Scenario: Configured stock-driven field may remain blank in a coarse row
+- **WHEN** a configured stock-driven runtime field is present in the opening-stock schema
 - **AND** a user attempts to save a row without that field populated
-- **THEN** the workflow blocks the save
-- **AND** prompts the user to complete the missing configured field
+- **THEN** the workflow may still preserve the row as a coarse opening-stock row
+- **AND** it does not treat the configured stock-driven field as an unconditional save blocker solely because the field exists in Stock Control
 
 ### Requirement: Opening-stock save SHALL persist all configured stock fields
 The opening-stock workflow SHALL write all configured stock-tracking fields captured in the active schema into the corresponding `Stock` row fields.
 
-#### Scenario: Opening-stock save writes configured additional fields
-- **WHEN** a user saves opening stock with configured additional stock-field values
-- **THEN** the save payload includes those values in the corresponding `field6` to `field10` properties
+#### Scenario: Opening-stock save writes configured stock-driven fields
+- **WHEN** a user saves opening stock with configured stock-driven field values
+- **THEN** the save payload includes those values in the corresponding `field1` to `field10` properties
 - **AND** the created `Stock` rows persist those values
-
