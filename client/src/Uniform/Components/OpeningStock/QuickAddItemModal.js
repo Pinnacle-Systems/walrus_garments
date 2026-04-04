@@ -29,6 +29,8 @@ const createStandardPriceRow = () => ({
   MinimumStockQty: [createEmptyLocationThreshold()],
 });
 
+const OPENING_STOCK_CREATION_SOURCE = "OPENING_STOCK";
+
 function sanitizePriceRowsForSave(priceRows = []) {
   return priceRows.map((row) => ({
     ...row,
@@ -36,7 +38,15 @@ function sanitizePriceRowsForSave(priceRows = []) {
   }));
 }
 
-const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, barcodeGenerationMethod = "STANDARD" }) => {
+const QuickAddItemModal = ({
+  isOpen,
+  onClose,
+  itemName,
+  onCreated,
+  itemToEdit,
+  barcodeGenerationMethod = "STANDARD",
+  legacyOnly = false,
+}) => {
   const params = getCommonParams();
   const [name, setName] = useState(itemName || "");
   const [code, setCode] = useState(itemName || "");
@@ -55,9 +65,8 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
   const [active, setActive] = useState(true);
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [showColorModal, setShowColorModal] = useState(false);
-  // This only shapes the item structure edited inside the modal.
-  // Parent stock-entry field presence/requiredness comes from Stock Control Panel.
-  const effectiveBarcodeGenerationMethod = barcodeGenerationMethod || "STANDARD";
+  // Opening Stock creates and corrects only flat legacy items.
+  const effectiveBarcodeGenerationMethod = legacyOnly ? "STANDARD" : (barcodeGenerationMethod || "STANDARD");
 
   const [addItem] = useAddItemMasterMutation();
   const [updateItem] = useUpdateItemMasterMutation();
@@ -113,8 +122,8 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
   }, [isOpen, effectiveBarcodeGenerationMethod, itemPriceList.length]);
 
   const handleSave = async () => {
-    if (!name || !code || !itemType) {
-      toast.info("Please fill required fields (Name, Code, Type)");
+    if (!name || (!legacyOnly && (!code || !itemType))) {
+      toast.info(legacyOnly ? "Please fill the required fields (Name, Barcode)." : "Please fill required fields (Name, Code, Type)");
       return;
     }
 
@@ -151,14 +160,16 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
       const payload = {
         id: itemToEdit?.id,
         name: name.toUpperCase(),
-        code: code.toUpperCase(),
-        itemType,
+        code: legacyOnly ? (code?.toUpperCase() || name.toUpperCase()) : code.toUpperCase(),
+        itemType: legacyOnly ? (itemType || undefined) : itemType,
         hsnId: itemToEdit?.hsnId || "",
         sectionId,
         mainCategoryId: mainCategory,
         subCategoryId: subCategory,
         itemPriceList: itemPriceListToSave,
         active,
+        isLegacy: legacyOnly || Boolean(itemToEdit?.isLegacy),
+        creationSource: legacyOnly && !itemToEdit ? OPENING_STOCK_CREATION_SOURCE : undefined,
         companyId: params.companyId,
         branchId: params.branchId,
       };
@@ -291,27 +302,33 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
   return (
     <Modal isOpen={isOpen} onClose={onClose} widthClass="w-[90%] h-[95%] ">
       <div className="p-4 bg-white rounded-lg shadow-xl">
-        <h2 className="text-lg font-bold text-gray-800">{itemToEdit ? "Manage Item" : "Quick Add Item"}</h2>
+        <h2 className="text-lg font-bold text-gray-800">
+          {itemToEdit ? (legacyOnly ? "Manage Legacy Item" : "Manage Item") : (legacyOnly ? "Quick Add Legacy Item" : "Quick Add Item")}
+        </h2>
 
         <div className="space-y-4 max-h-[70vh] pr-2">
           <fieldset className="border border-gray-300 rounded-lg p-4 bg-white">
-            <legend className="px-2 text-sm font-semibold text-gray-700">Item Information</legend>
+            <legend className="px-2 text-sm font-semibold text-gray-700">{legacyOnly ? "Legacy Item Information" : "Item Information"}</legend>
             <div className="grid grid-cols-12 gap-3">
-              <div className="col-span-6">
+              <div className={legacyOnly ? "col-span-8" : "col-span-6"}>
                 <TextInputNew1 name="Item Name" value={name} setValue={(v) => setName(v.toUpperCase())} required={true} className="uppercase" />
               </div>
-              <div className="col-span-3">
-                <TextInputNew1 name="Item Code" value={code} setValue={(v) => setCode(v.toUpperCase())} required={true} className="uppercase" />
-              </div>
-              <div className="col-span-3">
-                <DropdownInput
-                  name="Item Type"
-                  options={dropDownListObject(ItemTypes, "show", "value")}
-                  value={itemType}
-                  setValue={setItemType}
-                  required={true}
-                />
-              </div>
+              {!legacyOnly && (
+                <>
+                  <div className="col-span-3">
+                    <TextInputNew1 name="Item Code" value={code} setValue={(v) => setCode(v.toUpperCase())} required={true} className="uppercase" />
+                  </div>
+                  <div className="col-span-3">
+                    <DropdownInput
+                      name="Item Type"
+                      options={dropDownListObject(ItemTypes, "show", "value")}
+                      value={itemType}
+                      setValue={setItemType}
+                      required={true}
+                    />
+                  </div>
+                </>
+              )}
               <div className="col-span-3">
                 <DropdownInput
                   name="Section Type"
@@ -347,7 +364,7 @@ const QuickAddItemModal = ({ isOpen, onClose, itemName, onCreated, itemToEdit, b
           </fieldset>
 
           <fieldset className="border border-gray-300 rounded-lg p-4 bg-white h-[300px] ">
-            <legend className="px-2 text-sm font-semibold text-gray-700">Pricing Information</legend>
+            <legend className="px-2 text-sm font-semibold text-gray-700">{legacyOnly ? "Legacy Pricing Information" : "Pricing Information"}</legend>
             <div className="grid grid-cols-12 gap-3 items-end">
               {effectiveBarcodeGenerationMethod === "STANDARD" && (
                 <>

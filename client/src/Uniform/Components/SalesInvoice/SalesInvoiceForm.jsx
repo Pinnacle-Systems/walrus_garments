@@ -646,7 +646,6 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
         setHeaderOpen={setIsHeaderOpen}
         summaryItems={summaryItems}
         openStateClassName="max-h-[600px] opacity-100 overflow-visible"
-        headerBodyClassName="px-2 pb-2 overflow-visible"
         footer={footerContent}
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">

@@ -91,6 +91,7 @@ const PurchaseInwardForm = ({
   const { branchId, companyId, userId, finYearId } = getCommonParams();
   const branchIdFromApi = useRef(branchId);
   const params = { branchId, companyId };
+  const activeItemParams = { ...params, active: true };
 
   const inwardTyperef = useRef(null);
   const branchRef = useRef(null);
@@ -121,7 +122,7 @@ const PurchaseInwardForm = ({
   const { data: supplierDetails } = useGetPartyByIdQuery(supplierId, {
     skip: !supplierId,
   });
-  const { data: itemList } = useGetItemMasterQuery({ params });
+  const { data: itemList } = useGetItemMasterQuery({ params: activeItemParams });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
 
   const {

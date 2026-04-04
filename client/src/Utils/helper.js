@@ -3,6 +3,20 @@ import secureLocalStorage from "react-secure-storage";
 import { IMAGE_UPLOAD_URL } from "../Constants";
 import { useEffect, useRef } from "react";
 import { toWords } from "number-to-words";
+import {
+  DEFAULT_BARCODE_GENERATION_METHOD,
+  getItemVariantColorOptions,
+  getItemVariantSizeOptions,
+  getStockMaintenanceConfig,
+  resolveBarcodeGenerationMethod,
+} from "./stockMaintenanceRules";
+export {
+  DEFAULT_BARCODE_GENERATION_METHOD,
+  getItemVariantColorOptions,
+  getItemVariantSizeOptions,
+  getStockMaintenanceConfig,
+  resolveBarcodeGenerationMethod,
+};
 
 
 export function getImageUrlPath(fileName) {
@@ -455,38 +469,6 @@ export const useIdleLogout = (
 
 // Variant-option helpers intentionally use the item's configured price-list rows,
 // not barcode-generation mode, so field schema can stay owned by Stock Control Panel.
-export function getItemVariantSizeOptions(masterData, allData, key, itemId) {
-  const item = masterData?.find((entry) => String(entry.id) === String(itemId));
-  const availableOptionIds = [...new Set(
-    (item?.ItemPriceList || [])
-      .filter((priceRow) => priceRow?.[key])
-      .map((priceRow) => String(priceRow[key]))
-  )];
-
-  if (!availableOptionIds.length) {
-    return allData;
-  }
-
-  return allData?.filter((option) => availableOptionIds.includes(String(option?.id)));
-}
-
-export function getItemVariantColorOptions(masterData, allData, key, itemId, sizeId = "") {
-  const item = masterData?.find((entry) => String(entry.id) === String(itemId));
-  const priceRows = (item?.ItemPriceList || []).filter((priceRow) => {
-    if (!priceRow?.[key]) return false;
-    if (!sizeId) return true;
-    return String(priceRow.sizeId) === String(sizeId);
-  });
-
-  const availableOptionIds = [...new Set(priceRows.map((priceRow) => String(priceRow[key])))];
-
-  if (!availableOptionIds.length) {
-    return allData;
-  }
-
-  return allData?.filter((option) => availableOptionIds.includes(String(option?.id)));
-}
-
 // Backward-compatible aliases for older consumers.
 export function getUniqueArrayBySize(masterData, allData, key, itemId) {
   return getItemVariantSizeOptions(masterData, allData, key, itemId);
@@ -500,12 +482,6 @@ export function getUniqueArrayByColor(masterData, allData, key, itemId, sizeId =
 export function uppercase(inputValue) {
   if (!inputValue) return '';
   return inputValue.toUpperCase();
-}
-
-export const DEFAULT_BARCODE_GENERATION_METHOD = "STANDARD";
-
-export function resolveBarcodeGenerationMethod(itemControlPanel) {
-  return itemControlPanel?.barcodeGenerationMethod || DEFAULT_BARCODE_GENERATION_METHOD;
 }
 
 export function getItemBarcodeGenerationMethod(item, fallbackMethod = DEFAULT_BARCODE_GENERATION_METHOD) {
@@ -526,16 +502,6 @@ export function getItemPriceForBarcodeGenerationMode(item, barcodeGenerationMeth
   }
 
   return priceList?.[0]?.salesPrice || 0;
-}
-
-export function getStockMaintenanceConfig(stockReportControl) {
-  const config = stockReportControl || {};
-
-  return {
-    trackItem: Boolean(config.itemWise ?? true),
-    trackSize: Boolean(config.sizeWise || config.sizeColorWise),
-    trackColor: Boolean(config.sizeColorWise),
-  };
 }
 
 export function normalizeMasterValue(value) {

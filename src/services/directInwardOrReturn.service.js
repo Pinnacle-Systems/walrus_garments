@@ -63,6 +63,45 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
     )
 }
 
+async function validateActiveItemsForInward(directInwardReturnItems = []) {
+    const itemIds = [...new Set(
+        (directInwardReturnItems || [])
+            .map((item) => item?.itemId ? parseInt(item.itemId) : null)
+            .filter(Boolean)
+    )];
+
+    if (!itemIds.length) {
+        return;
+    }
+
+    const inactiveItems = await prisma.item.findMany({
+        where: {
+            id: {
+                in: itemIds
+            },
+            active: false
+        },
+        select: {
+            id: true,
+            name: true,
+            code: true
+        }
+    });
+
+    if (!inactiveItems.length) {
+        return;
+    }
+
+    const itemLabel = inactiveItems
+        .map((item) => item?.name || item?.code || `#${item.id}`)
+        .join(", ");
+
+    throw {
+        statusCode: 1,
+        message: `Inactive items cannot be used in inward operations: ${itemLabel}`
+    };
+}
+
 
 async function get(req) {
     const { branchId, active, poInwardOrDirectInward, pageNumber, dataPerPage, serachDocNo, searchDate, supplier,
@@ -1127,6 +1166,7 @@ async function create(body) {
         payTermId, processValid = false,
         vehicleNo, specialInstructions, remarks, orderId, locationId,
         branchId, active, userId, finYearId } = await body
+    await validateActiveItemsForInward(directInwardReturnItems);
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let docId = await getNextDocId(branchId, poInwardOrDirectInward, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
@@ -1324,6 +1364,7 @@ async function update(id, body) {
         supplierId, directInwardReturnItems, dcNo, dcDate, storeId,
         vehicleNo, specialInstructions, remarks, orderId, locationId, partyId,
         branchId, active, userId } = await body
+    await validateActiveItemsForInward(directInwardReturnItems);
 
 
     const dataFound = await prisma.directInwardOrReturn.findUnique({

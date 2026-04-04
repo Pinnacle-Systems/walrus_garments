@@ -43,6 +43,37 @@ const escapeCsvValue = (value) => {
 
 const normalizeLookupValue = (value) => (value || "").toString().trim().toLowerCase();
 const normalizeCodeValue = (value) => value?.toString().trim().toUpperCase() || "";
+const normalizeBarcodeValue = (value) => value?.toString().trim() || "";
+const OPENING_STOCK_CREATION_SOURCE = "OPENING_STOCK";
+
+const buildLegacySeedMap = (rows = []) => {
+  const nameToBarcode = new Map();
+  const barcodeToName = new Map();
+
+  rows.forEach((row, index) => {
+    const normalizedName = normalizeLookupValue(row?.item_name);
+    const normalizedBarcode = normalizeBarcodeValue(row?.barcode || row?.barcode_no);
+
+    if (!normalizedName || !normalizedBarcode) {
+      return;
+    }
+
+    const existingBarcodeForName = nameToBarcode.get(normalizedName);
+    if (existingBarcodeForName && existingBarcodeForName !== normalizedBarcode) {
+      throw Error(`Opening stock row ${index + 1} uses a different barcode for item ${row?.item_name}.`);
+    }
+
+    const existingNameForBarcode = barcodeToName.get(normalizedBarcode);
+    if (existingNameForBarcode && existingNameForBarcode !== normalizedName) {
+      throw Error(`Opening stock row ${index + 1} reuses barcode ${normalizedBarcode} for a different item name.`);
+    }
+
+    nameToBarcode.set(normalizedName, normalizedBarcode);
+    barcodeToName.set(normalizedBarcode, normalizedName);
+  });
+
+  return nameToBarcode;
+};
 
 const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems, setStockItems }) => {
   const { branchId, companyId, finYearId, userId } = getCommonParams();
@@ -74,7 +105,8 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
   console.log(file, "file for Invoice")
 
 
-  const { data: itemList } = useGetItemMasterQuery({ params });
+  const itemQueryParams = React.useMemo(() => ({ ...params, active: true }), [params]);
+  const { data: itemList } = useGetItemMasterQuery({ params: itemQueryParams });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
@@ -84,6 +116,10 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
 
   const branchOptions = branchList?.data?.map(b => ({ value: b.id, label: b.branchName })) || [];
   const locationOptions = locationList?.data?.map(l => ({ value: l.id, label: l.storeName })) || [];
+  const legacyItems = React.useMemo(
+    () => (itemList?.data || []).filter((item) => item.active && item.isLegacy),
+    [itemList]
+  );
 
 
   const [addData] = useAddOpeningStockMutation();
@@ -242,11 +278,24 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
       }
 
       // --- Auto-create missing Item masters ---
+      const legacySeedMap = buildLegacySeedMap(stockItems);
       const newItemIdMap = {};
       for (const itm of missingItems) {
+        const normalizedItemName = normalizeMasterValue(itm);
+        const legacyBarcode = legacySeedMap.get(normalizeLookupValue(itm)) || "";
         const res = await addItem({
-          name: normalizeMasterValue(itm),
+          name: normalizedItemName,
+          code: normalizedItemName,
           active: true,
+          isLegacy: true,
+          creationSource: OPENING_STOCK_CREATION_SOURCE,
+          itemPriceList: [{
+            sizeId: null,
+            colorId: null,
+            salesPrice: 0,
+            offerPrice: 0,
+            barcode: legacyBarcode,
+          }],
           companyId,
           branchId,
           storeId: selectedLocationId,
@@ -274,7 +323,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
 
         return {
           ...row,
-          itemId: newlyCreatedItemId || row.itemId || findFromList(row.item_name, itemList?.data, "id"),
+          itemId: newlyCreatedItemId || row.itemId || findFromList(row.item_name, legacyItems, "id"),
           sizeId: newlyCreatedSizeId || row.sizeId || findFromList(row.size, sizeList?.data, "id") || null,
           colorId: newlyCreatedColorId || row.colorId || findFromList(row.color, colorList?.data, "id") || null,
           uomId: resolvedUomId,
@@ -308,9 +357,16 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
   };
 
   const saveData = async () => {
+    try {
+      buildLegacySeedMap(stockItems);
+    } catch (error) {
+      toast.error(error.message);
+      return;
+    }
+
     const missingItems = [...new Set(
       stockItems
-        .filter(r => r.item_name && !findFromList(r.item_name, itemList?.data, "id"))
+        .filter(r => r.item_name && !findFromList(r.item_name, legacyItems, "id"))
         .map(r => r.item_name)
     )];
 
@@ -408,7 +464,7 @@ const ExcelSelectionTable = ({ file, setFile, pres, setPres, params, stockItems,
           const colorName = obj.color;
           const uomName = obj.uom;
 
-          obj.itemId = findFromList(itemName, itemList?.data, "id");
+          obj.itemId = findFromList(itemName, legacyItems, "id");
           obj.sizeId = findFromList(sizeName, sizeList?.data, "id") || null;
           obj.colorId = findFromList(colorName, colorList?.data, "id") || null;
           obj.uomId = findFromList(uomName, uomList?.data, "id") || null;

@@ -169,6 +169,7 @@ model Branch {
   Saleorder                              Saleorder[]
   StockAdjustment                        StockAdjustment[]
   SalesDelivery                          SalesDelivery[]
+  SalesDeliveryFulfillmentAllocation     SalesDeliveryFulfillmentAllocation[]
   SalesInvoice                           SalesInvoice[]
   SalesReturn                            SalesReturn[]
   Payment                                Payment[]
@@ -1126,10 +1127,10 @@ model Color {
   FromLocationTransferItems     FromLocationTransferItems[]
   ToLocationTransferTtems       ToLocationTransferTtems[]
   QuotationItems                QuotationItems[]
-  LegacyStock                   LegacyStock[]
   SaleOrderItems                SaleOrderItems[]
   StockAdjustmentItems          StockAdjustmentItems[]
   SalesDeliveryItems            SalesDeliveryItems[]
+  SalesDeliveryFulfillmentAllocation SalesDeliveryFulfillmentAllocation[]
   SalesInvoiceItems             SalesInvoiceItems[]
   SalesReturnItems              SalesReturnItems[]
   PosItems                      PosItems[]
@@ -1179,10 +1180,10 @@ model UnitOfMeasurement {
   AccessoryMaterialIssueItems               AccessoryMaterialIssueItems[]
   OrderAccessoryDetails                     OrderAccessoryDetails[]
   QuotationItems                            QuotationItems[]
-  LegacyStock                               LegacyStock[]
   SaleOrderItems                            SaleOrderItems[]
   StockAdjustmentItems                      StockAdjustmentItems[]
   SalesDeliveryItems                        SalesDeliveryItems[]
+  SalesDeliveryFulfillmentAllocation        SalesDeliveryFulfillmentAllocation[]
   SalesInvoiceItems                         SalesInvoiceItems[]
   SalesReturnItems                          SalesReturnItems[]
   PosItems                                  PosItems[]
@@ -1864,10 +1865,10 @@ model Size {
   FromLocationTransferItems                 FromLocationTransferItems[]
   ToLocationTransferTtems                   ToLocationTransferTtems[]
   QuotationItems                            QuotationItems[]
-  LegacyStock                               LegacyStock[]
   SaleOrderItems                            SaleOrderItems[]
   StockAdjustmentItems                      StockAdjustmentItems[]
   SalesDeliveryItems                        SalesDeliveryItems[]
+  SalesDeliveryFulfillmentAllocation        SalesDeliveryFulfillmentAllocation[]
   SalesInvoiceItems                         SalesInvoiceItems[]
   SalesReturnItems                          SalesReturnItems[]
   PosItems                                  PosItems[]
@@ -2011,6 +2012,7 @@ model Location {
   companyId                  Int
   PInwardOrReturn            PInwardOrReturn[]
   Stock                      Stock[]
+  SalesDeliveryFulfillmentAllocation SalesDeliveryFulfillmentAllocation[]
   ProcessDelivery            ProcessDelivery[]
   ProcessInward              ProcessInward[]
   CuttingDelivery            CuttingDelivery[]
@@ -4915,7 +4917,7 @@ model Item {
   styleId                   Int?
   Size                      Size?                       @relation(fields: [sizeId], references: [id])
   sizeId                    Int?
-  name                      String?
+  name                      String?                     @unique
   aliasName                 String?
   code                      String?
   sku                       String?
@@ -4926,6 +4928,7 @@ model Item {
   purchasePrice             String?
   salesTaxType              String?
   purchaseTaxType           String?
+  isLegacy                  Boolean                     @default(false)
   active                    Boolean                     @default(false)
   Section                   Section?                    @relation(fields: [sectionId], references: [id])
   sectionId                 Int?
@@ -4945,10 +4948,10 @@ model Item {
   FromLocationTransferItems FromLocationTransferItems[]
   ToLocationTransferTtems   ToLocationTransferTtems[]
   QuotationItems            QuotationItems[]
-  LegacyStock               LegacyStock[]
   SaleOrderItems            SaleOrderItems[]
   StockAdjustmentItems      StockAdjustmentItems[]
   SalesDeliveryItems        SalesDeliveryItems[]
+  SalesDeliveryFulfillmentAllocation SalesDeliveryFulfillmentAllocation[]
   PriceTemplate             PriceTemplate[]
   PriceTemplateDetails      PriceTemplateDetails[]
   SalesInvoiceItems         SalesInvoiceItems[]
@@ -5059,28 +5062,6 @@ model QuotationItems {
   taxMethod     String?
 }
 
-model LegacyStock {
-  id Int @id @default(autoincrement())
-
-  Item          Item?              @relation(fields: [itemId], references: [id])
-  itemId        Int?
-  Size          Size?              @relation(fields: [sizeId], references: [id])
-  sizeId        Int?
-  Color         Color?             @relation(fields: [colorId], references: [id])
-  colorId       Int?
-  Uom           UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId         Int?
-  adjType       String?
-  qty           Float?
-  price         Float?
-  barcode       String?
-  inOrOut       String?
-  storeId       Int?
-  branchId      Int?
-  transactionId Int?
-  createdAt     DateTime?          @default(now())
-}
-
 model Saleorder {
   id                    Int                    @id @default(autoincrement())
   docId                 String?
@@ -5134,6 +5115,7 @@ model SaleOrderItems {
   taxMethod          String?
   priceType          String?
   SalesDeliveryItems SalesDeliveryItems[]
+  FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
 }
 
 model ItemCategory {
@@ -5217,6 +5199,7 @@ model SalesDelivery {
   saleOrderId           Int?
   Saleorder             Saleorder?             @relation(fields: [saleOrderId], references: [id])
   SalesDeliveryItems    SalesDeliveryItems[]
+  FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
   SalesReturn           SalesReturn[]
 }
 
@@ -5243,6 +5226,32 @@ model SalesDeliveryItems {
   taxPercent      String?
   taxMethod       String?
   priceType       String?
+  FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
+}
+
+model SalesDeliveryFulfillmentAllocation {
+  id                  Int                @id @default(autoincrement())
+  SalesDelivery       SalesDelivery      @relation(fields: [salesDeliveryId], references: [id], onDelete: Cascade)
+  salesDeliveryId     Int
+  SalesDeliveryItems  SalesDeliveryItems? @relation(fields: [salesDeliveryItemId], references: [id], onDelete: SetNull)
+  salesDeliveryItemId Int?
+  SaleOrderItems      SaleOrderItems?    @relation(fields: [saleOrderItemId], references: [id], onDelete: SetNull)
+  saleOrderItemId     Int?
+  Item                Item?              @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  itemId              Int?
+  Size                Size?              @relation(fields: [sizeId], references: [id], onDelete: SetNull)
+  sizeId              Int?
+  Color               Color?             @relation(fields: [colorId], references: [id], onDelete: SetNull)
+  colorId             Int?
+  Uom                 UnitOfMeasurement? @relation(fields: [uomId], references: [id], onDelete: SetNull)
+  uomId               Int?
+  Store               Location?          @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  storeId             Int?
+  Branch              Branch?            @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  branchId            Int?
+  barcode             String?
+  allocatedQty        Float?
+  createdAt           DateTime?          @default(now())
 }
 
 model SalesInvoice {

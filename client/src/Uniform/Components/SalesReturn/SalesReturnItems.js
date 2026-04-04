@@ -9,6 +9,7 @@ import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import Swal from "sweetalert2";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
+import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import TransactionLineItemsSection, {
     standardTransactionPlaceholderRowCount,
     transactionTableClassName,
@@ -49,11 +50,15 @@ const SalesReturnItems = ({
     const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
     const showSize = stockMaintenance.trackSize;
     const showColor = stockMaintenance.trackColor;
-    const isSizeReady = (row) => !showSize || Boolean(row.itemId);
-    const isColorReady = (row) => !showColor || Boolean(showSize ? row.sizeId : row.itemId);
+    const findSelectedItem = (itemId) => itemList?.data?.find((item) => String(item.id) === String(itemId));
+    const isLegacyRow = (row) => Boolean(findSelectedItem(row?.itemId)?.isLegacy);
+    const rowRequiresSize = (row) => showSize && !isLegacyRow(row);
+    const rowRequiresColor = (row) => showColor && !isLegacyRow(row);
+    const isSizeReady = (row) => !rowRequiresSize(row) || Boolean(row.itemId);
+    const isColorReady = (row) => !rowRequiresColor(row) || Boolean(showSize ? row.sizeId : row.itemId);
     const isUomReady = (row) => {
-        if (showColor) return Boolean(row.colorId);
-        if (showSize) return Boolean(row.sizeId);
+        if (rowRequiresColor(row)) return Boolean(row.colorId);
+        if (rowRequiresSize(row)) return Boolean(row.sizeId);
         return Boolean(row.itemId);
     };
 
@@ -67,8 +72,13 @@ const SalesReturnItems = ({
         console.log(value, "value", index, "index", field, "field")
         const newBlend = structuredClone(deliveryItems);
         if (field == "itemId") {
+            const selectedItem = findSelectedItem(value);
             const sectionId = findFromList(value, itemList?.data, "sectionId")
             newBlend[index]["sectionId"] = sectionId;
+            if (selectedItem?.isLegacy) {
+                newBlend[index]["sizeId"] = "";
+                newBlend[index]["colorId"] = "";
+            }
         }
 
 
@@ -434,11 +444,11 @@ const SalesReturnItems = ({
                                                 handleInputChange((e.target.value), index, "sizeId")
                                             }
                                             }
-                                            disabled={readOnly || !isSizeReady(row)}
+                                            disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
                                         >
                                             <option >
                                             </option>
-                                            {(id ? sizeList?.data : getItemVariantSizeOptions(itemList?.data, sizeList?.data, "sizeId", row?.itemId))?.map((blend) =>
+                                            {(isLegacyRow(row) ? [] : (id ? sizeList?.data : getItemVariantSizeOptions(itemList?.data, sizeList?.data, "sizeId", row?.itemId)))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>)}
@@ -456,12 +466,12 @@ const SalesReturnItems = ({
                                                 handleInputChange((e.target.value), index, "colorId")
                                             }
                                             }
-                                            disabled={readOnly || !isColorReady(row)}
+                                            disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
 
                                         >
                                             <option hidden>
                                             </option>
-                                            {(id ? colorList?.data : (getItemVariantColorOptions(itemList?.data, colorList?.data, "colorId", row?.itemId, row?.sizeId)))?.map((blend) =>
+                                            {(isLegacyRow(row) ? [] : (id ? colorList?.data : (getItemVariantColorOptions(itemList?.data, colorList?.data, "colorId", row?.itemId, row?.sizeId))))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>

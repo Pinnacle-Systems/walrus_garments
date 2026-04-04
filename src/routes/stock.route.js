@@ -18,8 +18,6 @@ router.get('/unified-report', getUnifiedStockReport)
 
 router.get('/unified-barcode', getUnifiedStockWithLegacyByBarcode)
 
-router.get('/unified-with-legacy-barcode', getUnifiedStockWithLegacyByBarcode)
-
 router.get('/', get);
 
 router.get('/:id', getOne);

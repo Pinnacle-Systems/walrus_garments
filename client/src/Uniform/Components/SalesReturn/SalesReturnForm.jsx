@@ -93,7 +93,8 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   const { data: supplierDetails } =
     useGetPartyByIdQuery(customerId, { skip: !customerId });
 
-  const { data: itemList } = useGetItemMasterQuery({ params });
+  const salesItemParams = { ...params, active: true };
+  const { data: itemList } = useGetItemMasterQuery({ params: salesItemParams });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
 
 
@@ -318,8 +319,15 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
 
   const saveData = (nextProcess) => {
-
-    let mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty", "price"];
+    const mandatoryFields = ["itemId", "uomId", "qty", "price"];
+    const salesRows = (data?.deliveryItems || []).filter(i => i.itemId);
+    const requiresLegacyAwareVariantFields = salesRows.some((row) => {
+      const selectedItem = itemList?.data?.find((item) => String(item.id) === String(row.itemId));
+      return !selectedItem?.isLegacy;
+    });
+    const finalMandatoryFields = requiresLegacyAwareVariantFields
+      ? [...mandatoryFields, "sizeId", "colorId"]
+      : mandatoryFields;
 
     if (!validateData(data)) {
 
@@ -331,7 +339,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       });
       return
     }
-    if (!isGridDatasValid((data?.deliveryItems)?.filter(i => i.itemId), false, mandatoryFields)) {
+    if (!isGridDatasValid(salesRows, false, finalMandatoryFields)) {
       Swal.fire({
         title: "Please fill all Delivery Items Mandatory fields...!",
         icon: "warning",
@@ -640,7 +648,6 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
         setHeaderOpen={setIsHeaderOpen}
         summaryItems={summaryItems}
         openStateClassName="max-h-[420px] opacity-100 overflow-visible"
-        headerBodyClassName="px-2 pb-2 overflow-visible"
         footer={footerContent}
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">

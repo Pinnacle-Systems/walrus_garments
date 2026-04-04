@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -13,7 +13,6 @@ import moment from "moment";
 import Swal from "sweetalert2";
 import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import QuotationItems from "./QuotationItems";
 import { useAddQuotationMasterMutation, useAddQuotationMutation, useGetQuotationByIdQuery, useGetQuotationMasterByIdQuery, useUpdateQuotationMasterMutation, useUpdateQuotationMutation } from "../../../redux/uniformService/quotationServices";
 import Modal from "../../../UiComponents/Modal";
@@ -26,6 +25,7 @@ import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTem
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
+import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
 
 
 
@@ -92,10 +92,11 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const { data: supplierDetails } =
     useGetPartyByIdQuery(customerId, { skip: !customerId });
 
-  const { data: itemList } = useGetItemMasterQuery({ params });
+  const salesItemParams = { ...params, active: true };
+  const { data: itemList } = useGetItemMasterQuery({ params: salesItemParams });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: hsnList } = useGetHsnMasterQuery({ params });
-  const { data: itemPriceList } = useGetItemPriceListQuery({ params });
+  const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
 
 
@@ -314,9 +315,6 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
 
   const saveData = (nextProcess) => {
-
-    let mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty", "price"];
-
     if (!validateData(data)) {
 
 
@@ -327,7 +325,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       });
       return
     }
-    if (!isGridDatasValid((data?.quoteItems)?.filter(i => i.itemId), false, mandatoryFields)) {
+    if (!areSalesRowsValid((data?.quoteItems)?.filter(i => i.itemId), itemList?.data, itemPriceList?.data)) {
       Swal.fire({
         title: "Please fill all Quote Items Mandatory fields...!",
         icon: "warning",
@@ -712,7 +710,6 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
         setHeaderOpen={setIsHeaderOpen}
         summaryItems={summaryItems}
         openStateClassName="max-h-[400px] opacity-100 overflow-visible"
-        headerBodyClassName="px-2 pb-2 overflow-visible"
         footer={footerContent}
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 overflow-visible">

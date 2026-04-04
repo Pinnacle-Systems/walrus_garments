@@ -446,7 +446,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                 setHeaderOpen={setIsHeaderOpen}
                 summaryItems={summaryItems}
                 openStateClassName="max-h-[420px] opacity-100 overflow-visible"
-                headerBodyClassName="px-2 pb-2 overflow-visible"
                 footer={footerContent}
                 headerContent={(
                     <div className="grid grid-cols-1 gap-2 md:grid-cols-[1.2fr_1.2fr_0.75fr_1fr_1.1fr]">

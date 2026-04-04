@@ -18,7 +18,6 @@ async function get(req) {
                     ItemPriceList: true,
                     DirectItems: true,
                     DirectReturnItems: true,
-                    LegacyStock: true,
                     Stock: true,
                     SaleOrderItems: true,
                     SalesDeliveryItems: true,
