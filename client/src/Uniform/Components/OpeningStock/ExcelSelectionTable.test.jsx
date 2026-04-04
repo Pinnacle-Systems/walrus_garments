@@ -473,6 +473,39 @@ describe("Opening stock bulk import color review", () => {
     expect(payload.stockItems[0].itemId).toBe(900);
   });
 
+  it("highlights actionable cells directly instead of showing a status column", () => {
+    const { container } = render(
+      <TestHarness
+        initialStockItems={[
+          {
+            _rowId: 1,
+            item_name: "NEW SHIRT",
+            item_code: "",
+            size: "M",
+            sizeId: 201,
+            color: "RED",
+            colorId: 301,
+            uom: "PCS",
+            uomId: 401,
+            qty: "2",
+            price: "220",
+          },
+        ]}
+      />
+    );
+
+    expect(screen.queryByText("Status")).toBeNull();
+
+    const itemNameInput = screen.getByDisplayValue("NEW SHIRT");
+    expect(itemNameInput.getAttribute("title")).toBe("Item NEW SHIRT will be created during save");
+    expect(itemNameInput.closest("td")?.className).toContain("bg-amber-50");
+    expect(screen.getByDisplayValue("2").getAttribute("title")).toBe("");
+
+    const itemCodeInput = container.querySelector('input[title="Item Code is required"]');
+    expect(itemCodeInput).not.toBeNull();
+    expect(itemCodeInput.closest("td")?.className).toContain("bg-red-50");
+  });
+
   it("uses one shared review flow for a mixed batch with existing and newly added rows", async () => {
     const { container } = render(
       <TestHarness
