@@ -1,4 +1,16 @@
 export const DEFAULT_BARCODE_GENERATION_METHOD = "STANDARD";
+export const STOCK_DRIVEN_FIELD_KEYS = [
+  "field1",
+  "field2",
+  "field3",
+  "field4",
+  "field5",
+  "field6",
+  "field7",
+  "field8",
+  "field9",
+  "field10",
+];
 
 export function getItemVariantSizeOptions(masterData, allData, key, itemId) {
   const item = masterData?.find((entry) => String(entry.id) === String(itemId));
@@ -44,4 +56,23 @@ export function getStockMaintenanceConfig(stockReportControl) {
     trackSize: Boolean(config.sizeWise || config.sizeColorWise),
     trackColor: Boolean(config.sizeColorWise),
   };
+}
+
+export function getConfiguredStockDrivenFields(stockReportControl) {
+  return STOCK_DRIVEN_FIELD_KEYS.reduce((fields, key, index) => {
+    const label = stockReportControl?.[key]?.toString().trim();
+    if (!label) {
+      return fields;
+    }
+
+    fields.push({
+      key,
+      label,
+      required: true,
+      type: "custom",
+      widthClass: "w-32",
+      sampleValue: `VALUE-${index + 1}`,
+    });
+    return fields;
+  }, []);
 }

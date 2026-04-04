@@ -7,6 +7,7 @@ import {
 } from "../utils/helper.js";
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { NoRecordFound } from "../configs/Responses.js";
+import { buildStockRuntimeFieldWhere, pickStockRuntimeFieldValues, STOCK_RUNTIME_FIELD_KEYS } from "./stockRuntimeFields.js";
 
 
 
@@ -232,10 +233,32 @@ async function getOne(id) {
   });
   if (!data) return NoRecordFound("stockAdjustment");
 
+  const transactionIds = (data.StockAdjustmentItems || []).map((item) => item.id).filter(Boolean);
+  const stockRows = transactionIds.length
+    ? await prisma.stock.findMany({
+      where: {
+        inOrOut: "stockAdjustment",
+        transactionId: { in: transactionIds },
+      },
+      select: {
+        transactionId: true,
+        ...STOCK_RUNTIME_FIELD_KEYS.reduce((fields, key) => {
+          fields[key] = true;
+          return fields;
+        }, {}),
+      },
+    })
+    : [];
+  const stockRowMap = new Map(stockRows.map((row) => [row.transactionId, row]));
+
   return {
     statusCode: 0,
     data: {
       ...data,
+      StockAdjustmentItems: (data.StockAdjustmentItems || []).map((item) => ({
+        ...item,
+        ...(stockRowMap.get(item.id) || {}),
+      })),
     },
   };
 }
@@ -251,6 +274,7 @@ async function getExistingStockQty(tx, stockDetail, branchId, storeId) {
       sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
       colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
       uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
+      ...buildStockRuntimeFieldWhere(stockDetail),
     },
     _sum: {
       qty: true,
@@ -327,6 +351,7 @@ async function createStockAdjustmentItems(
       uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
       qty,
       price: stockDetail?.price ? parseFloat(stockDetail.price) : undefined,
+      ...pickStockRuntimeFieldValues(stockDetail),
     };
     await tx.stock.create({ data: baseData });
 
@@ -466,6 +491,7 @@ async function updateOpeningStockItems(
       uomId: itemPayload.uomId,
       qty,
       price: stockDetail?.price ? parseFloat(stockDetail.price) : undefined,
+      ...pickStockRuntimeFieldValues(stockDetail),
     };
 
     if (stockDetail?.id) {

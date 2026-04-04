@@ -19,6 +19,7 @@ jest.mock("../../../Utils/helper", () => ({
     finYearId: 20,
     userId: 30,
   }),
+  getConfiguredStockDrivenFields: () => [],
   getStockMaintenanceConfig: () => ({
     trackItem: true,
     trackSize: true,

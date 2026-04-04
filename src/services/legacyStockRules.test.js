@@ -131,6 +131,44 @@ test("buildBarcodeSnapshotMatches preserves multiple combinations for later reso
     assert.equal(matches.length, 2);
 });
 
+test("buildBarcodeSnapshotMatches keeps custom stock-field combinations separate", () => {
+    const matches = buildBarcodeSnapshotMatches([
+        {
+            itemId: 1,
+            sizeId: 11,
+            colorId: 21,
+            uomId: 2,
+            storeId: 3,
+            barcode: "CAN-002",
+            field1: "LOT-A",
+            qty: 5,
+            price: 120,
+            Item: { name: "CANONICAL SHIRT" },
+            Size: { name: "M" },
+            Color: { name: "RED" },
+            Uom: { name: "PCS" },
+        },
+        {
+            itemId: 1,
+            sizeId: 11,
+            colorId: 21,
+            uomId: 2,
+            storeId: 3,
+            barcode: "CAN-002",
+            field1: "LOT-B",
+            qty: 7,
+            price: 120,
+            Item: { name: "CANONICAL SHIRT" },
+            Size: { name: "M" },
+            Color: { name: "RED" },
+            Uom: { name: "PCS" },
+        }
+    ]);
+
+    assert.equal(matches.length, 2);
+    assert.deepEqual(matches.map((entry) => entry.field1).sort(), ["LOT-A", "LOT-B"]);
+});
+
 test("buildReconciliationEntries groups quantities by reconciliation dimensions", () => {
     const entries = buildReconciliationEntries([
         { itemId: 1, sizeId: null, storeId: 2, qty: 3 },

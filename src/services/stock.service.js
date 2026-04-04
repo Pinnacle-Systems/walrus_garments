@@ -4,6 +4,7 @@ import { getStockProperty } from '../utils/helper.js';
 import { getFinishedGoodsStockReport, getStockReportForCuttingDelivery } from '../utils/stockHelper.js';
 import moment from "moment"
 import { buildBarcodeSnapshotMatches, validateResolvedOpeningStockLegacyItems } from './legacyStockRules.js';
+import { pickStockRuntimeFieldValues, STOCK_RUNTIME_FIELD_KEYS } from './stockRuntimeFields.js';
 
 const xprisma = prisma.$extends({
     result: {
@@ -245,7 +246,7 @@ async function get(req) {
             "uomId",
             'price',
             'sectionId',
-
+            ...STOCK_RUNTIME_FIELD_KEYS,
         ],
         _sum: {
             qty: true,
@@ -421,11 +422,7 @@ export async function createOpeningStock(body) {
             branchId: branchId ? parseInt(branchId) : undefined,
             storeId: storeId ? parseInt(storeId) : undefined,
             barcode: item?.barcode_no ? String(item.barcode_no) : item?.barcode ? String(item.barcode) : undefined,
-            field6: item?.field6 ? String(item.field6) : undefined,
-            field7: item?.field7 ? String(item.field7) : undefined,
-            field8: item?.field8 ? String(item.field8) : undefined,
-            field9: item?.field9 ? String(item.field9) : undefined,
-            field10: item?.field10 ? String(item.field10) : undefined,
+            ...pickStockRuntimeFieldValues(item),
         }));
 
         data = await tx.stock.createMany({ data: formattedData });
@@ -951,8 +948,6 @@ export {
     update,
     remove,
 }
-
-
 
 
 

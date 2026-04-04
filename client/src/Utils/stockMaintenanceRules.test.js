@@ -1,4 +1,5 @@
 import {
+  getConfiguredStockDrivenFields,
   getItemVariantColorOptions,
   getItemVariantSizeOptions,
   getStockMaintenanceConfig,
@@ -53,5 +54,19 @@ describe("stockMaintenanceRules", () => {
 
   it("defaults barcode generation mode to STANDARD", () => {
     expect(resolveBarcodeGenerationMethod(undefined)).toBe("STANDARD");
+  });
+
+  it("returns configured stock-driven fields in field order", () => {
+    expect(
+      getConfiguredStockDrivenFields({
+        field2: "Shade",
+        field7: "Batch",
+        field10: "Bin",
+      })
+    ).toEqual([
+      expect.objectContaining({ key: "field2", label: "Shade", required: true }),
+      expect.objectContaining({ key: "field7", label: "Batch", required: true }),
+      expect.objectContaining({ key: "field10", label: "Bin", required: true }),
+    ]);
   });
 });

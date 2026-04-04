@@ -1,7 +1,8 @@
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isGridDatasValid, ModeChip } from "../../../Utils/helper";
+import { findFromList, getCommonParams, getConfiguredStockDrivenFields, isGridDatasValid } from "../../../Utils/helper";
+import { ModeChip } from "../../../Utils/helper";
 import { DateInputNew, DropdownInput, DropdownInputNew, DropdownWithSearch, ReusableSearchableInput, TextInput, TextInputNew1 } from "../../../Inputs";
 import { HiOutlineRefresh, HiPlus, HiX } from "react-icons/hi";
 import { stockTransferType } from "../../../Utils/DropdownData";
@@ -24,6 +25,7 @@ import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import Modal from "../../../UiComponents/Modal";
 import BarCodePrintFormat from "./BarcodePrintFormat";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 
 const StockTransferForm = ({
     docId, id, readOnly, setId, setForm,
@@ -53,6 +55,7 @@ const StockTransferForm = ({
     const { data: itemList } = useGetItemMasterQuery({ params });
     const { data: sizeList } = useGetSizeMasterQuery({ params });
     const { data: locationData } = useGetLocationMasterQuery({ params: { ...params } });
+    const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
 
     const [invalidateTagsDispatch] = useInvalidateTags();
     const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
@@ -65,6 +68,7 @@ const StockTransferForm = ({
 
     const [addData] = useAddStockTransferMutation();
     const [updateData] = useUpdateStockTransferMutation();
+    const stockDrivenFields = getConfiguredStockDrivenFields(stockReportControlData?.data?.[0]);
 
 
 
@@ -94,7 +98,8 @@ const StockTransferForm = ({
         const existsIndex = stockItems.findIndex(i =>
             i.itemId === newItem.itemId &&
             i.sizeId === newItem.sizeId &&
-            i.colorId === newItem.colorId
+            i.colorId === newItem.colorId &&
+            stockDrivenFields.every((field) => String(i?.[field.key] || "") === String(newItem?.[field.key] || ""))
         );
         if (existsIndex !== -1) {
             const updatedItems = [...stockItems];
@@ -309,6 +314,7 @@ const StockTransferForm = ({
             return
         }
         let mandatoryFields = ["transferQty"];
+        mandatoryFields.push(...stockDrivenFields.map((field) => field.key));
 
         if (!isGridDatasValid((data?.stockItems)?.filter(i => i.itemId), false, mandatoryFields)) {
             Swal.fire({
@@ -521,6 +527,7 @@ const StockTransferForm = ({
                             searchItem={searchItem} setSearchItem={setSearchItem}
                             searchColor={searchColor} setSearchColor={setSearchColor}
                             searchSize={searchSize} setSearchSize={setSearchSize}
+                            stockDrivenFields={stockDrivenFields}
                         />
                     </div>
                     <div className=" flex flex-col md:flex-row gap-2 justify-between mt-5">
@@ -572,8 +579,6 @@ const StockTransferForm = ({
 }
 
 export default StockTransferForm;
-
-
 
 
 

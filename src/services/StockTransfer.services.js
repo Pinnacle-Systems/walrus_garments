@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma.js';
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { getDateFromDateTime, getYearShortCode, getYearShortCodeForFinYear } from "../utils/helper.js";
 import { getTableRecordWithId } from '../utils/helperQueries.js';
+import { buildStockRuntimeFieldWhere, pickStockRuntimeFieldValues, STOCK_RUNTIME_FIELD_KEYS } from "./stockRuntimeFields.js";
 
 function findIsNumber(docId) {
     const parts = docId?.split('/');
@@ -193,15 +194,56 @@ async function getOne(id) {
 
     if (!data) return NoRecordFound("Stock Transfer");
 
+    const fromTransactionIds = (data.FromLocationTransferItems || []).map((item) => item.id).filter(Boolean);
+    const toTransactionIds = (data.ToLocationTransferTtems || []).map((item) => item.id).filter(Boolean);
+    const [fromStockRows, toStockRows] = await Promise.all([
+        fromTransactionIds.length
+            ? prisma.stock.findMany({
+                where: {
+                    inOrOut: "FromLocationTransferItems",
+                    transactionId: { in: fromTransactionIds }
+                },
+                select: {
+                    transactionId: true,
+                    qty: true,
+                    ...STOCK_RUNTIME_FIELD_KEYS.reduce((fields, key) => {
+                        fields[key] = true;
+                        return fields;
+                    }, {})
+                }
+            })
+            : [],
+        toTransactionIds.length
+            ? prisma.stock.findMany({
+                where: {
+                    inOrOut: "ToLocationTransferItems",
+                    transactionId: { in: toTransactionIds }
+                },
+                select: {
+                    transactionId: true,
+                    qty: true,
+                    ...STOCK_RUNTIME_FIELD_KEYS.reduce((fields, key) => {
+                        fields[key] = true;
+                        return fields;
+                    }, {})
+                }
+            })
+            : []
+    ]);
+    const fromStockMap = new Map(fromStockRows.map((row) => [row.transactionId, row]));
+    const toStockMap = new Map(toStockRows.map((row) => [row.transactionId, row]));
+
     if (data.FromLocationTransferItems && data.FromLocationTransferItems.length > 0) {
         data.FromLocationTransferItems = await Promise.all(
             data.FromLocationTransferItems.map(async (item) => {
+                const stockSnapshot = fromStockMap.get(item.id) || {};
                 const stockResult = await prisma.stock.aggregate({
                     where: {
                         itemId: item.itemId,
                         sizeId: item.sizeId,
                         colorId: item.colorId,
-                        storeId: data.fromLocationId
+                        storeId: data.fromLocationId,
+                        ...buildStockRuntimeFieldWhere(stockSnapshot)
                     },
                     _sum: {
                         qty: true
@@ -210,6 +252,7 @@ async function getOne(id) {
                 console.log(stockResult, "stockResult", stockResult._sum.qty + item?.transferQty)
                 return {
                     ...item,
+                    ...stockSnapshot,
                     stockQty: stockResult._sum.qty + item?.transferQty
                 };
             })
@@ -219,12 +262,14 @@ async function getOne(id) {
     if (data.ToLocationTransferTtems && data.ToLocationTransferTtems.length > 0) {
         data.ToLocationTransferTtems = await Promise.all(
             data.ToLocationTransferTtems.map(async (item) => {
+                const stockSnapshot = toStockMap.get(item.id) || {};
                 const stockResult = await prisma.stock.aggregate({
                     where: {
                         itemId: item.itemId,
                         sizeId: item.sizeId,
                         colorId: item.colorId,
-                        storeId: data.toLocationId
+                        storeId: data.toLocationId,
+                        ...buildStockRuntimeFieldWhere(stockSnapshot)
                     },
                     _sum: {
                         qty: true
@@ -232,6 +277,7 @@ async function getOne(id) {
                 });
                 return {
                     ...item,
+                    ...stockSnapshot,
                     stockQty: stockResult._sum.qty || 0
                 };
             })
@@ -425,6 +471,7 @@ async function createLocationTransferStock(
         branchId: branchId ? Number(branchId) : null,
         price: item?.discountPrice ? String(item?.discountPrice) : undefined,
         transactionId: transactionId ? transactionId : null,
+        ...pickStockRuntimeFieldValues(item),
     };
 
     const fromStockData = {
@@ -539,6 +586,7 @@ async function create(req) {
 async function UpdateFromLocationStock(tx, item, transactionId, storeId) {
     const updateData = {
         qty: item?.transferQty ? parseFloat(0 - item?.transferQty) : undefined,
+        ...pickStockRuntimeFieldValues(item),
     };
 
     await tx.stock.updateMany({
@@ -553,6 +601,7 @@ async function UpdateFromLocationStock(tx, item, transactionId, storeId) {
 async function UpdateToLocationStock(tx, item, transactionId, storeId) {
     const updateData = {
         qty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
+        ...pickStockRuntimeFieldValues(item),
     };
 
     await tx.stock.updateMany({
@@ -680,7 +729,6 @@ export {
     update,
     remove
 }
-
 
 
 
