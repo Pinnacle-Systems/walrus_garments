@@ -1,8 +1,5 @@
-# opening-stock-dynamic-schema Specification
+## MODIFIED Requirements
 
-## Purpose
-Define the shared dynamic schema that Opening Stock derives from the active Stock Control configuration.
-## Requirements
 ### Requirement: Opening stock SHALL derive its schema from active Stock Control
 The opening-stock workflow SHALL derive its visible columns, import headers, validation rules, and persistence mapping from the active Stock Control configuration rather than from a fixed hard-coded header list. The resulting stock-driven field set SHALL be incorporated into the shared Opening Stock row contract used by the unified table workspace, alongside the fixed operational row fields required for Opening Stock capture.
 
@@ -34,4 +31,3 @@ The opening-stock workflow SHALL write all configured stock-tracking fields capt
 - **WHEN** a user saves opening stock with configured additional stock-field values
 - **THEN** the save payload includes those values in the corresponding `field6` to `field10` properties
 - **AND** the created `Stock` rows persist those values
-

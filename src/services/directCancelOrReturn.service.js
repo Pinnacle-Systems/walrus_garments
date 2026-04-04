@@ -7,6 +7,10 @@ import { getDirectInwardReturnItemsLotBreakUp, getPurchaseReturnItemsAlreadyData
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
 import { prisma } from '../lib/prisma.js';
+import {
+    getBarcodeGenerationMethod,
+    validateVariantRowShape,
+} from './itemVariantValidation.js';
 
 function getInwardOrReturnShortCode(poInwardOrDirectInward) {
     switch (poInwardOrDirectInward) {
@@ -60,6 +64,50 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
         (searchDueDate ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate) : true) &&
         (searchPoType ? (item.poType.toLowerCase().includes(searchPoType.toLowerCase())) : true)
     )
+}
+
+async function validateReturnVariantRows(directReturnItems = [], rowLabelPrefix) {
+    const itemIds = [...new Set(
+        (directReturnItems || [])
+            .map((item) => item?.itemId ? parseInt(item.itemId) : null)
+            .filter(Boolean)
+    )];
+
+    if (!itemIds.length) {
+        return;
+    }
+
+    const [barcodeGenerationMethod, items] = await Promise.all([
+        getBarcodeGenerationMethod(),
+        prisma.item.findMany({
+            where: {
+                id: {
+                    in: itemIds,
+                },
+            },
+            select: {
+                id: true,
+                isLegacy: true,
+            },
+        }),
+    ]);
+
+    const itemMap = new Map(items.map((item) => [item.id, item]));
+
+    (directReturnItems || []).forEach((item, index) => {
+        const itemId = item?.itemId ? parseInt(item.itemId) : null;
+        if (!itemId) {
+            return;
+        }
+
+        validateVariantRowShape({
+            flowType: "canonical",
+            isLegacy: itemMap.get(itemId)?.isLegacy,
+            barcodeGenerationMethod,
+            row: item,
+            rowLabel: `${rowLabelPrefix} ${index + 1}`,
+        });
+    });
 }
 
 
@@ -690,6 +738,7 @@ async function create(body) {
         payTermId,
         vehicleNo, specialInstructions, remarks,
         branchId, active, userId, finYearId, purchaseInwardId } = await body
+    await validateReturnVariantRows(directReturnItems, `${poInwardOrDirectInward} row`);
 
     let processValid = false;
 
@@ -866,6 +915,7 @@ async function update(id, body) {
         supplierId, directReturnItems, dcNo, dcDate, storeId,
         vehicleNo, specialInstructions, remarks,
         branchId, active, userId, purchaseInwardId } = await body
+    await validateReturnVariantRows(directReturnItems, `${poInwardOrDirectInward} row`);
 
 
     const dataFound = await prisma.directReturnOrPoReturn.findUnique({
