@@ -155,6 +155,7 @@ const SalesDelivery = () => {
                         invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch} convertSaleOrderId={convertSaleOrderId}
                         linkedSaleOrder={saleOrderToConvertData?.data}
                         totalReceivedAmount={saleOrderToConvertData?.data?.totalReceivedAmount || 0}
+                        remainingPaymentCapacity={saleOrderToConvertData?.data?.remainingPaymentCapacity || 0}
                         termsData={termsData}
                     />
                 </div>

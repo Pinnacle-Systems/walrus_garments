@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -13,7 +13,6 @@ import moment from "moment";
 import Swal from "sweetalert2";
 import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import SaleOrderItems from "./SaleOrderItems";
 import { useAddsaleOrderMutation, useGetsaleOrderByIdQuery, useUpdatesaleOrderMutation } from "../../../redux/uniformService/saleOrderServices";
 import Modal from "../../../UiComponents/Modal";
@@ -26,6 +25,7 @@ import { push } from "../../../redux/features/opentabs";
 import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTemplateService";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
+import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
 
 
 
@@ -78,10 +78,11 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const { data: supplierDetails } =
     useGetPartyByIdQuery(customerId, { skip: !customerId });
 
-  const { data: itemList } = useGetItemMasterQuery({ params });
+  const salesItemParams = { ...params, active: true };
+  const { data: itemList } = useGetItemMasterQuery({ params: salesItemParams });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: hsnList } = useGetHsnMasterQuery({ params });
-  const { data: itemPriceList } = useGetItemPriceListQuery({ params });
+  const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
 
 
@@ -280,8 +281,6 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
 
   const saveData = (nextProcess) => {
-
-    let mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty", "price"];
     if (!validateData(data)) {
 
 
@@ -292,7 +291,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       });
       return
     }
-    if (!isGridDatasValid((data?.saleOrderItems)?.filter(i => i.itemId), false, mandatoryFields)) {
+    if (!areSalesRowsValid((data?.saleOrderItems)?.filter(i => i.itemId), itemList?.data, itemPriceList?.data)) {
       Swal.fire({
         title: "Please fill all Sale Order Items Mandatory fields...!",
         icon: "warning",
@@ -650,7 +649,6 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         setHeaderOpen={setIsHeaderOpen}
         summaryItems={summaryItems}
         openStateClassName="max-h-[600px] opacity-100 overflow-visible"
-        headerBodyClassName="px-2 pb-2 overflow-visible"
         footer={footerContent}
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">

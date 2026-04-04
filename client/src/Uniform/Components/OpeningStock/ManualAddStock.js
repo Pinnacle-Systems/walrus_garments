@@ -50,7 +50,8 @@ const ManualAddStock = ({ params }) => {
     color: { open: false, rowId: null, value: "" },
   });
   // --- Queries & Mutations ---
-  const { data: itemList } = useGetItemMasterQuery({ params });
+  const itemQueryParams = React.useMemo(() => ({ ...params, active: true }), [params]);
+  const { data: itemList } = useGetItemMasterQuery({ params: itemQueryParams });
   const { data: itemControlData } = useGetItemControlPanelMasterQuery({ params });
   const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
@@ -94,7 +95,11 @@ const ManualAddStock = ({ params }) => {
   }, [createManualRow, rows.length, uomList]);
 
   // --- Options Mapping ---
-  const itemOptions = itemList?.data?.map((i) => ({ value: i.id, label: i.name })) || [];
+  const legacyItems = React.useMemo(
+    () => (itemList?.data || []).filter((item) => item.active && item.isLegacy),
+    [itemList]
+  );
+  const itemOptions = legacyItems.map((i) => ({ value: i.id, label: i.name })) || [];
   const sizeOptions = sizeList?.data?.map((s) => ({ value: s.id, label: s.name })) || [];
   const colorOptions = colorList?.data?.map((c) => ({ value: c.id, label: c.name })) || [];
   const uomOptions = uomList?.data?.map((c) => ({ value: c.id, label: c.name })) || [];
@@ -118,15 +123,16 @@ const ManualAddStock = ({ params }) => {
 
         // Auto-price lookup (only if item, size, or color changed)
         if (["itemId", "sizeId", "colorId"].includes(field)) {
-          const selectedItem = itemList?.data?.find((i) => i.id === updatedRow.itemId);
+          const selectedItem = legacyItems.find((i) => i.id === updatedRow.itemId);
           if (selectedItem) {
-            const itemBarcodeGenerationMethod = getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod);
-            updatedRow.price = getItemPriceForBarcodeGenerationMode(
-              selectedItem,
-              itemBarcodeGenerationMethod,
-              updatedRow.sizeId,
-              updatedRow.colorId
-            );
+            updatedRow.price = selectedItem?.isLegacy
+              ? selectedItem?.ItemPriceList?.[0]?.salesPrice || 0
+              : getItemPriceForBarcodeGenerationMode(
+                selectedItem,
+                getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod),
+                updatedRow.sizeId,
+                updatedRow.colorId
+              );
           }
         }
 
@@ -270,7 +276,7 @@ const ManualAddStock = ({ params }) => {
           </thead>
           <tbody>
             {rows.map((row, idx) => {
-              const selectedItemData = itemList?.data?.find(i => i.id === row.itemId);
+              const selectedItemData = legacyItems.find(i => i.id === row.itemId);
               const validSizeIds = selectedItemData?.ItemPriceList?.map(p => p.sizeId) || [];
               const validColorIds = selectedItemData?.ItemPriceList?.map(p => p.colorId) || [];
 
@@ -288,16 +294,14 @@ const ManualAddStock = ({ params }) => {
                             <div className="flex-1 uppercase">
                               <CreatableSelect isClearable placeholder="Item..." options={itemOptions} value={itemOptions.find(o => o.value === row.itemId)} styles={customSelectStyles}
                                 onChange={o => {
-                                  const selectedItem = itemList?.data?.find(i => i.id === (o?.value || ""));
+                                  const selectedItem = legacyItems.find(i => i.id === (o?.value || ""));
                                   updateRow(row.id, "itemId", o?.value || "", {
                                     item_name: o?.label || "",
                                     sizeId: "",
                                     size: "",
                                     colorId: "",
                                     color: "",
-                                    price: getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod) === "STANDARD"
-                                      ? selectedItem?.ItemPriceList?.[0]?.salesPrice || 0
-                                      : ""
+                                    price: selectedItem?.ItemPriceList?.[0]?.salesPrice || 0
                                   });
                                 }}
                                 onInputChange={(v) => v.toUpperCase()}
@@ -407,6 +411,7 @@ const ManualAddStock = ({ params }) => {
           itemToEdit={modalState.item.editItem}
           onCreated={handleQuickSaveItem}
           barcodeGenerationMethod={barcodeGenerationMethod}
+          legacyOnly={true}
         />
       )}
       {modalState.size.open && (

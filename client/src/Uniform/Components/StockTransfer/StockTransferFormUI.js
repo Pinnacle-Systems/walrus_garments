@@ -90,6 +90,59 @@ const StockTransferForm = ({
 
     const [triggerBarcodeSearch, { isLoading: isBarcodeLoading, isFetching: isBarcodeFetching }] = useLazyGetUnifiedStockByBarcodeQuery({ skip: !barcode });
 
+    const upsertScannedStockItem = (newItem) => {
+        const existsIndex = stockItems.findIndex(i =>
+            i.itemId === newItem.itemId &&
+            i.sizeId === newItem.sizeId &&
+            i.colorId === newItem.colorId
+        );
+        if (existsIndex !== -1) {
+            const updatedItems = [...stockItems];
+            updatedItems[existsIndex] = {
+                ...updatedItems[existsIndex],
+                ...newItem,
+                transferQty: (updatedItems[existsIndex].transferQty || 0) + 1,
+            };
+            setStockItems(updatedItems);
+            return;
+        }
+
+        const firstEmptyIndex = stockItems.findIndex(i => !i.itemId);
+        if (firstEmptyIndex !== -1) {
+            const updatedItems = [...stockItems];
+            updatedItems[firstEmptyIndex] = newItem;
+            setStockItems(updatedItems);
+            return;
+        }
+
+        setStockItems([...stockItems, newItem]);
+    };
+
+    const resolveBarcodeMatch = async (matches = []) => {
+        const options = Object.fromEntries(
+            matches.map((match, index) => [
+                String(index),
+                `${match.item_name || "Item"} / ${match.size || "-"} / ${match.color || "-"} / Qty ${match.stockQty || 0}`,
+            ])
+        );
+
+        const result = await Swal.fire({
+            title: "Select Stock Row",
+            text: "This barcode matches multiple stock combinations.",
+            input: "select",
+            inputOptions: options,
+            inputPlaceholder: "Choose stock row",
+            showCancelButton: true,
+            inputValidator: (value) => (!value && value !== "0" ? "Please choose a stock row" : undefined),
+        });
+
+        if (!result.isConfirmed) {
+            return null;
+        }
+
+        return matches[Number(result.value)] || null;
+    };
+
     const handleBarcodeSearch = async (e) => {
         if (e.key === 'Enter' || e.type === 'blur') {
             if (!barcode) return;
@@ -100,44 +153,13 @@ const StockTransferForm = ({
 
             try {
                 const res = await triggerBarcodeSearch({ params: { barcode, storeId: fromLocationId, branchId } }).unwrap();
-                if (res.statusCode === 0 && res.data) {
-                    const newItem = {
-                        ...res.data,
-                        // transferQty: 1,
-                        // stockQty: res.data.availableQty
-                    };
+                const resolvedData = res?.needsResolution
+                    ? await resolveBarcodeMatch(res.matches || [])
+                    : res.data;
 
-                    console.log(newItem, "newItem");
-
-
-                    // Check if already in list
-                    const existsIndex = stockItems.findIndex(i =>
-                        i.itemId === newItem.itemId &&
-                        i.sizeId === newItem.sizeId &&
-                        i.colorId === newItem.colorId
-                    );
-                    if (existsIndex !== -1) {
-                        // ✅ UPDATE EXISTING ROW
-                        const updatedItems = [...stockItems];
-
-                        updatedItems[existsIndex] = {
-                            ...updatedItems[existsIndex],
-                            ...newItem,
-                            // Optional: increase qty instead of replace
-                            transferQty: (updatedItems[existsIndex].transferQty || 0) + 1,
-                        };
-
-                        setStockItems(updatedItems);
-                    } else {
-                        const firstEmptyIndex = stockItems.findIndex(i => !i.itemId);
-                        if (firstEmptyIndex !== -1) {
-                            const updatedItems = [...stockItems];
-                            updatedItems[firstEmptyIndex] = newItem;
-                            setStockItems(updatedItems);
-                        } else {
-                            setStockItems([...stockItems, newItem]);
-                        }
-                    }
+                if (res.statusCode === 0 && resolvedData) {
+                    const newItem = { ...resolvedData };
+                    upsertScannedStockItem(newItem);
                     setBarcode(""); // Clear barcode after successful scan
                 } else {
                     Swal.fire({ title: res.message || "Stock not found", icon: "error" });
@@ -550,7 +572,6 @@ const StockTransferForm = ({
 }
 
 export default StockTransferForm;
-
 
 
 
