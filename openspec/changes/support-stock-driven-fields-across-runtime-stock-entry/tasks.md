@@ -1,7 +1,7 @@
 ## 1. Shared Stock-Field Contract
 
 - [x] 1.1 Add or extract a shared runtime stock-field-definition helper that derives tracked shared dimensions and configured stock-driven fields from the active `StockReportControl` record across `field1` through `field10`.
-- [ ] 1.2 Update shared stock-writing helpers so configured stock-driven fields are exposed consistently for capture, persistence, and matching semantics when active in Stock Control.
+- [x] 1.2 Update shared stock-writing helpers so configured stock-driven fields are exposed consistently for capture, persistence, and matching semantics when active in Stock Control.
 - [x] 1.3 Document or encode the ordering/mapping rules that runtime stock-writing screens use for configured stock-driven fields so all in-scope flows follow the same contract.
 
 ## 2. Opening Stock Alignment
@@ -19,11 +19,11 @@
 
 ## 4. Purchase Inward / Return Consistency
 
-- [ ] 4.1 Verify Purchase Inward / Direct Inward still follows the shared stock-field contract for configured `field1` through `field10` after helper consolidation.
-- [ ] 4.2 Verify Purchase Return continues to enforce the same configured stock-driven field set and does not regress to a narrower stock-entry contract.
+- [x] 4.1 Verify Purchase Inward / Direct Inward still follows the shared stock-field contract for configured `field1` through `field10` after helper consolidation.
+- [x] 4.2 Verify Purchase Return continues to enforce the same configured stock-driven field set and does not regress to a narrower stock-entry contract.
 
 ## 5. Verification
 
 - [x] 5.1 Add or update tests for shared stock-field derivation and validation covering configured `field1` through `field10`.
-- [ ] 5.2 Verify Opening Stock, Stock Adjustment, and Stock Transfer all expose configured stock-driven fields consistently and preserve captured values without regressing screen-specific completion behavior.
-- [ ] 5.3 Verify persisted `Stock` rows from Opening Stock, Stock Adjustment, and Stock Transfer include values for configured runtime stock-driven fields whenever those values are captured.
+- [x] 5.2 Verify Opening Stock, Stock Adjustment, and Stock Transfer all expose configured stock-driven fields consistently and preserve captured values without regressing screen-specific completion behavior.
+- [x] 5.3 Verify persisted `Stock` rows from Opening Stock, Stock Adjustment, and Stock Transfer include values for configured runtime stock-driven fields whenever those values are captured.
