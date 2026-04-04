@@ -1,23 +1,12 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 import { normalizeLegacyBarcode, validateLegacyPriceRowShape } from './legacyStockRules.js';
+import {
+    getBarcodeGenerationMethod,
+    validateVariantRows,
+} from './itemVariantValidation.js';
 
-const DEFAULT_BARCODE_GENERATION_METHOD = "STANDARD";
 const OPENING_STOCK_CREATION_SOURCE = "OPENING_STOCK";
-
-async function getBarcodeGenerationMethod() {
-    const itemControlPanel = await prisma.ItemControlPanel.findFirst({
-        select: {
-            barcodeGenerationMethod: true,
-        }
-    });
-
-    return itemControlPanel?.barcodeGenerationMethod || DEFAULT_BARCODE_GENERATION_METHOD;
-}
-
-function validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList) {
-    return;
-}
 
 function parseOptionalBoolean(value) {
     if (value === undefined || value === null || value === "") {
@@ -325,7 +314,6 @@ async function create(body) {
         sectionId, sectionType, subCategory, mainCategory, isLegacy, creationSource
     } = body
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
-    validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList);
     const normalizedName = normalizeItemName(name);
     const normalizedIsLegacy = parseOptionalBoolean(isLegacy) ?? false;
     await ensureUniqueItemName(normalizedName);
@@ -334,6 +322,13 @@ async function create(body) {
         isLegacy: normalizedIsLegacy,
         itemPriceList,
         creationSource,
+    });
+    validateVariantRows({
+        flowType: "canonical",
+        isLegacy: normalizedIsLegacy,
+        barcodeGenerationMethod,
+        rows: itemPriceList,
+        rowLabelPrefix: "Item price row",
     });
     const data = await prisma.item.create({
         data: {
@@ -522,8 +517,6 @@ async function update(id, body) {
     const { styleId, sizeId, name, hsnId, code, active, itemPriceList, sectionId, fields, mainCategory, subCategory, aliasName, isLegacy } = body
 
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
-    validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList);
-
 
     const dataFound = await prisma.item.findUnique({
         where:
@@ -545,6 +538,13 @@ async function update(id, body) {
         isLegacy: normalizedIsLegacy,
         itemPriceList,
         existingItem: dataFound,
+    });
+    validateVariantRows({
+        flowType: "canonical",
+        isLegacy: normalizedIsLegacy,
+        barcodeGenerationMethod,
+        rows: itemPriceList,
+        rowLabelPrefix: "Item price row",
     });
     let data;
 

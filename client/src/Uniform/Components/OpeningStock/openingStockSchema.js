@@ -2,21 +2,21 @@ import { getConfiguredStockDrivenFields, getStockMaintenanceConfig } from "../..
 
 const FIXED_FIELD_DEFINITIONS = [
   {
+    key: "item_code",
+    label: "Item Code",
+    required: true,
+    type: "text",
+    widthClass: "w-40",
+    sampleValue: "LEG-001",
+    aliases: ["barcode", "barcode_no", "item code", "item_code"],
+  },
+  {
     key: "uom",
     label: "Uom",
     required: true,
     type: "uom",
     widthClass: "w-32",
     sampleValue: "PCS",
-  },
-  {
-    key: "barcode",
-    label: "Barcode No",
-    required: true,
-    type: "text",
-    widthClass: "w-40",
-    sampleValue: "TSHIRT-XL-0001",
-    aliases: ["barcode_no"],
   },
   {
     key: "price",
@@ -91,7 +91,7 @@ export function createOpeningStockRowDefaults(fieldDefinitions = []) {
   };
 
   fieldDefinitions.forEach((field) => {
-    row[field.key] = field.key === "qty" || field.key === "price" ? "" : "";
+    row[field.key] = "";
   });
 
   return row;

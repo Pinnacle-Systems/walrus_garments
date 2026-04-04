@@ -1,8 +1,5 @@
-# opening-stock-import-color-review Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change require-color-codes-for-opening-stock-import-colors. Update Purpose after archive.
-## Requirements
 ### Requirement: Bulk opening-stock import SHALL collect required color codes before creating missing colors
 When the current Opening Stock table contains color values that do not exist in color master, the workflow SHALL present those missing colors in the shared hydration review step and SHALL require the user to complete a color code for each pending color before creation.
 
@@ -38,4 +35,3 @@ The shared hydration review flow SHALL continue to summarize missing items and s
 - **THEN** the workflow shows one grouped shared review step
 - **AND** allows item creation to remain summary-based
 - **AND** requires the missing colors to be completed with valid codes before final confirmation
-

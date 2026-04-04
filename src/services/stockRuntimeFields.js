@@ -22,7 +22,7 @@ export function getConfiguredStockRuntimeFieldDefinitions(stockReportControl = {
       return definitions;
     }
 
-    definitions.push({ key, label, required: true, type: "custom" });
+    definitions.push({ key, label, required: false, type: "custom" });
     return definitions;
   }, []);
 }
@@ -52,4 +52,3 @@ export function getStockRuntimeFieldSelect(keys = STOCK_RUNTIME_FIELD_KEYS) {
     return result;
   }, {});
 }
-
