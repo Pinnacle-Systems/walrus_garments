@@ -5,16 +5,20 @@ import { useEffect, useRef } from "react";
 import { toWords } from "number-to-words";
 import {
   DEFAULT_BARCODE_GENERATION_METHOD,
+  getConfiguredStockDrivenFields,
   getItemVariantColorOptions,
   getItemVariantSizeOptions,
   getStockMaintenanceConfig,
+  STOCK_DRIVEN_FIELD_KEYS,
   resolveBarcodeGenerationMethod,
 } from "./stockMaintenanceRules";
 export {
   DEFAULT_BARCODE_GENERATION_METHOD,
+  getConfiguredStockDrivenFields,
   getItemVariantColorOptions,
   getItemVariantSizeOptions,
   getStockMaintenanceConfig,
+  STOCK_DRIVEN_FIELD_KEYS,
   resolveBarcodeGenerationMethod,
 };
 

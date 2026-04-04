@@ -1,6 +1,4 @@
-import { getStockMaintenanceConfig } from "../../../Utils/helper";
-
-const ADDITIONAL_STOCK_FIELD_KEYS = ["field6", "field7", "field8", "field9", "field10"];
+import { getConfiguredStockDrivenFields, getStockMaintenanceConfig } from "../../../Utils/helper";
 
 const FIXED_FIELD_DEFINITIONS = [
   {
@@ -79,19 +77,7 @@ export function getOpeningStockFieldDefinitions(stockReportControl) {
     });
   }
 
-  ADDITIONAL_STOCK_FIELD_KEYS.forEach((fieldKey, index) => {
-    const label = stockReportControl?.[fieldKey]?.toString().trim();
-    if (!label) return;
-
-    fieldDefinitions.push({
-      key: fieldKey,
-      label,
-      required: true,
-      type: "custom",
-      widthClass: "w-32",
-      sampleValue: `VALUE-${index + 1}`,
-    });
-  });
+  fieldDefinitions.push(...getConfiguredStockDrivenFields(stockReportControl));
 
   return [...fieldDefinitions, ...FIXED_FIELD_DEFINITIONS];
 }

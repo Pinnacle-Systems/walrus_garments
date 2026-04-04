@@ -1,3 +1,5 @@
+import { STOCK_RUNTIME_FIELD_KEYS } from "./stockRuntimeFields.js";
+
 export function normalizeLegacyBarcode(barcode) {
     const normalizedBarcode = barcode?.toString().trim();
     return normalizedBarcode || undefined;
@@ -78,10 +80,11 @@ export function buildBarcodeSnapshotMatches(records = []) {
             record.uomId ?? "",
             record.storeId ?? "",
             record.barcode ?? "",
+            ...STOCK_RUNTIME_FIELD_KEYS.map((key) => record?.[key] ?? ""),
         ].join("|");
 
         if (!snapshotMap.has(snapshotKey)) {
-            snapshotMap.set(snapshotKey, {
+            const snapshot = {
                 ...record,
                 itemId: record.itemId,
                 sizeId: record.sizeId,
@@ -94,7 +97,13 @@ export function buildBarcodeSnapshotMatches(records = []) {
                 uom: record.Uom?.name,
                 price: record.price,
                 stockQty: 0,
+            };
+
+            STOCK_RUNTIME_FIELD_KEYS.forEach((key) => {
+                snapshot[key] = record?.[key] ?? null;
             });
+
+            snapshotMap.set(snapshotKey, snapshot);
         }
 
         const snapshot = snapshotMap.get(snapshotKey);

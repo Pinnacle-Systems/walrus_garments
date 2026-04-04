@@ -4,7 +4,7 @@ import CreatableSelect from "react-select/creatable";
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-import { getCommonParams, getStockMaintenanceConfig, isGridDatasValid } from "../../../Utils/helper";
+import { getCommonParams, getConfiguredStockDrivenFields, getStockMaintenanceConfig, isGridDatasValid } from "../../../Utils/helper";
 import { toast } from "react-toastify";
 import { FiSave, FiSettings, FiEdit2 } from "react-icons/fi";
 import { DropdownInput } from "../../../Inputs";
@@ -106,6 +106,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
   const uomOptions = uomList?.data?.map((c) => ({ value: c.id, label: c.name })) || [];
   const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
   const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
+  const stockDrivenFields = getConfiguredStockDrivenFields(stockReportControlData?.data?.[0]);
 
 
   useEffect(() => {
@@ -206,6 +207,9 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
       id: Date.now() + Math.random(),
       poItemsId: ""
     };
+    stockDrivenFields.forEach((field) => {
+      newRow[field.key] = "";
+    });
     setRows([...rows, newRow]);
   };
 
@@ -273,6 +277,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
     const mandatoryFields = ["itemId", "adjType", "qty", "price"];
     if (stockMaintenance.trackSize) mandatoryFields.push("sizeId");
     if (stockMaintenance.trackColor) mandatoryFields.push("colorId");
+    mandatoryFields.push(...stockDrivenFields.map((field) => field.key));
 
     if (!validateData(data)) {
       Swal.fire({ title: "Please fill all required fields...!", icon: "warning" });
@@ -388,6 +393,9 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                   <th className={`${transactionTableHeaderCellClassName} w-64`}>Item Name</th>
                   {stockMaintenance.trackSize && <th className={`${transactionTableHeaderCellClassName} w-32`}>Size</th>}
                   {stockMaintenance.trackColor && <th className={`${transactionTableHeaderCellClassName} w-32`}>Color</th>}
+                  {stockDrivenFields.map((field) => (
+                    <th key={field.key} className={`${transactionTableHeaderCellClassName} w-32`}>{field.label}</th>
+                  ))}
                   <th className={`${transactionTableHeaderCellClassName} w-32`}>UOM</th>
                   <th className={`${transactionTableHeaderCellClassName} w-40`}>Barcode</th>
                   <th className={`${transactionTableHeaderCellClassName} w-24`}>Price</th>
@@ -472,6 +480,16 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                           />
                         </td>
                       )}
+                      {stockDrivenFields.map((field) => (
+                        <td key={field.key} className={transactionTableFocusCellClassName}>
+                          <input
+                            type="text"
+                            className={`${transactionTableSelectInputClassName} uppercase`}
+                            value={row?.[field.key] || ""}
+                            onChange={(e) => updateRow(row.id, field.key, e.target.value)}
+                          />
+                        </td>
+                      ))}
 
                       <td className={transactionTableFocusCellClassName}>
                         <Select isClearable placeholder="UOM..." options={uomOptions} value={uomOptions?.find(o => o.value === row.uomId)} styles={customSelectStyles}

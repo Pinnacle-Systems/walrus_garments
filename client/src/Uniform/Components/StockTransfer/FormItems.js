@@ -20,7 +20,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
     yarnList, setRequirementId, stockItems, setStockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
     toOrderId, fromOrderId, orderData, fromLocationId, locationData, sizeList, itemList, uomList, toLocationId,
     orderToGeneral, setOrderToGeneral, searchColor, setSearchColor, searchItem, setSearchItem, searchSize, setSearchSize
-
+    , stockDrivenFields = []
 
 }) => {
 
@@ -147,6 +147,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                     searchItem={searchItem} setSearchItem={setSearchItem}
                     searchColor={searchColor} setSearchColor={setSearchColor}
                     searchSize={searchSize} setSearchSize={setSearchSize}
+                    stockDrivenFields={stockDrivenFields}
 
                 />
             </Modal>
@@ -165,6 +166,9 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Item</th>
                                             <th className="w-16 px-4 py-1.5 border border-gray-300 text-center  text-xs">Size</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
+                                            {stockDrivenFields.map((field) => (
+                                                <th key={field.key} className="w-32 px-4 py-1.5 border border-gray-300 text-center text-xs">{field.label}</th>
+                                            ))}
                                             <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Pcs)</th>
                                             {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
 
@@ -182,6 +186,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                             readOnly={readOnly} handleInputChangeFromOrder={handleInputChangeFromOrder}
                                             itemList={itemList} sizeList={sizeList} colorList={colorList} fromLocationId={fromLocationId}
                                             stockItems={stockItems} toLocationId={toLocationId} locationData={locationData}
+                                            stockDrivenFields={stockDrivenFields}
                                         />)}
                                     </tbody>
                                 </table>
@@ -224,8 +229,6 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 }
 
 export default FormItems;
-
-
 
 
 
