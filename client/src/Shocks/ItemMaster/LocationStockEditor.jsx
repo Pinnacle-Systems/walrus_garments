@@ -120,7 +120,7 @@ export default function LocationStockEditor({
 
   return (
     <div className="flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <div className="flex items-start justify-between gap-2 border-b border-gray-200 px-3 py-2">
+      <div className="flex items-start justify-between gap-2 border-b border-gray-200 px-3 py-1.5">
         <div className="min-w-0">
           <h4 className="text-sm font-semibold text-gray-800 break-words leading-tight">{title}</h4>
           <p className="text-[11px] text-gray-500 leading-tight">Configure minimum stock by location.</p>
@@ -143,22 +143,23 @@ export default function LocationStockEditor({
         <table className="w-full table-fixed text-xs">
           <thead className="sticky top-0 z-10 bg-gray-50 text-gray-700">
             <tr>
-              <th className="w-10 border-b border-gray-200 px-1 py-2 text-center">S.No</th>
-              <th className="border-b border-gray-200 px-1 py-2 text-left">Location</th>
-              <th className="w-28 border-b border-gray-200 px-1 py-2 text-left">Min Qty</th>
-              <th className="w-12 border-b border-gray-200 px-1 py-2 text-center">Action</th>
+              <th className="w-10 border-b border-gray-200 px-1 py-1 text-center">S.No</th>
+              <th className="border-b border-gray-200 px-1 py-1 text-left">Location</th>
+              <th className="w-28 border-b border-gray-200 px-1 py-1 text-left">Min Qty</th>
+              <th className="w-12 border-b border-gray-200 px-1 py-1 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
             {safeRows.map((row, index) => (
               <tr key={`${row.locationId || "empty"}-${index}`}>
-                <td className="border-b border-gray-200 px-1 py-2 text-center">{index + 1}</td>
-                <td className="border-b border-gray-200 px-1 py-2">
+                <td className="border-b border-gray-200 px-1 py-1 text-center">{index + 1}</td>
+                <td className="border-b border-gray-200 px-1 py-1">
                   <select
-                    className={`w-full rounded border px-1.5 py-1 ${rowErrors[index]?.locationId ? "border-red-400" : "border-gray-200"}`}
+                    className={`w-full bg-transparent px-1 py-0.5 outline-none ${rowErrors[index]?.locationId ? "text-red-600" : "text-gray-900"}`}
                     value={row.locationId || ""}
                     onChange={(e) => updateRow(index, "locationId", e.target.value)}
                     disabled={readOnly}
+                    title={rowErrors[index]?.locationId || ""}
                   >
                     <option value=""></option>
                     {getAvailableLocationOptions(safeRows, locationOptions, index).map((option) => (
@@ -167,23 +168,18 @@ export default function LocationStockEditor({
                       </option>
                     ))}
                   </select>
-                  {rowErrors[index]?.locationId && (
-                    <p className="mt-1 text-[10px] text-red-600">{rowErrors[index].locationId}</p>
-                  )}
                 </td>
-                <td className="border-b border-gray-200 px-1 py-2">
+                <td className="border-b border-gray-200 px-1 py-1">
                   <input
                     type="text"
-                    className={`w-full rounded border px-1.5 py-1 text-right ${rowErrors[index]?.minStockQty ? "border-red-400" : "border-gray-200"}`}
+                    className={`w-full bg-transparent px-1 py-0.5 text-right outline-none ${rowErrors[index]?.minStockQty ? "text-red-600" : "text-gray-900"}`}
                     value={row.minStockQty || ""}
                     onChange={(e) => updateRow(index, "minStockQty", e.target.value)}
                     disabled={readOnly}
+                    title={rowErrors[index]?.minStockQty || ""}
                   />
-                  {rowErrors[index]?.minStockQty && (
-                    <p className="mt-1 text-[10px] text-red-600">{rowErrors[index].minStockQty}</p>
-                  )}
                 </td>
-                <td className="border-b border-gray-200 px-1 py-2 text-center">
+                <td className="border-b border-gray-200 px-1 py-1 text-center">
                   {!readOnly && (
                     <button
                       type="button"

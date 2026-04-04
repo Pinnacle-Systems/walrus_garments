@@ -58,9 +58,10 @@ The system SHALL allow phased Sale Order to Sales Delivery conversion only up to
 ### Requirement: Delivery fulfillment allocation SHALL remain secondary to the visible document shape
 The system MAY let the user allocate a converted delivery line against one or more stock identities underneath the visible delivery document, but that allocation detail SHALL NOT force the visible delivery grid to become stock-shaped.
 
-#### Scenario: Delivery line allocation happens under the sale-order-shaped line
-- **WHEN** a converted delivery line needs stock-aware execution
-- **THEN** the workflow MAY capture fulfillment allocation against one or more stock identities for that line
+#### Scenario: Converted delivery line resolves ambiguous stock through candidate allocation
+- **WHEN** a converted delivery line is less granular than the compatible stock buckets available for fulfillment
+- **THEN** the workflow returns the candidate stock buckets for that delivery line
+- **AND** the user must select one or more buckets before inventory reduction
 - **AND** the visible delivery line still remains in the source sale-order shape
 
 ### Requirement: Delivery save SHALL revalidate stock allocation before inventory recording
@@ -71,3 +72,4 @@ Any fulfillment allocation selected during converted Sales Delivery SHALL remain
 - **AND** current stock availability no longer covers that allocation at save time
 - **THEN** the system MUST reject the save
 - **AND** it MUST require the user to reallocate the affected delivery quantities before inventory is recorded
+

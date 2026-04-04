@@ -8,6 +8,7 @@ async function get(req, res, next) {
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error `, err.message);
+        res.status(500).json({ statusCode: 1, message: err.message });
     }
 }
 
@@ -18,6 +19,7 @@ async function getOne(req, res, next) {
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);
+        res.status(500).json({ statusCode: 1, message: err.message });
     }
 }
 
@@ -27,6 +29,7 @@ export async function getItemPriceList(req, res, next) {
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);
+        res.status(500).json({ statusCode: 1, message: err.message });
     }
 }
 
@@ -36,6 +39,7 @@ async function getSearch(req, res, next) {
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);
+        res.status(500).json({ statusCode: 1, message: err.message });
     }
 }
 

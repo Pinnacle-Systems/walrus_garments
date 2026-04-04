@@ -307,6 +307,39 @@ describe("Opening stock bulk import color review", () => {
     });
   });
 
+  it("does not block legacy opening stock when size and color are blank", async () => {
+    render(
+      <TestHarness
+        initialStockItems={[
+          {
+            _rowId: 1,
+            item_name: "SHIRT",
+            itemId: 101,
+            item_code: "SHIRT-001",
+            size: "",
+            sizeId: "",
+            color: "",
+            colorId: "",
+            uom: "PCS",
+            uomId: 401,
+            qty: "3",
+            price: "100",
+          },
+        ]}
+      />
+    );
+
+    selectLocation();
+    fireEvent.click(screen.getByText("Save Stock"));
+
+    await waitFor(() => {
+      expect(mockAddOpeningStock).toHaveBeenCalledTimes(1);
+    });
+
+    expect(mockToastWarning).not.toHaveBeenCalledWith("Size is required at row 1");
+    expect(mockToastWarning).not.toHaveBeenCalledWith("Color is required at row 1");
+  });
+
   it("requires color codes, rejects duplicates, creates reviewed colors, and reuses created ids in stock rows", async () => {
     render(
       <TestHarness

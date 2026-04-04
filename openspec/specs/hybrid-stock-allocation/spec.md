@@ -1,8 +1,7 @@
 # hybrid-stock-allocation Specification
 
 ## Purpose
-Define how hybrid fulfillment workflows resolve broad stock searches into explicit stock-bucket allocations before reducing inventory.
-
+TBD - created by archiving change add-explicit-stock-allocation-for-hybrid-fulfillment. Update Purpose after archive.
 ## Requirements
 ### Requirement: Hybrid fulfillment lookup SHALL return candidate stock buckets for broad matches
 When a hybrid fulfillment workflow searches stock with fewer dimensions than the tracked stock identity, the system SHALL return the compatible candidate stock buckets rather than silently collapsing ambiguous results into one consumable stock row.
@@ -47,3 +46,4 @@ Candidate stock-bucket matches and user selections SHALL remain provisional unti
 - **WHEN** the selected stock buckets remain valid at save time
 - **THEN** the system persists the fulfillment record, the explicit bucket allocation, and the resulting stock-out movement together
 - **AND** it does so without collapsing the chosen buckets into an untraceable pooled deduction
+
