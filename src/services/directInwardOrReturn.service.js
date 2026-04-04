@@ -11,6 +11,7 @@ import {
     getBarcodeGenerationMethod,
     validateVariantRowShape,
 } from './itemVariantValidation.js';
+import { pickStockRuntimeFieldValues } from './stockRuntimeFields.js';
 
 function getInwardOrReturnShortCode(poInwardOrDirectInward) {
     switch (poInwardOrDirectInward) {
@@ -1144,9 +1145,7 @@ async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId
             price: item.price ? parseFloat(item.price) : undefined,
             sectionId: item?.sectionId ? parseInt(item?.sectionId) : undefined,
             barcode: item?.barcode ? String(item?.barcode) : undefined,
-
-
-
+            ...pickStockRuntimeFieldValues(item),
         }
     })
 }
@@ -1317,7 +1316,7 @@ async function createYarnItemsUpdateStock(tx, poType, poInwardOrDirectInward, br
             qty: item["qty"] ? parseFloat(item["qty"]) : undefined,
             price: item["price"] ? parseFloat(item["price"]) : undefined,
             sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : undefined,
-
+            ...pickStockRuntimeFieldValues(item),
         }
     })
 }

@@ -11,6 +11,10 @@ import {
     getBarcodeGenerationMethod,
     validateVariantRowShape,
 } from './itemVariantValidation.js';
+import {
+    getStockRuntimeFieldSelect,
+    pickStockRuntimeFieldValues,
+} from './stockRuntimeFields.js';
 
 function getInwardOrReturnShortCode(poInwardOrDirectInward) {
     switch (poInwardOrDirectInward) {
@@ -271,6 +275,7 @@ async function getOne(id) {
                     qty: true,
                     poNo: true,
                     poQty: true,
+                    ...getStockRuntimeFieldSelect(),
                     returnLotDetails: {
                         select: {
                             id: true,
@@ -516,7 +521,8 @@ export async function getDirectReturnItemById(id, billEntryId) {
                 select: {
                     name: true
                 }
-            }
+            },
+            ...getStockRuntimeFieldSelect(),
         }
     });
 
@@ -680,9 +686,7 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
             branchId: branchId ? parseFloat(branchId) : undefined,
             storeId: storeId ? parseFloat(storeId) : undefined,
             barcode: item["barcode"] ? String(item["barcode"]) : undefined,
-
-
-
+            ...pickStockRuntimeFieldValues(item),
 
         }
     })
@@ -710,6 +714,7 @@ async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, direc
                 directItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
                 poNo: item["poNo"] ? item["poNo"] : "",
                 barcode: item["barcode"] ? item["barcode"] : "",
+                ...pickStockRuntimeFieldValues(item),
 
             }
         })
@@ -798,6 +803,7 @@ async function createYarnItemsUpdateStock(tx, poType, poInwardOrDirectInward, br
         data: {
 
             qty: (item.qty) ? parseFloat(0 - item.qty) : undefined,
+            ...pickStockRuntimeFieldValues(item),
         }
     })
     console.log("Eror")
@@ -842,6 +848,7 @@ async function updateOrCreate(tx, item, directReturnOrPoReturnId, poType, poInwa
                 orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
                 requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
                 barcode: item["barcode"] ? item["barcode"] : "",
+                ...pickStockRuntimeFieldValues(item),
 
             }
         })
@@ -880,6 +887,7 @@ async function updateOrCreate(tx, item, directReturnOrPoReturnId, poType, poInwa
                     orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
                     requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
                     barcode: item["barcode"] ? item["barcode"] : "",
+                    ...pickStockRuntimeFieldValues(item),
 
 
                 }
