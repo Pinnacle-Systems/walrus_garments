@@ -4,10 +4,12 @@ import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 import {
-    buildFulfillmentAllocations,
     buildStockOutEntries,
+    extractResolvedAllocations,
+    getHybridFulfillmentResolutionError,
     getRemainingPaymentCapacity,
     getRemainingQtyBySaleOrderItemId,
+    resolveHybridFulfillmentLines,
     validateConvertedDelivery,
     validateFulfillmentAllocations,
 } from './salesDeliveryConversionRules.js';
@@ -232,48 +234,57 @@ async function create(body) {
                     shippingChargeEnabled: Boolean(shippingChargeEnabled),
                     shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                     docId: docId,
-                    SalesDeliveryItems: {
-                        createMany: deliveryItems?.length > 0 ? {
-                            data: deliveryItems?.map((temp) => {
-                                let newItem = {}
-                                newItem["saleOrderItemId"] = temp["saleOrderItemId"] ? parseInt(temp["saleOrderItemId"]) : null;
-                                newItem["itemId"] = temp["itemId"] ? parseInt(temp["itemId"]) : null;
-                                newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : null;
-                                newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
-                                newItem["uomId"] = temp["uomId"] ? parseInt(temp["uomId"]) : null;
-                                newItem["hsnId"] = temp["hsnId"] ? parseInt(temp["hsnId"]) : null;
-                                newItem["qty"] = temp["qty"] ? temp["qty"] : null;
-                                newItem["price"] = temp["price"] ? temp["price"] : null;
-                                newItem["discountType"] = temp["discountType"] || null;
-                                newItem["discountValue"] = temp["discountValue"] || null;
-                                newItem["taxPercent"] = temp["taxPercent"] || null;
-                                newItem["taxMethod"] = temp["taxMethod"] || null;
-                                newItem["priceType"] = temp["priceType"] || null;
-                                return newItem
-                            })
-                        } : undefined
-                    }
                 }
             });
 
-            const savedDelivery = await tx.salesDelivery.findUnique({
-                where: { id: parseInt(data.id) },
+            const sourceDeliveryItems = (deliveryItems || []).filter((temp) => temp?.itemId && parseAmount(temp?.qty) > 0);
+            const persistedDeliveryItems = [];
+
+            for (const temp of sourceDeliveryItems) {
+                const savedItem = await tx.salesDeliveryItems.create({
+                    data: {
+                        salesDeliveryId: parseInt(data.id),
+                        saleOrderItemId: temp["saleOrderItemId"] ? parseInt(temp["saleOrderItemId"]) : null,
+                        itemId: temp["itemId"] ? parseInt(temp["itemId"]) : null,
+                        sizeId: temp["sizeId"] ? parseInt(temp["sizeId"]) : null,
+                        colorId: temp["colorId"] ? parseInt(temp["colorId"]) : null,
+                        uomId: temp["uomId"] ? parseInt(temp["uomId"]) : null,
+                        hsnId: temp["hsnId"] ? parseInt(temp["hsnId"]) : null,
+                        qty: temp["qty"] ? temp["qty"] : null,
+                        price: temp["price"] ? temp["price"] : null,
+                        discountType: temp["discountType"] || null,
+                        discountValue: temp["discountValue"] || null,
+                        taxPercent: temp["taxPercent"] || null,
+                        taxMethod: temp["taxMethod"] || null,
+                        priceType: temp["priceType"] || null,
+                    }
+                });
+
+                persistedDeliveryItems.push({
+                    ...savedItem,
+                    barcode: temp?.barcode || null,
+                    fulfillmentAllocations: temp?.fulfillmentAllocations || temp?.allocations || [],
+                });
+            }
+
+            const saleOrder = saleOrderId ? await tx.saleorder.findUnique({
+                where: { id: parseInt(saleOrderId) },
                 include: {
-                    SalesDeliveryItems: true,
-                    Saleorder: {
-                        include: {
-                            SaleOrderItems: true,
-                        }
-                    }
+                    SaleOrderItems: true,
                 }
-            });
+            }) : null;
 
-            const allocations = buildFulfillmentAllocations(savedDelivery?.SalesDeliveryItems, {
-                saleOrderItems: savedDelivery?.Saleorder?.SaleOrderItems,
+            const resolution = await resolveHybridFulfillmentLines(tx, persistedDeliveryItems, {
+                saleOrderItems: saleOrder?.SaleOrderItems,
                 storeId: body?.storeId,
                 branchId,
             });
+            const resolutionError = getHybridFulfillmentResolutionError(resolution);
+            if (resolutionError) {
+                throw resolutionError;
+            }
 
+            const allocations = extractResolvedAllocations(resolution);
             const allocationValidationMessage = await validateFulfillmentAllocations(tx, allocations);
             if (allocationValidationMessage) {
                 throw new Error(allocationValidationMessage);
@@ -307,7 +318,11 @@ async function create(body) {
 
         return { statusCode: 0, data };
     } catch (error) {
-        return { statusCode: 1, message: error.message || "Failed to save sales delivery." };
+        return {
+            statusCode: 1,
+            message: error.message || "Failed to save sales delivery.",
+            data: error?.fulfillmentResolution ? { fulfillmentResolution: error.fulfillmentResolution } : undefined,
+        };
     }
 }
 
@@ -455,9 +470,11 @@ async function update(id, body) {
             },
         })
 
+        const persistedDeliveryItems = [];
+
         for (const item of (deliveryItems || []).filter(i => i.itemId)) {
             if (item.id) {
-                await tx.salesDeliveryItems.update({
+                const savedItem = await tx.salesDeliveryItems.update({
                     where: { id: parseInt(item.id) },
                     data: {
                         saleOrderItemId: item.saleOrderItemId ? parseInt(item.saleOrderItemId) : null,
@@ -475,8 +492,13 @@ async function update(id, body) {
                         priceType: item.priceType || null,
                     }
                 });
+                persistedDeliveryItems.push({
+                    ...savedItem,
+                    barcode: item?.barcode || null,
+                    fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
+                });
             } else {
-                await tx.salesDeliveryItems.create({
+                const savedItem = await tx.salesDeliveryItems.create({
                     data: {
                         salesDeliveryId: salesDeliveryData.id,
                         saleOrderItemId: item.saleOrderItemId ? parseInt(item.saleOrderItemId) : null,
@@ -494,27 +516,32 @@ async function update(id, body) {
                         priceType: item.priceType || null,
                     }
                 });
+                persistedDeliveryItems.push({
+                    ...savedItem,
+                    barcode: item?.barcode || null,
+                    fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
+                });
             }
         }
 
-        const savedDelivery = await tx.salesDelivery.findUnique({
-            where: { id: parseInt(id) },
+        const saleOrder = saleOrderId ? await tx.saleorder.findUnique({
+            where: { id: parseInt(saleOrderId) },
             include: {
-                SalesDeliveryItems: true,
-                Saleorder: {
-                    include: {
-                        SaleOrderItems: true,
-                    }
-                }
+                SaleOrderItems: true,
             }
-        });
+        }) : null;
 
-        const allocations = buildFulfillmentAllocations(savedDelivery?.SalesDeliveryItems, {
-            saleOrderItems: savedDelivery?.Saleorder?.SaleOrderItems,
+        const resolution = await resolveHybridFulfillmentLines(tx, persistedDeliveryItems, {
+            saleOrderItems: saleOrder?.SaleOrderItems,
             storeId,
             branchId,
         });
+        const resolutionError = getHybridFulfillmentResolutionError(resolution);
+        if (resolutionError) {
+            throw resolutionError;
+        }
 
+        const allocations = extractResolvedAllocations(resolution);
         const allocationValidationMessage = await validateFulfillmentAllocations(tx, allocations);
         if (allocationValidationMessage) {
             throw new Error(allocationValidationMessage);
@@ -547,7 +574,11 @@ async function update(id, body) {
         });
         return { statusCode: 0, data: salesDeliveryData };
     } catch (error) {
-        return { statusCode: 1, message: error.message || "Failed to update sales delivery." };
+        return {
+            statusCode: 1,
+            message: error.message || "Failed to update sales delivery.",
+            data: error?.fulfillmentResolution ? { fulfillmentResolution: error.fulfillmentResolution } : undefined,
+        };
     }
 }
 
