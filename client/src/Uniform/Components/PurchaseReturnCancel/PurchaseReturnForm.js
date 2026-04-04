@@ -346,7 +346,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     readOnly={readOnly}
                 />
             </div>
-
             {/* Action Bar Section */}
             <div className="flex flex-col justify-between gap-2 md:flex-row">
 

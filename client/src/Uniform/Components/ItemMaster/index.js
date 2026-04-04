@@ -22,6 +22,7 @@ import ItemCategoryMaster from "../../../Shocks/ItemCategroyMaster";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { DELETE, PLUS } from "../../../icons";
 import Select from "react-dropdown-select";
+import Swal from "sweetalert2";
 
 const MODEL = "Item Master";
 
