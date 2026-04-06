@@ -22,8 +22,9 @@ const SearchableTableCellSelect = ({
   const listRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [showAddNew, setShowAddNew] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
 
   const selectedOption = useMemo(
     () => options.find((option) => String(option.value) === String(value)),
@@ -33,26 +34,49 @@ const SearchableTableCellSelect = ({
   const filteredOptions = useMemo(() => {
     const query = normalize(search);
     if (!query) return options;
-    return options.filter((option) => normalize(option.label).includes(query));
+
+    return options
+      .map((option) => {
+        const label = normalize(option.label);
+
+        let score = 0;
+
+        if (label.startsWith(query)) score = 3; // best
+        // else if (label.startsWith(query)) score = 2;
+        // else if (label.includes(query)) score = 1;
+
+        return { ...option, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score);
   }, [options, search]);
 
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
-        setSearch("");
-        setHighlightedIndex(-1);
-      }
-    };
+  const handleBlur = (event) => {
+    // Check if the focus is moving to an element outside the container
+    if (containerRef.current && !containerRef.current.contains(event.relatedTarget)) {
+      closeDropdown();
+    }
+  };
 
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const dropdownHeight = 200; // max-h-48 is ~192px + some padding
+
+      if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+        setOpenUp(true);
+      } else {
+        setOpenUp(false);
+      }
+    }
+  }, [isOpen]);
 
   const closeDropdown = () => {
     setIsOpen(false);
     setSearch("");
-    setHighlightedIndex(-1);
+    setHighlightedIndex(0);
   };
 
   const commitSelection = (nextValue) => {
@@ -67,19 +91,24 @@ const SearchableTableCellSelect = ({
   };
 
   useEffect(() => {
-    setHighlightedIndex(-1);
+    setHighlightedIndex(0);
   }, [search]);
 
   const scrollIntoView = (index) => {
     if (!listRef.current) return;
-    const item = listRef.current.children[index];
+    const domIndex = childComponent ? index + 1 : index;
+    const item = listRef.current.children[domIndex];
     if (item) item.scrollIntoView({ block: "nearest" });
   };
 
   const displayValue = isOpen ? search : selectedOption?.label || "";
 
   return (
-    <div ref={containerRef} className="relative h-full w-full">
+    <div 
+      ref={containerRef} 
+      className="relative h-full w-full"
+      onBlur={handleBlur}
+    >
       <input
         ref={inputRef}
         type="text"
@@ -92,7 +121,7 @@ const SearchableTableCellSelect = ({
           if (disabled) return;
           setIsOpen(true);
           setSearch("");
-          setHighlightedIndex(-1);
+          setHighlightedIndex(0);
           requestAnimationFrame(() => event.target.select());
         }}
         onChange={(event) => {
@@ -111,11 +140,39 @@ const SearchableTableCellSelect = ({
             return;
           }
 
+          if (event.key === "Enter") {
+            const minIdx = childComponent ? -1 : 0;
+            const maxIdx = filteredOptions.length - 1;
+
+            if (highlightedIndex === -1 && childComponent) {
+              event.preventDefault();
+              setIsOpen(false);
+              setSearch("");
+              setShowAddNew(true);
+              return;
+            }
+
+            if (filteredOptions.length > 0) {
+              event.preventDefault();
+              const idx = (highlightedIndex >= 0 && highlightedIndex <= maxIdx)
+                ? highlightedIndex
+                : 0;
+              commitSelection(filteredOptions[idx].value);
+            }
+            return;
+          }
+
           if (event.key === "ArrowDown") {
             event.preventDefault();
-            if (!isOpen) setIsOpen(true);
+            if (!isOpen) {
+              setIsOpen(true);
+              return;
+            }
+            const minIdx = childComponent ? -1 : 0;
+            const maxIdx = filteredOptions.length - 1;
+
             setHighlightedIndex((prev) => {
-              const next = prev < filteredOptions.length - 1 ? prev + 1 : 0;
+              const next = prev < maxIdx ? prev + 1 : minIdx;
               scrollIntoView(next);
               return next;
             });
@@ -124,22 +181,19 @@ const SearchableTableCellSelect = ({
 
           if (event.key === "ArrowUp") {
             event.preventDefault();
-            if (!isOpen) setIsOpen(true);
+            if (!isOpen) {
+              setIsOpen(true);
+              return;
+            }
+            const minIdx = childComponent ? -1 : 0;
+            const maxIdx = filteredOptions.length - 1;
+
             setHighlightedIndex((prev) => {
-              const next = prev > 0 ? prev - 1 : filteredOptions.length - 1;
+              const next = prev > minIdx ? prev - 1 : maxIdx;
               scrollIntoView(next);
               return next;
             });
             return;
-          }
-
-          if (event.key === "Enter" && filteredOptions.length > 0) {
-            event.preventDefault();
-            const idx = highlightedIndex >= 0 && highlightedIndex < filteredOptions.length
-              ? highlightedIndex
-              : 0;
-            commitSelection(filteredOptions[idx].value);
-
           }
           if (event.key === "Tab" && movedToNextSaveNewRef) {
             setIsOpen(false);
@@ -154,25 +208,32 @@ const SearchableTableCellSelect = ({
       <FaChevronDown className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[10px] text-slate-500" />
 
       {isOpen && !disabled && (
-        <div ref={listRef} className="absolute left-0 top-[calc(100%+4px)] z-40 max-h-48 w-full overflow-auto border border-slate-300 bg-white shadow-lg">
+        <div
+          ref={listRef}
+          className={`absolute left-0 z-40 max-h-48 w-full overflow-auto border border-slate-300 bg-white shadow-lg ${openUp ? "bottom-[calc(100%+4px)]" : "top-[calc(100%+4px)]"
+            }`}
+        >
           {childComponent && (
             <button
               type="button"
-              className="block w-full border-b border-slate-100 px-2 py-1.5 text-left text-[11px] font-semibold text-blue-600 hover:bg-blue-50"
+              className={`block w-full border-b border-slate-100 px-2 py-1.5 text-left text-[11px] font-semibold text-blue-600 ${highlightedIndex === -1 ? 'bg-blue-50' : 'hover:bg-blue-50'
+                }`}
               onMouseDown={(event) => {
                 event.preventDefault();
                 setIsOpen(false);
                 setSearch("");
                 setShowAddNew(true);
               }}
+              onMouseEnter={() => setHighlightedIndex(-1)}
             >
               {addNewLabel}
             </button>
           )}
 
           {filteredOptions.length > 0 ? (
-            filteredOptions.map((option, index) => (
+            filteredOptions?.map((option, index) => (
               <button
+                ref={handlers?.secondInputRef}
                 key={option.value}
                 type="button"
                 className={`block w-full border-b border-slate-100 px-2 py-1 text-left text-[11px] ${index === highlightedIndex ? "bg-blue-100" : "hover:bg-slate-100"

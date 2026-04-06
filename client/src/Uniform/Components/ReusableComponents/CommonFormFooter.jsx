@@ -52,7 +52,7 @@ const CommonFormFooter = ({
   readOnly = false,
   showTermSelect = false,
   termValue = "",
-  onTermChange = () => {},
+  onTermChange = () => { },
   termOptions = [],
   totalsRows,
   extraTotalsContent = null,
@@ -62,8 +62,13 @@ const CommonFormFooter = ({
   rightActions = null,
   remarksPlaceholder = "Additional notes...",
   termsPlaceholder = "Select or type Terms & Conditions...",
+  saveCloseButtonRef
 }) => {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const termsTextareaRef = React.useRef(null);
+  const templateOptionsRefs = React.useRef([]);
+
   const resolvedTotalsRows =
     totalsRows && totalsRows.length > 0
       ? totalsRows
@@ -115,8 +120,33 @@ const CommonFormFooter = ({
 
     setTerms(nextTermsText);
     onTermChange(normalizedValue, selectedOption);
+    setTimeout(() => termsTextareaRef.current?.focus(), 100);
     return true;
   };
+
+  React.useEffect(() => {
+    if (isTemplateModalOpen) {
+      const initialIndex = termOptions.findIndex(
+        (option) => String(option.value) === String(termValue || "")
+      );
+      const indexToSet = initialIndex >= 0 ? initialIndex : 0;
+      setActiveIndex(indexToSet);
+
+      // Focus the active option after a short delay to allow modal to render
+      const timer = setTimeout(() => {
+        if (templateOptionsRefs.current[indexToSet]) {
+          templateOptionsRefs.current[indexToSet].focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isTemplateModalOpen, termOptions, termValue]);
+
+  React.useEffect(() => {
+    if (isTemplateModalOpen && templateOptionsRefs.current[activeIndex]) {
+      templateOptionsRefs.current[activeIndex].focus();
+    }
+  }, [activeIndex, isTemplateModalOpen]);
 
   const renderSummaryRows = (rows) =>
     rows.map((row, index) => (
@@ -204,26 +234,66 @@ const CommonFormFooter = ({
 
           <div className="flex-1 space-y-1 overflow-y-auto pr-1">
             {termOptions.length > 0 ? (
-              termOptions.map((option) => {
+              termOptions.map((option, index) => {
                 const isSelected = String(option.value) === String(termValue || "");
+                const isActive = index === activeIndex;
 
                 return (
                   <button
+                    ref={(el) => (templateOptionsRefs.current[index] = el)}
+
                     key={option.value}
                     type="button"
+                    onKeyDown={(e) => {
+                      if (termOptions.length === 0) return;
+
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setActiveIndex((prev) =>
+                          prev < termOptions.length - 1 ? prev + 1 : 0
+                        );
+                      }
+
+                      if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        setActiveIndex((prev) =>
+                          prev > 0 ? prev - 1 : termOptions.length - 1
+                        );
+                      }
+
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const selectedOption = termOptions[activeIndex];
+                        if (handleTemplateSelection(selectedOption.value)) {
+                          setIsTemplateModalOpen(false);
+                        }
+                      }
+                    }}
+                    // ref={(node) => {
+                    //   if (isActive && node) {
+                    //     node.focus();
+                    //   }
+                    // }}
                     onClick={() => {
                       if (handleTemplateSelection(option.value)) {
                         setIsTemplateModalOpen(false);
                       }
                     }}
                     className={[
-                      "w-full rounded-md border px-3 py-2 text-left transition-colors",
-                      isSelected
-                        ? "border-indigo-300 bg-indigo-50"
-                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50",
+                      "w-full rounded-md border px-3 py-2 text-left transition-colors outline-none",
+                      isActive
+                        ? "border-indigo-500 bg-indigo-50 ring-1 ring-indigo-200 shadow-sm"
+                        : isSelected
+                          ? " bg-white"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
                     ].join(" ")}
                   >
-                    <div className="text-[12px] font-semibold text-slate-700">{option.label}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-[12px] font-semibold text-slate-700">{option.label}</div>
+                      {isSelected && (
+                        <span className="text-[10px] font-bold text-indigo-600">SELECTED</span>
+                      )}
+                    </div>
                     {option.templateText ? (
                       <div className="mt-1 max-h-8 overflow-hidden text-[11px] leading-4 text-slate-500">
                         {option.templateText}
@@ -248,6 +318,13 @@ const CommonFormFooter = ({
               <h2 className="text-[12px] font-bold text-slate-700">Terms & Conditions</h2>
               {showTemplateControl ? (
                 <button
+                  ref={saveCloseButtonRef}
+                  onKeyDown={(e) => {
+                    if (e.key == "Enter") {
+                      e.preventDefault();
+                      setIsTemplateModalOpen(true);
+                    }
+                  }}
                   type="button"
                   className="shrink-0 text-[10px] font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
                   onClick={() => setIsTemplateModalOpen(true)}
@@ -257,6 +334,7 @@ const CommonFormFooter = ({
               ) : null}
             </div>
             <textarea
+              ref={termsTextareaRef}
               disabled={readOnly}
               className="min-h-[3.5rem] flex-1 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
               value={terms || ""}

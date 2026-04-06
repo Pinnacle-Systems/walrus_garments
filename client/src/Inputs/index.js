@@ -572,7 +572,8 @@ export const LongTextInput = ({
   );
 };
 
-export const TextAreaNew = ({
+
+export const TextAreaNew = forwardRef(({
   name,
   value,
   setValue,
@@ -586,9 +587,10 @@ export const TextAreaNew = ({
   inputClass = "",
   onBlur = null,
   onKeyDown = null,
-}) => {
+}, ref) => {
+
   return (
-    <div className=" w-full">
+    <div className="w-full">
       {name && (
         <label className="mb-1 block text-[12px] font-bold text-gray-600">
           {required ? <RequiredLabel name={label ?? name} /> : (label ?? name)}
@@ -596,30 +598,30 @@ export const TextAreaNew = ({
       )}
 
       <textarea
+        ref={ref}
         id={name}
         name={name}
         rows={rows}
         cols={cols}
-        // tabIndex={tabIndex ?? undefined}
         disabled={disabled}
         required={required}
         readOnly={readOnly}
         value={value}
         onChange={(e) => handleOnChange(e, setValue)}
         onBlur={onBlur}
+        onKeyDown={onKeyDown}
         placeholder={name}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-          transition-all duration-150 shadow-sm  resize-y
-
+          transition-all duration-150 shadow-sm resize-y
           ${readOnly || disabled
             ? "bg-gray-100 text-gray-500 cursor-not-allowed"
             : "bg-white hover:border-gray-400"}
           ${inputClass}`}
-      ></textarea>
+      />
     </div>
   );
-};
+});
 
 export const DisabledInput = ({
   name,
@@ -894,7 +896,7 @@ export const DropdownInput = forwardRef(({
   return (
     <div className={` ${width}`}>
       {name && (
-        <label className="block text-xs font-bold text-slate-700 mb-1">
+        <label className="block text-xs font-bold text-slate-700 mb-2">
           {required ? <RequiredLabel name={name} /> : name}
         </label>
       )}
@@ -3278,7 +3280,6 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       setSearchTerm,   // selected value (partyId)
       searchTerm,
       readOnly,
-      nextRef,
       required,
       name,
       disabled,
@@ -3462,14 +3463,20 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
         {/* ----------------------------- MODAL ----------------------------- */}
         <Modal
           isOpen={openModel}
-          onClose={() => setOpenModel(false)}
+          onClose={() => {
+            setOpenModel(false)
+            setTimeout(() => focusNext(containerRef.current?.querySelector('button')), 100);
+          }}
           widthClass="w-[90%] h-[99%]"
         >
           <DynamicRenderer
             componentName={component}
             editingItem={editingItem}
             childId={childId}
-            onCloseForm={() => setOpenModel(false)}
+            onCloseForm={() => {
+              setOpenModel(false)
+              setTimeout(() => focusNext(containerRef.current?.querySelector('button')), 100);
+            }}
             show={show}
           />
         </Modal>
@@ -3540,10 +3547,23 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
                 className="h-full px-3 py-1.5 border border-green-500 rounded-md
                 hover:bg-green-500 text-green-600 hover:text-white"
                 disabled={disabled || readOnly}
+                onKeyDown={(e) => {
+                  if (e.ctrlKey && e.key === "Enter") {
+                    setEditingItem("new");
+                    setOpenModel(true);
+                  }
+                  if (e.key === "Enter") {
+                    setTooltipVisible(false)
+                    e.target.blur()
+                    focusNext(e.target);
+                  }
+                }}
                 onClick={() => {
                   setEditingItem("new");
                   setOpenModel(true);
                 }}
+
+                onFocus={() => setTooltipVisible(true)}
                 onMouseEnter={() => setTooltipVisible(true)}
                 onMouseLeave={() => setTooltipVisible(false)}
               >
@@ -3551,9 +3571,11 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
               </button>
 
               {tooltipVisible && (
-                <div className="absolute z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2">
+                <div className="absolute z-10 top-full right-0 mt-1 w-64 bg-indigo-800 text-white text-xs rounded p-2"
+
+                >
                   <FaInfoCircle className="inline mr-1" />
-                  Click to add new party
+                  Click Ctrl + Enter to add new {show == "isClient" ? "Customer" : "Supplier"}
                 </div>
               )}
             </div>
@@ -3660,7 +3682,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
               )}
             </div>
           )}
-        </div>
+        </div >
       </>
     );
   }

@@ -218,7 +218,7 @@ const PurchaseInwardForm = ({
         Swal.fire({
           icon: "success",
           title: `${text || "Saved"} Successfully`,
-          showConfirmButton: false,
+          showConfirmButton: true,
         });
         invalidateTagsDispatch();
         if (returnData.statusCode === 0) {

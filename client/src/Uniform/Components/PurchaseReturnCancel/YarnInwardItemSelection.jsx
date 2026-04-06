@@ -12,24 +12,35 @@ import Swal from 'sweetalert2';
 const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange, getSelectAll, handleSelectAllChange, storeId, handleDone, readOnly, purchaseInwardId, localInwardItems }) => {
     const [poNo, setPoNo] = useState("");
     const [searchPoDate, setPoDate] = useState("");
-    const [searchDueDate, setDueDate] = useState("");
+    const [searchItem, setSearchItem] = useState("");
     const [searchPoType, setSearchPoType] = useState("");
     const [supplier, setSupplier] = useState("");
     const [dataPerPage, setDataPerPage] = useState("10");
     const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
+    const [searchSize, setSearchSize] = useState("");
+    const [searchColor, setSearchColor] = useState("");
+    const [searchUom, setSearchUom] = useState("");
     const branchId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentBranchId"
     )
     const handleOnclick = (e) => {
         setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
     }
-    const searchFields = { searchDocId: poNo, searchPoDate, searchSupplierAliasName: supplier, searchPoType, searchDueDate }
+    const searchFields = { searchDocId: poNo, searchPoDate, searchItem, searchSize, searchColor, searchUom }
 
     const { data: poItems, isLoading: isPoItemsLoading, isFetching: isPoItemsFetching } = useGetDirectItemsQuery({
         params: {
-            branchId, supplierId, storeId, poType, ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber,
-            isDirectInwardFilter: true, purchaseInwardId
+            branchId,
+            supplierId,
+            storeId,
+            poType,
+            ...searchFields,
+            pagination: true,
+            dataPerPage,
+            pageNumber: currentPageNumber,
+            isDirectInwardFilter: true,
+            purchaseInwardId
         }
     })
 
@@ -107,7 +118,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                         <table className="border-collapse w-full table-fixed top-0 sticky">
                             <thead className="bg-gray-200 text-gray-800">
                                 <tr>
-                                    <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
+                                    <th className="border border-gray-300 px-2 py-1 text-center text-xs w-7">
 
                                         <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
                                             checked={getSelectAll(poItems?.data ? poItems.data : [])}
@@ -116,71 +127,71 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                                     <th className="border border-gray-300 px-2 py-1 text-center text-xs w-8">S No</th>
                                     <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-20">
 
-                                        <label>Inward Doc No</label>
-                                        {/* <input
-                                                                type="text"
-                                                                className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
-                                                                placeholder="Search"
-                                                                value={poNo}
-                                                                onChange={(e) => {
-                                                                    setPoNo(e.target.value);
-                                                                }}
-                                                            /> */}
+                                        <label>Purchase Inward No</label>
+                                        <input
+                                            type="text"
+                                            className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={poNo}
+                                            onChange={(e) => {
+                                                setPoNo(e.target.value);
+                                            }}
+                                        />
 
                                     </th>
-                                    <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-16">
-                                        <label>Inward Date</label>
-                                        {/* <input
-                                                                type="text"
-                                                                className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
-                                                                placeholder="Search"
-                                                                value={searchPoDate}
-                                                                onChange={(e) => {
-                                                                    setPoDate(e.target.value);
-                                                                }}
-                                                            /> */}
+                                    <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-20">
+                                        <label>Purchase Inward Date</label>
+                                        <input
+                                            type="text"
+                                            className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={searchPoDate}
+                                            onChange={(e) => {
+                                                setPoDate(e.target.value);
+                                            }}
+                                        />
 
                                     </th>
                                     <th className="px-1 py-1.5 border border-gray-300 text-xs  w-64">
 
                                         <label>Item</label>
-                                        {/* <input
-                                                                type="text"
-                                                                className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
-                                                                placeholder="Search"
-                                                                value={searchDueDate}
-                                                                onChange={(e) => {
-                                                                    setDueDate(e.target.value);
-                                                                }}
-                                                            /> */}
+                                        <input
+                                            type="text"
+                                            className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={searchItem}
+                                            onChange={(e) => {
+                                                setSearchItem(e.target.value);
+                                            }}
+                                        />
                                     </th>
 
                                     <th className="px-1 py-1.5 border border-gray-300 text-xs  w-14">
 
                                         <label>Size</label>
-                                        {/* <input
-                                                                type="text"
-                                                                className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
-                                                                placeholder="Search"
-                                                                value={searchDueDate}
-                                                                onChange={(e) => {
-                                                                    setDueDate(e.target.value);
-                                                                }}
-                                                            /> */}
+                                        <input
+                                            type="text"
+                                            className="text-black h-6 focus:outline-none border w-full border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={searchSize}
+                                            onChange={(e) => {
+                                                setSearchSize(e.target.value);
+                                            }}
+                                        />
                                     </th>
 
                                     <th className="px-1 py-1.5 border border-gray-300 text-xs text-gray-800  w-32">
 
                                         <label>Color</label>
-                                        {/* <input
-                                                                type="text"
-                                                                className="text-black h-6 focus:outline-none border  w-full border-gray-400 rounded-lg"
-                                                                placeholder="Search"
-                                                                value={searchDueDate}
-                                                            // onChange={(e) => {
-                                                            //     setDueDate(e.target.value);
-                                                            // }}
-                                                            /> */}
+                                        <input
+                                            type="text"
+                                            className="text-black h-6 focus:outline-none border  w-full border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={searchColor}
+                                            onChange={(e) => {
+                                                setSearchColor(e.target.value);
+                                            }}
+                                        />
                                     </th>
 
 
@@ -188,15 +199,16 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
 
                                     <th className="px-1 py-1.5 border border-gray-300 text-xs  w-14">
                                         <label>Uom</label>
-                                        {/* <input
-                                                                type="text"
-                                                                className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
-                                                                placeholder="Search"
-                                                                value={searchDueDate}
-                                                            // onChange={(e) => {
-                                                            //     setDueDate(e.target.value);
-                                                            // }}
-                                                            /> */}
+                                        <input
+                                            type="text"
+                                            className="text-black h-6 focus:outline-none border w-full  border-gray-400 rounded-lg"
+                                            placeholder="Search"
+                                            value={searchUom}
+                                            onChange={(e) => {
+                                                setSearchUom(e.target.value);
+                                            }}
+
+                                        />
 
                                     </th>
                                     <th className="px-1 py-1.5 border border-gray-300 text-xs  w-16">

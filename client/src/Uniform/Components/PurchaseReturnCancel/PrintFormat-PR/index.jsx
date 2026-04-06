@@ -106,37 +106,33 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 3,
   },
-  poRefRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    backgroundColor: COLOR.navyLight,
-    borderBottom: `1 solid ${COLOR.border}`,
-  },
   poRefBox: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: 15,
+    marginBottom: 4,
+    justifyContent: "flex-end",
   },
   poRefLabel: {
     fontSize: 7.5,
     color: COLOR.textMuted,
-    width: 75,
+    width: 85,
+    textAlign: "right",
   },
   poRefSep: {
     fontSize: 7.5,
     color: COLOR.textMuted,
-    marginRight: 3,
+    marginHorizontal: 4,
   },
   poRefValue: {
     fontSize: 7.5,
     color: COLOR.navy,
     fontWeight: "bold",
+    width: 80,
   },
   addressSection: {
     flexDirection: "row",
     borderBottom: `1 solid ${COLOR.border}`,
+    minHeight: 80,
   },
   addressBlock: {
     flex: 1,
@@ -279,6 +275,8 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
   supplierDetails,
   poItems = [],
   remarks,
+  deliveryPerson,
+  vehicleNo,
   branchData = {},
   colorList, uomList, sizeList, itemList,
 }, ref) => {
@@ -356,43 +354,9 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
             <Text style={styles.titleText}>PURCHASE RETURN</Text>
           </View>
 
-          {/* ── Reference row ── */}
-          <View style={styles.poRefRow}>
-            {[
-              { label: "Purchase Return No", value: poNumber },
-              { label: "Purchase Return Date", value: getDateFromDateTimeToDisplay(poDate) },
-              // { label: "Branch GST", value: branchData?.gstNo },
-            ].map(({ label, value }) => (
-              <View key={label} style={styles.poRefBox}>
-                <Text style={styles.poRefLabel}>{label}</Text>
-                <Text style={styles.poRefSep}>:</Text>
-                <Text style={styles.poRefValue}>{value}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* ── Addresses ── */}
+          {/* ── Address & Reference Section ── */}
           <View style={styles.addressSection}>
-            <View style={styles.addressBlock}>
-              <Text style={styles.addressSectionLabel}>From</Text>
-              <Text style={styles.addressName}>{branchData.branchName}</Text>
-              <Text style={styles.addressText}>{branchData.address}</Text>
-
-              <View style={styles.companyInfoRow}>
-                <Text style={styles.companyInfoLabel}>Mobile</Text>
-                <Text style={styles.companyInfoValue}>: {branchData.contactMobile}</Text>
-              </View>
-              <View style={styles.addressRow}>
-                <Text style={styles.addressLabel}>GST No</Text>
-                <Text style={styles.addressValue}>: {branchData?.gstNo}</Text>
-              </View>
-              <View style={styles.companyInfoRow}>
-                <Text style={styles.companyInfoLabel}>Email</Text>
-                <Text style={styles.companyInfoValue}>: {branchData.contactEmail}</Text>
-              </View>            </View>
-
-            <View style={styles.addressDivider} />
-
+            {/* To Section (Left) */}
             <View style={styles.addressBlock}>
               <Text style={styles.addressSectionLabel}>To</Text>
               <Text style={styles.addressName}>{supplierDetails?.name}</Text>
@@ -407,6 +371,25 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
                   <Text style={styles.addressValue}>: {value}</Text>
                 </View>
               ))}
+            </View>
+
+            <View style={styles.addressDivider} />
+
+            {/* Reference Section (Right) */}
+            <View style={styles.addressBlock}>
+              <View style={{ marginTop: 10 }}>
+                {[
+                  { label: "Return No", value: poNumber },
+                  { label: "Return Date", value: getDateFromDateTimeToDisplay(poDate) },
+                  { label: "Branch GST", value: branchData?.gstNo },
+                ].map(({ label, value }) => (
+                  <View key={label} style={styles.poRefBox}>
+                    <Text style={styles.poRefLabel}>{label}</Text>
+                    <Text style={styles.poRefSep}>:</Text>
+                    <Text style={styles.poRefValue}>{value}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
           </View>
 
@@ -481,13 +464,20 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
           </View>
 
           <View style={{ flexDirection: "row", minHeight: 60, borderBottom: `1 solid ${COLOR.border}` }}>
-            <View style={{ flex: 1, padding: 8, borderRight: `1 solid ${COLOR.border}`, backgroundColor: COLOR.offWhite }}>
+            <View style={{ flex: 1.4, padding: 8, borderRight: `1 solid ${COLOR.border}`, backgroundColor: COLOR.offWhite }}>
               <Text style={{ fontSize: 7.5, fontWeight: "bold", color: COLOR.navy, marginBottom: 4 }}>REMARKS</Text>
               <Text style={{ fontSize: 7.5, color: COLOR.textMuted }}>{remarks || "—"}</Text>
             </View>
-            <View style={{ flex: 1.4, padding: 8 }}>
-              <Text style={{ fontSize: 7.5, fontWeight: "bold", color: COLOR.navy, marginBottom: 4 }}>TERMS & CONDITIONS</Text>
-              <Text style={{ fontSize: 7.5, color: COLOR.textMuted }}></Text>
+            <View style={{ flex: 1, padding: 8 }}>
+              <Text style={{ fontSize: 7.5, fontWeight: "bold", color: COLOR.navy, marginBottom: 4 }}>DELIVERY DETAILS</Text>
+              {/* <View style={{ flexDirection: "row", marginBottom: 2 }}>
+                <Text style={{ fontSize: 7, color: COLOR.textMuted, width: 50 }}>Person</Text>
+                <Text style={{ fontSize: 7, color: COLOR.text }}>: {deliveryPerson || "—"}</Text>
+              </View> */}
+              <View style={{ flexDirection: "row" }}>
+                <Text style={{ fontSize: 7, color: COLOR.textMuted, width: 50 }}>Vehicle No</Text>
+                <Text style={{ fontSize: 7, color: COLOR.text }}>: {vehicleNo || "—"}</Text>
+              </View>
             </View>
           </View>
 

@@ -145,7 +145,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "SECTION MASTER": <SectionMaster />,
     "ESTIMATE / QUOTATION": <Quotation />,
     "SALE ORDER": <SaleOrder />,
-    "ITEM CATEGROY": <ItemCategroyMaster />,
+    "ITEM CATEGORY": <ItemCategroyMaster />,
     "STOCK ADJUSTMENT": <StockAdjustment />,
     "PRICE TEMPLATE": <PriceTemplateMaster />,
     "SALES INVOICE": <SalesInvoice />,

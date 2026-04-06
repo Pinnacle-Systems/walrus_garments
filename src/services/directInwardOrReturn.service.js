@@ -267,39 +267,71 @@ async function getOne(id) {
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
+function manualFilterSearchDataDirectItems(searchPoDate, searchDueDate, searchPoType, data) {
+    return data.filter(item =>
+        (searchPoDate ? String(getDateFromDateTime(item.DirectInwardOrReturn.createdAt)).includes(searchPoDate) : true) &&
+        (searchDueDate ? String(getDateFromDateTime(item.DirectInwardOrReturn.dcDate)).includes(searchDueDate) : true) &&
+        (searchPoType ? (item.DirectInwardOrReturn.poType.toLowerCase().includes(searchPoType.toLowerCase())) : true)
+    )
+}
 
 export async function getDirectItems(req) {
     const { branchId, active, poInwardOrDirectInward, dataPerPage, storeId,
-        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, isDirectInwardFilter, supplierId, poType, pagination, pageNumber,
-        isPurchaseCancelFilter = false, isPurchaseReturnFilter = false, purchaseInwardId } = req.query
+        searchDocId, searchPoDate,
+        searchSupplierAliasName,
+        searchPoType, searchDueDate,
+        isDirectInwardFilter, supplierId, poType, pagination, pageNumber,
+        isPurchaseCancelFilter = false,
+        isPurchaseReturnFilter = false, purchaseInwardId,
+        searchItem,
+        searchSize,
+        searchColor,
+        searchUom
+    } = req.query
     let data;
     let totalCount;
-    console.log(pagination, "pagination")
+
+    console.log(searchPoDate, "searchPoDate", searchDueDate, "searchDueDate", searchPoType, "searchPoType", searchSupplierAliasName, "searchSupplierAliasName")
+
     if (pagination) {
         data = await prisma.directItems.findMany({
             where: {
-                // DirectInwardOrReturn:
-                // {
-                //     branchId: branchId ? parseInt(branchId) : undefined,
-                //     docId: Boolean(searchDocId) ?
-                //         {
-                //             contains: searchDocId
-                //         }
-                //         : undefined,
-                //     supplierId: supplierId ? parseInt(supplierId) : undefined,
-                //     storeId: storeId ? parseInt(storeId) : undefined,
-                //     poType,
-                //     supplier: {
-                //         aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
-                //     }
-                // },
+                DirectInwardOrReturn:
+                {
+                    branchId: branchId ? parseInt(branchId) : undefined,
+                    docId: Boolean(searchDocId) ?
+                        {
+                            contains: searchDocId
+                        }
+                        : undefined,
+                    supplierId: supplierId ? parseInt(supplierId) : undefined,
+                    storeId: storeId ? parseInt(storeId) : undefined,
+                    poType,
+                    supplier: {
+                        aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
+                    }
+                },
+                Item: {
+                    name: Boolean(searchItem) ? { contains: searchItem } : undefined,
+                },
+                Size: {
+                    name: Boolean(searchSize) ? { contains: searchSize } : undefined,
+                },
+                Color: {
+                    name: Boolean(searchColor) ? { contains: searchColor } : undefined,
+                },
+                Uom: {
+                    name: Boolean(searchUom) ? { contains: searchUom } : undefined,
+                }
             },
             include: {
                 DirectInwardOrReturn: {
                     select: {
                         poInwardOrDirectInward: true,
                         poType: true,
-                        supplierId: true
+                        supplierId: true,
+                        createdAt: true,
+                        dcDate: true
                     }
                 },
                 DirectReturnItems: true,
@@ -362,11 +394,12 @@ export async function getDirectItems(req) {
         data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
         // data = await getAllDataPoItems(data)
 
+        console.log(data, "datadata")
+
         if (purchaseInwardId) {
             data = await data?.filter(val => val.directInwardOrReturnId == purchaseInwardId)
         }
 
-        console.log(data, "datadata")
         data = await getAllDataDirectItems(data, storeId)
 
 
@@ -392,13 +425,7 @@ export async function getDirectItems(req) {
     return { statusCode: 0, data, totalCount };
 }
 
-function manualFilterSearchDataDirectItems(searchPoDate, searchDueDate, searchPoType, data) {
-    return data.filter(item =>
-        (searchPoDate ? String(getDateFromDateTime(item.Po.createdAt)).includes(searchPoDate) : true) &&
-        (searchDueDate ? String(getDateFromDateTime(item.Po.dueDate)).includes(searchDueDate) : true) &&
-        (searchPoType ? (item.DirectInwardOrReturn.poType.toLowerCase().includes(searchPoType.toLowerCase())) : true)
-    )
-}
+
 
 function manualFilterSearchDataPoItems(searchPoDate, searchDueDate, searchPoType, data) {
     return data.filter(item =>
@@ -908,11 +935,24 @@ async function getPoItemById(id, purchaseInwardReturnId, stockId, storeId, billE
 
 export async function getPoItemsandDirectInwardItems(req) {
     const { branchId, active, pageNumber, dataPerPage, poType,
-        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, supplierId, isYarnFilter } = req.query
+        searchDocId, searchPoDate,
+        searchSupplierAliasName,
+        searchPoType,
+        searchDueDate,
+        pagination,
+        supplierId,
+        isYarnFilter,
+        searchItem,
+        searchSize,
+        searchColor,
+        searchUom
+    } = req.query
     let poItems;
     let directItems;
     let data;
     let totalCount;
+
+
     if (pagination) {
         directItems = await prisma.directItems.findMany({
             where: {
@@ -930,6 +970,19 @@ export async function getPoItemsandDirectInwardItems(req) {
                         aliasName: Boolean(searchSupplierAliasName) ? { contains: searchSupplierAliasName } : undefined
                     }
                 },
+                Item: {
+                    name: Boolean(searchItem) ? { contains: searchItem } : undefined,
+                },
+                Size: {
+                    name: Boolean(searchSize) ? { contains: searchSize } : undefined,
+                },
+                Color: {
+                    name: Boolean(searchColor) ? { contains: searchColor } : undefined,
+                },
+                Uom: {
+                    name: Boolean(searchUom) ? { contains: searchUom } : undefined,
+                }
+
             }
         });
         directItems = manualFilterSearchDataDirectItems(searchPoDate, searchDueDate, searchPoType, directItems)

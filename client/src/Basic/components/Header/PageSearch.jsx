@@ -168,7 +168,7 @@ const PageSearch = ({ pageList }) => {
                     {filteredPages.map((page, index) => (
                         <li
                             key={page.id}
-                            className={`cursor-pointer px-2 py-1 text-[12px]
+                            className={`cursor-pointer px-2 py-1 text-[11px]
                                 ${index === selectedIndex ? "bg-blue-100" : ""}
                             `}
                             onClick={() => {

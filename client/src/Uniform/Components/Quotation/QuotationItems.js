@@ -22,6 +22,8 @@ import TransactionLineItemsSection, {
     transactionTableRowClassName,
     transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
+import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
+import { ItemMaster } from "../../../Shocks";
 
 const QuotationItems = ({
     id,
@@ -44,7 +46,10 @@ const QuotationItems = ({
     setTaxMethod,
     isHeaderOpen,
     itemPriceList,
-    priceTemplateList
+    priceTemplateList,
+    itemControlPanel,
+    handlers,
+    movedToNextSaveNewRef
 }) => {
     const compactHeaderCellClassName = transactionTableHeaderCellClassName;
     const compactCellClassName = transactionTableCellClassName;
@@ -99,7 +104,8 @@ const QuotationItems = ({
             if (selectedItem) {
                 newBlend[index]["sectionId"] = selectedItem.sectionId;
                 newBlend[index]["hsnId"] = selectedItem.hsnId;
-                // Auto-fill tax based on the new HSN ID
+
+
                 const selectedHsn = hsnList?.data?.find(hsn => parseInt(hsn.id) === parseInt(selectedItem.hsnId));
                 newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
                 newBlend[index]["taxMethod"] = newBlend[index]["taxMethod"] || "Inclusive";
@@ -340,6 +346,34 @@ const QuotationItems = ({
         };
     };
 
+
+    const itemOptions = (id ? itemList?.data : itemList?.data?.filter(i => i.active) || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
+    const hsnOptions = (id ? hsnList?.data : hsnList?.data?.filter(i => i.active) || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
+    const uomOptions = (id ? uomList?.data : uomList?.data?.filter(i => i.active) || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
+    const discountTypeOptions = [
+        { value: "", label: "" },
+        { value: "Flat", label: "Flat" },
+        { value: "Percentage", label: "Percentage" },
+    ];
+
+    const taxMethodOptions = [
+        { value: "", label: "   " },
+        { value: "Inclusive", label: "Inclusive" },
+        { value: "Exclusive", label: "Exclusive" },
+    ];
+
     return (
         <>
 
@@ -452,7 +486,7 @@ const QuotationItems = ({
                                     </th> */}
                                     <th
 
-                                        className={`w-16 px-3 py-2 text-center font-medium text-[13px] `}
+                                        className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Net Amount
                                     </th>
@@ -493,28 +527,23 @@ const QuotationItems = ({
                                         >
                                             <td className={transactionTableIndexCellClassName}>{index + 1}</td>
                                             <td className={compactFocusCellClassName}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "itemId") } }}
-                                                    tabIndex={"0"} disabled={readOnly} className={compactSelectClassName}
+
+                                                <SearchableTableCellSelect
                                                     value={row.itemId}
-                                                    onChange={(e) => handleInputChange(e.target.value, index, "itemId")}
-                                                    onBlur={(e) => {
-                                                        handleInputChange((e.target.value), index, "itemId")
-                                                    }
-                                                    }
-                                                >
-                                                    <option >
-                                                    </option>
-                                                    {(id ? itemList?.data : itemList?.data)?.map((blend) =>
-                                                        <option value={blend.id} key={blend.id}>
-                                                            {blend?.name}
-                                                        </option>)}
-                                                </select>
+                                                    options={itemOptions}
+                                                    disabled={readOnly}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
+                                                    addNewModalWidth="w-[90%] h-[95%]"
+                                                    childComponent={ItemMaster}
+                                                    addNewLabel="+ Add New Item"
+                                                    // ref={secondInputRef}
+                                                    handlers={handlers}
+                                                    movedToNextSaveNewRef={movedToNextSaveNewRef}
+                                                />
                                             </td>
-                                            {/* {console.log(row,"row")} */}
 
                                             <td className={compactFocusCellClassName}>
-                                                <select
+                                                {/* <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
                                                     tabIndex={"0"} className={compactSelectClassName}
                                                     value={row.sizeId}
@@ -531,11 +560,29 @@ const QuotationItems = ({
                                                         <option value={blend.id} key={blend.id}>
                                                             {blend?.name}
                                                         </option>)}
-                                                </select>
+                                                </select> */}
+                                                <SearchableTableCellSelect
+                                                    value={row.sizeId}
+                                                    options={
+                                                        id ?
+                                                            sizeList?.data?.map((item) => ({
+                                                                value: item.id,
+                                                                label: item?.name || "",
+                                                            })) :
+                                                            getUniqueArrayBySize(itemControlPanel?.data, sizeList?.data, "sizeId", row?.itemId, itemPriceList)?.map((item) => ({
+                                                                value: item.id,
+                                                                label: item?.name || "",
+                                                            }))}
+
+                                                    disabled={readOnly}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
+                                                    addNewModalWidth="w-[90%] h-[95%]"
+
+                                                />
                                             </td>
 
                                             <td className={compactFocusCellClassName}>
-                                                <select
+                                                {/* <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
                                                     className={compactSelectClassName} value={row.colorId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
@@ -553,35 +600,43 @@ const QuotationItems = ({
                                                             {blend?.name}
                                                         </option>
                                                     )}
-                                                </select>
+                                                </select> */}
+
+                                                <SearchableTableCellSelect
+                                                    value={row.colorId}
+                                                    options={
+                                                        id ?
+                                                            colorList?.data?.map((item) => ({
+                                                                value: item.id,
+                                                                label: item?.name || "",
+                                                            })) :
+                                                            getUniqueArrayByColor(itemControlPanel?.data, colorList?.data, "colorId", row?.itemId, itemPriceList)?.map((item) => ({
+                                                                value: item.id,
+                                                                label: item?.name || "",
+                                                            }))}
+
+                                                    disabled={readOnly}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
+                                                    addNewModalWidth="w-[90%] h-[95%]"
+
+                                                />
                                             </td>
 
 
                                             <td className={compactFocusCellClassName}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "hsnId") } }}
-                                                    className={compactSelectClassName} value={row.hsnId}
-                                                    onChange={(e) => handleInputChange(e.target.value, index, "hsnId")}
-                                                    onBlur={(e) => {
-                                                        handleInputChange((e.target.value), index, "hsnId")
-                                                    }
-                                                    }
-                                                    disabled={readOnly || !row.sizeId}
+                                                <SearchableTableCellSelect
+                                                    value={row.hsnId}
+                                                    options={hsnOptions}
+                                                    disabled={true}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "hsnId")}
+                                                    addNewModalWidth="w-[90%] h-[95%]"
 
-                                                >
-                                                    <option hidden>
-                                                    </option>
-                                                    {(id ? hsnList?.data : hsnList?.data)?.map((blend) =>
-                                                        <option value={blend.id} key={blend.id}>
-                                                            {blend?.name}
-                                                        </option>
-                                                    )}
-                                                </select>
+                                                />
                                             </td>
 
 
                                             <td className={`${compactFocusCellClassName} w-40`}>
-                                                <select
+                                                {/* <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
                                                     className={compactSelectClassName} value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                                     onBlur={(e) => {
@@ -599,7 +654,15 @@ const QuotationItems = ({
                                                             {blend.name}
                                                         </option>
                                                     )}
-                                                </select>
+                                                </select> */}
+                                                <SearchableTableCellSelect
+                                                    value={row.uomId}
+                                                    options={uomOptions}
+                                                    disabled={readOnly}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
+                                                    addNewModalWidth="w-[90%] h-[95%]"
+
+                                                />
                                             </td>
 
 
@@ -637,7 +700,7 @@ const QuotationItems = ({
                                                     className={compactNumberInputClassName}
                                                     onFocus={(e) => e.target.select()}
                                                     value={(!row.price) ? 0 : row.price}
-                                                    disabled={readOnly || !row.qty}
+                                                    disabled={readOnly || !row.qty || true}
                                                     onChange={(e) =>
                                                         handleInputChange(e.target.value, index, "price")
                                                     }
@@ -660,7 +723,7 @@ const QuotationItems = ({
                                             </td>
 
                                             <td className={`${compactFocusCellClassName} w-40 text-right`}>
-                                                <select
+                                                {/* <select
                                                     className={compactDropdownClassName}
                                                     value={row.discountType}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "discountType")}
@@ -669,8 +732,15 @@ const QuotationItems = ({
                                                     <option value=""></option>
                                                     <option value="Flat">Flat</option>
                                                     <option value="Percentage">Percentage</option>
-                                                </select>
+                                                </select> */}
+                                                <SearchableTableCellSelect
+                                                    value={row.discountType}
+                                                    options={discountTypeOptions}
+                                                    disabled={readOnly}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "discountType")}
+                                                    addNewModalWidth="w-[90%] h-[95%]"
 
+                                                />
 
                                             </td>
                                             <td className={`${compactFocusCellClassName} w-40 text-right`}>
@@ -704,7 +774,7 @@ const QuotationItems = ({
 
                                             </td> */}
                                             <td className={compactFocusCellClassName}>
-                                                <select
+                                                {/* <select
                                                     className={compactDropdownClassName}
                                                     value={row.itemId ? (row.taxMethod || "Inclusive") : (row.taxMethod || "")}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "taxMethod")}
@@ -712,7 +782,15 @@ const QuotationItems = ({
                                                     <option value=""></option>
                                                     <option value="Inclusive">Inclusive</option>
                                                     <option value="Exclusive">Exclusive</option>
-                                                </select>
+                                                </select> */}
+                                                <SearchableTableCellSelect
+                                                    value={row.taxMethod}
+                                                    options={taxMethodOptions}
+                                                    disabled={readOnly}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "taxMethod")}
+                                                    addNewModalWidth="w-[90%] h-[95%]"
+
+                                                />
                                             </td>
 
                                             <td className={`${compactCellClassName} w-40 text-right`}>
@@ -743,24 +821,28 @@ const QuotationItems = ({
                                                 {(taxTotal).toFixed(2)}
 
                                             </td> */}
-                                            <td className={`${compactCellClassName} w-40 text-right`}>
+                                            <td className={`${compactCellClassName} w-40 text-right px-2`}>
                                                 {(total).toFixed(2)}
                                             </td>
 
 
 
                                             <td className="w-16 px-1 py-1 text-center">
-                                                <input
-                                                    readOnly
-                                                    className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
+                                                <button
+                                                    onClick={() => addNewRow(index)}
                                                     onKeyDown={(e) => {
                                                         if (e.key === "Enter") {
                                                             e.preventDefault();
-                                                            addNewRow();
+                                                            if (index === quotationItems.length - 1) {
+                                                                addNewRow(index);
+                                                            }
+
                                                         }
                                                     }}
-
-                                                />
+                                                    className="h-full w-full rounded-none bg-blue-50 py-0"
+                                                >
+                                                    +
+                                                </button>
                                             </td>
 
 
@@ -776,44 +858,44 @@ const QuotationItems = ({
                                 )}
                             </tbody>
                         </table>
-                    {contextMenu && (
-                        <div
-                            style={{
-                                position: "absolute",
-                                top: `${contextMenu.mouseY - 50}px`,
-                                left: `${contextMenu.mouseX - 30}px`,
+                        {contextMenu && (
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    top: `${contextMenu.mouseY - 180}px`,
+                                    left: `${contextMenu.mouseX - 38}px`,
 
-                                // background: "gray",
-                                boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                                padding: "8px",
-                                borderRadius: "4px",
-                                zIndex: 1000,
-                            }}
-                            className="bg-gray-100"
-                            onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
-                        >
-                            <div className="flex flex-col gap-1">
-                                <button
-                                    className=" text-black text-[12px] text-left rounded px-1"
-                                    onClick={() => {
-                                        handleDeleteRow(contextMenu.rowId);
-                                        handleCloseContextMenu();
-                                    }}
-                                >
-                                    Delete{" "}
-                                </button>
-                                <button
-                                    className=" text-black text-[12px] text-left rounded px-1"
-                                    onClick={() => {
-                                        handleDeleteAllRows();
-                                        handleCloseContextMenu();
-                                    }}
-                                >
-                                    Delete All
-                                </button>
+                                    // background: "gray",
+                                    boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                                    padding: "8px",
+                                    borderRadius: "4px",
+                                    zIndex: 1000,
+                                }}
+                                className="bg-gray-100"
+                                onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+                            >
+                                <div className="flex flex-col gap-1">
+                                    <button
+                                        className=" text-black text-[12px] text-left rounded px-1"
+                                        onClick={() => {
+                                            handleDeleteRow(contextMenu.rowId);
+                                            handleCloseContextMenu();
+                                        }}
+                                    >
+                                        Delete{" "}
+                                    </button>
+                                    <button
+                                        className=" text-black text-[12px] text-left rounded px-1"
+                                        onClick={() => {
+                                            handleDeleteAllRows();
+                                            handleCloseContextMenu();
+                                        }}
+                                    >
+                                        Delete All
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                     </div>
                 </TransactionLineItemsSection>
             </fieldset>

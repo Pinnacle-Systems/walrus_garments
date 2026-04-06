@@ -86,6 +86,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                 <div className="h-full min-h-0 overflow-x-auto overflow-y-scroll ">
                     <table className={transactionTableClassName}>
                         <thead className={`${transactionTableHeadClassName} shadow-sm`} >
+
                             <tr>
                                 <th
                                     className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"

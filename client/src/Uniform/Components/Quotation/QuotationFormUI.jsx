@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
-import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
+import { DateInput, DropdownInput, ReusableSearchableInput, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
@@ -26,6 +26,8 @@ import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTem
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
+import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 
 
@@ -86,7 +88,16 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
 
   console.log(quoteItems, "quoteItems")
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef,
+    secondInputRef,
+    movedToNextSaveNewRef,
+    saveNewButtonRef,
+    saveCloseButtonRef,
+  } = refs;
 
+  console.log(focusFirstInput, "focusFirstInput")
 
 
   const { data: supplierDetails } =
@@ -97,6 +108,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const { data: hsnList } = useGetHsnMasterQuery({ params });
   const { data: itemPriceList } = useGetItemPriceListQuery({ params });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
+  const { data: itemControlPanel } = useGetItemControlPanelMasterQuery({ params });
 
 
   const {
@@ -109,7 +121,9 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const [updateData] = useUpdateQuotationMutation();
   const [invalidateTagsDispatch] = useInvalidateTags();
 
-
+  useEffect(() => {
+    if (firstInputRef.current && !id) firstInputRef.current.focus();
+  }, []);
 
 
   const FirstInputFocus = useRef(null);
@@ -423,37 +437,37 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const chargeRows = [
     ...(packingChargeEnabled
       ? [{
-          key: "packingCharge",
-          label: "Packing Charge",
-          summaryColumn: "right",
-          renderValue: () => (
-            <input
-              type="number"
-              value={packingCharge}
-              onChange={(event) => setPackingCharge(event.target.value)}
-              onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
-              readOnly={readOnly}
-              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
-            />
-          ),
-        }]
+        key: "packingCharge",
+        label: "Packing Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={packingCharge}
+            onChange={(event) => setPackingCharge(event.target.value)}
+            onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
       : []),
     ...(shippingChargeEnabled
       ? [{
-          key: "shippingCharge",
-          label: "Shipping Charge",
-          summaryColumn: "right",
-          renderValue: () => (
-            <input
-              type="number"
-              value={shippingCharge}
-              onChange={(event) => setShippingCharge(event.target.value)}
-              onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
-              readOnly={readOnly}
-              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
-            />
-          ),
-        }]
+        key: "shippingCharge",
+        label: "Shipping Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={shippingCharge}
+            onChange={(event) => setShippingCharge(event.target.value)}
+            onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
       : []),
   ];
 
@@ -500,6 +514,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
         label: blend?.name,
         templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
+      saveCloseButtonRef={saveCloseButtonRef}
+      saveNewButtonRef={saveNewButtonRef}
       chargeOptions={[
         {
           key: "packingChargeToggle",
@@ -574,13 +590,13 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       extraTotalsContentColumn="left"
       leftActions={
         <>
-          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-            <FiSave className="w-4 h-4 mr-2" />
-            Save & New
-          </button>
           <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
             <HiOutlineRefresh className="w-4 h-4 mr-2" />
             Save & Close
+          </button>
+          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <FiSave className="w-4 h-4 mr-2" />
+            Save & New
           </button>
         </>
       }
@@ -716,73 +732,78 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
         footer={footerContent}
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 overflow-visible">
-                  <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2">
-                      <ReusableInput label="Quotation No" readOnly value={docId} />
-                      <ReusableInput label="Quotation Date" value={date} type="date" required readOnly disabled />
-                  </TransactionHeaderSection>
+            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2">
+              <ReusableInput label="Quotation No" readOnly value={docId} />
+              <ReusableInput label="Quotation Date" value={date} type="date" required readOnly disabled />
+            </TransactionHeaderSection>
 
-                  <TransactionHeaderSection title="Customer Details" className="col-span-3 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
-                      <div className="col-span-3 overflow-visible">
+            <TransactionHeaderSection title="Customer Details" className="col-span-3 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
+              <div className="col-span-3 overflow-visible">
 
-                        <ReusableSearchableInput
-                          label="Customer Name"
-                          component="PartyMaster"
-                          placeholder="Search Customer Name..."
-                          optionList={supplierList?.data}
-                          setSearchTerm={(value) => { setCustomerId(value) }}
-                          searchTerm={customerId}
-                          show={"isClient"}
-                          required={true}
-                          disabled={id}
-                        />
-                      </div>
-                      <TextInput
-                        name="Phone Number"
-                        value={
-                          supplierDetails?.data?.contactPersonNumber ||
-                          findFromList(customerId, supplierList?.data, "contactPersonNumber")
-                        }
-                        disabled
-                        required
-                      />
-                      <div className="col-span-3">
-                        <TextAreaNew
-                          name="Address"
-                          placeholder="Address"
-                          value={
-                            supplierDetails?.data?.address ||
-                            findFromList(customerId, supplierList?.data, "address")
-                          }
-                          disabled
-                        />
-                      </div>
-                  </TransactionHeaderSection>
+                <ReusableSearchableInputNewCustomerwithBranches
+                  label="Customer Name"
+                  component="PartyMaster"
+                  placeholder="Search Customer Name..."
+                  optionList={supplierList?.data}
+                  setSearchTerm={(value) => { setCustomerId(value) }}
+                  searchTerm={customerId}
+                  show={"isClient"}
+                  required={true}
+                  disabled={id}
+                  ref={firstInputRef}
+                  nextRef={secondInputRef}
+                />
+              </div>
+              <TextInput
+                name="Phone Number"
+                value={
+                  supplierDetails?.data?.contactPersonNumber ||
+                  findFromList(customerId, supplierList?.data, "contactPersonNumber")
+                }
+                disabled
+                required
+              />
+              <div className="col-span-3">
+                <TextAreaNew
+                  name="Address"
+                  placeholder="Address"
+                  value={
+                    supplierDetails?.data?.address ||
+                    findFromList(customerId, supplierList?.data, "address")
+                  }
+                  disabled
+                />
+              </div>
+            </TransactionHeaderSection>
 
           </div>
         )}
       >
-          <div className="min-h-0 flex-1 overflow-hidden">
-            <QuotationItems
-              quoteItems={quoteItems}
-              setQuoteItems={setQuoteItems}
-              setInwardItemSelection={setInwardItemSelection}
-              supplierId={customerId}
-              handleRightClick={handleRightClick}
-              contextMenu={contextMenu}
-              handleCloseContextMenu={handleCloseContextMenu}
-              yarnList={yarnList}
-              colorList={colorList}
-              uomList={uomList}
-              itemList={itemList}
-              sizeList={sizeList}
-              readOnly={readOnly}
-              taxMethod={taxMethod}
-              setTaxMethod={setTaxMethod}
-              isHeaderOpen={isHeaderOpen}
-              itemPriceList={itemPriceList}
-              priceTemplateList={priceTemplateList}
-            />
-          </div>
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <QuotationItems
+            quoteItems={quoteItems}
+            setQuoteItems={setQuoteItems}
+            setInwardItemSelection={setInwardItemSelection}
+            supplierId={customerId}
+            handleRightClick={handleRightClick}
+            contextMenu={contextMenu}
+            handleCloseContextMenu={handleCloseContextMenu}
+            yarnList={yarnList}
+            colorList={colorList}
+            uomList={uomList}
+            itemList={itemList}
+            sizeList={sizeList}
+            readOnly={readOnly}
+            taxMethod={taxMethod}
+            setTaxMethod={setTaxMethod}
+            isHeaderOpen={isHeaderOpen}
+            itemPriceList={itemPriceList}
+            priceTemplateList={priceTemplateList}
+            itemControlPanel={itemControlPanel}
+            handlers={handlers}
+            movedToNextSaveNewRef={movedToNextSaveNewRef}
+          />
+        </div>
       </TransactionEntryShell>
 
 

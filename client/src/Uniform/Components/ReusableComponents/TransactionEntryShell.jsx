@@ -1,5 +1,6 @@
 import { FaFileAlt } from "react-icons/fa";
 import { FiChevronDown } from "react-icons/fi";
+import { IoArrowBackCircleSharp } from "react-icons/io5";
 
 const renderSummaryValue = (value) => {
   if (value === undefined || value === null) {
@@ -33,7 +34,7 @@ const TransactionEntryShell = ({
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
           <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
-            <FaFileAlt className="h-5 w-5" />
+            <IoArrowBackCircleSharp className="w-7 h-7" />
           </button>
         </div>
       </div>
@@ -66,9 +67,8 @@ const TransactionEntryShell = ({
           </button>
 
           <div
-            className={`transition-all duration-300 ease-in-out ${
-              headerOpen ? openStateClassName : "max-h-0 opacity-0 overflow-hidden"
-            }`}
+            className={`transition-all duration-300 ease-in-out ${headerOpen ? openStateClassName : "max-h-0 opacity-0 overflow-hidden"
+              }`}
           >
             <div className={["px-3 pb-3 overflow-visible", headerBodyClassName].filter(Boolean).join(" ")}>
               {headerContent}

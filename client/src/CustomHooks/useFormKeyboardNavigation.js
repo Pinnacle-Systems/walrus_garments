@@ -17,9 +17,7 @@ export const useFormKeyboardNavigation = () => {
   }, []);
 
   const handleToggleKeyDown = useCallback((e) => {
-
-    if (e.key === 'Enter' && !e.shiftKey) {
-      console.log("reciev the forem evenet ,", e.key, !e.shiftKey)
+    if (e.key === 'Tab' && !e.shiftKey) {
       e.preventDefault();
       saveCloseButtonRef.current?.focus();
     }

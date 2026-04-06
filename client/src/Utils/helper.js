@@ -3,6 +3,7 @@ import secureLocalStorage from "react-secure-storage";
 import { IMAGE_UPLOAD_URL } from "../Constants";
 import { useEffect, useRef } from "react";
 import { toWords } from "number-to-words";
+import { useGetItemPriceListQuery } from "../redux/uniformService/ItemMasterService";
 
 
 export function getImageUrlPath(fileName) {
@@ -453,33 +454,35 @@ export const useIdleLogout = (
 };
 
 
-export function getUniqueArrayBySize(rowData, allData, key, itemId) {
+export function getUniqueArrayBySize(rowData, allData, key, itemId, itemPriceList) {
 
-  const item = rowData?.filter(i => i.id == itemId)?.[0]
 
-  if (getItemBarcodeGenerationMethod(item) == "STANDARD") {
+
+  const item = rowData?.[0]
+
+  console.log(getItemBarcodeGenerationMethod(item) == "STANDARD", "itemitem")
+
+  if (item?.barcodeGenerationMethod == "STANDARD") {
     return allData
   } else {
     return allData?.filter(all =>
-      item?.ItemPriceList?.some(item => item[key] == all?.id)
+      itemPriceList?.data?.filter(i => i.itemId == itemId)?.some(item => item[key] == all?.id)
     )
   }
 }
 
 
-export function getUniqueArrayByColor(masterData, allData, key, itemId) {
+export function getUniqueArrayByColor(rowData, allData, key, itemId, itemPriceList) {
+  const item = rowData?.[0]
 
-  const item = masterData?.filter(i => i.id == itemId)?.[0]
+  console.log(getItemBarcodeGenerationMethod(item) == "STANDARD", "itemitem")
 
-  console.log(item, "item", masterData)
-
-
-  if (getItemBarcodeGenerationMethod(item) == "SIZE_COLOR") {
-    return allData?.filter(all =>
-      item?.ItemPriceList?.some(item => item[key] == all?.id)
-    )
-  } else {
+  if (item?.barcodeGenerationMethod == "STANDARD") {
     return allData
+  } else {
+    return allData?.filter(all =>
+      itemPriceList?.data?.filter(i => i.itemId == itemId)?.some(item => item[key] == all?.id)
+    )
   }
 }
 

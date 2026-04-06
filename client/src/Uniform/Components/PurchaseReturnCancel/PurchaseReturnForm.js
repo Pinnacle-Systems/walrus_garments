@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 import { toast } from "react-toastify";
-import { DropdownInput, DateInput, TextInput, ReusableSearchableInput, DateInputNew, ReusableSearchableInputNewCustomerwithBranches } from "../../../Inputs";
+import { DropdownInput, DateInput, TextInput, ReusableSearchableInput, DateInputNew, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInputNew1 } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
 // eslint-disable-next-line no-unused-vars
@@ -38,11 +38,12 @@ import { useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMast
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell.jsx";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection.jsx";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import PopUp from "./Pop.js";
 
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList, hasPermission, invalidateTagsDispatch
+    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList, hasPermission, invalidateTagsDispatch, onNew
 
 }) => {
 
@@ -74,8 +75,10 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const [taxTemplateId, setTaxTemplateId] = useState("4");
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
-
     const [printModalOpen, setPrintModalOpen] = useState(false);
+    const [isPrintOpen, setIsPrintOpen] = useState(false)
+    const [nextprocess, setNextProcess] = useState("")
+
 
 
 
@@ -167,7 +170,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         specialInstructions,
         vehicleNo,
         finYearId, locationId,
-        purchaseInwardId
+        purchaseInwardId,
     }
 
     function isSupplierOutside() {
@@ -186,8 +189,10 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     }
 
 
+
     const handleSubmitCustom = async (callback, payload, text, nextProcess) => {
         try {
+            setNextProcess(nextProcess)
             const returnData = await callback(payload).unwrap();
             invalidateTagsDispatch()
             if (returnData.statusCode === 1) {
@@ -195,24 +200,25 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                 await Swal.fire({
                     icon: "error",
                     title: returnData.message,
-                    showConfirmButton: false,
 
                 });
             } else {
-                await Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, showConfirmButton: false });
+                await Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, });
                 if (returnData.statusCode === 0) {
                     if (nextProcess === "new") {
-                        syncFormWithDb(undefined)
+                        setIsPrintOpen(true)
+                        // syncFormWithDb(undefined)
+                        console.log(isPrintOpen, "isPrintOpen", nextProcess)
+
                     } else {
                         onClose()
                     }
 
                 } else {
-                    // toast.error(returnData?.message);
                     Swal.fire({
                         icon: "error",
                         title: returnData.message,
-                        showConfirmButton: false,
+                        showConfirmButton: true,
 
                     });
                 }
@@ -224,7 +230,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
 
-    const saveData = () => {
+    const saveData = (nextProcess) => {
 
         if (!validateData(data)) {
 
@@ -239,9 +245,9 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             return
         }
         if (id) {
-            handleSubmitCustom(updateData, data, "Updated");
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
         } else {
-            handleSubmitCustom(addData, data, "Added");
+            handleSubmitCustom(addData, data, "Added", nextProcess);
         }
     }
 
@@ -305,58 +311,94 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             value: supplierList?.data?.find(item => String(item.id) === String(supplierId))?.name
         },
         { label: "Purchase Inward No", value: purchaseInwardData?.data?.find(i => String(i.id) === String(purchaseInwardId))?.docId },
+        // { label: "Vehicle No", value: vehicleNo },
+        // { label: "Delivery Person", value: specialInstructions },
     ];
 
     const footerContent = (
-        <div className="flex flex-col justify-between gap-2 md:flex-row">
-            <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-4">
+            {/* Input Fields Section */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 border-b border-slate-100 ">
+                <div className="col-span-2">
+                    <TextAreaNew
+                        name="Remarks"
+                        value={remarks}
+                        setValue={setRemarks}
+                        placeholder="Enter remarks..."
+                        readOnly={readOnly}
+                        ref={saveCloseButtonRef}
+                        tabIndex={0}
+                    />
+                </div>
 
-                <button
-                    onClick={() => hasPermission(() => saveData("close"), "create")}
-                    ref={saveCloseButtonRef}
-                    tabIndex={0}
-                    onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
-                    className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
-                >
-                    <HiOutlineRefresh className="mr-2 h-4 w-4" />
-                    Save & Close
-                </button>
-                <button
-                    onClick={() => hasPermission(() => saveData("new"), "create")}
-                    ref={saveNewButtonRef}
-                    onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
-                    className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
-                >
-                    <FiSave className="mr-2 h-4 w-4" />
-                    Save & New
-                </button>
+                {/* <TextInput
+                    name="Delivery Person"
+                    value={specialInstructions}
+                    setValue={setSpecialInstructions}
+                    placeholder="Enter delivery person name..."
+                    readOnly={readOnly}
+                /> */}
+                <TextInputNew1
+                    name="Delivery Vehicle No"
+                    value={vehicleNo}
+                    setValue={setVehicleNo}
+                    placeholder="Enter vehicle number..."
+                    readOnly={readOnly}
+                />
             </div>
-            <div className="flex flex-wrap gap-2">
-                <button
-                    className="flex items-center rounded-md bg-yellow-600 px-4 py-1 text-sm text-white hover:bg-yellow-700"
-                    onClick={() => hasPermission(() => setReadOnly(false), "edit")}
-                >
-                    <FiEdit2 className="mr-2 h-4 w-4" />
-                    Edit
-                </button>
-                <button
-                    className="flex items-center rounded-md bg-blue-600 px-4 py-1 text-sm text-white hover:bg-blue-700"
-                    onClick={() => {
-                        if (
-                            directInwardReturnItems?.filter((i) => i.itemId)?.length === 0
-                        ) {
-                            Swal.fire({
-                                icon: "warning",
-                                title: "Please Fill At Least One Inward Item",
-                            });
-                            return;
-                        }
-                        setBarcodePrintOpen(true);
-                    }}
-                >
-                    <FiPrinter className="mr-2 h-4 w-4" />
-                    Barcode
-                </button>
+
+            {/* Action Bar Section */}
+            <div className="flex flex-col justify-between gap-2 md:flex-row">
+
+                <div className="flex flex-wrap gap-2">
+
+                    <button
+                        onClick={() => hasPermission(() => saveData("close"), "create")}
+                        // ref={saveCloseButtonRef}
+                        tabIndex={0}
+                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
+                        className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+                    >
+                        <HiOutlineRefresh className="mr-2 h-4 w-4" />
+                        Save & Close
+                    </button>
+                    <button
+                        onClick={() => hasPermission(() => saveData("new"), "create")}
+                        ref={saveNewButtonRef}
+                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
+                        className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+                    >
+                        <FiSave className="mr-2 h-4 w-4" />
+                        Save & New
+                    </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        className="flex items-center rounded-md bg-yellow-600 px-4 py-1 text-sm text-white hover:bg-yellow-700"
+                        onClick={() => hasPermission(() => setReadOnly(false), "edit")}
+                    >
+                        <FiEdit2 className="mr-2 h-4 w-4" />
+                        Edit
+                    </button>
+                    <button
+                        className="flex items-center rounded-md bg-blue-600 px-4 py-1 text-sm text-white hover:bg-blue-700"
+                        onClick={() => {
+                            if (
+                                directInwardReturnItems?.filter((i) => i.itemId)?.length === 0
+                            ) {
+                                Swal.fire({
+                                    icon: "warning",
+                                    title: "Please Fill At Least One Inward Item",
+                                });
+                                return;
+                            }
+                            setPrintModalOpen(true);
+                        }}
+                    >
+                        <FiPrinter className="mr-2 h-4 w-4" />
+                        Print
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -370,6 +412,16 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     return (
         <>
+            <Modal
+                isOpen={isPrintOpen}
+                // onClose={() => setIsPrintOpen(false)}
+                widthClass={"px-2 h-[38%] w-[40%]"} >
+
+                <PopUp setIsPrintOpen={setIsPrintOpen} onClose={() => setIsPrintOpen(false)} setPrintModalOpen={setPrintModalOpen}
+                    nextprocess={nextprocess} formclose={onClose} syncFormWithDb={syncFormWithDb} onNew={onNew} inputRef={nameRef}
+                    setId={setId}
+                    id={id} />
+            </Modal>
             <Modal isOpen={inwardItemSelection}
                 onClose={() => setInwardItemSelection(false)}
                 widthClass={"w-[95%] h-[90%] py-10"}>
@@ -405,6 +457,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         date={id ? singleData?.data?.selectedDate : date}
                         docId={docId ? docId : ""}
                         remarks={remarks}
+                        deliveryPerson={specialInstructions}
+                        vehicleNo={vehicleNo}
                         discountType={discountType}
                         poType={directOrPoreturn}
                         discountValue={discountValue}
@@ -459,7 +513,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                 disabled={true}
                             />
                         </TransactionHeaderSection>
-                        <TransactionHeaderSection title="Location Details" className="col-span-2" bodyClassName="grid-cols-2 gap-2">
+                        <TransactionHeaderSection title="Location Details" className="col-span-1" bodyClassName="grid-cols-2 gap-2">
                             {/* <DropdownInput name="Return Type"
                                     beforeChange={() => { setDirectInwardReturnItems([]) }}
                                     options={directOrPoreturn}
@@ -478,21 +532,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                         </TransactionHeaderSection>
 
-                        <TransactionHeaderSection title="Supplier Details" className="col-span-2" bodyClassName="grid-cols-3 gap-2">
+                        <TransactionHeaderSection title="Supplier Details" className="col-span-3" bodyClassName="grid-cols-5 gap-2">
 
                             <div className="col-span-3">
 
-                                {/* <ReusableSearchableInput
-                                    label="Supplier Id"
-                                    component="PartyMaster"
-                                    placeholder="Search Supplier Id..."
-                                    optionList={supplierList?.data}
-                                    setSearchTerm={(value) => { setSupplierId(value); }}
-                                    searchTerm={supplierId}
-                                    show={"isSupplier"}
-                                    required={true}
-                                    disabled={id}
-                                /> */}
+
                                 <ReusableSearchableInputNewCustomerwithBranches
                                     label="Supplier Name"
                                     component="PartyMaster"
@@ -512,7 +556,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                             />
 
-                            <div className="w-28 mt-6">
+                            <div className="w-28 mt-7">
                                 <button
                                     className="flex items-center gap-1 px-1 py-[1px] text-[10px] font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 focus:outline-none focus:ring-1 focus:ring-indigo-300 transition-all"
                                     onKeyDown={(e) => {
@@ -570,9 +614,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     />
                 </div>
             </TransactionEntryShell>
-        </ >
-
-    )
+        </>
+    );
 }
 
 export default PurchaseReturnForm

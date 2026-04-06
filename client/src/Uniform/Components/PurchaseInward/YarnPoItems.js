@@ -173,7 +173,7 @@ const YarnPoItems = ({
             }));
             return [...prev, ...newArray];
         });
-    }, [transType, setPoItems, poItems, headerOpen]);
+    }, [transType, setPoItems, poItems, headerOpen, id]);
 
 
     const addNewRow = () => {
@@ -422,7 +422,7 @@ const YarnPoItems = ({
                                                 disabled={readOnly || !row.itemId || id ? row.stockQty < row?.qty : false}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
                                                 addNewModalWidth="w-[40%] h-[45%]"
-                                                childComponent={SizeMaster}
+                                                // childComponent={SizeMaster}
                                                 addNewLabel="+ Add New Size"
                                             />
                                         </td>
@@ -435,7 +435,7 @@ const YarnPoItems = ({
                                                 disabled={readOnly || !row.sizeId || id ? row.stockQty < row?.qty : false}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
                                                 addNewModalWidth="w-[40%] h-[45%]"
-                                                childComponent={ColorMaster}
+                                                // childComponent={ColorMaster}
                                                 addNewLabel="+ Add New Color"
                                             />
                                         </td>
@@ -566,7 +566,7 @@ const YarnPoItems = ({
 
 
 
-                                    <td className='border border-gray-300 p-0 text-[11px] text-right'>
+                                    <td className='border border-gray-300 text-[11px] text-right px-2'>
                                         {formatTwoDecimals(row?.price && row?.qty ? parseFloat(row?.price) * parseFloat(row?.qty) : 0)}</td>
 
 
@@ -578,7 +578,10 @@ const YarnPoItems = ({
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
                                                     e.preventDefault();
-                                                    addNewRow(index);
+                                                    if (index === poItems.length - 1) {
+                                                        addNewRow(index);
+                                                    }
+
                                                 }
                                             }}
                                             className="h-full w-full rounded-none bg-blue-50 py-0"

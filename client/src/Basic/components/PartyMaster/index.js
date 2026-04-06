@@ -47,7 +47,7 @@ import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardN
 
 const MODEL = "Party Master";
 
-export default function Form({ partyId, show, openModelForAddress }) {
+export default function Form({ partyId, show, openModelForAddress, onCloseForm }) {
 
   const [isAddressExpanded, setIsAddressExpanded] = useState(false);
   const [form, setForm] = useState(false);
@@ -431,6 +431,17 @@ export default function Form({ partyId, show, openModelForAddress }) {
       } else {
         returnData = await callback(formData).unwrap();
       }
+
+      await Swal.fire({
+        icon: 'success',
+        title: `${text} Successfully`,
+        didClose: () => {
+          if (partyId) {
+            onCloseForm()
+            return
+          }
+        }
+      });
       if (nextProcess == "new") {
         syncFormWithDb(undefined)
         onNew()
@@ -439,10 +450,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
       }
       setId("")
 
-      await Swal.fire({
-        icon: 'success',
-        title: `${text} Successfully`,
-      });
+
       dispatch({
         type: `accessoryItemMaster/invalidateTags`,
         payload: ["AccessoryItemMaster"],
@@ -887,7 +895,7 @@ export default function Form({ partyId, show, openModelForAddress }) {
   const countryNameRef = useRef(null)
 
   useEffect(() => {
-    if (form && nameRef.current) {
+    if (form && nameRef.current && !partyId) {
       nameRef.current.focus();
     }
   }, [form]);
