@@ -7,6 +7,14 @@ import { getDirectInwardReturnItemsLotBreakUp, getPurchaseReturnItemsAlreadyData
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
 import { prisma } from '../lib/prisma.js';
+import {
+    getBarcodeGenerationMethod,
+    validateVariantRowShape,
+} from './itemVariantValidation.js';
+import {
+    getStockRuntimeFieldSelect,
+    pickStockRuntimeFieldValues,
+} from './stockRuntimeFields.js';
 
 function getInwardOrReturnShortCode(poInwardOrDirectInward) {
     switch (poInwardOrDirectInward) {
@@ -60,6 +68,50 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
         (searchDueDate ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate) : true) &&
         (searchPoType ? (item.poType.toLowerCase().includes(searchPoType.toLowerCase())) : true)
     )
+}
+
+async function validateReturnVariantRows(directReturnItems = [], rowLabelPrefix) {
+    const itemIds = [...new Set(
+        (directReturnItems || [])
+            .map((item) => item?.itemId ? parseInt(item.itemId) : null)
+            .filter(Boolean)
+    )];
+
+    if (!itemIds.length) {
+        return;
+    }
+
+    const [barcodeGenerationMethod, items] = await Promise.all([
+        getBarcodeGenerationMethod(),
+        prisma.item.findMany({
+            where: {
+                id: {
+                    in: itemIds,
+                },
+            },
+            select: {
+                id: true,
+                isLegacy: true,
+            },
+        }),
+    ]);
+
+    const itemMap = new Map(items.map((item) => [item.id, item]));
+
+    (directReturnItems || []).forEach((item, index) => {
+        const itemId = item?.itemId ? parseInt(item.itemId) : null;
+        if (!itemId) {
+            return;
+        }
+
+        validateVariantRowShape({
+            flowType: "canonical",
+            isLegacy: itemMap.get(itemId)?.isLegacy,
+            barcodeGenerationMethod,
+            row: item,
+            rowLabel: `${rowLabelPrefix} ${index + 1}`,
+        });
+    });
 }
 
 
@@ -223,11 +275,7 @@ async function getOne(id) {
                     qty: true,
                     poNo: true,
                     poQty: true,
-                    Item: {
-                        select: {
-                            Hsn: true
-                        }
-                    },
+                    ...getStockRuntimeFieldSelect(),
                     returnLotDetails: {
                         select: {
                             id: true,
@@ -473,7 +521,8 @@ export async function getDirectReturnItemById(id, billEntryId) {
                 select: {
                     name: true
                 }
-            }
+            },
+            ...getStockRuntimeFieldSelect(),
         }
     });
 
@@ -637,9 +686,7 @@ async function createYarnStock(tx, poType, poInwardOrDirectInward, branchId, sto
             branchId: branchId ? parseFloat(branchId) : undefined,
             storeId: storeId ? parseFloat(storeId) : undefined,
             barcode: item["barcode"] ? String(item["barcode"]) : undefined,
-
-
-
+            ...pickStockRuntimeFieldValues(item),
 
         }
     })
@@ -667,6 +714,7 @@ async function createDirectInwardReturnItems(tx, directReturnOrPoReturnId, direc
                 directItemsId: item["poItemsId"] ? parseInt(item["poItemsId"]) : undefined,
                 poNo: item["poNo"] ? item["poNo"] : "",
                 barcode: item["barcode"] ? item["barcode"] : "",
+                ...pickStockRuntimeFieldValues(item),
 
             }
         })
@@ -690,6 +738,7 @@ async function create(body) {
         payTermId,
         vehicleNo, specialInstructions, remarks,
         branchId, active, userId, finYearId, purchaseInwardId } = await body
+    await validateReturnVariantRows(directReturnItems, `${poInwardOrDirectInward} row`);
 
     let processValid = false;
 
@@ -754,6 +803,7 @@ async function createYarnItemsUpdateStock(tx, poType, poInwardOrDirectInward, br
         data: {
 
             qty: (item.qty) ? parseFloat(0 - item.qty) : undefined,
+            ...pickStockRuntimeFieldValues(item),
         }
     })
     console.log("Eror")
@@ -798,6 +848,7 @@ async function updateOrCreate(tx, item, directReturnOrPoReturnId, poType, poInwa
                 orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
                 requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
                 barcode: item["barcode"] ? item["barcode"] : "",
+                ...pickStockRuntimeFieldValues(item),
 
             }
         })
@@ -836,6 +887,7 @@ async function updateOrCreate(tx, item, directReturnOrPoReturnId, poType, poInwa
                     orderDetailsId: item["orderDetailsId"] ? parseInt(item["orderDetailsId"]) : undefined,
                     requirementPlanningItemsId: item["requirementPlanningItemsId"] ? parseInt(item["requirementPlanningItemsId"]) : undefined,
                     barcode: item["barcode"] ? item["barcode"] : "",
+                    ...pickStockRuntimeFieldValues(item),
 
 
                 }
@@ -866,6 +918,7 @@ async function update(id, body) {
         supplierId, directReturnItems, dcNo, dcDate, storeId,
         vehicleNo, specialInstructions, remarks,
         branchId, active, userId, purchaseInwardId } = await body
+    await validateReturnVariantRows(directReturnItems, `${poInwardOrDirectInward} row`);
 
 
     const dataFound = await prisma.directReturnOrPoReturn.findUnique({

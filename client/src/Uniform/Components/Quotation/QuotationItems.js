@@ -3,13 +3,21 @@ import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import { capitalizeFirstLetter, findFromList, getUniqueArrayByColor, getUniqueArrayBySize, sumArray } from "../../../Utils/helper";
+import { capitalizeFirstLetter, findFromList, sumArray } from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import Swal from "sweetalert2";
-import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
+import {
+    getCatalogColorOptions,
+    getCatalogColumnVisibility,
+    getCatalogSizeOptions,
+    isLegacyCatalogItem,
+    itemUsesColor,
+    itemUsesSize,
+    resolveSellablePriceRow,
+} from "../../../Utils/salesCatalogRules";
 import TransactionLineItemsSection, {
     standardTransactionPlaceholderRowCount,
     transactionTableClassName,
@@ -58,20 +66,20 @@ const QuotationItems = ({
     const compactNumberInputClassName = transactionTableNumberInputClassName;
     const compactDropdownClassName = "h-full w-full max-w-none rounded-none border-0 bg-transparent px-1 py-0 text-[10px] shadow-none outline-none focus:bg-transparent focus:outline-none";
 
-
-
-
-
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false)
-
-    const getBarcodeFromList = (itemId, sizeId, colorId) => {
-        console.log(itemPriceList, "itemPriceList")
-        if (!itemPriceList?.data || !itemId || !sizeId) return null;
-        return itemPriceList?.data?.find(item =>
-            String(item.itemId) === String(itemId) &&
-            String(item.sizeId) === String(sizeId) &&
-            (colorId ? String(item.colorId) === String(colorId) : !item.colorId)
-        );
+    const catalogItems = itemList?.data || [];
+    const catalogPriceRows = itemPriceList?.data || [];
+    const { showSize, showColor } = getCatalogColumnVisibility(catalogItems, catalogPriceRows);
+    const findSelectedItem = (itemId) => catalogItems.find((item) => String(item.id) === String(itemId));
+    const isLegacyRow = (row) => isLegacyCatalogItem(catalogItems, row?.itemId);
+    const rowRequiresSize = (row) => itemUsesSize(catalogItems, catalogPriceRows, row?.itemId);
+    const rowRequiresColor = (row) => itemUsesColor(catalogItems, catalogPriceRows, row?.itemId);
+    const isSizeReady = (row) => !rowRequiresSize(row) || Boolean(row.itemId);
+    const isColorReady = (row) => !rowRequiresColor(row) || Boolean(rowRequiresSize(row) ? row.sizeId : row.itemId);
+    const isUomReady = (row) => {
+        if (rowRequiresColor(row)) return Boolean(row.colorId);
+        if (rowRequiresSize(row)) return Boolean(row.sizeId);
+        return Boolean(row.itemId);
     };
 
     const getPriceFromTemplate = (itemId, qty) => {
@@ -100,12 +108,17 @@ const QuotationItems = ({
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(quoteItems);
         if (field === "itemId") {
-            const selectedItem = itemList?.data?.find(item => parseInt(item.id) === parseInt(value));
+            const selectedItem = findSelectedItem(value);
             if (selectedItem) {
                 newBlend[index]["sectionId"] = selectedItem.sectionId;
                 newBlend[index]["hsnId"] = selectedItem.hsnId;
-
-
+                if (!itemUsesSize(catalogItems, catalogPriceRows, selectedItem.id)) {
+                    newBlend[index]["sizeId"] = "";
+                }
+                if (!itemUsesColor(catalogItems, catalogPriceRows, selectedItem.id)) {
+                    newBlend[index]["colorId"] = "";
+                }
+                // Auto-fill tax based on the new HSN ID
                 const selectedHsn = hsnList?.data?.find(hsn => parseInt(hsn.id) === parseInt(selectedItem.hsnId));
                 newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
                 newBlend[index]["taxMethod"] = newBlend[index]["taxMethod"] || "Inclusive";
@@ -125,6 +138,9 @@ const QuotationItems = ({
             const currentSize = field === "sizeId" ? value : newBlend[index].sizeId;
             const currentColor = field === "colorId" ? value : newBlend[index].colorId;
             const currentQty = field === "qty" ? value : newBlend[index].qty;
+            const isLegacySelection = isLegacyCatalogItem(catalogItems, currentItem);
+            const requiresSize = itemUsesSize(catalogItems, catalogPriceRows, currentItem);
+            const requiresColor = itemUsesColor(catalogItems, catalogPriceRows, currentItem);
 
             if (currentItem) {
                 // 1. Check for Bulk Tier Offer
@@ -132,10 +148,15 @@ const QuotationItems = ({
                 if (templateDetail) {
                     newBlend[index]["price"] = templateDetail.price;
                     newBlend[index]["priceType"] = "BulkOfferPrice";
-                } else if (currentSize) {
+                } else if (!requiresSize || currentSize || isLegacySelection) {
                     // 2. Standard Price Master Logic
-                    const foundPrice = getBarcodeFromList(currentItem, currentSize, currentColor);
-                    console.log(foundPrice, "foundPrice")
+                    const foundPrice = resolveSellablePriceRow(
+                        catalogItems,
+                        catalogPriceRows,
+                        currentItem,
+                        currentSize,
+                        requiresColor ? currentColor : ""
+                    );
                     if (foundPrice) {
                         const numericQty = parseFloat(currentQty || 0);
                         if (numericQty > 6 && foundPrice.offerPrice) {
@@ -398,18 +419,20 @@ const QuotationItems = ({
                                     >
                                         Item
                                     </th>
+                                    {showSize && (
                                     <th
-
                                         className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Size
                                     </th>
+                                    )}
+                                    {showColor && (
                                     <th
-
                                         className={`${compactHeaderCellClassName} w-32`}
                                     >
                                         Color
                                     </th>
+                                    )}
                                     <th
 
                                         className={`${compactHeaderCellClassName} w-20`}
@@ -542,6 +565,7 @@ const QuotationItems = ({
                                                 />
                                             </td>
 
+                                            {showSize && (
                                             <td className={compactFocusCellClassName}>
                                                 {/* <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
@@ -552,11 +576,11 @@ const QuotationItems = ({
                                                         handleInputChange((e.target.value), index, "sizeId")
                                                     }
                                                     }
-                                                    disabled={readOnly || !row.itemId}
+                                                    disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
                                                 >
                                                     <option >
                                                     </option>
-                                                    {(id ? sizeList?.data : getUniqueArrayBySize(itemList?.data, sizeList?.data, "sizeId", row?.itemId))?.map((blend) =>
+                                                    {getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map((blend) =>
                                                         <option value={blend.id} key={blend.id}>
                                                             {blend?.name}
                                                         </option>)}
@@ -569,18 +593,20 @@ const QuotationItems = ({
                                                                 value: item.id,
                                                                 label: item?.name || "",
                                                             })) :
-                                                            getUniqueArrayBySize(itemControlPanel?.data, sizeList?.data, "sizeId", row?.itemId, itemPriceList)?.map((item) => ({
+                                                            getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map((item) => ({
                                                                 value: item.id,
                                                                 label: item?.name || "",
                                                             }))}
 
-                                                    disabled={readOnly}
+                                                    disabled={readOnly || !isSizeReady(row)}
                                                     onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
                                                     addNewModalWidth="w-[90%] h-[95%]"
 
                                                 />
                                             </td>
+                                            )}
 
+                                            {showColor && (
                                             <td className={compactFocusCellClassName}>
                                                 {/* <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
@@ -590,12 +616,12 @@ const QuotationItems = ({
                                                         handleInputChange((e.target.value), index, "colorId")
                                                     }
                                                     }
-                                                    disabled={readOnly || !row.sizeId}
+                                                    disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
 
                                                 >
                                                     <option hidden>
                                                     </option>
-                                                    {(id ? colorList?.data : (getUniqueArrayByColor(itemList?.data, colorList?.data, "colorId", row?.itemId)))?.map((blend) =>
+                                                    {getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((blend) =>
                                                         <option value={blend.id} key={blend.id}>
                                                             {blend?.name}
                                                         </option>
@@ -610,24 +636,25 @@ const QuotationItems = ({
                                                                 value: item.id,
                                                                 label: item?.name || "",
                                                             })) :
-                                                            getUniqueArrayByColor(itemControlPanel?.data, colorList?.data, "colorId", row?.itemId, itemPriceList)?.map((item) => ({
+                                                            getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((item) => ({
                                                                 value: item.id,
                                                                 label: item?.name || "",
                                                             }))}
 
-                                                    disabled={readOnly}
+                                                    disabled={readOnly || !isColorReady(row)}
                                                     onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
                                                     addNewModalWidth="w-[90%] h-[95%]"
 
                                                 />
                                             </td>
+                                            )}
 
 
                                             <td className={compactFocusCellClassName}>
                                                 <SearchableTableCellSelect
                                                     value={row.hsnId}
                                                     options={hsnOptions}
-                                                    disabled={true}
+                                                    disabled={readOnly || !row.itemId}
                                                     onChange={(nextValue) => handleInputChange(nextValue, index, "hsnId")}
                                                     addNewModalWidth="w-[90%] h-[95%]"
 
@@ -643,7 +670,7 @@ const QuotationItems = ({
                                                         handleInputChange((e.target.value), index, "uomId")
                                                     }
                                                     }
-                                                    disabled={readOnly || !row.colorId}
+                                                    disabled={readOnly || !isUomReady(row)}
 
                                                 >
 
@@ -658,7 +685,7 @@ const QuotationItems = ({
                                                 <SearchableTableCellSelect
                                                     value={row.uomId}
                                                     options={uomOptions}
-                                                    disabled={readOnly}
+                                                    disabled={readOnly || !isUomReady(row)}
                                                     onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
                                                     addNewModalWidth="w-[90%] h-[95%]"
 

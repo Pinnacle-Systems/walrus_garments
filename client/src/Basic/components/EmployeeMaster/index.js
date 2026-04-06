@@ -1230,6 +1230,7 @@ import {
 import imageDefault from "../../../assets/default-dp.png";
 import Swal from "sweetalert2";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import MasterPageLayout from "../MasterPageLayout";
 
 const MODEL = "Employee Master";
 
@@ -1585,10 +1586,11 @@ export default function Form() {
 
 
   return (
-    <div onKeyDown={handleKeyDown} className="p-1">
-      <div className="w-full flex bg-white p-1 justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Employee Master</h1>
-        <div className="flex items-center gap-4">
+    <MasterPageLayout
+      title="Employee Master"
+      onKeyDown={handleKeyDown}
+      headerActions={
+        <>
           <button
             onClick={() => { setForm(true); onNew(); setNewForm(true); }}
             className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
@@ -1605,48 +1607,47 @@ export default function Form() {
               <LayoutGrid size={16} /> Cards
             </button>
           </div>
-        </div>
-      </div>
-
-      <div className="bg-gray-100 rounded-xl shadow overflow-hidden">
-        <div className="pt-2">
-          {view === "table" ? (
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
-              <ReusableTable
-                columns={columns} data={allData?.data}
-                onView={handleView} onEdit={handleEdit}
-                onDelete={deleteData} itemsPerPage={10}
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {allData?.data?.map((employee, index) => (
-                <div key={index} onClick={() => { setId(employee.id); setForm(true); }}
-                  className={`border rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer ${employee?.active ? "border-green-200" : "border-red-200"}`}>
-                  <div className={`p-4 ${employee?.active ? "bg-green-50" : "bg-red-50"}`}>
-                    <div className="flex items-center">
-                      <img src={employee?.imageBase64 || imageDefault} alt="Profile"
-                        className={`w-12 h-12 object-cover rounded-full border-2 ${employee?.active ? "border-green-500" : "border-red-500"}`} />
-                      <div className="ml-3">
-                        <h3 className="font-medium text-gray-900">{employee?.name}</h3>
-                        <p className="text-xs text-gray-500">{employee?.regNo}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 bg-white">
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div><p className="text-gray-500">Department</p><p className="font-medium">{employee?.department?.name || "-"}</p></div>
-                      <div><p className="text-gray-500">Status</p><p className={`font-medium ${employee?.active ? "text-green-600" : "text-red-600"}`}>{employee?.active ? "Active" : "Inactive"}</p></div>
-                      <div><p className="text-gray-500">Mobile</p><p className="font-medium">{employee?.mobile || "-"}</p></div>
-                      <div><p className="text-gray-500">Email</p><p className="font-medium truncate">{employee?.email || "-"}</p></div>
+        </>
+      }
+    >
+      {view === "table" ? (
+        <ReusableTable
+          columns={columns}
+          data={allData?.data}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={deleteData}
+          itemsPerPage={10}
+        />
+      ) : (
+        <div className="h-full overflow-auto bg-gray-100 p-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {allData?.data?.map((employee, index) => (
+              <div key={index} onClick={() => { setId(employee.id); setForm(true); }}
+                className={`overflow-hidden rounded-lg border transition-all duration-200 hover:shadow-md cursor-pointer ${employee?.active ? "border-green-200" : "border-red-200"}`}>
+                <div className={`p-4 ${employee?.active ? "bg-green-50" : "bg-red-50"}`}>
+                  <div className="flex items-center">
+                    <img src={employee?.imageBase64 || imageDefault} alt="Profile"
+                      className={`h-12 w-12 rounded-full border-2 object-cover ${employee?.active ? "border-green-500" : "border-red-500"}`} />
+                    <div className="ml-3">
+                      <h3 className="font-medium text-gray-900">{employee?.name}</h3>
+                      <p className="text-xs text-gray-500">{employee?.regNo}</p>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="bg-white p-4">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div><p className="text-gray-500">Department</p><p className="font-medium">{employee?.department?.name || "-"}</p></div>
+                    <div><p className="text-gray-500">Status</p><p className={`font-medium ${employee?.active ? "text-green-600" : "text-red-600"}`}>{employee?.active ? "Active" : "Inactive"}</p></div>
+                    <div><p className="text-gray-500">Mobile</p><p className="font-medium">{employee?.mobile || "-"}</p></div>
+                    <div><p className="text-gray-500">Email</p><p className="font-medium truncate">{employee?.email || "-"}</p></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {form && (
         <Modal isOpen={form} form={form} widthClass={"w-[95%]  h-[95vh]"}
@@ -2093,6 +2094,6 @@ export default function Form() {
           </Modal>
         </Modal>
       )}
-    </div>
+    </MasterPageLayout>
   );
 }

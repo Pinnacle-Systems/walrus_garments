@@ -26,7 +26,7 @@ import { useGetItemMasterQuery } from '../../../redux/uniformService/ItemMasterS
 import { useGetPartyQuery, useAddPartyMutation } from '../../../redux/services/PartyMasterService';
 import { useAddSalesInvoiceMutation } from '../../../redux/uniformService/salesInvoiceServices';
 import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
-import { useLazyGetUnifiedStockWithLegacyByBarcodeQuery } from '../../../redux/services/StockService';
+import { useLazyGetUnifiedStockByBarcodeQuery } from '../../../redux/services/StockService';
 import { getCommonParams } from '../../../Utils/helper';
 import Swal from 'sweetalert2';
 import { useGetPointOfSalesQuery, useAddPointOfSalesMutation } from '../../../redux/uniformService/PointOfSalesService';
@@ -35,6 +35,41 @@ import { useEffect, useRef, useState } from 'react';
 
 // Child components can be defined in separate files later or kept here for now for speed
 // I'll define them in-line for now since I'm building the "Page" as requested.
+
+const findDefaultPriceRow = (item) => {
+    const priceRows = item?.ItemPriceList || [];
+    return priceRows.find((row) => !row?.sizeId && !row?.colorId) || priceRows[0] || null;
+};
+
+const normalizeLocalItemForPos = (item, branchId, storeId) => {
+    const defaultPriceRow = findDefaultPriceRow(item);
+    if (!item || !defaultPriceRow) {
+        return null;
+    }
+
+    return {
+        id: item.id,
+        itemId: item.id,
+        Item: item,
+        Size: null,
+        Color: null,
+        sizeId: null,
+        colorId: null,
+        uomId: null,
+        branchId,
+        storeId,
+        barcode: defaultPriceRow?.barcode || "",
+        itemName: item?.name || "",
+        itemCode: item?.code || "",
+        salesPrice: defaultPriceRow?.salesPrice || item?.salesPrice || 0,
+        offerPrice: defaultPriceRow?.offerPrice || 0,
+        price: defaultPriceRow?.salesPrice || item?.salesPrice || 0,
+        priceType: "SalesPrice",
+    };
+};
+
+const buildResolutionLabel = (match) =>
+    `${match.item_name || match?.Item?.name || "Item"} / ${match.size || match?.Size?.name || "-"} / ${match.color || match?.Color?.name || "-"} / Qty ${match.stockQty || 0}`;
 
 const PointOfSale = () => {
     const dispatch = useDispatch();
@@ -165,7 +200,7 @@ const PointOfSale = () => {
 
     // Queries
     const { data: itemsData, isLoading: itemsLoading } = useGetItemMasterQuery({
-        params: { branchId, userId, finYearId }
+        params: { branchId, userId, finYearId, active: true }
     });
     const { data: customerData } = useGetPartyQuery({
         params: { branchId, userId, finYearId }
@@ -174,7 +209,7 @@ const PointOfSale = () => {
         params: { branchId, companyId }
     });
     const [addPointOfSales] = useAddPointOfSalesMutation();
-    const [getStockByBarcode, { isLoading: isBarcodeLoading }] = useLazyGetUnifiedStockWithLegacyByBarcodeQuery();
+    const [getStockByBarcode, { isLoading: isBarcodeLoading }] = useLazyGetUnifiedStockByBarcodeQuery();
     const { data: posData } = useGetPointOfSalesQuery({
         params: { branchId, companyId, finYearId }
     });
@@ -193,15 +228,41 @@ const PointOfSale = () => {
 
     // Filter items
     const filteredItems = items.filter(item => {
+        const defaultPriceRow = findDefaultPriceRow(item);
+        const itemName = item?.name?.toLowerCase() || '';
+        const itemCode = item?.code?.toLowerCase() || '';
+        const barcode = defaultPriceRow?.barcode?.toLowerCase() || '';
         const matchesSearch = (
-            item.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.itemCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.barcode?.toLowerCase().includes(searchQuery.toLowerCase())
+            itemName.includes(searchQuery.toLowerCase()) ||
+            itemCode.includes(searchQuery.toLowerCase()) ||
+            barcode.includes(searchQuery.toLowerCase())
         );
         return matchesSearch;
     });
 
     // Handle Quick Scan
+    const resolveBarcodeMatch = async (matches = []) => {
+        const options = Object.fromEntries(
+            matches.map((match, index) => [String(index), buildResolutionLabel(match)])
+        );
+
+        const result = await Swal.fire({
+            title: 'Select Stock Row',
+            text: 'This barcode matches multiple stock combinations.',
+            input: 'select',
+            inputOptions: options,
+            inputPlaceholder: 'Choose stock row',
+            showCancelButton: true,
+            inputValidator: (value) => (!value && value !== '0' ? 'Please choose a stock row' : undefined)
+        });
+
+        if (!result.isConfirmed) {
+            return null;
+        }
+
+        return matches[Number(result.value)] || null;
+    };
+
     const handleScan = async (e) => {
         if (e.key === 'Enter') {
             const barcode = searchQuery.trim();
@@ -217,8 +278,12 @@ const PointOfSale = () => {
                     }
                 }).unwrap();
 
-                if (response.statusCode === 0 && response.data) {
-                    const stockData = response?.data;
+                const resolvedData = response?.needsResolution
+                    ? await resolveBarcodeMatch(response.matches || [])
+                    : response?.data;
+
+                if (response.statusCode === 0 && resolvedData) {
+                    const stockData = resolvedData;
                     // Simply pass stockData; addToCart handles normalization of qty, price, and itemId
                     addToCart({ ...stockData });
                     setSearchQuery('');
@@ -229,16 +294,49 @@ const PointOfSale = () => {
             }
 
             // Fallback to local items if API fails or not found
-            const localItem = items.find(i =>
-                i.barcode === barcode || i.itemCode === barcode
-            );
+            const localItem = items.find((item) => {
+                const defaultPriceRow = findDefaultPriceRow(item);
+                return (
+                    item?.name?.toLowerCase() === barcode.toLowerCase() ||
+                    item?.code?.toLowerCase() === barcode.toLowerCase() ||
+                    defaultPriceRow?.barcode === barcode
+                );
+            });
 
-            if (localItem) {
-                addToCart(localItem);
-                setSearchQuery('');
-            } else {
+            if (!localItem) {
                 toast.warning("Barcode not found in stock or local database");
+                return;
             }
+
+            const normalizedLocalItem = normalizeLocalItemForPos(localItem, branchId, retailStoreId);
+            if (!normalizedLocalItem?.barcode) {
+                toast.warning("Selected item is missing a barcode on its default price row");
+                return;
+            }
+
+            try {
+                const localResponse = await getStockByBarcode({
+                    params: {
+                        barcode: normalizedLocalItem.barcode,
+                        storeId: retailStoreId,
+                        branchId
+                    }
+                }).unwrap();
+
+                const resolvedLocalData = localResponse?.needsResolution
+                    ? await resolveBarcodeMatch(localResponse.matches || [])
+                    : localResponse?.data;
+
+                if (localResponse.statusCode === 0 && resolvedLocalData) {
+                    addToCart({ ...resolvedLocalData });
+                    setSearchQuery('');
+                    return;
+                }
+            } catch (error) {
+                console.error("Local item stock lookup failed:", error);
+            }
+
+            toast.warning("Item was found in Item Master but is not available in current store stock");
         }
     };
 

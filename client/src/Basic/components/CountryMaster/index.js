@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import MasterPageLayout from "../MasterPageLayout";
 // import { usePermissionForUsers } from "../HasPermission";
 
 const MODEL = "Country Master";
@@ -426,23 +427,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   }
 
   return (
-    <div onKeyDown={handleKeyDown} className="p-1">
-      <div className="w-full flex bg-white p-1 justify-between  items-center">
-        <h5 className="text-lg font-bold text-gray-800">Country Master</h5>
-        <div className="flex items-center">
-          <button
-            onClick={() => {
-              setForm(true);
-              onNew();
-            }}
-            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-          >
-            + Add New Country
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+    <MasterPageLayout
+      title="Country Master"
+      addButtonLabel="+ Add New Country"
+      onAdd={() => {
+        setForm(true);
+        onNew();
+      }}
+      onKeyDown={handleKeyDown}
+      titleClassName="text-lg font-bold text-gray-800"
+    >
         <ReusableTable
           columns={columns}
           data={allData?.data}
@@ -451,7 +445,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           onDelete={deleteData}
           itemsPerPage={15}
         />
-      </div>
 
       <div>
         {form === true && (
@@ -536,6 +529,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           </Modal>
         )}
       </div>
-    </div>
+    </MasterPageLayout>
   );
 }

@@ -3,6 +3,13 @@ import { prisma } from '../lib/prisma.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { getRemovedItems, getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
+import {
+    buildStockOutEntries,
+    extractResolvedAllocations,
+    getHybridFulfillmentResolutionError,
+    resolveHybridFulfillmentLines,
+    validateFulfillmentAllocations,
+} from './salesDeliveryConversionRules.js';
 
 
 
@@ -143,18 +150,38 @@ async function create(body) {
                 }
             });
 
-            const stockEntries = posItems.map((item) => ({
-                itemId: parseInt(item.itemId || item.id),
-                sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                colorId: item.colorId ? parseInt(item.colorId) : null,
-                uomId: item.uomId ? parseInt(item.uomId) : null,
-                qty: item.qty ? parseFloat(item.qty) : null,
-                price: item.price ? parseFloat(item.price) : null,
-                storeId: item.storeId ? parseInt(item.storeId) : null,
-                barcode: item.barcode,
-                branchId: parseInt(item.branchId || branchId),
-                inOrOut: "POS",
+            const posFulfillmentLines = (posItems || [])
+                .filter((item) => item?.itemId || item?.id)
+                .map((item, lineIndex) => ({
+                    ...item,
+                    lineIndex,
+                    itemId: parseInt(item.itemId || item.id),
+                    fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
+                    branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
+                }));
+
+            const resolution = await resolveHybridFulfillmentLines(tx, posFulfillmentLines, {
+                branchId,
+            });
+            const resolutionError = getHybridFulfillmentResolutionError(resolution);
+            if (resolutionError) {
+                throw resolutionError;
+            }
+
+            const allocations = extractResolvedAllocations(resolution);
+            const allocationValidationMessage = await validateFulfillmentAllocations(tx, allocations);
+            if (allocationValidationMessage) {
+                throw new Error(allocationValidationMessage);
+            }
+
+            const stockEntries = buildStockOutEntries(allocations, {
                 transactionId: posRecord.id,
+                inOrOut: "POS",
+            }).map((entry, index) => ({
+                ...entry,
+                price: allocations[index]?.lineIndex >= 0 && posFulfillmentLines[allocations[index].lineIndex]?.price
+                    ? parseFloat(posFulfillmentLines[allocations[index].lineIndex].price)
+                    : null,
             }));
 
             await tx.stock.createMany({
@@ -168,7 +195,11 @@ async function create(body) {
 
     } catch (error) {
         console.error("POS Creation Error:", error);
-        return { statusCode: 1, message: "Failed to process sale: " + error.message };
+        return {
+            statusCode: 1,
+            message: "Failed to process sale: " + error.message,
+            data: error?.fulfillmentResolution ? { fulfillmentResolution: error.fulfillmentResolution } : undefined,
+        };
     }
 }
 

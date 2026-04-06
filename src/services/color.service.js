@@ -12,7 +12,7 @@ async function get(req) {
                 select: {
                     ItemPriceList: true,
                     DirectItems: true,
-                    Stock: true,
+                    Stock: true
                 }
             }
         }

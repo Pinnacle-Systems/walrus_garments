@@ -9,7 +9,7 @@ import { useState } from 'react'
 
 export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderItems, onClose, tempStockItems, toOrderId, setStockItems
     , yarnList, colorList, stockItems, sizeList, itemList, locationData, fromLocationId,
-    searchColor, setSearchColor, searchItem, setSearchItem, searchSize, setSearchSize
+    searchColor, setSearchColor, searchItem, setSearchItem, searchSize, setSearchSize, stockDrivenFields = []
 }) {
 
 
@@ -38,7 +38,12 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
 
         setStockItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
-            const isAlreadyAdded = newItems.some(i => i.sizeId == obj.sizeId && i.itemId == obj.itemId && i.colorId == obj.colorId);
+            const isAlreadyAdded = newItems.some((i) =>
+                i.sizeId == obj.sizeId &&
+                i.itemId == obj.itemId &&
+                i.colorId == obj.colorId &&
+                stockDrivenFields.every((field) => String(i?.[field.key] || "") === String(obj?.[field.key] || ""))
+            );
 
             if (isAlreadyAdded) {
                 return newItems
@@ -65,12 +70,12 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
         setStockItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             newItems = newItems?.filter(item =>
-                parseInt(item.itemId) !== parseInt(obj?.itemId) &&
-                parseInt(item.sizeId) !== parseInt(obj?.sizeId) &&
-                parseInt(item.colorId) !== parseInt(obj?.colorId)
-
-
-
+                !(
+                    parseInt(item.itemId) === parseInt(obj?.itemId) &&
+                    parseInt(item.sizeId) === parseInt(obj?.sizeId) &&
+                    parseInt(item.colorId) === parseInt(obj?.colorId) &&
+                    stockDrivenFields.every((field) => String(item?.[field.key] || "") === String(obj?.[field.key] || ""))
+                )
             )
             return newItems
         });
@@ -87,11 +92,10 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
 
     function isItemAdded(obj) {
         return stockItems?.findIndex(item =>
-
             parseInt(item?.itemId) == parseInt(obj?.itemId) &&
             parseInt(item?.sizeId) == parseInt(obj?.sizeId) &&
-            parseInt(item?.colorId) == parseInt(obj?.colorId)
-
+            parseInt(item?.colorId) == parseInt(obj?.colorId) &&
+            stockDrivenFields.every((field) => String(item?.[field.key] || "") === String(obj?.[field.key] || ""))
         ) !== -1
     }
 
@@ -166,6 +170,9 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-72">Item</th>
                                             <th className=" px-4 py-1.5 border border-gray-300 text-center  text-xs w-14">Size</th>
                                             <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
+                                            {stockDrivenFields.map((field) => (
+                                                <th key={field.key} className="w-32 px-4 py-1.5 border border-gray-300 text-center text-xs">{field.label}</th>
+                                            ))}
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty(Pcs) </th>
 
 
@@ -214,6 +221,9 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                                     }}
                                                 />
                                             </th>
+                                            {stockDrivenFields.map((field) => (
+                                                <th key={field.key} className="w-32 px-4 py-1.5 border border-gray-300 text-center text-xs"></th>
+                                            ))}
                                             <th className="w-24 px-4 py-1.5 border border-gray-300  text-xs"> </th>
 
 
@@ -266,6 +276,11 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                                 <td className="w-48 border border-gray-300 text-[11px] py-1.5 px-2">
                                                     {findFromList(yarnItem?.colorId, colorList, "name")}
                                                 </td>
+                                                {stockDrivenFields.map((field) => (
+                                                    <td key={field.key} className="w-32 border border-gray-300 text-[11px] py-1.5 px-2">
+                                                        {yarnItem?.[field.key] || ""}
+                                                    </td>
+                                                ))}
 
                                                 <td className="w-28 border border-gray-300 text-right text-[11px] py-1.5 px-2">
 
@@ -290,7 +305,6 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
         </>
     )
 }
-
 
 
 

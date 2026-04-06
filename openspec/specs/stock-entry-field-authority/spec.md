@@ -1,0 +1,112 @@
+# stock-entry-field-authority Specification
+
+## Purpose
+Define Stock Control Panel as the authority for stock-entry field schema on runtime stock-writing and stock-assisted operational screens.
+## Requirements
+### Requirement: Stock Control Panel SHALL be the only authority for stock-entry field schema
+Runtime stock-writing and stock-assisted operational screens SHALL derive available stock-defined attributes and stock-granularity support from Stock Control Panel configuration. Item-level or centralized barcode-generation settings SHALL NOT determine whether stock-defined runtime fields such as `field1` through `field10` exist. Canonical size/color requiredness for non-legacy flows MAY still come from centralized barcode-generation mode, but Stock Control SHALL remain the authority for which stock-defined attributes participate in stock capture and stock identity semantics.
+
+#### Scenario: Stock Control exposes stock-defined runtime attributes
+- **WHEN** Stock Control Panel configures one or more stock-defined runtime fields
+- **THEN** relevant stock-writing or stock-assisted operational screens expose those attributes as supported stock-entry fields
+- **AND** barcode-generation mode does not remove them from the screen schema.
+
+#### Scenario: Canonical size and color requiredness is not derived from stock-defined fields
+- **WHEN** a canonical inventory flow requires size or color for a row
+- **THEN** that requirement comes from the centralized barcode-generation contract for the flow
+- **AND** not from whether Stock Control labels `field1` through `field10`.
+
+#### Scenario: Matching field numbers do not cross item and stock authority layers
+- **WHEN** Item Control Panel and Stock Control Panel both define configurable fields with similar names such as `field1`
+- **THEN** runtime stock-writing screens do not assume those fields are the same attribute by default
+- **AND** the stock-writing workflow continues to follow Stock Control Panel for stock-defined field availability.
+
+### Requirement: Stock-writing surfaces SHALL persist complete stock keys
+Any runtime surface that writes rows to `Stock` SHALL expose the stock-tracking dimensions and stock-defined runtime fields enabled by Stock Control Panel, and SHALL persist the values that are actually captured for the row. These workflows MAY begin with partial data from barcode lookup, import, or other prefills. Shared dimensions such as `Size` and `Color` MAY still be required by flow-specific rules, but configured stock-defined runtime fields SHALL NOT automatically become universal save blockers solely because they are enabled in Stock Control.
+
+#### Scenario: Configured stock-defined field is exposed for capture
+- **WHEN** Stock Control Panel enables a stock-defined runtime field for stock capture
+- **THEN** the stock-writing workflow exposes that field in the row schema
+- **AND** it preserves the value if the user provides one before writing the row to `Stock`
+
+#### Scenario: Partial barcode resolution does not make stock-defined field universally mandatory
+- **WHEN** barcode lookup or imported row data provides fewer values than the available stock-defined runtime field set
+- **THEN** the workflow may begin with the partially resolved row
+- **AND** it does not automatically fail solely because a configured stock-defined field remains blank unless a higher-level flow-specific rule requires it
+
+#### Scenario: Present stock-defined field remains part of stock identity
+- **WHEN** a stock-writing row includes one or more configured stock-defined runtime field values
+- **THEN** the workflow persists those values with the `Stock` row
+- **AND** downstream matching or grouping may use those values as part of stock identity semantics
+
+#### Scenario: Stock adjustment preserves configured stock-defined fields without universal block
+- **WHEN** Stock Control Panel configures one or more stock-defined runtime fields such as `field1` through `field10`
+- **AND** a user enters one or more of those values on a stock adjustment row
+- **THEN** stock adjustment persists the captured values onto the adjustment item and resulting `Stock` row
+- **AND** it does not impose a blanket save block solely because some configured stock-defined fields remain blank
+
+#### Scenario: Stock transfer preserves configured stock-defined fields without universal block
+- **WHEN** Stock Control Panel configures one or more stock-defined runtime fields such as `field1` through `field10`
+- **AND** a user enters one or more of those values on a stock transfer row
+- **THEN** stock transfer persists the captured values on both transfer legs written to `Stock`
+- **AND** it does not write those values through a narrower field contract than the rest of stock-writing runtime surfaces
+
+### Requirement: Stock-writing value sourcing SHALL distinguish shared dimensions from stock-defined attributes
+When a stock-writing screen captures tracked fields, it SHALL distinguish between shared master-backed dimensions such as `Size` and `Color` and stock-defined business attributes configured through Stock Control Panel. Shared master-backed dimensions MAY use item-scoped option lists when available, but SHALL fall back to normalized master selection or controlled master creation when Item Master is less granular. Stock-defined attributes such as configured `field1` through `field10` SHALL be treated as runtime stock-entry fields when they are active in Stock Control, and the stock-writing workflow MAY capture their values through direct operational entry according to Stock Control configuration.
+
+#### Scenario: Shared master-backed dimension falls back to normalized master selection
+- **WHEN** a stock-writing screen requires `Size` or `Color`
+- **AND** Item Master does not provide item-scoped options at the needed stock granularity
+- **THEN** the workflow may fall back to normalized master-backed selection or controlled master creation
+- **AND** it does not persist the tracked field as unresolved free text
+
+#### Scenario: Stock-defined attribute accepts direct operational entry
+- **WHEN** Stock Control Panel configures a stock-defined business attribute such as `field1` through `field10`
+- **THEN** the stock-writing screen shows that tracked attribute according to Stock Control
+- **AND** the workflow may capture its value through direct operational entry rather than through Item Master option lists
+
+#### Scenario: Opening stock uses the same stock-defined attribute contract as purchase inward
+- **WHEN** Stock Control Panel configures runtime stock-defined fields that are active on Purchase Inward / Direct Inward
+- **THEN** Opening Stock follows the same stock-defined field contract for field presence and persistence mapping
+- **AND** it does not narrow the runtime stock-defined field set to only a subset unless Stock Control itself excludes the other fields
+
+### Requirement: Barcode-generation mode SHALL be limited to variant and barcode behavior
+Runtime screens MAY use item-level or centralized barcode-generation mode to resolve price, barcode, or valid variant combinations, but SHALL NOT use that mode as the source of truth for field presence or requiredness.
+
+#### Scenario: Barcode mode drives price lookup without changing field schema
+- **WHEN** a runtime entry screen resolves item price from item variant data
+- **THEN** it may use barcode-generation semantics to select the correct price row
+- **AND** it does not use those semantics to decide whether `Size` or `Color` fields exist
+
+#### Scenario: Barcode mode filters valid combinations after field schema is established
+- **WHEN** a runtime entry screen already shows `Size` or `Color` because Stock Control Panel requires those fields
+- **THEN** the screen may narrow the available options to valid combinations for the selected item
+- **AND** treats that filtering as item-variant validity rather than as field-schema authority
+
+#### Scenario: Matching field numbers do not cross item and stock authority layers
+- **WHEN** Item Control Panel and Stock Control Panel both define configurable fields with similar names such as `field1`
+- **THEN** runtime stock-writing screens do not assume those fields are the same attribute by default
+- **AND** the stock-writing workflow continues to follow Stock Control Panel for stock-defined field schema
+
+### Requirement: Stock-writing surfaces SHALL not enforce canonical barcode uniqueness
+Runtime surfaces that write rows to `Stock` MAY use barcode values for lookup, prefill, or display, but SHALL NOT reject a stock row solely because another stock row uses the same barcode. Shared barcode values are allowed when the row otherwise satisfies the tracked stock dimensions required by Stock Control Panel.
+
+#### Scenario: Shared barcode across multiple tracked stock combinations
+- **WHEN** a stock-writing surface captures two or more rows with the same barcode
+- **AND** those rows differ by stock dimensions required by Stock Control Panel
+- **THEN** the workflow allows those rows to be saved
+- **AND** does not treat the shared barcode as a stock-validation conflict by itself
+
+#### Scenario: Barcode does not replace required tracked fields
+- **WHEN** a barcode identifies an item or partially resolves stock dimensions
+- **THEN** the workflow may prefill the row from that barcode
+- **AND** it still requires any remaining tracked stock fields before saving the row to `Stock`
+
+### Requirement: Quick-add item flows SHALL not redefine parent transaction field rules
+Quick-add item flows launched from runtime stock or transaction screens MAY use barcode-generation mode to construct item variant data, but SHALL NOT redefine the field presence or requiredness of the parent screen.
+
+#### Scenario: Quick add creates a standard item while parent screen still tracks size and color
+- **WHEN** a user launches a quick-add item flow from a parent screen whose Stock Control settings require dimension capture
+- **THEN** the quick-add flow may create item structure according to barcode-generation settings
+- **AND** the parent screen still determines its visible and required fields from Stock Control Panel
+

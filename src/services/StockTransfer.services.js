@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma.js';
 import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
 import { getDateFromDateTime, getYearShortCode, getYearShortCodeForFinYear } from "../utils/helper.js";
 import { getTableRecordWithId } from '../utils/helperQueries.js';
+import { buildStockRuntimeFieldWhere, pickStockRuntimeFieldValues, STOCK_RUNTIME_FIELD_KEYS } from "./stockRuntimeFields.js";
 
 function findIsNumber(docId) {
     const parts = docId?.split('/');
@@ -193,15 +194,56 @@ async function getOne(id) {
 
     if (!data) return NoRecordFound("Stock Transfer");
 
+    const fromTransactionIds = (data.FromLocationTransferItems || []).map((item) => item.id).filter(Boolean);
+    const toTransactionIds = (data.ToLocationTransferTtems || []).map((item) => item.id).filter(Boolean);
+    const [fromStockRows, toStockRows] = await Promise.all([
+        fromTransactionIds.length
+            ? prisma.stock.findMany({
+                where: {
+                    inOrOut: "FromLocationTransferItems",
+                    transactionId: { in: fromTransactionIds }
+                },
+                select: {
+                    transactionId: true,
+                    qty: true,
+                    ...STOCK_RUNTIME_FIELD_KEYS.reduce((fields, key) => {
+                        fields[key] = true;
+                        return fields;
+                    }, {})
+                }
+            })
+            : [],
+        toTransactionIds.length
+            ? prisma.stock.findMany({
+                where: {
+                    inOrOut: "ToLocationTransferItems",
+                    transactionId: { in: toTransactionIds }
+                },
+                select: {
+                    transactionId: true,
+                    qty: true,
+                    ...STOCK_RUNTIME_FIELD_KEYS.reduce((fields, key) => {
+                        fields[key] = true;
+                        return fields;
+                    }, {})
+                }
+            })
+            : []
+    ]);
+    const fromStockMap = new Map(fromStockRows.map((row) => [row.transactionId, row]));
+    const toStockMap = new Map(toStockRows.map((row) => [row.transactionId, row]));
+
     if (data.FromLocationTransferItems && data.FromLocationTransferItems.length > 0) {
         data.FromLocationTransferItems = await Promise.all(
             data.FromLocationTransferItems.map(async (item) => {
+                const stockSnapshot = fromStockMap.get(item.id) || {};
                 const stockResult = await prisma.stock.aggregate({
                     where: {
                         itemId: item.itemId,
                         sizeId: item.sizeId,
                         colorId: item.colorId,
-                        storeId: data.fromLocationId
+                        storeId: data.fromLocationId,
+                        ...buildStockRuntimeFieldWhere(stockSnapshot)
                     },
                     _sum: {
                         qty: true
@@ -210,6 +252,7 @@ async function getOne(id) {
                 console.log(stockResult, "stockResult", stockResult._sum.qty + item?.transferQty)
                 return {
                     ...item,
+                    ...stockSnapshot,
                     stockQty: stockResult._sum.qty + item?.transferQty
                 };
             })
@@ -219,12 +262,14 @@ async function getOne(id) {
     if (data.ToLocationTransferTtems && data.ToLocationTransferTtems.length > 0) {
         data.ToLocationTransferTtems = await Promise.all(
             data.ToLocationTransferTtems.map(async (item) => {
+                const stockSnapshot = toStockMap.get(item.id) || {};
                 const stockResult = await prisma.stock.aggregate({
                     where: {
                         itemId: item.itemId,
                         sizeId: item.sizeId,
                         colorId: item.colorId,
-                        storeId: data.toLocationId
+                        storeId: data.toLocationId,
+                        ...buildStockRuntimeFieldWhere(stockSnapshot)
                     },
                     _sum: {
                         qty: true
@@ -232,6 +277,7 @@ async function getOne(id) {
                 });
                 return {
                     ...item,
+                    ...stockSnapshot,
                     stockQty: stockResult._sum.qty || 0
                 };
             })
@@ -407,17 +453,6 @@ async function UpdateRequirementPlanningItemsFromOrder(tx, poType, inOrOut, bran
     });
 }
 
-async function isLegacyLocation(tx, storeId) {
-    if (!storeId) return false;
-    const location = await tx.location.findUnique({
-        where: { id: parseInt(storeId) }
-    });
-    if (location && (location.storeName.toLowerCase().includes('old'))) {
-        return true;
-    }
-    return false;
-}
-
 async function createLocationTransferStock(
     tx,
     branchId,
@@ -426,11 +461,8 @@ async function createLocationTransferStock(
     item,
     transactionId
 ) {
-    const isLegacyFrom = await isLegacyLocation(tx, fromStoreId);
-    const isLegacyTo = await isLegacyLocation(tx, toStoreId);
-
-    // ================= COMMON DATA =================
     const baseData = {
+        transactionId: transactionId ? Number(transactionId) : null,
         itemId: item?.itemId ? Number(item.itemId) : null,
         sizeId: item?.sizeId ? Number(item.sizeId) : null,
         colorId: item?.colorId ? Number(item.colorId) : null,
@@ -439,9 +471,9 @@ async function createLocationTransferStock(
         branchId: branchId ? Number(branchId) : null,
         price: item?.discountPrice ? String(item?.discountPrice) : undefined,
         transactionId: transactionId ? transactionId : null,
+        ...pickStockRuntimeFieldValues(item),
     };
 
-    // ================= FROM (OUTWARD) =================
     const fromStockData = {
         ...baseData,
         inOrOut: "FromLocationTransferItems",
@@ -450,7 +482,6 @@ async function createLocationTransferStock(
         qty: item?.transferQty ? -Number(item.transferQty) : 0 // negative
     };
 
-    // ================= TO (INWARD) =================
     const toStockData = {
         ...baseData,
         inOrOut: "ToLocationTransferItems",
@@ -464,29 +495,8 @@ async function createLocationTransferStock(
         qty: item?.transferQty ? Number(item.transferQty) : 0 // positive
     };
 
-    // ================= LOGIC =================
-    if (isLegacyFrom) {
-        // FROM → legacy
-        await tx.legacyStock.create({ data: fromStockData });
-
-        // TO → stock
-        await tx.stock.create({ data: toStockData });
-
-    }
-    else if (isLegacyTo) {
-        // FROM → stock
-        await tx.stock.create({ data: fromStockData });
-
-        // TO → legacy
-        await tx.legacyStock.create({ data: toStockData });
-    }
-    else {
-        // FROM → stock
-        await tx.stock.create({ data: fromStockData });
-
-        // TO → stock
-        await tx.stock.create({ data: toStockData });
-    }
+    await tx.stock.create({ data: fromStockData });
+    await tx.stock.create({ data: toStockData });
 }
 
 
@@ -574,49 +584,26 @@ async function create(req) {
 
 
 async function UpdateFromLocationStock(tx, item, transactionId, storeId) {
-    const isLegacy = await isLegacyLocation(tx, storeId);
-
-    console.log(item, "item for update", isLegacy, "transactionId", transactionId)
-
     const updateData = {
         qty: item?.transferQty ? parseFloat(0 - item?.transferQty) : undefined,
+        ...pickStockRuntimeFieldValues(item),
     };
 
-    if (isLegacy) {
-        await tx.legacyStock.updateMany({
-            where: {
-                transactionId: parseInt(transactionId),
-                inOrOut: "FromLocationTransferItems"
-            },
-            data: updateData
-        });
-    } else {
-        await tx.stock.updateMany({
-            where: {
-                transactionId: parseInt(transactionId),
-                inOrOut: "FromLocationTransferItems"
-            },
-            data: updateData
-        });
-    }
+    await tx.stock.updateMany({
+        where: {
+            transactionId: parseInt(transactionId),
+            inOrOut: "FromLocationTransferItems"
+        },
+        data: updateData
+    });
 }
 
 async function UpdateToLocationStock(tx, item, transactionId, storeId) {
-    const isLegacy = await isLegacyLocation(tx, storeId);
-
     const updateData = {
         qty: item?.transferQty ? parseFloat(item?.transferQty) : undefined,
+        ...pickStockRuntimeFieldValues(item),
     };
 
-    // if (isLegacy) {
-    //     await tx.legacyStock.updateMany({
-    //         where: {
-    //             transactionId: parseInt(transactionId),
-    //             inOrOut: "ToLocationTransferItems"
-    //         },
-    //         data: updateData
-    //     });
-    // } else {
     await tx.stock.updateMany({
         where: {
             transactionId: parseInt(transactionId),
@@ -624,7 +611,6 @@ async function UpdateToLocationStock(tx, item, transactionId, storeId) {
         },
         data: updateData
     });
-    // }
 }
 
 async function updateOrCreateFrom(tx, item, fromLocationId, branchId) {
@@ -743,9 +729,6 @@ export {
     update,
     remove
 }
-
-
-
 
 
 

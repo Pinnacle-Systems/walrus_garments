@@ -1,20 +1,154 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
+import { normalizeLegacyBarcode, validateLegacyPriceRowShape } from './legacyStockRules.js';
+import { validateUniqueBarcodesWithinPayload } from './itemBarcodeRules.js';
+import {
+    getBarcodeGenerationMethod,
+    validateVariantRows,
+} from './itemVariantValidation.js';
+import { resolveItemAliasName } from './itemAliasRules.js';
 
-const DEFAULT_BARCODE_GENERATION_METHOD = "STANDARD";
+const OPENING_STOCK_CREATION_SOURCE = "OPENING_STOCK";
 
-async function getBarcodeGenerationMethod() {
-    const itemControlPanel = await prisma.ItemControlPanel.findFirst({
+function parseOptionalBoolean(value) {
+    if (value === undefined || value === null || value === "") {
+        return undefined;
+    }
+
+    if (typeof value === "boolean") {
+        return value;
+    }
+
+    const normalizedValue = String(value).trim().toLowerCase();
+
+    if (normalizedValue === "true") {
+        return true;
+    }
+
+    if (normalizedValue === "false") {
+        return false;
+    }
+
+    return Boolean(value);
+}
+
+function parseIntOrUndefined(value) {
+    if (value === undefined || value === null || value === "") {
+        return undefined;
+    }
+
+    return parseInt(value);
+}
+
+function normalizePriceString(value) {
+    if (value === undefined || value === null || value === "") {
+        return undefined;
+    }
+
+    return String(value);
+}
+
+function normalizeItemName(name) {
+    const normalizedName = name?.toString().trim().toUpperCase();
+    return normalizedName || undefined;
+}
+
+async function ensureUniqueItemName(name, excludeItemId) {
+    if (!name) {
+        return;
+    }
+
+    const existingItem = await prisma.item.findFirst({
+        where: {
+            name,
+            id: excludeItemId ? { not: parseInt(excludeItemId) } : undefined,
+        },
         select: {
-            barcodeGenerationMethod: true,
+            id: true,
         }
     });
 
-    return itemControlPanel?.barcodeGenerationMethod || DEFAULT_BARCODE_GENERATION_METHOD;
+    if (existingItem) {
+        throw Error("The Item Name already exists.");
+    }
 }
 
-function validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList) {
-    return;
+async function validateLegacyItemPayload({
+    itemId,
+    itemName,
+    isLegacy,
+    itemPriceList = [],
+    existingItem,
+    creationSource,
+}) {
+    if (!isLegacy) {
+        if (existingItem?.isLegacy) {
+            throw Error("Legacy items must remain in the flat legacy-item structure.");
+        }
+        return;
+    }
+
+    if (!existingItem && creationSource !== OPENING_STOCK_CREATION_SOURCE) {
+        throw Error("Legacy items can only be created from Opening Stock.");
+    }
+
+    const { normalizedBarcode } = validateLegacyPriceRowShape(itemPriceList);
+
+    const conflictingBarcodeRow = await prisma.itemPriceList.findFirst({
+        where: {
+            barcode: normalizedBarcode,
+            item: {
+                id: itemId ? { not: parseInt(itemId) } : undefined,
+            }
+        },
+        include: {
+            item: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            }
+        }
+    });
+
+    if (conflictingBarcodeRow?.item && conflictingBarcodeRow.item.name !== itemName) {
+        throw Error(`Legacy barcode ${normalizedBarcode} is already associated with item ${conflictingBarcodeRow.item.name}.`);
+    }
+}
+
+async function ensureUniqueItemBarcodes({ itemId, itemPriceList = [] }) {
+    const barcodeEntries = validateUniqueBarcodesWithinPayload(itemPriceList);
+    const barcodes = [...new Set(barcodeEntries.map((entry) => entry.barcode))];
+
+    if (!barcodes.length) {
+        return;
+    }
+
+    const conflictingRows = await prisma.itemPriceList.findMany({
+        where: {
+            barcode: {
+                in: barcodes,
+            },
+            item: itemId
+                ? {
+                    id: { not: parseInt(itemId) },
+                }
+                : undefined,
+        },
+        include: {
+            item: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            }
+        }
+    });
+
+    const conflictingRow = conflictingRows[0];
+    if (conflictingRow?.item?.name) {
+        throw Error(`Barcode ${conflictingRow.barcode} is already associated with item ${conflictingRow.item.name}.`);
+    }
 }
 
 function validateAndNormalizeMinimumStockQtyRows(rows = []) {
@@ -80,8 +214,13 @@ async function syncMinimumStockQty(tx, itemPriceListId, minimumStockQtyRows = []
 }
 
 async function get(req) {
-    let data = await prisma.item.findMany({
+    const active = parseOptionalBoolean(req.query?.active);
+    const items = await prisma.item.findMany({
+        where: {
+            active,
+        },
         include: {
+            Hsn: true,
             ItemPriceList: true,
             _count: {
                 select: {
@@ -99,7 +238,7 @@ async function get(req) {
     });
 
 
-    data = data.map((item) => {
+    const data = items.map((item) => {
         const types = [];
 
         if (item._count.DirectItems) types.push("Purchase Inward Items");
@@ -113,6 +252,7 @@ async function get(req) {
 
         return {
             ...item,
+            hsn: item.Hsn ?? null,
             referencedIn: types.join(", ")
 
         };
@@ -177,11 +317,11 @@ async function getOne(id) {
 
 
 export async function getItemPriceList(req) {
-    const { companyId, active } = req.query
+    const active = parseOptionalBoolean(req.query?.active);
     const data = await prisma.itemPriceList.findMany({
         where: {
             item: {
-                active: active ? Boolean(active) : undefined,
+                active,
             }
         },
         include: {
@@ -196,11 +336,12 @@ export async function getItemPriceList(req) {
 
 async function getSearch(req) {
     const { searchKey } = req.params
-    const { companyId, active } = req.query
+    const { companyId } = req.query
+    const active = parseOptionalBoolean(req.query?.active);
     const data = await prisma.item.findMany({
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
-            active: active ? Boolean(active) : undefined,
+            active,
             OR: [
                 {
                     name: {
@@ -210,30 +351,61 @@ async function getSearch(req) {
             ]
         },
         include: {
+            Hsn: true,
             ItemPriceList: true,
         }
     })
-    return { statusCode: 0, data };
+    return {
+        statusCode: 0,
+        data: data.map((item) => ({
+            ...item,
+            hsn: item.Hsn ?? null,
+        })),
+    };
 }
 async function create(body) {
     const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, aliasName, itemPriceList, active,
-        sectionId, sectionType, subCategory, mainCategory
+        sectionId, sectionType, subCategory, mainCategory, isLegacy, creationSource
     } = body
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
-    validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList);
+    const normalizedName = normalizeItemName(name);
+    const normalizedIsLegacy = parseOptionalBoolean(isLegacy) ?? false;
+    const normalizedAliasName = resolveItemAliasName({
+        aliasName,
+        normalizedName,
+        isLegacy: normalizedIsLegacy,
+        creationSource,
+    });
+    await ensureUniqueItemName(normalizedName);
+    await validateLegacyItemPayload({
+        itemName: normalizedName,
+        isLegacy: normalizedIsLegacy,
+        itemPriceList,
+        creationSource,
+    });
+    await ensureUniqueItemBarcodes({
+        itemPriceList,
+    });
+    validateVariantRows({
+        flowType: "canonical",
+        isLegacy: normalizedIsLegacy,
+        barcodeGenerationMethod,
+        rows: itemPriceList,
+        rowLabelPrefix: "Item price row",
+    });
     const data = await prisma.item.create({
         data: {
-            styleId: styleId ? parseInt(styleId) : undefined,
-            sizeId: sizeId ? parseInt(sizeId) : undefined,
-            name: name ? name : undefined,
-            hsnId: hsnId ? parseInt(hsnId) : undefined,
+            styleId: parseIntOrUndefined(styleId),
+            sizeId: parseIntOrUndefined(sizeId),
+            name: normalizedName,
+            hsnId: parseIntOrUndefined(hsnId),
             code: code ? code : undefined,
-            sectionId: sectionId ? parseInt(sectionId) : undefined,
-            mainCategoryId: mainCategory ? parseInt(mainCategory) : undefined,
-            subCategoryId: subCategory ? parseInt(subCategory) : undefined,
-            aliasName: aliasName ? aliasName : undefined,
-
-            active: active ? active : undefined,
+            sectionId: parseIntOrUndefined(sectionId),
+            mainCategoryId: parseIntOrUndefined(mainCategory),
+            subCategoryId: parseIntOrUndefined(subCategory),
+            aliasName: normalizedAliasName,
+            isLegacy: normalizedIsLegacy,
+            active: parseOptionalBoolean(active),
 
             ItemPriceList: itemPriceList?.length > 0
                 ? {
@@ -241,12 +413,12 @@ async function create(body) {
                         ...(function () {
                             const minimumStockQtyRows = validateAndNormalizeMinimumStockQtyRows(item?.MinimumStockQty);
                             return {
-                                colorId: item?.colorId ? parseInt(item.colorId) : undefined,
-                                sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
-                                offerPrice: item?.offerPrice || undefined,
-                                salesPrice: item?.salesPrice || undefined,
+                                colorId: parseIntOrUndefined(item?.colorId),
+                                sizeId: parseIntOrUndefined(item?.sizeId),
+                                offerPrice: normalizePriceString(item?.offerPrice),
+                                salesPrice: normalizePriceString(item?.salesPrice),
                                 sku: item?.sku ? item?.sku : undefined,
-                                barcode: item?.barcode ? item?.barcode : undefined,
+                                barcode: normalizeLegacyBarcode(item?.barcode),
 
                                 MinimumStockQty: minimumStockQtyRows.length > 0
                                     ? {
@@ -360,56 +532,57 @@ async function updateItemPriceList(tx, itemPriceList, item) {
         }
     })
 
-    const promises = itemPriceList.map(async (priceItem) => {
+    const updatedPriceItems = [];
+
+    for (const priceItem of itemPriceList) {
         if (priceItem?.id) {
-            return await tx.ItemPriceList.update({
+            const updatedPriceItem = await tx.ItemPriceList.update({
                 where: {
                     id: parseInt(priceItem.id)
                 },
 
                 data: {
                     itemId: priceItem?.itemId ? parseInt(priceItem?.itemId) : undefined,
-                    sizeId: priceItem?.sizeId ? parseInt(priceItem?.sizeId) : undefined,
-                    offerPrice: priceItem?.offerPrice ? priceItem?.offerPrice : undefined,
-                    colorId: priceItem?.colorId ? parseInt(priceItem?.colorId) : undefined,
-                    salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
+                    sizeId: parseIntOrUndefined(priceItem?.sizeId),
+                    offerPrice: normalizePriceString(priceItem?.offerPrice),
+                    colorId: parseIntOrUndefined(priceItem?.colorId),
+                    salesPrice: normalizePriceString(priceItem?.salesPrice),
                     sku: priceItem?.sku ? priceItem?.sku : undefined,
-                    barcode: priceItem?.barcode ? priceItem?.barcode : undefined,
+                    barcode: normalizeLegacyBarcode(priceItem?.barcode),
 
 
                 }
-            }).then(async (updatedPriceItem) => {
-                await syncMinimumStockQty(tx, updatedPriceItem.id, priceItem?.MinimumStockQty);
-                return updatedPriceItem;
-            })
+            });
+
+            await syncMinimumStockQty(tx, updatedPriceItem.id, priceItem?.MinimumStockQty);
+            updatedPriceItems.push(updatedPriceItem);
         } else {
-            return await tx.ItemPriceList.create({
+            const createdPriceItem = await tx.ItemPriceList.create({
                 data: {
                     itemId: parseInt(item?.id),
-                    offerPrice: priceItem?.offerPrice ? priceItem?.offerPrice : undefined,
-                    sizeId: priceItem?.sizeId ? parseInt(priceItem?.sizeId) : undefined,
-                    colorId: priceItem?.colorId ? parseInt(priceItem?.colorId) : undefined,
-                    salesPrice: priceItem?.salesPrice ? priceItem?.salesPrice : undefined,
+                    offerPrice: normalizePriceString(priceItem?.offerPrice),
+                    sizeId: parseIntOrUndefined(priceItem?.sizeId),
+                    colorId: parseIntOrUndefined(priceItem?.colorId),
+                    salesPrice: normalizePriceString(priceItem?.salesPrice),
                     sku: priceItem?.sku ? priceItem?.sku : undefined,
-                    barcode: priceItem?.barcode ? priceItem?.barcode : undefined,
+                    barcode: normalizeLegacyBarcode(priceItem?.barcode),
 
                 }
-            }).then(async (createdPriceItem) => {
-                await syncMinimumStockQty(tx, createdPriceItem.id, priceItem?.MinimumStockQty);
-                return createdPriceItem;
-            })
+            });
+
+            await syncMinimumStockQty(tx, createdPriceItem.id, priceItem?.MinimumStockQty);
+            updatedPriceItems.push(createdPriceItem);
         }
-    })
-    return Promise.all(promises)
+    }
+
+    return updatedPriceItems;
 }
 
 
 async function update(id, body) {
-    const { styleId, sizeId, name, hsnId, code, active, itemPriceList, sectionId, fields, mainCategory, subCategory, aliasName } = body
+    const { styleId, sizeId, name, hsnId, code, active, itemPriceList, sectionId, fields, mainCategory, subCategory, aliasName, isLegacy } = body
 
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
-    validateStandardPriceMethod(barcodeGenerationMethod, itemPriceList);
-
 
     const dataFound = await prisma.item.findUnique({
         where:
@@ -422,6 +595,27 @@ async function update(id, body) {
 
     });
     if (!dataFound) return NoRecordFound("item");
+    const normalizedName = normalizeItemName(name);
+    const normalizedIsLegacy = parseOptionalBoolean(isLegacy) ?? dataFound.isLegacy ?? false;
+    await ensureUniqueItemName(normalizedName, id);
+    await validateLegacyItemPayload({
+        itemId: id,
+        itemName: normalizedName,
+        isLegacy: normalizedIsLegacy,
+        itemPriceList,
+        existingItem: dataFound,
+    });
+    await ensureUniqueItemBarcodes({
+        itemId: id,
+        itemPriceList,
+    });
+    validateVariantRows({
+        flowType: "canonical",
+        isLegacy: normalizedIsLegacy,
+        barcodeGenerationMethod,
+        rows: itemPriceList,
+        rowLabelPrefix: "Item price row",
+    });
     let data;
 
 
@@ -435,17 +629,17 @@ async function update(id, body) {
             },
 
             data: {
-                styleId: styleId ? parseInt(styleId) : undefined,
-                sizeId: sizeId ? parseInt(sizeId) : undefined,
-                name: name ? name : undefined,
-                hsnId: hsnId ? parseInt(hsnId) : undefined,
+                styleId: parseIntOrUndefined(styleId),
+                sizeId: parseIntOrUndefined(sizeId),
+                name: normalizedName,
+                hsnId: parseIntOrUndefined(hsnId),
                 code: code ? code : undefined,
-                sectionId: sectionId ? parseInt(sectionId) : undefined,
-                active: active ? active : false,
-                mainCategoryId: mainCategory ? parseInt(mainCategory) : undefined,
-                subCategoryId: subCategory ? parseInt(subCategory) : undefined,
+                sectionId: parseIntOrUndefined(sectionId),
+                active: parseOptionalBoolean(active),
+                isLegacy: normalizedIsLegacy,
+                mainCategoryId: parseIntOrUndefined(mainCategory),
+                subCategoryId: parseIntOrUndefined(subCategory),
                 aliasName: aliasName ? aliasName : undefined,
-
                 field1: fields?.[0] ?? "",
                 field2: fields?.[1] ?? "",
                 field3: fields?.[2] ?? "",

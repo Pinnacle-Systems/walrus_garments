@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function TransferItems({ item, index, handleRightClickFromOrder, readOnly, handleInputChangeFromOrder,
-    itemList, sizeList, colorList, fromLocationId, stockItems, locationData, toLocationId, id
+    itemList, sizeList, colorList, fromLocationId, stockItems, locationData, toLocationId, id, stockDrivenFields = []
 }) {
 
 
@@ -68,6 +68,11 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                 <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
                     {findFromList(item?.colorId, colorList, "name")}
                 </td>
+                {stockDrivenFields.map((field) => (
+                    <td key={field.key} className="w-32 border border-gray-300 text-[11px] py-1 px-2">
+                        {item?.[field.key] || ""}
+                    </td>
+                ))}
                 <td className="w-12 border border-gray-300 text-[11px] text-right py-1 px-2">
                     {item?.stockQty}
                 </td>
@@ -150,7 +155,6 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
         </>
     )
 }
-
 
 
 

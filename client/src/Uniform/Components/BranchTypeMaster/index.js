@@ -9,6 +9,7 @@ import Modal from "../../../UiComponents/Modal";
 import { ReusableTable, TextInput, TextInputNew1, ToggleButton } from "../../../Inputs";
 import { statusDropdown } from "../../../Utils/DropdownData";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import MasterPageLayout from "../../../Basic/components/MasterPageLayout";
 
 
 const MODEL = "Department Master";
@@ -430,32 +431,15 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
   return (
 
-    <div onKeyDown={handleKeyDown} className="p-1">
-      <div className="w-full flex bg-white p-1 justify-between  items-center">
-        <h5 className="text-2xl font-bold text-gray-800">BranchType Master</h5>
-        <div className="flex items-center gap-3">
-          {/* <input
-            ref={searchRef}
-            type="text"
-            placeholder="Search..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value.toUpperCase())}
-            className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-600 shadow-sm"
-            autoFocus
-          /> */}
-          <button
-            onClick={() => {
-              setForm(true);
-              onNew();
-            }}
-            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-          >
-            + Add New BranchType
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+    <MasterPageLayout
+      title="BranchType Master"
+      addButtonLabel="+ Add New BranchType"
+      onAdd={() => {
+        setForm(true);
+        onNew();
+      }}
+      onKeyDown={handleKeyDown}
+    >
         <ReusableTable
           columns={columns}
           data={allData?.data}
@@ -464,7 +448,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           onDelete={deleteData}
           itemsPerPage={10}
         />
-      </div>
 
       <div>
         {form === true && (
@@ -582,6 +565,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           </Modal>
         )}
       </div >
-    </div >
+    </MasterPageLayout>
   )
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -26,12 +26,13 @@ import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintForm
 import { push } from "../../../redux/features/opentabs";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
+import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
 
 
 
 const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setDeliveryItems, deliveryItems, 
-  yarnList, colorList, uomList, hsnList, convertSaleOrderId, linkedSaleOrder, invalidateTagsDispatch , termsData, dispatch, totalReceivedAmount = 0
+  yarnList, colorList, uomList, hsnList, convertSaleOrderId, linkedSaleOrder, invalidateTagsDispatch , termsData, dispatch, totalReceivedAmount = 0, remainingPaymentCapacity = 0
 
 
 
@@ -92,9 +93,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const { data: supplierDetails } =
     useGetPartyByIdQuery(customerId, { skip: !customerId });
 
-  const { data: itemList } = useGetItemMasterQuery({ params });
+  const salesItemParams = { ...params, active: true };
+  const { data: itemList } = useGetItemMasterQuery({ params: salesItemParams });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
-  const { data: itemPriceList } = useGetItemPriceListQuery({ params });
+  const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
 
 
@@ -283,8 +285,9 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
 
   const saveData = (nextProcess) => {
-
-    let mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty", "price"];
+    const deliveryRows = (data?.deliveryItems)?.filter(i => i.itemId);
+    const catalogItems = itemList?.data || [];
+    const catalogPriceRows = itemPriceList?.data || [];
 
     if (!validateData(data)) {
 
@@ -296,7 +299,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       });
       return
     }
-    if (!isGridDatasValid((data?.deliveryItems)?.filter(i => i.itemId), false, mandatoryFields)) {
+    if (!areSalesRowsValid(deliveryRows, catalogItems, catalogPriceRows)) {
       Swal.fire({
         title: "Please fill all Delivery Items Mandatory fields...!",
         icon: "warning",
@@ -310,10 +313,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       });
       return;
     }
-    if (convertSaleOrderId && totalReceivedAmount < adjustedNetAmount) {
+    if (convertSaleOrderId && remainingPaymentCapacity < adjustedNetAmount) {
       Swal.fire({
         title: "Insufficient Payment",
-        text: `Received payment (${parseFloat(totalReceivedAmount || 0).toFixed(2)}) must cover the delivery net amount (${parseFloat(adjustedNetAmount || 0).toFixed(2)}).`,
+        text: `Remaining payment capacity (${parseFloat(remainingPaymentCapacity || 0).toFixed(2)}) must cover the delivery net amount (${parseFloat(adjustedNetAmount || 0).toFixed(2)}).`,
         icon: "warning",
       });
       return;
@@ -462,7 +465,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const summaryItems = [
     { label: "No", value: docId },
     { label: "Date", value: date },
-    { label: "Sale Order", value: linkedSaleOrderDocId || "-" },
+    { label: "Sale Order", value: linkedSaleOrderDocId || "" },
     {
       label: "Customer",
       value:
@@ -482,6 +485,16 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         supplierDetails?.data?.address ||
         findFromList(customerId, supplierList?.data, "address"),
     },
+    ...(convertSaleOrderId ? [
+      {
+        label: "Received Payment",
+        value: `Rs.${parseFloat(totalReceivedAmount || 0).toFixed(2)}`,
+      },
+      {
+        label: "Remaining Capacity",
+        value: `Rs.${parseFloat(remainingPaymentCapacity || 0).toFixed(2)}`,
+      },
+    ] : []),
   ];
 
   const handleTermTemplateChange = (value) => {
@@ -658,7 +671,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         setHeaderOpen={setIsHeaderOpen}
         summaryItems={summaryItems}
         openStateClassName="max-h-[600px] opacity-100 overflow-visible"
-        headerBodyClassName="px-2 pb-2 overflow-visible"
         footer={footerContent}
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
@@ -671,7 +683,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                       <ReusableInput label="Sales Delivery Date" value={date} type="date" required readOnly disabled />
                     </div>
                     <div className="col-span-4">
-                      <ReusableInput label="Linked Sale Order" readOnly value={linkedSaleOrderDocId || "-"} />
+                      <ReusableInput label="Linked Sale Order" readOnly value={linkedSaleOrderDocId || ""} />
                     </div>
                 </TransactionHeaderSection>
 

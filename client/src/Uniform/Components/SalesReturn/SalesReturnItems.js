@@ -3,12 +3,13 @@ import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import { findFromList, getUniqueArrayByColor, getUniqueArrayBySize, sumArray } from "../../../Utils/helper";
+import { findFromList, getItemVariantColorOptions, getItemVariantSizeOptions, getStockMaintenanceConfig, sumArray } from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import Swal from "sweetalert2";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
+import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import TransactionLineItemsSection, {
     standardTransactionPlaceholderRowCount,
     transactionTableClassName,
@@ -45,6 +46,21 @@ const SalesReturnItems = ({
     const compactFocusCellClassName = transactionTableFocusCellClassName;
     const compactSelectClassName = transactionTableSelectInputClassName;
     const compactNumberInputClassName = transactionTableNumberInputClassName;
+    const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
+    const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
+    const showSize = stockMaintenance.trackSize;
+    const showColor = stockMaintenance.trackColor;
+    const findSelectedItem = (itemId) => itemList?.data?.find((item) => String(item.id) === String(itemId));
+    const isLegacyRow = (row) => Boolean(findSelectedItem(row?.itemId)?.isLegacy);
+    const rowRequiresSize = (row) => showSize && !isLegacyRow(row);
+    const rowRequiresColor = (row) => showColor && !isLegacyRow(row);
+    const isSizeReady = (row) => !rowRequiresSize(row) || Boolean(row.itemId);
+    const isColorReady = (row) => !rowRequiresColor(row) || Boolean(showSize ? row.sizeId : row.itemId);
+    const isUomReady = (row) => {
+        if (rowRequiresColor(row)) return Boolean(row.colorId);
+        if (rowRequiresSize(row)) return Boolean(row.sizeId);
+        return Boolean(row.itemId);
+    };
 
 
 
@@ -56,8 +72,13 @@ const SalesReturnItems = ({
         console.log(value, "value", index, "index", field, "field")
         const newBlend = structuredClone(deliveryItems);
         if (field == "itemId") {
+            const selectedItem = findSelectedItem(value);
             const sectionId = findFromList(value, itemList?.data, "sectionId")
             newBlend[index]["sectionId"] = sectionId;
+            if (selectedItem?.isLegacy) {
+                newBlend[index]["sizeId"] = "";
+                newBlend[index]["colorId"] = "";
+            }
         }
 
 
@@ -321,18 +342,20 @@ const SalesReturnItems = ({
                                 >
                                     Item
                                 </th>
+                                {showSize && (
                                 <th
-
                                     className={`${compactHeaderCellClassName} w-16`}
                                 >
                                     Size
                                 </th>
+                                )}
+                                {showColor && (
                                 <th
-
                                     className={`${compactHeaderCellClassName} w-32`}
                                 >
                                     Color
                                 </th>
+                                )}
                                 <th
 
                                     className={`${compactHeaderCellClassName} w-20`}
@@ -410,6 +433,7 @@ const SalesReturnItems = ({
                                     </td>
                                     {/* {console.log(row,"row")} */}
 
+                                    {showSize && (
                                     <td className={compactFocusCellClassName}>
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
@@ -420,17 +444,19 @@ const SalesReturnItems = ({
                                                 handleInputChange((e.target.value), index, "sizeId")
                                             }
                                             }
-                                            disabled={readOnly || !row.itemId}
+                                            disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
                                         >
                                             <option >
                                             </option>
-                                            {(id ? sizeList?.data : getUniqueArrayBySize(itemList?.data, sizeList?.data, "sizeId", row?.itemId))?.map((blend) =>
+                                            {(isLegacyRow(row) ? [] : (id ? sizeList?.data : getItemVariantSizeOptions(itemList?.data, sizeList?.data, "sizeId", row?.itemId)))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>)}
                                         </select>
                                     </td>
+                                    )}
 
+                                    {showColor && (
                                     <td className={compactFocusCellClassName}>
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
@@ -440,18 +466,19 @@ const SalesReturnItems = ({
                                                 handleInputChange((e.target.value), index, "colorId")
                                             }
                                             }
-                                            disabled={readOnly || !row.sizeId}
+                                            disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
 
                                         >
                                             <option hidden>
                                             </option>
-                                            {(id ? colorList?.data : (getUniqueArrayByColor(itemList?.data, colorList?.data, "colorId", row?.itemId)))?.map((blend) =>
+                                            {(isLegacyRow(row) ? [] : (id ? colorList?.data : (getItemVariantColorOptions(itemList?.data, colorList?.data, "colorId", row?.itemId, row?.sizeId))))?.map((blend) =>
                                                 <option value={blend.id} key={blend.id}>
                                                     {blend?.name}
                                                 </option>
                                             )}
                                         </select>
                                     </td>
+                                    )}
 
 
                                     <td className={compactFocusCellClassName}>
@@ -463,7 +490,7 @@ const SalesReturnItems = ({
                                                 handleInputChange((e.target.value), index, "hsnId")
                                             }
                                             }
-                                            disabled={readOnly || !row.sizeId}
+                                            disabled={readOnly || !row.itemId}
 
                                         >
                                             <option hidden>
@@ -485,7 +512,7 @@ const SalesReturnItems = ({
                                                 handleInputChange((e.target.value), index, "uomId")
                                             }
                                             }
-                                            disabled={readOnly || !row.colorId}
+                                            disabled={readOnly || !isUomReady(row)}
 
                                         >
 

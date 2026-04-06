@@ -24,9 +24,11 @@ import HsnMaster from "../../Basic/components/HsnMaster";
 import ItemCategroyMaster from "../ItemCategroyMaster";
 import SectionMaster from "../SectionMaster";
 import LocationStockEditor, { createEmptyLocationThreshold, getConfiguredLocationAlertCount, validateLocationThresholdRows } from "./LocationStockEditor";
+import { shouldDisableLinkedRecordField } from "./legacyEditPermissions";
 import { useGetSubCategoryQuery } from "../../redux/uniformService/SubCategoryMasterService";
 import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
 import { SubCategoryMaster } from "..";
+import MasterPageLayout from "../../Basic/components/MasterPageLayout";
 
 
 const createStandardPriceRow = () => ({
@@ -83,8 +85,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
   const [childRecord, setChildRecord] = useState("")
-
-
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
   const {
     firstInputRef: nameRef,
@@ -92,8 +92,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     saveCloseButtonRef,
     saveNewButtonRef,
   } = refs;
-
-
+  const [isLegacyItem, setIsLegacyItem] = useState(false);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -171,6 +170,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
   const AccessItemsColums = itemControlData?.data?.[0];
   const barcodeGenerationMethod = resolveBarcodeGenerationMethod(AccessItemsColums);
+  const effectivePricingMode = isLegacyItem ? "STANDARD" : barcodeGenerationMethod;
+  const disableLinkedRecordField = shouldDisableLinkedRecordField({
+    childRecord,
+    isLegacyItem,
+  });
 
 
   const syncFormWithDb = useCallback(
@@ -189,6 +193,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         setActive(id ? (data?.active ? data?.active : false) : true)
         setSectionId(data?.sectionId ? data?.sectionId : "")
         setOfferPrice(data?.offerPrice ? data?.offerPrice : "")
+        setIsLegacyItem(false)
         setSku("")
         setBarcode("")
         setItemPriceList(barcodeGenerationMethod === "STANDARD" ? [createStandardPriceRow()] : [])
@@ -209,6 +214,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         setActive(id ? (data?.active ? data?.active : false) : true)
         setSectionId(data?.sectionId ? data?.sectionId : "")
         setOfferPrice(data?.offerPrice ? data?.offerPrice : "")
+        setIsLegacyItem(Boolean(data?.isLegacy))
         setMainCategory(data?.mainCategoryId ? data?.mainCategoryId : "")
         setSubCategory(data?.subCategoryId ? data?.subCategoryId : "")
         setAliasName(data?.aliasName ? data?.aliasName : "")
@@ -225,14 +231,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         setFields(initialState)
         setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
 
-
-
-
-
-
-
-
-        if (barcodeGenerationMethod === "STANDARD") {
+        if ((data?.isLegacy ? "STANDARD" : barcodeGenerationMethod) === "STANDARD") {
           setOfferPrice(data?.ItemPriceList?.[0]?.offerPrice ? data?.ItemPriceList?.[0]?.offerPrice : "")
           setSalesPrice(data?.ItemPriceList?.[0]?.salesPrice ? data?.ItemPriceList?.[0]?.salesPrice : "")
           setSku(data?.ItemPriceList?.[0]?.sku ? data?.ItemPriceList?.[0]?.sku : "")
@@ -269,7 +268,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         }
       }
     },
-    [barcodeGenerationMethod, id, itemControlData?.data, sizeData?.data, colorData?.data]
+    [barcodeGenerationMethod, effectivePricingMode, id, itemControlData?.data, sizeData?.data, colorData?.data]
   );
 
   console.log(childRecord, "childRecord")
@@ -287,7 +286,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     itemType,
     hsnId,
     active,
-    itemPriceList: barcodeGenerationMethod === "STANDARD" ?
+    isLegacy: isLegacyItem,
+    itemPriceList: effectivePricingMode === "STANDARD" ?
       [{
         id: itemPriceList?.[0]?.id,
         itemId: itemPriceList?.[0]?.itemId,
@@ -313,14 +313,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       return false;
     }
 
-    if (barcodeGenerationMethod === "STANDARD") {
+    if (effectivePricingMode === "STANDARD") {
       const standardPrice = data?.itemPriceList?.[0];
       if (!standardPrice?.barcode?.trim() || !standardPrice?.sku?.trim() || !standardPrice?.salesPrice?.trim()) {
         return false;
       }
     }
 
-    const hasStockAlertErrors = (barcodeGenerationMethod === "STANDARD" ? [itemPriceList?.[0]] : itemPriceList)
+    const hasStockAlertErrors = (effectivePricingMode === "STANDARD" ? [itemPriceList?.[0]] : itemPriceList)
       .filter(Boolean)
       .some((priceRow) => validateLocationThresholdRows(priceRow?.MinimumStockQty || []).hasErrors);
 
@@ -400,7 +400,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
 
     if (!validateData(data)) {
-      const hasStockAlertErrors = (barcodeGenerationMethod === "STANDARD" ? [itemPriceList?.[0]] : itemPriceList)
+      const hasStockAlertErrors = (effectivePricingMode === "STANDARD" ? [itemPriceList?.[0]] : itemPriceList)
         .filter(Boolean)
         .some((priceRow) => validateLocationThresholdRows(priceRow?.MinimumStockQty || []).hasErrors);
       Swal.fire({
@@ -521,6 +521,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     setSizeList([]);
     setColorList([]);
     setGridIndex(null);
+    setIsLegacyItem(false);
     setItemPriceList(barcodeGenerationMethod === "STANDARD" ? [createStandardPriceRow()] : []);
   };
 
@@ -545,7 +546,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     {
       header: "Item Name",
       accessor: (item) => item.name,
-      className: "font-medium text-gray-900  w-[400px]  py-1  px-2",
+      className: "font-medium text-gray-900  w-[200px]  py-1  px-2",
       search: "Item Name",
     },
     {
@@ -554,12 +555,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       className: "font-medium text-gray-900  w-[150px]  py-1  px-2",
       search: "Item Code",
     },
-    // {
-    //   header: "HSN Code",
-    //   accessor: (item) => item.hsn?.name,
-    //   className: "font-medium text-gray-900  w-[120px]  py-1  px-2",
-    //   search: "HSN Code",
-    // },
+    {
+      header: "HSN Code",
+      accessor: (item) => item.hsn?.name,
+      className: "font-medium text-gray-900  w-[120px]  py-1  px-2",
+      search: "HSN Code",
+    },
     {
       header: "Status",
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
@@ -626,7 +627,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   };
 
   function setItems() {
-    if (!sizeList?.length) return;
+    if (isLegacyItem || !sizeList?.length) return;
 
     const newCombinations = colorList?.length
       ? sizeList.flatMap(size =>
@@ -761,10 +762,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   }, [itemControlData, itemControlLoading, itemControlFetching]);
 
   useEffect(() => {
-    if (form && barcodeGenerationMethod === "STANDARD" && itemPriceList.length === 0) {
+    if (form && effectivePricingMode === "STANDARD" && itemPriceList.length === 0) {
       setItemPriceList([createStandardPriceRow()]);
     }
-  }, [form, barcodeGenerationMethod, itemPriceList.length]);
+  }, [form, effectivePricingMode, itemPriceList.length]);
 
 
 
@@ -834,13 +835,20 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-3">
-        <div ref={formRef} className="bg-gray-50 p-2 rounded-lg h-full space-y-4">
-          <fieldset className="border border-gray-300 rounded-lg p-2 bg-white h-full">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3">
+        <div ref={formRef} className="bg-gray-50 p-2 rounded-lg h-full min-h-0">
+          <fieldset className="flex h-full min-h-0 flex-col overflow-hidden border border-gray-300 rounded-lg p-2 bg-white">
             <legend className="px-2 text-sm font-semibold text-gray-700">
-              Item Information
+              <span className="inline-flex items-center gap-2">
+                <span>Item Information</span>
+                {isLegacyItem && (
+                  <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-700">
+                    Legacy item
+                  </span>
+                )}
+              </span>
             </legend>
-            <div className="grid grid-cols-12 gap-4 ">
+            <div className="grid flex-1 min-h-0 grid-cols-12 gap-4 content-start overflow-y-auto overflow-x-hidden pr-1">
               <div className="col-span-4">
                 <TextInputNew1
                   name="Item Name"
@@ -848,7 +856,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   setValue={handleNameChange}
                   required
                   readOnly={readOnly}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                   ref={nameRef}
                 />
               </div>
@@ -860,7 +868,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   setValue={setAliasName}
                   required={true}
                   readOnly={readOnly}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                 />
               </div>
               <div className="col-span-2">
@@ -869,11 +877,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   value={code}
                   setValue={setCode}
                   readOnly={readOnly}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                   required={true}
                 />
               </div>
-              <div className="col-span-1">
+              <div className="col-span-2">
                 <DropdownInputNew
                   name="HSN"
                   options={hsnData?.data?.filter(item => id || item.active).map(item => ({
@@ -885,7 +893,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   setValue={setHsnId}
                   required
                   readOnly={readOnly}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                   addNewLabel="+ Add New HSN"
                   childComponent={HsnMaster}
                   addNewModalWidth="w-[45%] h-[400px]"
@@ -907,7 +915,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     setValue={setSectionId}
                     required
                     readOnly={readOnly}
-                    disabled={childRecord > 0}
+                    disabled={disableLinkedRecordField}
                     addNewLabel="+ Add New Section"
                     childComponent={SectionMaster}
                     addNewModalWidth="w-[45%] h-[400px]"
@@ -927,7 +935,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   setValue={setMainCategory}
                   required
                   readOnly={readOnly}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                   addNewLabel="+ Add New Category"
                   childComponent={ItemCategroyMaster}
                   addNewModalWidth="w-[45%] h-[400px]"
@@ -948,7 +956,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   setValue={setSubCategory}
                   required
                   readOnly={readOnly || !mainCategory}
-                  disabled={childRecord > 0}
+                  disabled={disableLinkedRecordField}
                   addNewLabel="+ Add New  Sub Category"
                   childComponent={SubCategoryMaster}
                   addNewModalWidth="w-[45%] h-[300px]"
@@ -977,272 +985,284 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
               <div className="col-span-1 ">
                 <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
               </div>
-              <fieldset className="col-span-12 border border-gray-300 rounded-lg h-[380px]">
+              <fieldset className="col-span-12 flex min-h-0 max-h-[380px] flex-col overflow-hidden border border-gray-300 rounded-lg">
                 <legend className="px-2 text-sm font-semibold text-gray-700">
-                  Pricing Information
+                  {isLegacyItem ? "Legacy Pricing Information" : "Pricing Information"}
                 </legend>
-                <div>
-                  <div className="grid grid-cols-12 gap-4 px-2">
-                    {barcodeGenerationMethod == "STANDARD" && (
-                      <>
-                        <div className="col-span-2">
-                          <TextInputNew1
-                            name="Barcode"
-                            value={barcode}
-                            setValue={setBarcode}
-                            readOnly={readOnly}
-                            disabled={id ? childRecord > 0 : false}
-                            required={true}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <TextInputNew1
-                            name="Sku"
-                            value={sku}
-                            setValue={setSku}
-                            readOnly={readOnly}
-                            disabled={id ? childRecord > 0 : false}
-                            required={true}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <TextInputNew1
-                            name="Sales Price"
-                            value={salesPrice}
-                            setValue={setSalesPrice}
-                            readOnly={readOnly}
-                            disabled={id ? childRecord > 0 : false}
-                            required={true}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <TextInputNew1
-                            name="Offer Price"
-                            value={offerPrice}
-                            setValue={setOfferPrice}
-                            readOnly={readOnly}
-                            disabled={id ? childRecord > 0 : false}
-                          />
-                        </div>
-                        <div className="col-span-3 mt-5">
-                          <button
-                            type="button"
-                            onClick={() => setGridIndex((prev) => (prev === 0 ? null : 0))}
-                            className="w-full rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-left text-xs font-medium text-indigo-700 hover:bg-indigo-100"
-                          >
-                            Stock Alerts: {getLowStockSummary(itemPriceList?.[0])}
-                          </button>
-                        </div>
-                      </>
-                    )}
-                    {(barcodeGenerationMethod == "SIZE" || barcodeGenerationMethod == "SIZE_COLOR") && (
-                      <div className="col-span-3">
-                        <div className="flex items-end gap-1">
-                          <div className="flex-1">
-                            <MultiSelectDropdownNew
-                              name="Sizes"
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                  {effectivePricingMode == "STANDARD" && (
+                    <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 px-2 pb-2">
+                      <div className="col-span-8 min-h-0">
+                        <div className="grid grid-cols-9 items-start gap-4">
+                          <div className="col-span-2">
+                            <TextInputNew1
+                              name="Barcode"
+                              value={barcode}
+                              setValue={setBarcode}
+                              readOnly={readOnly}
+                              disabled={id ? disableLinkedRecordField : false}
                               required={true}
-                              disabled={readOnly}
-                              options={multiSelectOption(id ? sizeData?.data : sizeData?.data?.filter(i => i.active) || [], "name", "id")}
-                              selected={sizeList}
-                              setSelected={(value) => {
-                                setSizeList(value)
-                              }}
                             />
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setShowSizeModal(true)}
-                            className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
-                            title="Add New Size"
-                          >
-                            <Plus size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {(barcodeGenerationMethod == "SIZE_COLOR") && (
-                      <div className="col-span-3">
-                        <div className="flex items-end gap-1">
-                          <div className="flex-1">
-                            <MultiSelectDropdownNew
-                              name="Colors"
+                          <div className="col-span-2">
+                            <TextInputNew1
+                              name="Sku"
+                              value={sku}
+                              setValue={setSku}
+                              readOnly={readOnly}
+                              disabled={id ? disableLinkedRecordField : false}
                               required={true}
-                              disabled={readOnly}
-                              options={multiSelectOption(id ? colorData?.data : colorData?.data?.filter(i => i.active) || [], "name", "id")}
-                              selected={colorList}
-                              setSelected={(value) => {
-                                setColorList(value)
-                              }}
                             />
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setShowColorModal(true)}
-                            className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
-                            title="Add New Color"
-                          >
-                            <Plus size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {(barcodeGenerationMethod == "SIZE" || barcodeGenerationMethod == "SIZE_COLOR") && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setItems()
-                        }}
-                        className="px-3 py-1 rounded items-center gap-1 text-xs h-8 w-14 mt-4 bg-gray-200"
-                      >
-                        Add
-                      </button>
-                    )}
-                  </div>
-                  {barcodeGenerationMethod == "STANDARD" && gridIndex === 0 && itemPriceList[0] && (
-                    <div className="px-2 pt-3 h-[280px] min-h-0">
-                      <LocationStockEditor
-                        rows={itemPriceList[0]?.MinimumStockQty || []}
-                        onChange={(rows) => handleMinimumStockRowsChange(0, rows)}
-                        locationOptions={id ? storeOptions : storeOptions?.filter((i) => i.active)}
-                        readOnly={readOnly}
-                        title="Stock Alerts"
-                      />
-                    </div>
-                  )}
-                  {barcodeGenerationMethod != "STANDARD" && (
-                    <div className="grid grid-cols-12 gap-3 ">
-                      <div className={`col-span-8 w-full h-[280px]`}>
-                        <div className={`relative overflow-y-auto py-1 h-full`}>
-                          <table className="w-full border-collapse table-fixed">
-                            <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
-                              <tr>
-                                <th className={`w-10 px-2 py-2 text-center font-medium text-[12px] `}>S.No</th>
-                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Size Name</th>
-                                {barcodeGenerationMethod == "SIZE_COLOR" && (
-                                  <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Color Name</th>
-                                )}
-                                <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Barcode</th>
-                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sku</th>
-                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price</th>
-                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th>
-                                <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {itemPriceList.map((item, index) => (
-                                <tr
-                                  key={index}
-                                  onContextMenu={(e) => {
-                                    if (!readOnly) {
-                                      handleRightSubGridClick(e, index, "notes");
-                                    }
-                                  }}
-                                >
-                                  <td className="border border-gray-200 w-10 px-1 py-1 text-center text-xs ">{index + 1}</td>
-                                  <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
-                                    {findFromList(item?.sizeId, sizeData?.data, "name")}
-                                  </td>
-                                  {barcodeGenerationMethod == "SIZE_COLOR" && (
-                                    <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
-                                      {findFromList(item?.colorId, colorData?.data, "name")}
-                                    </td>
-                                  )}
-                                  <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
-                                    <input
-                                      type="text"
-                                      min="0"
-                                      rows={1}
-                                      onFocus={e => e.target.select()}
-                                      className="text-right rounded w-full px-1 py-1 text-xs"
-                                      value={item.barcode}
-                                      disabled={readOnly}
-                                      onChange={e => handleInputChange(e.target.value, index, "barcode")}
-                                      onBlur={e => handleInputChange(e.target.value, index, "barcode")}
-                                    />
-                                  </td>
-                                  <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
-                                    <input
-                                      type="text"
-                                      min="0"
-                                      rows={1}
-                                      onFocus={e => e.target.select()}
-                                      className="text-right rounded w-full px-1 py-1 text-xs"
-                                      value={item.sku}
-                                      disabled={readOnly}
-                                      onChange={e => handleInputChange(e.target.value, index, "sku")}
-                                      onBlur={e => handleInputChange(e.target.value, index, "sku")}
-                                    />
-                                  </td>
-                                  <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
-                                    <input
-                                      type="text"
-                                      min="0"
-                                      rows={1}
-                                      onFocus={e => e.target.select()}
-                                      className="text-right rounded w-full px-1 py-1 text-xs"
-                                      value={item.salesPrice}
-                                      disabled={readOnly}
-                                      onChange={e => handleInputChange(e.target.value, index, "salesPrice")}
-                                      onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
-                                    />
-                                  </td>
-                                  <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
-                                    <input
-                                      type="text"
-                                      min="0"
-                                      rows={1}
-                                      onFocus={e => e.target.select()}
-                                      className="text-right rounded w-full px-1 py-1 text-xs"
-                                      value={item.offerPrice}
-                                      disabled={readOnly}
-                                      onChange={e => handleInputChange(e.target.value, index, "offerPrice")}
-                                      onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
-                                    />
-                                  </td>
-                                  <td className="border border-gray-200 px-2 py-1 text-xs">
-                                    <button
-                                      type="button"
-                                      onClick={() => setGridIndex((prev) => (prev === index ? null : index))}
-                                      className={`w-full rounded-md border px-2 py-1 text-left ${gridIndex === index ? "border-indigo-400 bg-indigo-50 text-indigo-700" : "border-gray-200 bg-gray-50 text-gray-700"}`}
-                                    >
-                                      {getLowStockSummary(item)}
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {contextMenu && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: `${contextMenu.mouseY - 40}px`,
-                            left: `${contextMenu.mouseX - 80}px`,
-                            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                            padding: "8px",
-                            borderRadius: "4px",
-                            zIndex: 1000,
-                          }}
-                          className="bg-gray-100"
-                          onMouseLeave={handleCloseContextMenu}
-                        >
-                          <div className="flex flex-col gap-1">
+                          <div className="col-span-1">
+                            <TextInputNew1
+                              name="Sales Price"
+                              value={salesPrice}
+                              setValue={setSalesPrice}
+                              readOnly={readOnly}
+                              disabled={id ? disableLinkedRecordField : false}
+                              required={true}
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            <TextInputNew1
+                              name="Offer Price"
+                              value={offerPrice}
+                              setValue={setOfferPrice}
+                              readOnly={readOnly}
+                              disabled={id ? disableLinkedRecordField : false}
+                            />
+                          </div>
+                          <div className="col-span-3 col-start-7 max-w-[230px]">
                             <button
-                              className=" text-black text-[12px] text-left rounded px-1"
-                              onClick={() => {
-                                handleDeleteRow(contextMenu.rowId);
-                                handleCloseContextMenu();
-                              }}
+                              type="button"
+                              onClick={() => setGridIndex((prev) => (prev === 0 ? null : 0))}
+                              className="mt-5 w-full whitespace-nowrap rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1.5 text-left text-[11px] font-medium leading-tight text-indigo-700 hover:bg-indigo-100"
                             >
-                              Delete
+                              Stock Alerts: {getLowStockSummary(itemPriceList?.[0])}
                             </button>
                           </div>
                         </div>
-                      )}
+                      </div>
+                      <div className="col-span-4 h-[220px] min-h-0">
+                        {gridIndex === 0 && itemPriceList[0] ? (
+                          <LocationStockEditor
+                            rows={itemPriceList[0]?.MinimumStockQty || []}
+                            onChange={(rows) => handleMinimumStockRowsChange(0, rows)}
+                            locationOptions={id ? storeOptions : storeOptions?.filter((i) => i.active)}
+                            readOnly={readOnly}
+                            title="Stock Alerts"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 text-center text-xs text-gray-500">
+                            Select the stock alerts button to edit location-wise stock alerts.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {effectivePricingMode != "STANDARD" && (
+                    <>
+                      <div className="grid grid-cols-12 gap-4 px-2 pb-3">
+                        {(effectivePricingMode == "SIZE" || effectivePricingMode == "SIZE_COLOR") && (
+                          <div className="col-span-3">
+                            <div className="flex items-end gap-1">
+                              <div className="flex-1">
+                                <MultiSelectDropdownNew
+                                  name="Sizes"
+                                  required={true}
+                                  disabled={readOnly || isLegacyItem}
+                                  options={multiSelectOption(id ? sizeData?.data : sizeData?.data?.filter(i => i.active) || [], "name", "id")}
+                                  selected={sizeList}
+                                  setSelected={(value) => {
+                                    setSizeList(value)
+                                  }}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setShowSizeModal(true)}
+                                className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
+                                title="Add New Size"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {(effectivePricingMode == "SIZE_COLOR") && (
+                          <div className="col-span-3">
+                            <div className="flex items-end gap-1">
+                              <div className="flex-1">
+                                <MultiSelectDropdownNew
+                                  name="Colors"
+                                  required={true}
+                                  disabled={readOnly || isLegacyItem}
+                                  options={multiSelectOption(id ? colorData?.data : colorData?.data?.filter(i => i.active) || [], "name", "id")}
+                                  selected={colorList}
+                                  setSelected={(value) => {
+                                    setColorList(value)
+                                  }}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setShowColorModal(true)}
+                                className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
+                                title="Add New Color"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {(effectivePricingMode == "SIZE" || effectivePricingMode == "SIZE_COLOR") && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setItems()
+                            }}
+                            className="px-3 py-1 rounded items-center gap-1 text-xs h-8 w-14 mt-4 bg-gray-200"
+                          >
+                            Add
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {effectivePricingMode != "STANDARD" && (
+                      <div className="grid grid-cols-12 gap-3 ">
+                        <div className={`col-span-8 w-full h-[280px]`}>
+                          <div className={`relative overflow-y-auto py-1 h-full`}>
+                            <table className="w-full border-collapse table-fixed">
+                              <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
+                                <tr>
+                                  <th className={`w-10 px-2 py-2 text-center font-medium text-[12px] `}>S.No</th>
+                                  <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Size Name</th>
+                                  {effectivePricingMode == "SIZE_COLOR" && (
+                                    <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Color Name</th>
+                                  )}
+                                  <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Barcode</th>
+                                  <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sku</th>
+                                  <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price</th>
+                                  <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th>
+                                  <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {itemPriceList.map((item, index) => (
+                                  <tr
+                                    key={index}
+                                    onContextMenu={(e) => {
+                                      if (!readOnly) {
+                                        handleRightSubGridClick(e, index, "notes");
+                                      }
+                                    }}
+                                  >
+                                    <td className="border border-gray-200 w-10 px-1 py-1 text-center text-xs ">{index + 1}</td>
+                                    <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                      {findFromList(item?.sizeId, sizeData?.data, "name")}
+                                    </td>
+                                    {effectivePricingMode == "SIZE_COLOR" && (
+                                      <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
+                                        {findFromList(item?.colorId, colorData?.data, "name")}
+                                      </td>
+                                    )}
+                                    <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
+                                      <input
+                                        type="text"
+                                        min="0"
+                                        rows={1}
+                                        onFocus={e => e.target.select()}
+                                        className="text-right rounded w-full px-1 py-1 text-xs"
+                                        value={item.barcode}
+                                        disabled={readOnly || isLegacyItem}
+                                        onChange={e => handleInputChange(e.target.value, index, "barcode")}
+                                        onBlur={e => handleInputChange(e.target.value, index, "barcode")}
+                                      />
+                                    </td>
+                                    <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                      <input
+                                        type="text"
+                                        min="0"
+                                        rows={1}
+                                        onFocus={e => e.target.select()}
+                                        className="text-right rounded w-full px-1 py-1 text-xs"
+                                        value={item.sku}
+                                        disabled={readOnly || isLegacyItem}
+                                        onChange={e => handleInputChange(e.target.value, index, "sku")}
+                                        onBlur={e => handleInputChange(e.target.value, index, "sku")}
+                                      />
+                                    </td>
+                                    <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                      <input
+                                        type="text"
+                                        min="0"
+                                        rows={1}
+                                        onFocus={e => e.target.select()}
+                                        className="text-right rounded w-full px-1 py-1 text-xs"
+                                        value={item.salesPrice}
+                                        disabled={readOnly || isLegacyItem}
+                                        onChange={e => handleInputChange(e.target.value, index, "salesPrice")}
+                                        onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
+                                      />
+                                    </td>
+                                    <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                      <input
+                                        type="text"
+                                        min="0"
+                                        rows={1}
+                                        onFocus={e => e.target.select()}
+                                        className="text-right rounded w-full px-1 py-1 text-xs"
+                                        value={item.offerPrice}
+                                        disabled={readOnly || isLegacyItem}
+                                        onChange={e => handleInputChange(e.target.value, index, "offerPrice")}
+                                        onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
+                                      />
+                                    </td>
+                                    <td className="border border-gray-200 px-2 py-1 text-xs">
+                                      <button
+                                        type="button"
+                                        onClick={() => setGridIndex((prev) => (prev === index ? null : index))}
+                                        className={`w-full rounded-md border px-2 py-1 text-left ${gridIndex === index ? "border-indigo-400 bg-indigo-50 text-indigo-700" : "border-gray-200 bg-gray-50 text-gray-700"}`}
+                                      >
+                                        {getLowStockSummary(item)}
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {contextMenu && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: `${contextMenu.mouseY - 40}px`,
+                              left: `${contextMenu.mouseX - 80}px`,
+                              boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                              padding: "8px",
+                              borderRadius: "4px",
+                              zIndex: 1000,
+                            }}
+                            className="bg-gray-100"
+                            onMouseLeave={handleCloseContextMenu}
+                          >
+                            <div className="flex flex-col gap-1">
+                              <button
+                                className=" text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                  handleDeleteRow(contextMenu.rowId);
+                                  handleCloseContextMenu();
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       <div className="col-span-4 h-[280px] min-h-0">
                         {itemPriceList[gridIndex] ? (
                           <LocationStockEditor
@@ -1250,7 +1270,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                             onChange={(rows) => handleMinimumStockRowsChange(gridIndex, rows)}
                             locationOptions={id ? storeOptions : storeOptions?.filter((i) => i.active)}
                             readOnly={readOnly}
-                            title={`Stock Alerts${barcodeGenerationMethod == "SIZE_COLOR"
+                            title={`Stock Alerts${effectivePricingMode == "SIZE_COLOR"
                               ? ` - ${findFromList(itemPriceList[gridIndex]?.sizeId, sizeData?.data, "name")} / ${findFromList(itemPriceList[gridIndex]?.colorId, colorData?.data, "name")}`
                               : ` - ${findFromList(itemPriceList[gridIndex]?.sizeId, sizeData?.data, "name")}`
                               }`}
@@ -1357,24 +1377,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   }
 
   return (
-    <div onKeyDown={handleKeyDown} className="p-1">
-      <div className="w-full flex bg-white p-1 justify-between  items-center">
-        <h5 className="text-xl font-bold font-segoe text-gray-800 ">
-          Item Master
-        </h5>
-        <div className="flex items-center">
-          <button
-            onClick={() => {
-              setForm(true);
-              onNew();
-            }}
-            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-          >
-            + Add New Item
-          </button>
-        </div>
-      </div>
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+    <MasterPageLayout
+      title="Item Master"
+      addButtonLabel="+ Add New Item"
+      onAdd={() => {
+        setForm(true);
+        onNew();
+      }}
+      onKeyDown={handleKeyDown}
+      titleClassName="text-xl font-bold font-segoe text-gray-800"
+    >
         <ReusableTable
           columns={columns}
           data={allData?.data || []}
@@ -1383,7 +1395,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           onDelete={handleDelete}
           itemsPerPage={15}
         />
-      </div>
       {form && (
         <Modal
           isOpen={form}
@@ -1394,6 +1405,547 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           }}
         >
           {formBody}
+          {false && <>
+          <div className="h-full flex flex-col bg-gray-200">
+            <div className="border-b py-2 px-4 mt-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+                  {id
+                    ? !readOnly
+                      ? "Edit Item"
+                      : "Item Master"
+                    : "Add New Item"}
+                </h2>
+              </div>
+              <div className="flex gap-2">
+                <div>
+                  {readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm(false);
+                        setSearchValue("");
+                        setId(false);
+                      }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        saveData("close")
+                      }}
+                      className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                  border border-blue-600 flex items-center gap-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-blue-600"
+                    >
+                      <Check size={14} />
+                      {id ? "Update" : "Save & close"}
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {(!readOnly && !id) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        saveData("new")
+                      }}
+
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-green-600"
+                    >
+                      <Check size={14} />
+                      {"Save & New"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-3">
+              <div ref={formRef} className="bg-gray-50 p-2 rounded-lg h-full space-y-4">
+
+                <fieldset className="border border-gray-300 rounded-lg p-2 bg-white h-full">
+                  <legend className="px-2 text-sm font-semibold text-gray-700">
+                    {isLegacyItem ? "Legacy Item Information" : "Item Information"}
+                  </legend>
+
+                  <div className="grid grid-cols-12 gap-4 ">
+
+
+
+                    <div className="col-span-4">
+                      <TextInputNew1
+                        name="Item Name"
+                        value={name}
+                        setValue={handleNameChange}
+                        required
+                        readOnly={readOnly}
+                        disabled={childRecord > 0}
+                        ref={firstInputFocus}
+                      />
+                    </div>
+
+                    {isLegacyItem && (
+                      <div className="col-span-2">
+                        <TextInputNew1
+                          name="Item Mode"
+                          value="LEGACY"
+                          readOnly={true}
+                          disabled={true}
+                        />
+                      </div>
+                    )}
+
+                    <div className="col-span-2">
+                      <TextInputNew1
+                        name="Item Code"
+                        value={code}
+                        setValue={setCode}
+                        readOnly={readOnly}
+                        disabled={childRecord > 0}
+                        required={true}
+                      />
+                    </div>
+
+
+
+
+
+
+                    <div className="col-span-1">
+                      <DropdownInputNew
+                        name="HSN"
+                        options={hsnData?.data?.filter(item => id || item.active).map(item => ({
+                          show: item?.country?.name ? `${item.name} (${item.country.name})` : item.name,
+                          value: item.id,
+                          _count: item?._count
+                        }))}
+                        value={hsnId}
+                        setValue={setHsnId}
+                        required
+                        readOnly={readOnly}
+                        disabled={childRecord > 0}
+                        addNewLabel="+ Add New HSN"
+                        childComponent={HsnMaster}
+                        addNewModalWidth="w-[45%] h-[400px]"
+                        searchable={true}
+                      />
+                    </div>
+
+                    {AccessItemsColums?.sectionType && (
+                      <>
+                        <div className="col-span-2">
+                          <DropdownInputNew
+                            name="Section Type"
+                            options={dropDownListObject(
+                              id ? sectionData?.data : sectionData?.data?.filter(item => item.active),
+                              "name",
+                              "id"
+                            )}
+                            value={sectionId}
+                            setValue={setSectionId}
+                            required
+                            readOnly={readOnly}
+                            disabled={childRecord > 0}
+                          />
+                        </div>
+
+                      </>
+                    )}
+
+
+
+                    <div className="col-span-2">
+                      <DropdownInputNew
+                        name="Item Category"
+                        options={dropDownListObject(
+                          id ? itemCategoryData?.data : itemCategoryData?.data?.filter(item => item.active),
+                          "name",
+                          "id"
+                        )}
+                        value={mainCategory}
+                        setValue={setMainCategory}
+                        required
+                        readOnly={readOnly}
+                        disabled={childRecord > 0}
+                        addNewLabel="+ Add New Category"
+                        childComponent={ItemCategroyMaster}
+                        addNewModalWidth="w-[45%] h-[400px]"
+                        searchable={true}
+                      />
+                    </div>
+                    {/* <div className="col-span-2">
+                      <DropdownInput
+                        name="Sub Category"
+                        options={dropDownListObject(
+                          id ? itemCategoryData?.data?.filter(item => item.id != mainCategory) : itemCategoryData?.data?.filter(item => item.active && item.id != mainCategory),
+                          "name",
+                          "id"
+                        )}
+                        value={subCategory}
+                        setValue={setSubCategory}
+                        required
+                        readOnly={readOnly || !mainCategory}
+                        disabled={childRecord > 0}
+                      />
+                    </div> */}
+
+
+
+                    {/* <div className="col-span-2">
+
+                    </div> */}
+
+                    {Object.keys(fields).map((key) => (
+                      <div
+                        key={key}
+                        className={`${key.toLowerCase() === "description"
+                          ? "col-span-4"
+                          : "col-span-2"
+                          }`}
+                      >
+                        <TextInputNew1
+                          name={capitalizeFirstLetter(key)}
+                          value={fields[key]}
+                          setValue={(val) =>
+                            setFields((prev) => ({
+                              ...prev,
+                              [key]: val,
+                            }))
+                          }
+                          width="w-full px-2"
+                        />
+                      </div>
+                    ))}
+                    <div className="col-span-1 ">
+                      <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly} />
+                    </div>
+
+
+                    <fieldset className="col-span-12 border border-gray-300 rounded-lg h-[380px]">
+                      <legend className="px-2 text-sm font-semibold text-gray-700">
+                        {isLegacyItem ? "Legacy Pricing Information" : "Pricing Information"}
+                      </legend>
+
+                      <div>
+                        <div className="grid grid-cols-12 gap-4 px-2">
+                          {effectivePricingMode == "STANDARD" && (
+                            <>
+                              <div className="col-span-2">
+                                <TextInputNew1
+                                  name="Barcode"
+                                  value={barcode}
+                                  setValue={setBarcode}
+                                  readOnly={readOnly}
+                                  disabled={childRecord > 0}
+                                  required={true}
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <TextInputNew1
+                                  name="Sku"
+                                  value={sku}
+                                  setValue={setSku}
+                                  readOnly={readOnly}
+                                  disabled={childRecord > 0}
+                                  required={true}
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <TextInputNew1
+                                  name="Sales Price"
+                                  value={salesPrice}
+                                  setValue={setSalesPrice}
+                                  readOnly={readOnly}
+                                  disabled={childRecord > 0}
+                                  required={true}
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <TextInputNew1
+                                  name="Offer Price"
+                                  value={offerPrice}
+                                  setValue={setOfferPrice}
+                                  readOnly={readOnly}
+                                  disabled={childRecord > 0}
+                                />
+                              </div>
+                              <div className="col-span-3 mt-5">
+                                <button
+                                  type="button"
+                                  onClick={() => setGridIndex((prev) => (prev === 0 ? null : 0))}
+                                  className="w-full rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-left text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                                >
+                                  Stock Alerts: {getLowStockSummary(itemPriceList?.[0])}
+                                </button>
+                              </div>
+                            </>
+                          )}
+
+                          {(effectivePricingMode == "SIZE" || effectivePricingMode == "SIZE_COLOR") && (
+                            <div className="col-span-3">
+                              <div className="flex items-end gap-1">
+                                <div className="flex-1">
+                                  <MultiSelectDropdownNew
+                                    name="Sizes"
+                                    required={true}
+                                    disabled={readOnly || isLegacyItem}
+                                    options={multiSelectOption(id ? sizeData?.data : sizeData?.data?.filter(i => i.active) || [], "name", "id")}
+                                    selected={sizeList}
+                                    setSelected={(value) => {
+                                      setSizeList(value)
+                                    }}
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowSizeModal(true)}
+                                  className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
+                                  title="Add New Size"
+                                >
+                                  <Plus size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {(effectivePricingMode == "SIZE_COLOR") && (
+                            <div className="col-span-3">
+                              <div className="flex items-end gap-1">
+                                <div className="flex-1">
+                                  <MultiSelectDropdownNew
+                                    name="Colors"
+                                    required={true}
+                                    disabled={readOnly || isLegacyItem}
+                                    options={multiSelectOption(id ? colorData?.data : colorData?.data?.filter(i => i.active) || [], "name", "id")}
+                                    selected={colorList}
+                                    setSelected={(value) => {
+                                      setColorList(value)
+                                    }}
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowColorModal(true)}
+                                  className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
+                                  title="Add New Color"
+                                >
+                                  <Plus size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                          {(effectivePricingMode == "SIZE" || effectivePricingMode == "SIZE_COLOR") && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setItems()
+                              }}
+                              className="px-3 py-1 rounded items-center gap-1 text-xs h-8 w-14 mt-4 bg-gray-200"
+                            >
+                              Add
+                            </button>
+                          )}
+                        </div>
+
+                        {effectivePricingMode == "STANDARD" && gridIndex === 0 && itemPriceList[0] && (
+                          <div className="px-2 pt-3 h-[280px] min-h-0">
+                            <LocationStockEditor
+                              rows={itemPriceList[0]?.MinimumStockQty || []}
+                              onChange={(rows) => handleMinimumStockRowsChange(0, rows)}
+                              locationOptions={id ? storeOptions : storeOptions?.filter((i) => i.active)}
+                              readOnly={readOnly}
+                              title="Stock Alerts"
+                            />
+                          </div>
+                        )}
+
+                        {effectivePricingMode != "STANDARD" && (
+                          <>
+                            <div className="grid grid-cols-12 gap-3 ">
+                              <div className={`col-span-8 w-full ${Object.keys(fields).length > 1 ? " h-[280px]" : " h-[280px]"} `}>
+                                <div className={`relative overflow-y-auto py-1 h-full`}>
+                                  <table className="w-full border-collapse table-fixed">
+                                    <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
+                                      <tr>
+                                        <th className={`w-10 px-2 py-2 text-center font-medium text-[12px] `}>S.No</th>
+                                        <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Size Name</th>
+                                        {effectivePricingMode == "SIZE_COLOR" && (
+                                          <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Color Name</th>
+                                        )}
+                                        <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Barcode</th>
+                                        <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sku</th>
+                                        <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price</th>
+                                        <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th>
+                                        <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {itemPriceList.map((item, index) => (
+                                        <tr
+                                          key={index}
+                                          onContextMenu={(e) => {
+                                            if (!readOnly) {
+                                              handleRightSubGridClick(e, index, "notes");
+                                            }
+                                          }}
+                                        >
+                                          <td className="border border-gray-200 w-10 px-1 py-1 text-center text-xs ">{index + 1}</td>
+                                          <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                            {findFromList(item?.sizeId, sizeData?.data, "name")}
+                                          </td>
+                                          {effectivePricingMode == "SIZE_COLOR" && (
+                                            <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
+                                              {findFromList(item?.colorId, colorData?.data, "name")}
+                                            </td>
+                                          )}
+                                          <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
+                                            <input
+                                              type="text"
+                                              min="0"
+                                              rows={1}
+                                              onFocus={e => e.target.select()}
+                                              className="text-right rounded w-full px-1 py-1 text-xs"
+                                              value={item.barcode}
+                                              disabled={readOnly || isLegacyItem}
+                                              onChange={e => handleInputChange(e.target.value, index, "barcode")}
+                                              onBlur={e => handleInputChange(e.target.value, index, "barcode")}
+                                            />
+                                          </td>
+                                          <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                            <input
+                                              type="text"
+                                              min="0"
+                                              rows={1}
+                                              onFocus={e => e.target.select()}
+                                              className="text-right rounded w-full px-1 py-1 text-xs"
+                                              value={item.sku}
+                                              disabled={readOnly || isLegacyItem}
+                                              onChange={e => handleInputChange(e.target.value, index, "sku")}
+                                              onBlur={e => handleInputChange(e.target.value, index, "sku")}
+                                            />
+                                          </td>
+                                          <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                            <input
+                                              type="text"
+                                              min="0"
+                                              rows={1}
+                                              onFocus={e => e.target.select()}
+                                              className="text-right rounded w-full px-1 py-1 text-xs"
+                                              value={item.salesPrice}
+                                              disabled={readOnly || isLegacyItem}
+                                              onChange={e => handleInputChange(e.target.value, index, "salesPrice")}
+                                              onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
+                                            />
+                                          </td>
+                                          <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                            <input
+                                              type="text"
+                                              min="0"
+                                              rows={1}
+                                              onFocus={e => e.target.select()}
+                                              className="text-right rounded w-full px-1 py-1 text-xs"
+                                              value={item.offerPrice}
+                                              disabled={readOnly || isLegacyItem}
+                                              onChange={e => handleInputChange(e.target.value, index, "offerPrice")}
+                                              onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
+                                            />
+                                          </td>
+                                          <td className="border border-gray-200 px-2 py-1 text-xs">
+                                            <button
+                                              type="button"
+                                              onClick={() => setGridIndex((prev) => (prev === index ? null : index))}
+                                              className={`w-full rounded-md border px-2 py-1 text-left ${gridIndex === index ? "border-indigo-400 bg-indigo-50 text-indigo-700" : "border-gray-200 bg-gray-50 text-gray-700"}`}
+                                            >
+                                              {getLowStockSummary(item)}
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                              {contextMenu && (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    top: `${contextMenu.mouseY - 40}px`,
+                                    left: `${contextMenu.mouseX - 80}px`,
+                                    boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                                    padding: "8px",
+                                    borderRadius: "4px",
+                                    zIndex: 1000,
+                                  }}
+                                  className="bg-gray-100"
+                                  onMouseLeave={handleCloseContextMenu}
+                                >
+                                  <div className="flex flex-col gap-1">
+                                    <button
+                                      className=" text-black text-[12px] text-left rounded px-1"
+                                      onClick={() => {
+                                        handleDeleteRow(contextMenu.rowId);
+                                        handleCloseContextMenu();
+                                      }}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="col-span-4 h-[280px] min-h-0">
+                                {itemPriceList[gridIndex] ? (
+                                  <LocationStockEditor
+                                    rows={itemPriceList[gridIndex]?.MinimumStockQty || []}
+                                    onChange={(rows) => handleMinimumStockRowsChange(gridIndex, rows)}
+                                    locationOptions={id ? storeOptions : storeOptions?.filter((i) => i.active)}
+                                    readOnly={readOnly}
+                                    title={`Stock Alerts${effectivePricingMode == "SIZE_COLOR"
+                                      ? ` - ${findFromList(itemPriceList[gridIndex]?.sizeId, sizeData?.data, "name")} / ${findFromList(itemPriceList[gridIndex]?.colorId, colorData?.data, "name")}`
+                                      : ` - ${findFromList(itemPriceList[gridIndex]?.sizeId, sizeData?.data, "name")}`
+                                      }`}
+                                  />
+                                ) : (
+                                  <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 text-center text-xs text-gray-500">
+                                    Select a row to edit location-wise stock alerts.
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                    </fieldset>
+
+
+
+                  </div>
+
+                </fieldset>
+
+              </div>
+            </div>
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+          </>}
         </Modal >
       )}
 
@@ -1416,6 +1968,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           }}
         />
       )}
-    </div>
+    </MasterPageLayout>
   );
 }

@@ -70,6 +70,48 @@ function getTotalReceivedAmountForSaleOrder(saleOrder) {
     ) || 0);
 }
 
+function calculateDeliveryNetAmount(deliveryItems = [], { packingChargeEnabled, packingCharge, shippingChargeEnabled, shippingCharge } = {}) {
+    const lineNetAmount = (deliveryItems || []).reduce((acc, curr) => {
+        const price = parseFloat(curr?.price || 0) || 0;
+        const qty = parseFloat(curr?.qty || 0) || 0;
+        const taxPercent = parseFloat(curr?.taxPercent || 0) || 0;
+        const taxMethod = curr?.taxMethod || "Inclusive";
+        const discountType = curr?.discountType;
+        const discountValue = parseFloat(curr?.discountValue || 0) || 0;
+
+        const gross = price * qty;
+        let discountedAmount = gross;
+
+        if (discountType === "Percentage") {
+            discountedAmount = gross - (gross * discountValue) / 100;
+        } else if (discountType === "Flat") {
+            discountedAmount = gross - discountValue;
+        }
+
+        discountedAmount = Math.max(0, discountedAmount);
+
+        if (taxMethod === "Inclusive" && taxPercent > 0) {
+            return acc + discountedAmount;
+        }
+
+        return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+    }, 0);
+
+    const packingAmount = packingChargeEnabled ? (parseFloat(packingCharge || 0) || 0) : 0;
+    const shippingAmount = shippingChargeEnabled ? (parseFloat(shippingCharge || 0) || 0) : 0;
+
+    return lineNetAmount + packingAmount + shippingAmount;
+}
+
+function getRemainingPaymentCapacityForSaleOrder(saleOrder) {
+    const totalReceivedAmount = getTotalReceivedAmountForSaleOrder(saleOrder);
+    const consumedAmount = (saleOrder?.SalesDelivery || []).reduce((acc, salesDelivery) => (
+        acc + calculateDeliveryNetAmount(salesDelivery?.SalesDeliveryItems, salesDelivery)
+    ), 0);
+
+    return Math.max(0, totalReceivedAmount - consumedAmount);
+}
+
 
 
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
@@ -230,6 +272,7 @@ async function getOne(id) {
         data?.SalesDelivery
     );
     const totalReceivedAmount = getTotalReceivedAmountForSaleOrder({ ...data, Quotation: quotationWithPayments });
+    const remainingPaymentCapacity = getRemainingPaymentCapacityForSaleOrder({ ...data, Quotation: quotationWithPayments });
 
     return {
         statusCode: 0,
@@ -238,6 +281,7 @@ async function getOne(id) {
             Quotation: quotationWithPayments,
             remainingSaleOrderItems,
             totalReceivedAmount,
+            remainingPaymentCapacity,
             canConvertToDelivery: remainingSaleOrderItems.length > 0,
         }
     };

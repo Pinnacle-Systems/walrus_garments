@@ -7,6 +7,11 @@ import { getDirectInwardReturnItemsAlreadyData, getDirectInwardReturnItemsLotBre
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import dataIntegrityValidation from "../validators/DataIntegregityValidation/index.js";
 import { prisma } from '../lib/prisma.js';
+import {
+    getBarcodeGenerationMethod,
+    validateVariantRowShape,
+} from './itemVariantValidation.js';
+import { pickStockRuntimeFieldValues } from './stockRuntimeFields.js';
 
 function getInwardOrReturnShortCode(poInwardOrDirectInward) {
     switch (poInwardOrDirectInward) {
@@ -61,6 +66,89 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
         (searchDueDate ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate) : true) &&
         (searchPoType ? (item.poType.toLowerCase().includes(searchPoType.toLowerCase())) : true)
     )
+}
+
+async function validateActiveItemsForInward(directInwardReturnItems = []) {
+    const itemIds = [...new Set(
+        (directInwardReturnItems || [])
+            .map((item) => item?.itemId ? parseInt(item.itemId) : null)
+            .filter(Boolean)
+    )];
+
+    if (!itemIds.length) {
+        return;
+    }
+
+    const inactiveItems = await prisma.item.findMany({
+        where: {
+            id: {
+                in: itemIds
+            },
+            active: false
+        },
+        select: {
+            id: true,
+            name: true,
+            code: true
+        }
+    });
+
+    if (!inactiveItems.length) {
+        return;
+    }
+
+    const itemLabel = inactiveItems
+        .map((item) => item?.name || item?.code || `#${item.id}`)
+        .join(", ");
+
+    throw {
+        statusCode: 1,
+        message: `Inactive items cannot be used in inward operations: ${itemLabel}`
+    };
+}
+
+async function validateInventoryVariantRows(directInwardReturnItems = [], rowLabelPrefix) {
+    const itemIds = [...new Set(
+        (directInwardReturnItems || [])
+            .map((item) => item?.itemId ? parseInt(item.itemId) : null)
+            .filter(Boolean)
+    )];
+
+    if (!itemIds.length) {
+        return;
+    }
+
+    const [barcodeGenerationMethod, items] = await Promise.all([
+        getBarcodeGenerationMethod(),
+        prisma.item.findMany({
+            where: {
+                id: {
+                    in: itemIds,
+                },
+            },
+            select: {
+                id: true,
+                isLegacy: true,
+            },
+        }),
+    ]);
+
+    const itemMap = new Map(items.map((item) => [item.id, item]));
+
+    (directInwardReturnItems || []).forEach((item, index) => {
+        const itemId = item?.itemId ? parseInt(item.itemId) : null;
+        if (!itemId) {
+            return;
+        }
+
+        validateVariantRowShape({
+            flowType: "canonical",
+            isLegacy: itemMap.get(itemId)?.isLegacy,
+            barcodeGenerationMethod,
+            row: item,
+            rowLabel: `${rowLabelPrefix} ${index + 1}`,
+        });
+    });
 }
 
 
@@ -1114,9 +1202,7 @@ async function createYarnItemsStock(tx, poType, poInwardOrDirectInward, branchId
             price: item.price ? parseFloat(item.price) : undefined,
             sectionId: item?.sectionId ? parseInt(item?.sectionId) : undefined,
             barcode: item?.barcode ? String(item?.barcode) : undefined,
-
-
-
+            ...pickStockRuntimeFieldValues(item),
         }
     })
 }
@@ -1184,6 +1270,8 @@ async function create(body) {
         payTermId, processValid = false,
         vehicleNo, specialInstructions, remarks, orderId, locationId,
         branchId, active, userId, finYearId } = await body
+    await validateActiveItemsForInward(directInwardReturnItems);
+    await validateInventoryVariantRows(directInwardReturnItems, `${poInwardOrDirectInward} row`);
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let docId = await getNextDocId(branchId, poInwardOrDirectInward, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
@@ -1285,7 +1373,7 @@ async function createYarnItemsUpdateStock(tx, poType, poInwardOrDirectInward, br
             qty: item["qty"] ? parseFloat(item["qty"]) : undefined,
             price: item["price"] ? parseFloat(item["price"]) : undefined,
             sectionId: item["sectionId"] ? parseFloat(item["sectionId"]) : undefined,
-
+            ...pickStockRuntimeFieldValues(item),
         }
     })
 }
@@ -1381,6 +1469,8 @@ async function update(id, body) {
         supplierId, directInwardReturnItems, dcNo, dcDate, storeId,
         vehicleNo, specialInstructions, remarks, orderId, locationId, partyId,
         branchId, active, userId } = await body
+    await validateActiveItemsForInward(directInwardReturnItems);
+    await validateInventoryVariantRows(directInwardReturnItems, `${poInwardOrDirectInward} row`);
 
 
     const dataFound = await prisma.directInwardOrReturn.findUnique({

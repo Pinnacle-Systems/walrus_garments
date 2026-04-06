@@ -15,6 +15,7 @@ import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import MasterPageLayout from "../MasterPageLayout";
 
 const MODEL = "Employee Category Master";
 export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
@@ -372,20 +373,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     }
 
     return (
-        <div onKeyDown={handleKeyDown} className="p-1">
-            <div className="w-full flex bg-white p-1 justify-between items-center">
-                <h5 className="text-2xl font-bold text-gray-800">Employee Category Master</h5>
-                <div className="flex items-center">
-                    <button
-                        onClick={() => { setForm(true); onNew(); }}
-                        className="bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-                    >
-                        + Add New Employee Category
-                    </button>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+        <MasterPageLayout
+            title="Employee Category Master"
+            addButtonLabel="+ Add New Employee Category"
+            onAdd={() => { setForm(true); onNew(); }}
+            onKeyDown={handleKeyDown}
+        >
                 <ReusableTable
                     columns={columns}
                     data={allData?.data}
@@ -394,7 +387,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     onDelete={deleteData}
                     itemsPerPage={10}
                 />
-            </div>
 
             <div>
                 {form === true && (
@@ -452,6 +444,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     </Modal>
                 )}
             </div>
-        </div>
+        </MasterPageLayout>
     );
 }

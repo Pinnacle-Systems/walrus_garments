@@ -3,7 +3,24 @@ import secureLocalStorage from "react-secure-storage";
 import { IMAGE_UPLOAD_URL } from "../Constants";
 import { useEffect, useRef } from "react";
 import { toWords } from "number-to-words";
-import { useGetItemPriceListQuery } from "../redux/uniformService/ItemMasterService";
+import {
+  DEFAULT_BARCODE_GENERATION_METHOD,
+  getConfiguredStockDrivenFields,
+  getItemVariantColorOptions,
+  getItemVariantSizeOptions,
+  getStockMaintenanceConfig,
+  STOCK_DRIVEN_FIELD_KEYS,
+  resolveBarcodeGenerationMethod,
+} from "./stockMaintenanceRules";
+export {
+  DEFAULT_BARCODE_GENERATION_METHOD,
+  getConfiguredStockDrivenFields,
+  getItemVariantColorOptions,
+  getItemVariantSizeOptions,
+  getStockMaintenanceConfig,
+  STOCK_DRIVEN_FIELD_KEYS,
+  resolveBarcodeGenerationMethod,
+};
 
 
 export function getImageUrlPath(fileName) {
@@ -453,47 +470,19 @@ export const useIdleLogout = (
   }, [isLoggedIn, onLogout]);
 };
 
-
-export function getUniqueArrayBySize(rowData, allData, key, itemId, itemPriceList) {
-
-
-
-  const item = rowData?.[0]
-
-
-  if (item?.barcodeGenerationMethod == "STANDARD") {
-    return allData
-  } else {
-    return allData?.filter(all =>
-      itemPriceList?.data?.filter(i => i.itemId == itemId)?.some(item => item[key] == all?.id)
-    )
-  }
+// Backward-compatible aliases for older consumers.
+export function getUniqueArrayBySize(masterData, allData, key, itemId) {
+  return getItemVariantSizeOptions(masterData, allData, key, itemId);
 }
 
-
-export function getUniqueArrayByColor(rowData, allData, key, itemId, itemPriceList) {
-  const item = rowData?.[0]
-
-
-  if (item?.barcodeGenerationMethod == "STANDARD") {
-    return allData
-  } else {
-    return allData?.filter(all =>
-      itemPriceList?.data?.filter(i => i.itemId == itemId)?.some(item => item[key] == all?.id)
-    )
-  }
+export function getUniqueArrayByColor(masterData, allData, key, itemId, sizeId = "") {
+  return getItemVariantColorOptions(masterData, allData, key, itemId, sizeId);
 }
 
 
 export function uppercase(inputValue) {
   if (!inputValue) return '';
   return inputValue.toUpperCase();
-}
-
-export const DEFAULT_BARCODE_GENERATION_METHOD = "STANDARD";
-
-export function resolveBarcodeGenerationMethod(itemControlPanel) {
-  return itemControlPanel?.barcodeGenerationMethod || DEFAULT_BARCODE_GENERATION_METHOD;
 }
 
 export function getItemBarcodeGenerationMethod(item, fallbackMethod = DEFAULT_BARCODE_GENERATION_METHOD) {
@@ -514,6 +503,11 @@ export function getItemPriceForBarcodeGenerationMode(item, barcodeGenerationMeth
   }
 
   return priceList?.[0]?.salesPrice || 0;
+}
+
+export function normalizeMasterValue(value) {
+  if (value === undefined || value === null) return "";
+  return value.toString().trim().toUpperCase();
 }
 
 

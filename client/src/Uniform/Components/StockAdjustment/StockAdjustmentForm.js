@@ -1,33 +1,37 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
-import { useAddItemMasterMutation, useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
-import { useAddSizeMasterMutation, useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useAddColorMasterMutation, useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-import { useAddLegacyStockMutation, useUpdateLegacyStockMutation } from "../../../redux/uniformService/LegacyStockService";
-import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
+import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { getCommonParams, getConfiguredStockDrivenFields, getStockMaintenanceConfig, isGridDatasValid } from "../../../Utils/helper";
 import { toast } from "react-toastify";
-import { FiPlus, FiTrash, FiSave, FiSettings, FiEdit2 } from "react-icons/fi";
-import { Check, X } from "lucide-react";
-import Modal from "../../../UiComponents/Modal";
-import { TextInput, DropdownInput, ReusableSearchableInput } from "../../../Inputs";
-import { adjTypeData, ItemTypes } from "../../../Utils/DropdownData";
+import { FiSave, FiSettings, FiEdit2 } from "react-icons/fi";
+import { DropdownInput } from "../../../Inputs";
+import { adjTypeData } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import Swal from "sweetalert2";
 import QuickAddItemModal from "./QuickAddItemModal";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { FaFileAlt } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
-import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
-import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { HiOutlineRefresh } from "react-icons/hi";
 import { useAddStockAdjustmentMutation, useGetStockAdjustmentByIdQuery, useUpdateStockAdjustmentMutation } from "../../../redux/uniformService/StockAdjustmentService";
 import moment from "moment";
 import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 import { getItemBarcodeGenerationMethod, getItemPriceForBarcodeGenerationMode, resolveBarcodeGenerationMethod } from "../../../Utils/helper";
+import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
+import QuickAddSizeModal from "../OpeningStock/QuickAddSizeModal";
+import QuickAddColorModal from "../OpeningStock/QuickAddColorModal";
 import TransactionLineItemsSection, {
+  transactionTableActionCellClassName,
+  transactionTableFocusCellClassName,
   transactionTableClassName,
   transactionTableHeadClassName,
+  transactionTableHeaderCellClassName,
+  transactionTableIndexCellClassName,
+  transactionTableNumberInputClassName,
+  transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
 
 const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
@@ -60,12 +64,10 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
     color: { open: false, rowId: null, value: "" },
   });
 
-  // --- Quick Add Form State ---
-  const [quickItem, setQuickItem] = useState({ name: "", code: "", type: "" });
-
   // --- Queries & Mutations ---
   const { data: itemList } = useGetItemMasterQuery({ params });
   const { data: itemControlData } = useGetItemControlPanelMasterQuery({ params });
+  const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: colorList } = useGetColorMasterQuery({ params });
   const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
@@ -103,6 +105,8 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
   const colorOptions = colorList?.data?.map((c) => ({ value: c.id, label: c.name })) || [];
   const uomOptions = uomList?.data?.map((c) => ({ value: c.id, label: c.name })) || [];
   const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
+  const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
+  const stockDrivenFields = getConfiguredStockDrivenFields(stockReportControlData?.data?.[0]);
 
 
   useEffect(() => {
@@ -158,7 +162,6 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
   const openQuickAdd = (type, value, rowId, editItem = null) => {
     setModalState((prev) => ({ ...prev, [type]: { open: true, rowId, value, editItem } }));
-    if (type === "item") setQuickItem({ name: value, code: value, type: "" });
   };
 
   const closeQuickAdd = (type) => {
@@ -168,6 +171,12 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
   // --- Save Logic (Quick Add) ---
   const handleQuickSaveItem = (newItem) => {
     updateRow(modalState.item.rowId, "itemId", newItem.id, { item_name: newItem.name });
+  };
+  const handleQuickSaveSize = (newSize) => {
+    updateRow(modalState.size.rowId, "sizeId", newSize.id, { size: newSize.name });
+  };
+  const handleQuickSaveColor = (newColor) => {
+    updateRow(modalState.color.rowId, "colorId", newColor.id, { color: newColor.name });
   };
 
   // --- Save Logic (Batch Stock) ---
@@ -198,6 +207,9 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
       id: Date.now() + Math.random(),
       poItemsId: ""
     };
+    stockDrivenFields.forEach((field) => {
+      newRow[field.key] = "";
+    });
     setRows([...rows, newRow]);
   };
 
@@ -262,8 +274,10 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
 
   const saveData = (nextProcess) => {
-
-    const mandatoryFields = ["itemId", "sizeId", "adjType", "qty", "price"];
+    const mandatoryFields = ["itemId", "adjType", "qty", "price"];
+    if (stockMaintenance.trackSize) mandatoryFields.push("sizeId");
+    if (stockMaintenance.trackColor) mandatoryFields.push("colorId");
+    mandatoryFields.push(...stockDrivenFields.map((field) => field.key));
 
     if (!validateData(data)) {
       Swal.fire({ title: "Please fill all required fields...!", icon: "warning" });
@@ -374,19 +388,20 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
         >
             <table className={transactionTableClassName}>
               <thead className={transactionTableHeadClassName}>
-                <tr className="text-xs font-semibold text-gray-600">
-                  <th className="border px-2 py-1.5 w-12">S.No</th>
-                  <th className="border px-2 py-1.5 w-64 text-left">Item Name</th>
-                  <th className="border px-2 py-1.5 w-32 text-left">Size</th>
-                  {/* <th className="border px-2 py-1.5 w-32 text-left">Color</th> */}
-                  <th className="border px-2 py-1.5 w-32 text-left">UOM</th>
-
-                  <th className="border px-2 py-1.5 w-40 text-left">Barcode</th>
-                  <th className="border px-2 py-1.5 w-24 text-left">Price</th>
-                  <th className="border px-2 py-1.5 w-24 text-left">Adjust Type</th>
-
-                  <th className="border px-2 py-1.5 w-24 text-right">Qty</th>
-                  <th className="border px-2 py-1.5 w-12 text-center">Action</th>
+                <tr>
+                  <th className={`${transactionTableHeaderCellClassName} w-12`}>S.No</th>
+                  <th className={`${transactionTableHeaderCellClassName} w-64`}>Item Name</th>
+                  {stockMaintenance.trackSize && <th className={`${transactionTableHeaderCellClassName} w-32`}>Size</th>}
+                  {stockMaintenance.trackColor && <th className={`${transactionTableHeaderCellClassName} w-32`}>Color</th>}
+                  {stockDrivenFields.map((field) => (
+                    <th key={field.key} className={`${transactionTableHeaderCellClassName} w-32`}>{field.label}</th>
+                  ))}
+                  <th className={`${transactionTableHeaderCellClassName} w-32`}>UOM</th>
+                  <th className={`${transactionTableHeaderCellClassName} w-40`}>Barcode</th>
+                  <th className={`${transactionTableHeaderCellClassName} w-24`}>Price</th>
+                  <th className={`${transactionTableHeaderCellClassName} w-24`}>Adjust Type</th>
+                  <th className={`${transactionTableHeaderCellClassName} w-24`}>Qty</th>
+                  <th className={`${transactionTableHeaderCellClassName} w-16`}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -395,22 +410,22 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                   const validSizeIds = selectedItemData?.ItemPriceList?.map(p => p.sizeId) || [];
                   const validColorIds = selectedItemData?.ItemPriceList?.map(p => p.colorId) || [];
 
-                  const filteredSizeOptions = sizeOptions.filter(o => validSizeIds.includes(o.value));
-                  const filteredColorOptions = colorOptions.filter(o => validColorIds.includes(o.value));
+                  const filteredSizeOptions = validSizeIds.length > 0 ? sizeOptions.filter(o => validSizeIds.includes(o.value)) : sizeOptions;
+                  const filteredColorOptions = validColorIds.length > 0 ? colorOptions.filter(o => validColorIds.includes(o.value)) : colorOptions;
 
                   return (
-                    <tr key={row.id} className="hover:bg-gray-50 border-b"
+                    <tr key={row.id} className="border border-blue-gray-200"
 
                       onContextMenu={(e) => {
                         if (!readOnly) {
                           handleRightClick(e, idx, "shiftTimeHrs");
                         }
                       }}>
-                      <td className="border px-2 py-1 text-center text-xs">{idx + 1}</td>
-                      <td className="border px-2 py-1">
+                      <td className={transactionTableIndexCellClassName}>{idx + 1}</td>
+                      <td className={transactionTableFocusCellClassName}>
                         <div className="flex items-center gap-1">
                           <div className="flex-1 uppercase">
-                            <CreatableSelect isClearable placeholder="Item..." options={itemOptions} value={itemOptions.find(o => o.value === row.itemId)} styles={customSelectStyles}
+                            <Select isClearable placeholder="Item..." options={itemOptions} value={itemOptions.find(o => o.value === row.itemId)} styles={customSelectStyles}
                               onChange={o => {
                                 const selectedItem = itemList?.data?.find(i => i.id === (o?.value || ""));
                                 updateRow(row.id, "itemId", o?.value || "", {
@@ -424,9 +439,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                                     : ""
                                 });
                               }}
-                              onInputChange={(v) => v.toUpperCase()}
-                              onCreateOption={v => openQuickAdd("item", v.toUpperCase(), row.id)}
-                              formatCreateLabel={(v) => `Create Item: "${v.toUpperCase()}"`} />
+                            />
                           </div>
                           {row.itemId && (
                             <button
@@ -439,28 +452,61 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                           )}
                         </div>
                       </td>
-                      <td className="border px-2 py-1">
-                        <Select isClearable placeholder="Size..." options={filteredSizeOptions} value={filteredSizeOptions.find(o => o.value === row.sizeId)} styles={customSelectStyles}
-                          onChange={o => updateRow(row.id, "sizeId", o?.value || "", { size: o?.label || "" })}
-                        />
-                      </td>
+                      {stockMaintenance.trackSize && (
+                        <td className={transactionTableFocusCellClassName}>
+                          <CreatableSelect
+                            isClearable
+                            placeholder="Size..."
+                            options={filteredSizeOptions}
+                            value={filteredSizeOptions.find(o => o.value === row.sizeId)}
+                            styles={customSelectStyles}
+                            onChange={o => updateRow(row.id, "sizeId", o?.value || "", { size: o?.label || "" })}
+                            onCreateOption={v => openQuickAdd("size", v.toUpperCase(), row.id)}
+                            formatCreateLabel={(v) => `Create Size: "${v.toUpperCase()}"`}
+                          />
+                        </td>
+                      )}
+                      {stockMaintenance.trackColor && (
+                        <td className={transactionTableFocusCellClassName}>
+                          <CreatableSelect
+                            isClearable
+                            placeholder="Color..."
+                            options={filteredColorOptions}
+                            value={filteredColorOptions.find(o => o.value === row.colorId)}
+                            styles={customSelectStyles}
+                            onChange={o => updateRow(row.id, "colorId", o?.value || "", { color: o?.label || "" })}
+                            onCreateOption={v => openQuickAdd("color", v.toUpperCase(), row.id)}
+                            formatCreateLabel={(v) => `Create Color: "${v.toUpperCase()}"`}
+                          />
+                        </td>
+                      )}
+                      {stockDrivenFields.map((field) => (
+                        <td key={field.key} className={transactionTableFocusCellClassName}>
+                          <input
+                            type="text"
+                            className={`${transactionTableSelectInputClassName} uppercase`}
+                            value={row?.[field.key] || ""}
+                            onChange={(e) => updateRow(row.id, field.key, e.target.value)}
+                          />
+                        </td>
+                      ))}
 
-                      <td className="border px-2 py-1">
+                      <td className={transactionTableFocusCellClassName}>
                         <Select isClearable placeholder="UOM..." options={uomOptions} value={uomOptions?.find(o => o.value === row.uomId)} styles={customSelectStyles}
                           onChange={o => updateRow(row.id, "uomId", o?.value || "", { uom: o?.label || "" })}
                         />
                       </td>
-                      <td className="border px-2 py-1">
-                        <input type="text" className="w-full px-2 py-1 text-xs border rounded outline-none uppercase" value={row.barcode} onChange={e => updateRow(row.id, "barcode", e.target.value)} />
+                      <td className={transactionTableFocusCellClassName}>
+                        <input type="text" className={`${transactionTableSelectInputClassName} uppercase`} value={row.barcode} onChange={e => updateRow(row.id, "barcode", e.target.value)} />
                       </td>
-                      <td className="border px-2 py-1"><input type="number" className="w-full px-2 py-1 text-xs border rounded outline-none text-right" value={row.price} onChange={e => updateRow(row.id, "price", parseInt(e.target.value) || 0)} />
+                      <td className={transactionTableFocusCellClassName}><input type="number" className={transactionTableNumberInputClassName} value={row.price} onChange={e => updateRow(row.id, "price", parseInt(e.target.value) || 0)} />
                       </td>
-                      <td className="py-0.5 border border-gray-300 text-[11px]">
+                      <td className={transactionTableFocusCellClassName}>
                         <select
                           id={`adjType-${idx}`}
                           tabIndex={0}
                           disabled={readOnly || (row.salesQty ?? 0) > 0}
-                          className={`text-left w-full rounded py-1 table-data-input 
+                          className={`${transactionTableSelectInputClassName}
     ${row.adjType === "PLUS" ? "text-green-600" : ""}
     ${row.adjType === "MINUS" ? "text-red-600" : ""}
   `}
@@ -481,16 +527,16 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                           ))}
                         </select>
                       </td>
-                      <td className="border px-2 py-1"><input type="number" className="w-full px-2 py-1 text-xs border rounded outline-none text-right" value={row.qty} onChange={e => updateRow(row.id, "qty", parseInt(e.target.value) || 0)} />
+                      <td className={transactionTableFocusCellClassName}><input type="number" className={transactionTableNumberInputClassName} value={row.qty} onChange={e => updateRow(row.id, "qty", parseInt(e.target.value) || 0)} />
                       </td>
                       {/* <td className="border px-2 py-1 text-center">
                         <button onClick={() => removeRow(row.id)} className="text-red-500 hover:text-red-700"><FiTrash />
                         </button>
                       </td> */}
-                      <td className="w-16 px-1 py-1 text-center">
+                      <td className={transactionTableActionCellClassName}>
                         <input
                           readOnly
-                          className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
+                          className="w-full bg-transparent pr-2 text-right focus:border-transparent focus:outline-none"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
@@ -553,6 +599,22 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
               itemToEdit={modalState.item.editItem}
               onCreated={handleQuickSaveItem}
               barcodeGenerationMethod={barcodeGenerationMethod}
+            />
+          )}
+          {modalState.size.open && (
+            <QuickAddSizeModal
+              isOpen={modalState.size.open}
+              onClose={() => closeQuickAdd("size")}
+              sizeName={modalState.size.value}
+              onCreated={handleQuickSaveSize}
+            />
+          )}
+          {modalState.color.open && (
+            <QuickAddColorModal
+              isOpen={modalState.color.open}
+              onClose={() => closeQuickAdd("color")}
+              colorName={modalState.color.value}
+              onCreated={handleQuickSaveColor}
             />
           )}
 

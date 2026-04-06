@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import { getUniqueArrayByColor, getUniqueArrayBySize } from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
@@ -19,6 +18,15 @@ import TransactionLineItemsSection, {
     transactionTableRowClassName,
     transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
+import {
+    getCatalogColorOptions,
+    getCatalogColumnVisibility,
+    getCatalogSizeOptions,
+    isLegacyCatalogItem,
+    itemUsesColor,
+    itemUsesSize,
+    resolveSellablePriceRow,
+} from "../../../Utils/salesCatalogRules";
 
 const SaleOrderItems = ({
     id,
@@ -52,14 +60,9 @@ const SaleOrderItems = ({
 
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false);
 
-    const getBarcodeFromList = (itemId, sizeId, colorId) => {
-        if (!itemPriceList?.data || !itemId || !sizeId) return null;
-        return itemPriceList?.data?.find(item =>
-            String(item.itemId) === String(itemId) &&
-            String(item.sizeId) === String(sizeId) &&
-            (colorId ? String(item.colorId) === String(colorId) : !item.colorId)
-        );
-    };
+    const catalogItems = itemList?.data || [];
+    const catalogPriceRows = itemPriceList?.data || [];
+    const { showSize, showColor } = getCatalogColumnVisibility(catalogItems, catalogPriceRows);
 
     const getPriceFromTemplate = (itemId, qty) => {
         if (!priceTemplateList?.data || !itemId || !qty) return null;
@@ -80,10 +83,16 @@ const SaleOrderItems = ({
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(saleOrderItems);
         if (field === "itemId") {
-            const selectedItem = itemList?.data?.find(item => parseInt(item.id) === parseInt(value));
+            const selectedItem = catalogItems?.find(item => String(item.id) === String(value));
             if (selectedItem) {
                 newBlend[index]["sectionId"] = selectedItem.sectionId;
                 newBlend[index]["hsnId"] = selectedItem.hsnId;
+                if (!itemUsesSize(catalogItems, catalogPriceRows, selectedItem.id)) {
+                    newBlend[index]["sizeId"] = "";
+                }
+                if (!itemUsesColor(catalogItems, catalogPriceRows, selectedItem.id)) {
+                    newBlend[index]["colorId"] = "";
+                }
                 const selectedHsn = hsnList?.data?.find(hsn => parseInt(hsn.id) === parseInt(selectedItem.hsnId));
                 newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
                 newBlend[index]["taxMethod"] = newBlend[index]["taxMethod"] || "Inclusive";
@@ -102,14 +111,23 @@ const SaleOrderItems = ({
             const currentSize = field === "sizeId" ? value : newBlend[index].sizeId;
             const currentColor = field === "colorId" ? value : newBlend[index].colorId;
             const currentQty = field === "qty" ? value : newBlend[index].qty;
+            const isLegacySelection = isLegacyCatalogItem(catalogItems, currentItem);
+            const requiresSize = itemUsesSize(catalogItems, catalogPriceRows, currentItem);
+            const requiresColor = itemUsesColor(catalogItems, catalogPriceRows, currentItem);
 
             if (currentItem) {
                 const templateDetail = getPriceFromTemplate(currentItem, currentQty);
                 if (templateDetail) {
                     newBlend[index]["price"] = templateDetail.price;
                     newBlend[index]["priceType"] = "BulkOfferPrice";
-                } else if (currentSize) {
-                    const foundPrice = getBarcodeFromList(currentItem, currentSize, currentColor);
+                } else if (!requiresSize || currentSize || isLegacySelection) {
+                    const foundPrice = resolveSellablePriceRow(
+                        catalogItems,
+                        catalogPriceRows,
+                        currentItem,
+                        currentSize,
+                        requiresColor ? currentColor : ""
+                    );
                     if (foundPrice) {
                         const numericQty = parseFloat(currentQty || 0);
                         if (numericQty > 6 && foundPrice.offerPrice) {
@@ -176,6 +194,16 @@ const SaleOrderItems = ({
     const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
     const { data: colorList } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined } });
     const { data: hsnList } = useGetHsnMasterQuery({ params });
+    const isLegacyRow = (row) => isLegacyCatalogItem(catalogItems, row?.itemId);
+    const rowRequiresSize = (row) => itemUsesSize(catalogItems, catalogPriceRows, row?.itemId);
+    const rowRequiresColor = (row) => itemUsesColor(catalogItems, catalogPriceRows, row?.itemId);
+    const isSizeReady = (row) => !rowRequiresSize(row) || Boolean(row.itemId);
+    const isColorReady = (row) => !rowRequiresColor(row) || Boolean(rowRequiresSize(row) ? row.sizeId : row.itemId);
+    const isUomReady = (row) => {
+        if (rowRequiresColor(row)) return Boolean(row.colorId);
+        if (rowRequiresSize(row)) return Boolean(row.sizeId);
+        return Boolean(row.itemId);
+    };
 
     const dispatch = useDispatch();
     const handleCreateNew = (masterName = "") => {
@@ -222,8 +250,8 @@ const SaleOrderItems = ({
                                 <tr>
                                     <th className={`${compactHeaderCellClassName} w-12`}>S.No</th>
                                     <th className={`${compactHeaderCellClassName} w-52`}>Item</th>
-                                    <th className={`${compactHeaderCellClassName} w-16`}>Size</th>
-                                    <th className={`${compactHeaderCellClassName} w-32`}>Color</th>
+                                    {showSize && <th className={`${compactHeaderCellClassName} w-16`}>Size</th>}
+                                    {showColor && <th className={`${compactHeaderCellClassName} w-32`}>Color</th>}
                                     <th className={`${compactHeaderCellClassName} w-20`}>Hsn</th>
                                     <th className={`${compactHeaderCellClassName} w-12`}>UOM</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Quantity</th>
@@ -268,6 +296,7 @@ const SaleOrderItems = ({
                                             </td>
 
                                             {/* Size */}
+                                            {showSize && (
                                             <td className={compactFocusCellClassName}>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "sizeId"); }}
@@ -276,16 +305,18 @@ const SaleOrderItems = ({
                                                     value={row.sizeId}
                                                     onChange={e => handleInputChange(e.target.value, index, "sizeId")}
                                                     onBlur={e => handleInputChange(e.target.value, index, "sizeId")}
-                                                    disabled={readOnly || !row.itemId}
+                                                    disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
                                                 >
                                                     <option></option>
-                                                    {(id ? sizeList?.data : getUniqueArrayBySize(itemList?.data, sizeList?.data, "sizeId", row?.itemId))?.map(blend => (
+                                                    {getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map(blend => (
                                                         <option value={blend.id} key={blend.id}>{blend?.name}</option>
                                                     ))}
                                                 </select>
                                             </td>
+                                            )}
 
                                             {/* Color */}
+                                            {showColor && (
                                             <td className={compactFocusCellClassName}>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "colorId"); }}
@@ -293,14 +324,15 @@ const SaleOrderItems = ({
                                                     value={row.colorId}
                                                     onChange={e => handleInputChange(e.target.value, index, "colorId")}
                                                     onBlur={e => handleInputChange(e.target.value, index, "colorId")}
-                                                    disabled={readOnly || !row.sizeId}
+                                                    disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
                                                 >
                                                     <option hidden></option>
-                                                    {(id ? colorList?.data : getUniqueArrayByColor(itemList?.data, colorList?.data, "colorId", row?.itemId))?.map(blend => (
+                                                    {getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map(blend => (
                                                         <option value={blend.id} key={blend.id}>{blend?.name}</option>
                                                     ))}
                                                 </select>
                                             </td>
+                                            )}
 
                                             {/* HSN */}
                                             <td className={compactFocusCellClassName}>
@@ -310,7 +342,7 @@ const SaleOrderItems = ({
                                                     value={row.hsnId}
                                                     onChange={e => handleInputChange(e.target.value, index, "hsnId")}
                                                     onBlur={e => handleInputChange(e.target.value, index, "hsnId")}
-                                                    disabled={readOnly || !row.sizeId}
+                                                    disabled={readOnly || !row.itemId}
                                                 >
                                                     <option hidden></option>
                                                     {hsnList?.data?.map(blend => (
@@ -327,7 +359,7 @@ const SaleOrderItems = ({
                                                     value={row.uomId}
                                                     onChange={e => handleInputChange(e.target.value, index, "uomId")}
                                                     onBlur={e => handleInputChange(e.target.value, index, "uomId")}
-                                                    disabled={readOnly || !row.colorId}
+                                                    disabled={readOnly || !isUomReady(row)}
                                                 >
                                                     <option hidden></option>
                                                     {(id ? uomList?.data : uomList?.data?.filter(item => item.active))?.map(blend => (
