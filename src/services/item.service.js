@@ -532,9 +532,11 @@ async function updateItemPriceList(tx, itemPriceList, item) {
         }
     })
 
-    const promises = itemPriceList.map(async (priceItem) => {
+    const updatedPriceItems = [];
+
+    for (const priceItem of itemPriceList) {
         if (priceItem?.id) {
-            return await tx.ItemPriceList.update({
+            const updatedPriceItem = await tx.ItemPriceList.update({
                 where: {
                     id: parseInt(priceItem.id)
                 },
@@ -550,12 +552,12 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 
 
                 }
-            }).then(async (updatedPriceItem) => {
-                await syncMinimumStockQty(tx, updatedPriceItem.id, priceItem?.MinimumStockQty);
-                return updatedPriceItem;
-            })
+            });
+
+            await syncMinimumStockQty(tx, updatedPriceItem.id, priceItem?.MinimumStockQty);
+            updatedPriceItems.push(updatedPriceItem);
         } else {
-            return await tx.ItemPriceList.create({
+            const createdPriceItem = await tx.ItemPriceList.create({
                 data: {
                     itemId: parseInt(item?.id),
                     offerPrice: normalizePriceString(priceItem?.offerPrice),
@@ -566,13 +568,14 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                     barcode: normalizeLegacyBarcode(priceItem?.barcode),
 
                 }
-            }).then(async (createdPriceItem) => {
-                await syncMinimumStockQty(tx, createdPriceItem.id, priceItem?.MinimumStockQty);
-                return createdPriceItem;
-            })
+            });
+
+            await syncMinimumStockQty(tx, createdPriceItem.id, priceItem?.MinimumStockQty);
+            updatedPriceItems.push(createdPriceItem);
         }
-    })
-    return Promise.all(promises)
+    }
+
+    return updatedPriceItems;
 }
 
 

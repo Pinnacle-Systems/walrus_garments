@@ -254,6 +254,22 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     () => new Map(legacyItems.map((item) => [normalizeLookupValue(item.name), item])),
     [legacyItems]
   );
+  const itemsByBarcode = React.useMemo(() => {
+    const barcodeMap = new Map();
+
+    legacyItems.forEach((item) => {
+      const normalizedBarcode = getExistingLegacyBarcode(item);
+      if (!normalizedBarcode) {
+        return;
+      }
+
+      const matches = barcodeMap.get(normalizedBarcode) || [];
+      matches.push(item);
+      barcodeMap.set(normalizedBarcode, matches);
+    });
+
+    return barcodeMap;
+  }, [legacyItems]);
   const itemLookupOptions = React.useMemo(
     () => legacyItems.map((item) => ({
       value: String(item.id),
@@ -310,6 +326,47 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       : undefined;
     return resolvedFromState || itemByName.get(normalizeLookupValue(row?.item_name));
   }, [itemByName, legacyItems]);
+  const getBarcodeMatches = React.useCallback((row) => {
+    const normalizedBarcode = normalizeCodeValue(row?.item_code);
+    if (!normalizedBarcode) {
+      return [];
+    }
+
+    return itemsByBarcode.get(normalizedBarcode) || [];
+  }, [itemsByBarcode]);
+  const getItemIdentityAttentionState = React.useCallback((row) => {
+    const normalizedName = normalizeLookupValue(row?.item_name);
+    if (!normalizedName) {
+      return null;
+    }
+
+    const resolvedItem = getResolvedItem(row);
+    if (resolvedItem) {
+      return null;
+    }
+
+    const barcodeMatches = getBarcodeMatches(row);
+    const normalizedBarcode = normalizeCodeValue(row?.item_code);
+
+    if (normalizedBarcode && barcodeMatches.length > 1) {
+      return {
+        tone: "conflict",
+        message: `Barcode ${normalizedBarcode} matches multiple Item Master rows. Clean up Item Master before loading stock.`,
+      };
+    }
+
+    if (normalizedBarcode && barcodeMatches.length === 1) {
+      return {
+        tone: "conflict",
+        message: `Row name ${normalizeMasterValue(row.item_name)} differs from Item Master item ${barcodeMatches[0].name} for barcode ${normalizedBarcode}. Update Item Master before loading stock.`,
+      };
+    }
+
+    return {
+      tone: "pending",
+      message: `Item ${normalizeMasterValue(row.item_name)} will be created during save`,
+    };
+  }, [getBarcodeMatches, getResolvedItem]);
 
   const getResolvedSize = React.useCallback((row) => {
     const resolvedFromState = row?.sizeId
@@ -424,11 +481,11 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       };
     }
 
-    if (field.key === "item_name" && normalizeLookupValue(row?.item_name) && !getResolvedItem(row)) {
-      return {
-        tone: "pending",
-        message: `Item ${normalizeMasterValue(row.item_name)} will be created during save`,
-      };
+    if (field.key === "item_name") {
+      const identityAttentionState = getItemIdentityAttentionState(row);
+      if (identityAttentionState) {
+        return identityAttentionState;
+      }
     }
 
     if (field.key === "size" && stockMaintenance.trackSize && normalizeLookupValue(row?.size) && !getResolvedSize(row)) {
@@ -448,8 +505,8 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     return null;
   }, [
     getResolvedColor,
-    getResolvedItem,
     getResolvedSize,
+    getItemIdentityAttentionState,
     isFieldValueMissing,
     stockMaintenance.trackColor,
     stockMaintenance.trackSize,
@@ -511,7 +568,8 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       const normalizedSize = normalizeLookupValue(row?.size);
       const normalizedColor = normalizeLookupValue(row?.color);
 
-      if (normalizedItemName && !getResolvedItem(row) && !seenItems.has(normalizedItemName)) {
+      const itemIdentityAttentionState = getItemIdentityAttentionState(row);
+      if (normalizedItemName && itemIdentityAttentionState?.tone === "pending" && !seenItems.has(normalizedItemName)) {
         seenItems.add(normalizedItemName);
         missingItems.push({
           name: normalizeMasterValue(row.item_name),
@@ -540,12 +598,18 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       sizes: missingSizes,
       colors: missingColors,
     };
-  }, [getResolvedColor, getResolvedItem, getResolvedSize, stockItems, stockMaintenance.trackColor, stockMaintenance.trackSize]);
+  }, [getItemIdentityAttentionState, getResolvedColor, getResolvedSize, stockItems, stockMaintenance.trackColor, stockMaintenance.trackSize]);
 
   const getExistingLegacyConflicts = React.useCallback(() => {
     const conflicts = [];
 
     stockItems.forEach((row, index) => {
+      const itemIdentityAttentionState = getItemIdentityAttentionState(row);
+      if (itemIdentityAttentionState?.tone === "conflict") {
+        conflicts.push(`Row ${index + 1}: ${itemIdentityAttentionState.message}`);
+        return;
+      }
+
       const existingItem = getResolvedItem(row);
       if (!existingItem) {
         return;
@@ -583,7 +647,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     });
 
     return conflicts;
-  }, [getResolvedItem, stockItems]);
+  }, [getItemIdentityAttentionState, getResolvedItem, stockItems]);
 
   const hydrateExistingLegacyItems = React.useCallback(async () => {
     const hydratedItemIds = new Set();
@@ -1097,6 +1161,8 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                           const attentionState = getFieldAttentionState(row, field);
                           const cellClassName = attentionState?.tone === "missing"
                             ? `${transactionTableFocusCellClassName} bg-red-50`
+                            : attentionState?.tone === "conflict"
+                              ? `${transactionTableFocusCellClassName} bg-orange-50`
                             : attentionState?.tone === "pending"
                               ? `${transactionTableFocusCellClassName} bg-amber-50`
                               : transactionTableFocusCellClassName;
@@ -1104,7 +1170,13 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                             ? transactionTableNumberInputClassName
                             : transactionTableSelectInputClassName;
                           const emphasizedInputClassName = attentionState
-                            ? `${inputClassName} ${attentionState.tone === "missing" ? "text-red-700 placeholder:text-red-300" : "text-amber-800 placeholder:text-amber-300"}`
+                            ? `${inputClassName} ${
+                              attentionState.tone === "missing"
+                                ? "text-red-700 placeholder:text-red-300"
+                                : attentionState.tone === "conflict"
+                                  ? "text-orange-800 placeholder:text-orange-300"
+                                  : "text-amber-800 placeholder:text-amber-300"
+                            }`
                             : inputClassName;
 
                           if (field.key === "uom") {
