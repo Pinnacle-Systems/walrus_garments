@@ -13,6 +13,7 @@ import { statusDropdown } from "../../../Utils/DropdownData";
 import { Check, Power } from "lucide-react";
 import Modal from "../../../UiComponents/Modal";
 import Swal from "sweetalert2";
+import MasterPageLayout from "../../../Basic/components/MasterPageLayout";
 
 const MODEL = "Gsm Master";
 
@@ -208,23 +209,15 @@ export default function Form() {
     ];
 
     return (
-        <div onKeyDown={handleKeyDown} className="p-1">
-            <div className="w-full flex bg-white p-1 justify-between items-center">
-                <h5 className="text-2xl font-bold text-gray-800">Gsm Master</h5>
-                <div className="flex items-center">
-                    <button
-                        onClick={() => {
-                            setForm(true);
-                            onNew();
-                        }}
-                        className="bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-                    >
-                        + Add New Gsm
-                    </button>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+        <MasterPageLayout
+            title="Gsm Master"
+            addButtonLabel="+ Add New Gsm"
+            onAdd={() => {
+                setForm(true);
+                onNew();
+            }}
+            onKeyDown={handleKeyDown}
+        >
                 <ReusableTable
                     columns={columns}
                     data={allData?.data}
@@ -233,7 +226,6 @@ export default function Form() {
                     onDelete={deleteData}
                     itemsPerPage={10}
                 />
-            </div>
 
             <div>
                 {form === true && (
@@ -320,6 +312,6 @@ export default function Form() {
                     </Modal>
                 )}
             </div>
-        </div>
+        </MasterPageLayout>
     );
 }

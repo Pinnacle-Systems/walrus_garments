@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation } from "../../redux/uniformService/ItemMasterService";
 import secureLocalStorage from "react-secure-storage";
 import Swal from "sweetalert2";
@@ -28,6 +28,7 @@ import { shouldDisableLinkedRecordField } from "./legacyEditPermissions";
 import { useGetSubCategoryQuery } from "../../redux/uniformService/SubCategoryMasterService";
 import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
 import { SubCategoryMaster } from "..";
+import MasterPageLayout from "../../Basic/components/MasterPageLayout";
 
 
 const createStandardPriceRow = () => ({
@@ -49,8 +50,6 @@ function sanitizePriceRowsForSave(priceRows = []) {
 
 export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
   const [form, setForm] = useState(onSuccess ? true : false);
-  const pageContainerRef = useRef(null);
-  const [availableViewportHeight, setAvailableViewportHeight] = useState(null);
 
   const [readOnly, setReadOnly] = useState(false);
   const [id, setId] = useState(editId || deleteId || "");
@@ -94,49 +93,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     saveNewButtonRef,
   } = refs;
   const [isLegacyItem, setIsLegacyItem] = useState(false);
-
-  const syncAvailableViewportHeight = useCallback(() => {
-    if (typeof window === "undefined" || !pageContainerRef.current) {
-      return;
-    }
-
-    const { top } = pageContainerRef.current.getBoundingClientRect();
-    const nextHeight = Math.max(window.innerHeight - Math.max(top, 0), 320);
-
-    setAvailableViewportHeight((currentHeight) =>
-      currentHeight === nextHeight ? currentHeight : nextHeight
-    );
-  }, []);
-
-  useLayoutEffect(() => {
-    syncAvailableViewportHeight();
-
-    if (typeof window === "undefined") {
-      return undefined;
-    }
-
-    const scheduleSync = () => {
-      window.requestAnimationFrame(syncAvailableViewportHeight);
-    };
-
-    window.addEventListener("resize", scheduleSync);
-
-    let resizeObserver;
-    if (typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(scheduleSync);
-
-      if (pageContainerRef.current?.parentElement) {
-        resizeObserver.observe(pageContainerRef.current.parentElement);
-      }
-
-      resizeObserver.observe(document.body);
-    }
-
-    return () => {
-      window.removeEventListener("resize", scheduleSync);
-      resizeObserver?.disconnect();
-    };
-  }, [syncAvailableViewportHeight]);
 
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -1421,29 +1377,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   }
 
   return (
-    <div
-      ref={pageContainerRef}
+    <MasterPageLayout
+      title="Item Master"
+      addButtonLabel="+ Add New Item"
+      onAdd={() => {
+        setForm(true);
+        onNew();
+      }}
       onKeyDown={handleKeyDown}
-      className="flex min-h-0 flex-col p-1"
-      style={availableViewportHeight ? { height: `${availableViewportHeight}px` } : undefined}
+      titleClassName="text-xl font-bold font-segoe text-gray-800"
     >
-      <div className="w-full flex bg-white p-1 justify-between  items-center">
-        <h5 className="text-xl font-bold font-segoe text-gray-800 ">
-          Item Master
-        </h5>
-        <div className="flex items-center">
-          <button
-            onClick={() => {
-              setForm(true);
-              onNew();
-            }}
-            className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-          >
-            + Add New Item
-          </button>
-        </div>
-      </div>
-      <div className="mt-3 min-h-0 flex-1 overflow-hidden rounded-xl bg-white shadow-sm">
         <ReusableTable
           columns={columns}
           data={allData?.data || []}
@@ -1452,7 +1395,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           onDelete={handleDelete}
           itemsPerPage={15}
         />
-      </div>
       {form && (
         <Modal
           isOpen={form}
@@ -2026,6 +1968,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           }}
         />
       )}
-    </div>
+    </MasterPageLayout>
   );
 }

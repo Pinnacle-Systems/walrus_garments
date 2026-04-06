@@ -38,6 +38,7 @@ import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterS
 import Modal from "../../../UiComponents/Modal";
 import { Check, LayoutGrid, Plus, Table } from "lucide-react";
 import { useGetbranchTypeQuery } from "../../../redux/uniformService/BranchTypeMaster";
+import MasterPageLayout from "../MasterPageLayout";
 import Swal from "sweetalert2";
 import Loader from "../Loader";
 import { getImageUrlPath } from "../../../Constants";
@@ -1652,67 +1653,49 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
 
 
   return (
-    <div onKeyDown={handleKeyDown}>
-
-      <div className="w-full  mx-auto rounded-md shadow-lg px-2 py-1 overflow-y-auto mt-1">
-
-        <div className='w-full flex justify-between mb-2 items-center px-0.5'>
-          <h1 className="text-xl font-bold text-gray-800">Customer/Supplier Master </h1>
-          <div className="flex items-center gap-4 text-md">
+    <MasterPageLayout
+      title="Customer/Supplier Master"
+      onKeyDown={handleKeyDown}
+      titleClassName="text-xl font-bold text-gray-800"
+      headerActions={
+        <>
+          <button
+            onClick={() => {
+              setForm(true);
+              onNew();
+              setParentId("")
+            }}
+            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+          >
+            <Plus size={12} />
+            <span>Add New Customer/Supplier</span>
+          </button>
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                setForm(true);
-                onNew();
-                // syncFormWithDb(undefined)
-                // syncFormWithDbNew(undefined)
-                setParentId("")
-              }}
-              className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+              onClick={() => { setView("All") }}
+              className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "All" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}
             >
-              <Plus size={12} />
-              <span className=" ">
-                Add New Customer/Supplier
-              </span>
+              <Table size={16} />
+              All
             </button>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => { setView("All") }}
-                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "All"
-                  ? "bg-indigo-100 text-indigo-600"
-                  : "text-gray-600 hover:bg-gray-100"
-                  }`}
-              >
-                <Table size={16} />
-                All
-              </button>
-              <button
-                onClick={() => { setView("Customer"); }}
-                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "Customer"
-                  ? "bg-indigo-100 text-indigo-600"
-                  : "text-gray-600 hover:bg-gray-100"
-                  }`}
-              >
-                <Table size={16} />
-                Customer
-              </button>
-              <button
-                onClick={() => { setView("Supplier"); }}
-                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "Supplier"
-                  ? "bg-indigo-100 text-indigo-600"
-                  : "text-gray-600 hover:bg-gray-100"
-                  }`}
-              >
-                <LayoutGrid size={16} />
-                Supplier
-              </button>
-            </div>
-            <div className="flex items-center">
-            </div>
+            <button
+              onClick={() => { setView("Customer"); }}
+              className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "Customer" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}
+            >
+              <Table size={16} />
+              Customer
+            </button>
+            <button
+              onClick={() => { setView("Supplier"); }}
+              className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "Supplier" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}
+            >
+              <LayoutGrid size={16} />
+              Supplier
+            </button>
           </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3 w-">
+        </>
+      }
+    >
         <ReusableTable
           columns={columns}
           data={filterParty || []}
@@ -1721,7 +1704,6 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
           onDelete={deleteData}
           itemsPerPage={15}
         />
-      </div>
 
 
 
@@ -2484,10 +2466,9 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
 
         </Modal>
       )}
-    </div>
+    </MasterPageLayout>
   );
 }
-
 
 
 

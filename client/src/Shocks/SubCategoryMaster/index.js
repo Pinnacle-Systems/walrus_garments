@@ -12,6 +12,7 @@ import { useAddSubCategoryMutation, useDeleteSubCategoryMutation, useGetSubCateg
 import { dropDownListObject } from "../../Utils/contructObject";
 import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
 import { ItemCategroyMaster } from "..";
+import MasterPageLayout from "../../Basic/components/MasterPageLayout";
 
 export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
     const [form, setForm] = useState(false);
@@ -393,18 +394,12 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
 
     // ── default (standalone page) render path ────────────────────────────────
     return (
-        <div onKeyDown={handleKeyDown} className="p-1">
-            <div className="w-full flex bg-white p-1 justify-between items-center">
-                <h5 className="text-2xl font-bold text-gray-800">Sub Category Master</h5>
-                <button
-                    onClick={() => { setForm(true); onNew(); }}
-                    className="bg-white border border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-                >
-                    + Add New Sub Category
-                </button>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-3">
+        <MasterPageLayout
+            title="Sub Category Master"
+            addButtonLabel="+ Add New Sub Category"
+            onAdd={() => { setForm(true); onNew(); }}
+            onKeyDown={handleKeyDown}
+        >
                 <ReusableTable
                     columns={columns}
                     data={allData?.data}
@@ -413,7 +408,6 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
                     onDelete={deleteData}
                     itemsPerPage={15}
                 />
-            </div>
 
             {form && (
                 <Modal isOpen={form} widthClass="w-[40%] h-[40%]" onClose={() => setForm(false)}>
@@ -456,6 +450,6 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
                     </div>
                 </Modal>
             )}
-        </div>
+        </MasterPageLayout>
     );
 }

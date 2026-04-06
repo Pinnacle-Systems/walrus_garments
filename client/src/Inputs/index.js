@@ -1822,11 +1822,12 @@ export const ReusableTable = ({
   onDelete,
   emptyStateMessage = 'No data available',
   rowActions = true,
+  itemsPerPage = 15,
   width,
-  childRecordLabel = ""
+  childRecordLabel = "",
+  heightClass = "h-[calc(100%-0.75rem)]"
 }) => {
 
-  const itemsPerPage = 15;
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math?.ceil(data?.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -1846,18 +1847,16 @@ export const ReusableTable = ({
   };
 
   const Pagination = () => {
-    // if (totalPages <= 1) return null;
-
     return (
-      <div className="shrink-0 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200">
-        <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, data?.length)} of {data?.length} entries
+      <div className="h-10 shrink-0 flex w-full flex-col items-center justify-between border-t border-gray-200 bg-white p-2 sm:flex-row">
+        <div className="mb-2 text-sm text-gray-600 sm:mb-0">
+          Showing {data?.length ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, data?.length || 0)} of {data?.length || 0} entries
         </div>
         <div className="flex gap-1">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`px-3 py-1 rounded-md ${currentPage === 1
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
               : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
@@ -1881,7 +1880,7 @@ export const ReusableTable = ({
               <button
                 key={pageNum}
                 onClick={() => handlePageChange(pageNum)}
-                className={`px-3 py-1 rounded-md ${currentPage === pageNum
+                className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === pageNum
                   ? 'bg-indigo-800 text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-100'
                   }`}
@@ -1892,13 +1891,13 @@ export const ReusableTable = ({
           })}
 
           {totalPages > 5 && currentPage < totalPages - 2 && (
-            <span className="px-3 py-1">...</span>
+            <span className="px-2 py-1">...</span>
           )}
 
           {totalPages > 5 && currentPage < totalPages - 2 && (
             <button
               onClick={() => handlePageChange(totalPages)}
-              className={`px-3 py-1 rounded-md ${currentPage === totalPages
+              className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
                 ? 'bg-indigo-800 text-white'
                 : 'bg-white text-gray-600 hover:bg-gray-100'
                 }`}
@@ -1910,7 +1909,7 @@ export const ReusableTable = ({
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-3 py-1 rounded-md ${currentPage === totalPages
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
               : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
@@ -1926,7 +1925,7 @@ export const ReusableTable = ({
 
   return (
     <>
-      <div className="flex h-full min-h-0 flex-col rounded-lg bg-[#F1F1F0] shadow-sm">
+      <div className={`flex min-h-0 flex-col overflow-hidden bg-[#F1F1F0] ${heightClass}`}>
         <div className="min-h-0 flex-1 overflow-auto">
             <table className="table-auto">
               <thead className="sticky top-0 z-10 bg-gray-200 text-gray-800">
@@ -2064,7 +2063,9 @@ export const ReusableTable = ({
               </tbody>
             </table>
           </div>
-        <Pagination />
+        <div className="shrink-0 bg-white">
+          <Pagination />
+        </div>
       </div>
 
     </>
