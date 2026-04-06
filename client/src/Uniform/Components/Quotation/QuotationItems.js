@@ -593,7 +593,7 @@ const QuotationItems = ({
                                                                 value: item.id,
                                                                 label: item?.name || "",
                                                             })) :
-                                                            getItemVariantSizeOptions(itemList?.data, sizeList?.data, "sizeId", row?.itemId)?.map((item) => ({
+                                                            getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map((item) => ({
                                                                 value: item.id,
                                                                 label: item?.name || "",
                                                             }))}
@@ -636,7 +636,7 @@ const QuotationItems = ({
                                                                 value: item.id,
                                                                 label: item?.name || "",
                                                             })) :
-                                                            getItemVariantColorOptions(itemList?.data, colorList?.data, "colorId", row?.itemId, row?.sizeId)?.map((item) => ({
+                                                            getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((item) => ({
                                                                 value: item.id,
                                                                 label: item?.name || "",
                                                             }))}
