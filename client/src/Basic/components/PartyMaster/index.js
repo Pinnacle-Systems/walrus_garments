@@ -893,10 +893,9 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
 
 
 
-  const countryNameRef = useRef(null)
 
   useEffect(() => {
-    if (form && nameRef.current && !partyId) {
+    if (form && nameRef.current) {
       nameRef.current.focus();
     }
   }, [form]);
@@ -1696,14 +1695,14 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
         </>
       }
     >
-        <ReusableTable
-          columns={columns}
-          data={filterParty || []}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={deleteData}
-          itemsPerPage={15}
-        />
+      <ReusableTable
+        columns={columns}
+        data={filterParty || []}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={deleteData}
+        itemsPerPage={15}
+      />
 
 
 

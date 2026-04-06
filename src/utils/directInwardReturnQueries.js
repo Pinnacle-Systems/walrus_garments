@@ -61,7 +61,6 @@ async function getAlreadyInwardData(poInwardOrDirectInward, directItemsId, poIte
 
 
     `
-    console.log(sql, "sql query already return data")
 
     const alreadyInwardData = await prisma.$queryRawUnsafe(sql);
 
@@ -73,14 +72,19 @@ async function getAlreadyRetrunData(poInwardOrDirectInward, directItemsId, poIte
 
 
     const sql = `
-   select  sum(qty) as alreadyInwardedQty,sum(noofrolls) as alreadyInwardedRolls from DirectInwardOrReturn left join directItems
- on DirectInwardOrReturn.id=directItems.DirectInwardOrReturnID
- WHERE  DirectInwardOrReturn.poinwardordirectinward="${poInwardOrDirectInward}" AND  directItems.ID = ${directItemsId} 
+    select  sum(DR.qty) as alreadyReturnedQty
+   from DirectReturnItems DR left join directItems DI
+ on DR.directItemsId=DI.id
+ WHERE  DI.ID = ${directItemsId} 
 
     `
-    const alreadyInwardData = await prisma.$queryRawUnsafe(sql);
+    console.log(sql, "sql query already return data")
 
-    return alreadyInwardData[0]
+    const alreadyReturnData = await prisma.$queryRawUnsafe(sql);
+    console.log(alreadyReturnData, "sql output already return data")
+
+
+    return alreadyReturnData[0]
 }
 
 
@@ -206,7 +210,7 @@ export async function getDirectInwardReturnItemsAlreadyData(storeId, poType, dir
             ...directItem,
             alreadyInwardedQty: (await getAlreadyInwardData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedQty,
             alreadyInwardedRolls: (await getAlreadyRetrunData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedRolls,
-            alreadyReturnedQty: (await getAlreadyInwardData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyInwardedQty,
+            alreadyReturnedQty: (await getAlreadyRetrunData(poInwardOrDirectInward, directItem?.id, directItem?.poItemsId, poType))?.alreadyReturnedQty,
             stockQty: ((await getStockQtyLocationWise(storeId, directItem?.itemId, directItem?.sizeId, directItem?.colorId, directItem?.uomId))?.stockQty || 0)
 
         }

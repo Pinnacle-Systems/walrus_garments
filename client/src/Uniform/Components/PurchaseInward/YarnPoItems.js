@@ -411,7 +411,7 @@ const YarnPoItems = ({
                             {(poItems ? poItems : [])?.map((row, index) =>
                                 <tr key={index} className={`border border-blue-gray-200 cursor-pointer ${index % 2 === 0 ? "bg-white" : "bg-gray-100"}`}
                                     onContextMenu={(e) => {
-                                        if (!readOnly && !(parseFloat(row.stockQty) < parseFloat(row?.qty)) && !row?.DirectReturnItems?.length) {
+                                        if (!readOnly && !(parseFloat(row.stockQty) < parseFloat(row?.qty)) && !row?.alreadyReturnedQty || !row?.alreadyReturnedQty) {
                                             handleRightClick(e, index, "shiftTimeHrs");
                                         }
                                     }}
@@ -423,7 +423,7 @@ const YarnPoItems = ({
                                             <SearchableTableCellSelect
                                                 value={row.itemId}
                                                 options={itemOptions}
-                                                disabled={readOnly || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
+                                                disabled={readOnly || (id ? (Number(row.stockQty) < Number(row?.qty)) || row?.alreadyReturnedQty : false)}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
                                                 addNewModalWidth="w-[90%] h-[95%]"
                                                 childComponent={ItemMaster}
@@ -438,7 +438,7 @@ const YarnPoItems = ({
                                             <SearchableTableCellSelect
                                                 value={row.sizeId}
                                                 options={getSizeOptions(row)}
-                                                disabled={readOnly || !row.itemId || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
+                                                disabled={readOnly || !row.itemId || (id ? (Number(row.stockQty) < Number(row?.qty)) || row?.alreadyReturnedQty : false)}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
                                                 addNewModalWidth="w-[40%] h-[45%]"
                                                 // childComponent={SizeMaster}
@@ -451,7 +451,7 @@ const YarnPoItems = ({
                                             <SearchableTableCellSelect
                                                 value={row.colorId}
                                                 options={getColorOptions(row)}
-                                                disabled={readOnly || !(showSize ? row.sizeId : row.itemId) || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
+                                                disabled={readOnly || !(showSize ? row.sizeId : row.itemId) || (id ? (Number(row.stockQty) < Number(row?.qty)) || row?.alreadyReturnedQty : false)}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
                                                 addNewModalWidth="w-[40%] h-[45%]"
                                                 // childComponent={ColorMaster}
@@ -467,7 +467,7 @@ const YarnPoItems = ({
                                         <SearchableTableCellSelect
                                             value={row.uomId}
                                             options={uomOptions}
-                                            disabled={readOnly || !isUomReady(row) || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
+                                            disabled={readOnly || !isUomReady(row) || (id ? (Number(row.stockQty) < Number(row?.qty)) || row?.alreadyReturnedQty : false)}
                                             onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
                                             addNewModalWidth="w-[40%] h-[45%]"
                                             childComponent={UomMaster}
@@ -532,7 +532,7 @@ const YarnPoItems = ({
                                             onFocus={(e) => e.target.select()}
                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                             value={(row?.qty)}
-                                            disabled={readOnly || !row.uomId || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
+                                            disabled={readOnly || !row.uomId || (id ? (Number(row.stockQty) < Number(row?.qty)) || row?.alreadyReturnedQty : false)}
                                             onChange={(e) => {
 
                                                 handleInputChange(e.target.value, index, "qty")
@@ -621,7 +621,7 @@ const YarnPoItems = ({
                         <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300  font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
                             <tr>
                                 <td
-                                    colSpan={6 + (id ? 1 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
+                                    colSpan={6 + (id ? 2 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
                                     className="bg-gray-300 px-1 py-1 text-right text-[12px]"
                                 >
                                     Total:

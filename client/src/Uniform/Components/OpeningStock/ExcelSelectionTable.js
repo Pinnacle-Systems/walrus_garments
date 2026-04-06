@@ -1163,19 +1163,18 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                             ? `${transactionTableFocusCellClassName} bg-red-50`
                             : attentionState?.tone === "conflict"
                               ? `${transactionTableFocusCellClassName} bg-orange-50`
-                            : attentionState?.tone === "pending"
-                              ? `${transactionTableFocusCellClassName} bg-amber-50`
-                              : transactionTableFocusCellClassName;
+                              : attentionState?.tone === "pending"
+                                ? `${transactionTableFocusCellClassName} bg-amber-50`
+                                : transactionTableFocusCellClassName;
                           const inputClassName = field.type === "number"
                             ? transactionTableNumberInputClassName
                             : transactionTableSelectInputClassName;
                           const emphasizedInputClassName = attentionState
-                            ? `${inputClassName} ${
-                              attentionState.tone === "missing"
-                                ? "text-red-700 placeholder:text-red-300"
-                                : attentionState.tone === "conflict"
-                                  ? "text-orange-800 placeholder:text-orange-300"
-                                  : "text-amber-800 placeholder:text-amber-300"
+                            ? `${inputClassName} ${attentionState.tone === "missing"
+                              ? "text-red-700 placeholder:text-red-300"
+                              : attentionState.tone === "conflict"
+                                ? "text-orange-800 placeholder:text-orange-300"
+                                : "text-amber-800 placeholder:text-amber-300"
                             }`
                             : inputClassName;
 
@@ -1191,10 +1190,10 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                                       previousRows.map((entry) =>
                                         entry._rowId === row._rowId
                                           ? {
-                                              ...entry,
-                                              uomId: option?.value || "",
-                                              uom: option?.label || "",
-                                            }
+                                            ...entry,
+                                            uomId: option?.value || "",
+                                            uom: option?.label || "",
+                                          }
                                           : entry
                                       )
                                     );
@@ -1267,7 +1266,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
         </TransactionLineItemsSection>
       </div>
 
-      <Modal isOpen={missingMasterReview.isOpen} onClose={closeMissingMasterReview} widthClass="w-[720px] max-w-[95vw]">
+      <Modal isOpen={missingMasterReview.isOpen} onClose={closeMissingMasterReview} widthClass="w-[80vw]">
         <div className="flex max-h-[80vh] flex-col bg-white">
           <div className="mb-4 border-b pb-3">
             <h2 className="text-lg font-semibold text-slate-800">Review Missing Masters</h2>
@@ -1282,10 +1281,10 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                   <table className="w-full table-fixed border-collapse">
                     <thead className="bg-slate-100">
                       <tr>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Item Name</th>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Item Code</th>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Sales Price</th>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Offer Price</th>
+                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600 w-96">Item Name</th>
+                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600 w-32">Item Code</th>
+                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600 w-32">Sales Price</th>
+                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600 w-32">Offer Price</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1339,11 +1338,10 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                                 }));
                               }}
                               placeholder="Enter color code"
-                              className={`w-full rounded border px-2 py-1.5 text-sm uppercase outline-none ${
-                                reviewErrors[color.name]
-                                  ? "border-red-400 bg-red-50 text-red-700"
-                                  : "border-slate-300"
-                              }`}
+                              className={`w-full rounded border px-2 py-1.5 text-sm uppercase outline-none ${reviewErrors[color.name]
+                                ? "border-red-400 bg-red-50 text-red-700"
+                                : "border-slate-300"
+                                }`}
                             />
                             {reviewErrors[color.name] ? (
                               <p className="mt-1 text-xs text-red-600">{reviewErrors[color.name]}</p>

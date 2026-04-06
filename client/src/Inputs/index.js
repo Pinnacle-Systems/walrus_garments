@@ -1927,142 +1927,142 @@ export const ReusableTable = ({
     <>
       <div className={`flex min-h-0 flex-col overflow-hidden bg-[#F1F1F0] ${heightClass}`}>
         <div className="min-h-0 flex-1 overflow-auto">
-            <table className="table-auto">
-              <thead className="sticky top-0 z-10 bg-gray-200 text-gray-800">
+          <table className="table-auto">
+            <thead className="sticky top-0 z-10 bg-gray-200 text-gray-800">
 
+              <tr>
+                {columns?.map((column, index) => (
+                  <th
+                    key={index}
+                    className={` font-medium text-gray-900 py-2 text-[12px] px-8 text-center uppercase  ${column.header !== "" ? "border-r border-white/50" : ""
+                      } `}
+                  >
+                    {column.header}
+                  </th>
+                ))}
+                {rowActions && (
+                  <th className="px-4 py-2 text-center text-[12px] font-medium justify-end">
+                    ACTIONS
+                  </th>
+                )}
+              </tr>
+
+
+
+
+
+            </thead>
+            <tbody>
+              {currentItems?.length === 0 ? (
                 <tr>
-                  {columns?.map((column, index) => (
-                    <th
-                      key={index}
-                      className={` font-medium text-gray-900 py-2 text-[12px] px-8 text-center uppercase  ${column.header !== "" ? "border-r border-white/50" : ""
-                        } `}
-                    >
-                      {column.header}
-                    </th>
-                  ))}
-                  {rowActions && (
-                    <th className="px-4 py-2 text-center text-[12px] font-medium justify-end">
-                      ACTIONS
-                    </th>
-                  )}
+                  <td colSpan={columns?.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
+                    {emptyStateMessage}
+                  </td>
                 </tr>
+              ) : (
+                currentItems?.map((item, index) => {
+
+                  const hasChildRecords = childRecordCount(item?._count) > 0
 
 
+                  return (
+                    <tr
+                      key={item.id}
+                      className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                        }`}
+                    >
 
-
-
-              </thead>
-              <tbody>
-                {currentItems?.length === 0 ? (
-                  <tr>
-                    <td colSpan={columns?.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
-                      {emptyStateMessage}
-                    </td>
-                  </tr>
-                ) : (
-                  currentItems?.map((item, index) => {
-
-                    const hasChildRecords = childRecordCount(item?._count) > 0
-
-
-                    return (
-                      <tr
-                        key={item.id}
-                        className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                          }`}
-                      >
-
-                        {columns?.map((column, colIndex) => (
-                          <td
-                            key={colIndex}
-                            className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7 px-1.5`}
-                          >
-                            {column.accessor(item, indexOfFirstItem + index)}
-                          </td>
-                        ))}
-                        {rowActions && (
-                          <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
-                            <div className="flex">
-                              {onView && (
-                                <button
-                                  className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                  onClick={() => hasPermission(() => onView(item.id), "read")}
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                  </svg>
-                                </button>
-                              )}
-                              {onEdit && (
-                                <button
-                                  className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                  onClick={() => hasPermission(() => onEdit(item.id), "edit")}
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                  </svg>
-                                </button>
-                              )}
-                              <div className="relative inline-block"
-                                onMouseEnter={() =>
-                                  setHoveredDeleteId(item.id)
-                                }
-                                onMouseLeave={() => setHoveredDeleteId(null)}
+                      {columns?.map((column, colIndex) => (
+                        <td
+                          key={colIndex}
+                          className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7 px-1.5`}
+                        >
+                          {column.accessor(item, indexOfFirstItem + index)}
+                        </td>
+                      ))}
+                      {rowActions && (
+                        <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
+                          <div className="flex">
+                            {onView && (
+                              <button
+                                className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
+                                onClick={() => hasPermission(() => onView(item.id), "read")}
                               >
-                                {onDelete && (
-                                  <button
-                                    className="text-red-800 flex items-center gap-1 px-1 bg-red-50 rounded disabled:opacity-50"
-                                    onClick={() =>
-                                      hasPermission(() => onDelete(item.id), "delete", item?._count)
-                                    }
-                                    disabled={hasChildRecords}
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            )}
+                            {onEdit && (
+                              <button
+                                className="text-green-600 gap-1 px-1   bg-green-50 rounded"
+                                onClick={() => hasPermission(() => onEdit(item.id), "edit")}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                              </button>
+                            )}
+                            <div className="relative inline-block"
+                              onMouseEnter={() =>
+                                setHoveredDeleteId(item.id)
+                              }
+                              onMouseLeave={() => setHoveredDeleteId(null)}
+                            >
+                              {onDelete && (
+                                <button
+                                  className="text-red-800 flex items-center gap-1 px-1 bg-red-50 rounded disabled:opacity-50"
+                                  onClick={() =>
+                                    hasPermission(() => onDelete(item.id), "delete", item?._count)
+                                  }
+                                  disabled={hasChildRecords}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
                                   >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      className="h-4 w-4"
-                                      viewBox="0 0 20 20"
-                                      fill="currentColor"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                  </button>
-                                )}
-                                {console.log(childRecordCount(item?._count > 0), "childRecord")}
-                                {hasChildRecords &&
-                                  hoveredDeleteId === item.id && (
-                                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-[12px] rounded shadow-lg w-64 z-50">
-                                      Cannot delete. Child records exist.
-                                      {/* <span className="font-semibold">
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </button>
+                              )}
+                              {console.log(childRecordCount(item?._count > 0), "childRecord")}
+                              {hasChildRecords &&
+                                hoveredDeleteId === item.id && (
+                                  <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-[12px] rounded shadow-lg w-64 z-50">
+                                    Cannot delete. Child records exist.
+                                    {/* <span className="font-semibold">
                                         {item?.referencedIn ? "in " + item?.referencedIn : ""}
                                       </span>
                                       . Please Remove them First.
                                       <div className="absolute right-full top-1/2 transform -translate-y-1/2 mr-1">
                                         <div className="border-4 border-transparent border-r-gray-900"></div>
                                       </div> */}
-                                    </div>
-                                  )}
-
-                              </div>
+                                  </div>
+                                )}
 
                             </div>
-                          </td>
-                        )}
-                      </tr>
-                    )
 
-                  }
-
-
+                          </div>
+                        </td>
+                      )}
+                    </tr>
                   )
-                )}
-              </tbody>
-            </table>
-          </div>
+
+                }
+
+
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
         <div className="shrink-0 bg-white">
           <Pagination />
         </div>
@@ -3289,6 +3289,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       disabled,
       show,
       id,
+      isShow = true
     },
 
     ref
@@ -3545,44 +3546,48 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
               )}
             </div>
 
-            {/* ---------------- ADD BUTTON ---------------- */}
-            <div className="relative">
-              <button
-                className="h-full px-3 py-1.5 border border-green-500 rounded-md
+            {isShow && (
+              <>
+                <div className="relative">
+                  <button
+                    className="h-full px-3 py-1.5 border border-green-500 rounded-md
                 hover:bg-green-500 text-green-600 hover:text-white"
-                disabled={disabled || readOnly}
-                onKeyDown={(e) => {
-                  if (e.ctrlKey && e.key === "Enter") {
-                    setEditingItem("new");
-                    setOpenModel(true);
-                  }
-                  if (e.key === "Enter") {
-                    setTooltipVisible(false)
-                    e.target.blur()
-                    focusNext(e.target);
-                  }
-                }}
-                onClick={() => {
-                  setEditingItem("new");
-                  setOpenModel(true);
-                }}
+                    disabled={disabled || readOnly}
+                    onKeyDown={(e) => {
+                      if (e.ctrlKey && e.key === "Enter") {
+                        setEditingItem("new");
+                        setOpenModel(true);
+                      }
+                      if (e.key === "Enter") {
+                        setTooltipVisible(false)
+                        e.target.blur()
+                        focusNext(e.target);
+                      }
+                    }}
+                    onClick={() => {
+                      setEditingItem("new");
+                      setOpenModel(true);
+                    }}
 
-                onFocus={() => setTooltipVisible(true)}
-                onMouseEnter={() => setTooltipVisible(true)}
-                onMouseLeave={() => setTooltipVisible(false)}
-              >
-                <FaPlus />
-              </button>
+                    onFocus={() => setTooltipVisible(true)}
+                    onMouseEnter={() => setTooltipVisible(true)}
+                    onMouseLeave={() => setTooltipVisible(false)}
+                  >
+                    <FaPlus />
+                  </button>
 
-              {tooltipVisible && (
-                <div className="absolute z-10 top-full right-0 mt-1 w-64 bg-indigo-800 text-white text-xs rounded p-2"
+                  {tooltipVisible && (
+                    <div className="absolute z-10 top-full right-0 mt-1 w-64 bg-indigo-800 text-white text-xs rounded p-2"
 
-                >
-                  <FaInfoCircle className="inline mr-1" />
-                  Click Ctrl + Enter to add new {show == "isClient" ? "Customer" : "Supplier"}
+                    >
+                      <FaInfoCircle className="inline mr-1" />
+                      Click Ctrl + Enter to add new {show == "isClient" ? "Customer" : "Supplier"}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
+
           </div>
 
           {/* ---------------- DROPDOWN LIST ---------------- */}
