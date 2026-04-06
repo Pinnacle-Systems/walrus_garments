@@ -603,7 +603,11 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       if (returnData.statusCode === 1) {
         Swal.fire({ icon: "error", title: returnData?.message, showConfirmButton: false });
       } else if (returnData.statusCode === 0) {
-        Swal.fire({ icon: "success", title: "Stock Added Successfully", showConfirmButton: false });
+        await Swal.fire({
+          icon: "success",
+          title: "Stock Added Successfully",
+        });
+        clearWorkspace();
       } else {
         toast.error(returnData?.message);
       }
@@ -617,6 +621,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     addSize,
     addUom,
     branchId,
+    clearWorkspace,
     companyId,
     finYearId,
     getMissingRequiredRowMessage,

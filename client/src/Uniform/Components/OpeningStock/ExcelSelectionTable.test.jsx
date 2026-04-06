@@ -191,6 +191,7 @@ describe("Opening stock bulk import color review", () => {
     mockToastError.mockReset();
     mockSwalFire.mockReset();
     mockSwalShowLoading.mockReset();
+    mockSwalFire.mockResolvedValue({});
     jest.spyOn(window, "confirm").mockReturnValue(true);
 
     mockAddOpeningStock.mockReturnValue(createMutationResult({ statusCode: 0, data: { id: 1 } }));
@@ -268,6 +269,49 @@ describe("Opening stock bulk import color review", () => {
     const payload = mockAddOpeningStock.mock.calls[0][0];
     expect(payload.stockItems[0].barcode).toBe("SHIRT-001");
     expect(screen.queryByText("Review Missing Masters")).toBeNull();
+  });
+
+  it("clears the opening stock workspace after the success popup is closed", async () => {
+    render(
+      <TestHarness
+        initialStockItems={[
+          {
+            _rowId: 1,
+            item_name: "SHIRT",
+            itemId: 101,
+            item_code: "SHIRT-001",
+            size: "M",
+            sizeId: 201,
+            color: "RED",
+            colorId: 301,
+            uom: "PCS",
+            uomId: 401,
+            qty: "5",
+            price: "100",
+          },
+        ]}
+      />
+    );
+
+    selectLocation();
+    fireEvent.click(screen.getByText("Save Stock"));
+
+    await waitFor(() => {
+      expect(mockAddOpeningStock).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
+      expect(mockSwalFire).toHaveBeenCalledWith(
+        expect.objectContaining({
+          icon: "success",
+          title: "Stock Added Successfully",
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("No rows yet.")).toBeTruthy();
+    });
   });
 
   it("uses the lightweight review path when only sizes are missing", async () => {
