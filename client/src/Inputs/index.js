@@ -2839,10 +2839,17 @@ export const DropdownInputNew = forwardRef(({
   const isMouseDownRef = useRef(false);
 
   const isDisabled = readOnly || disabled;
+  // Use custom dropdown when addNewComponent is provided (native select can't host clickable options)
+  const useCustomDropdown = searchable || !!childComponent;
 
+  // Only provide imperative handle for custom dropdown
   useImperativeHandle(ref, () => ({
-    focus: () => buttonRef.current?.focus(),
-  }));
+    focus: () => {
+      if (useCustomDropdown) {
+        buttonRef.current?.focus();
+      }
+    }
+  }), [useCustomDropdown]);
 
   const handleAddNewSuccess = (newValue) => {
     beforeChange();
@@ -2861,9 +2868,6 @@ export const DropdownInputNew = forwardRef(({
     }
     setDeletingOption(null);
   };
-
-  // Use custom dropdown when addNewComponent is provided (native select can't host clickable options)
-  const useCustomDropdown = searchable || !!childComponent;
 
   const updateDropdownPos = useCallback(() => {
     if (buttonRef.current) {
@@ -3031,6 +3035,7 @@ export const DropdownInputNew = forwardRef(({
       <button
         ref={buttonRef}
         type="button"
+        autoFocus={autoFocus}
         disabled={isDisabled}
         tabIndex={tabIndex ?? undefined}
         onMouseDown={() => { isMouseDownRef.current = true; }}

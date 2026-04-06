@@ -1,7 +1,7 @@
 import { FaFileAlt, FaWhatsapp } from "react-icons/fa";
 import { ReusableInput } from "../Order/CommonInput";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isGridDatasValid } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isGridDatasValid, ModeChip } from "../../../Utils/helper";
 import { DateInputNew, DropdownInput, DropdownInputNew, DropdownWithSearch, ReusableSearchableInput, TextInput, TextInputNew1 } from "../../../Inputs";
 import { HiOutlineRefresh, HiPlus, HiX } from "react-icons/hi";
 import { stockTransferType } from "../../../Utils/DropdownData";
@@ -23,6 +23,7 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import Modal from "../../../UiComponents/Modal";
 import BarCodePrintFormat from "./BarcodePrintFormat";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 const StockTransferForm = ({
     docId, id, readOnly, setId, setForm,
@@ -54,10 +55,18 @@ const StockTransferForm = ({
     const { data: locationData } = useGetLocationMasterQuery({ params: { ...params } });
 
     const [invalidateTagsDispatch] = useInvalidateTags();
-
+    const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+    const {
+        firstInputRef: nameRef,
+        movedToNextSaveNewRef,
+        saveNewButtonRef,
+        saveCloseButtonRef,
+    } = refs;
 
     const [addData] = useAddStockTransferMutation();
     const [updateData] = useUpdateStockTransferMutation();
+
+
 
 
 
@@ -308,14 +317,6 @@ const StockTransferForm = ({
     };
 
 
-    const inputRef1 = useRef(null);
-
-
-    useEffect(() => {
-        if (inputRef1.current) {
-            inputRef1.current.focus();
-        }
-    }, []);
 
 
 
@@ -344,7 +345,7 @@ const StockTransferForm = ({
             </Modal>
             <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
                 <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Stock Transfer</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Stock Transfer <ModeChip id={id} readOnly={readOnly} /></h1>
                     <div className="gap-4">
                         {/* <button
                                         onClick={onClose}
@@ -389,12 +390,21 @@ const StockTransferForm = ({
                                 <div className="grid grid-cols-10 gap-x-3 gap-y-1">
                                     <div className="col-span-2">
 
-                                        <DropdownInputNew name="From Location"
+                                        <DropdownInputNew
+                                            ref={nameRef}
+                                            autoFocus={!id}
+                                            openOnFocus={!id}
+                                            name="From Location"
                                             options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active), "storeName", "id")}
-                                            value={fromLocationId} setValue={setFromLocationId} required={true}
-                                            readOnly={id || readOnly} clear={true} disabled={id}
+                                            value={fromLocationId}
+                                            setValue={setFromLocationId}
+                                            required={true}
+                                            readOnly={id || readOnly}
+                                            clear={true}
+                                            disabled={id}
                                         />
                                     </div>
+
                                     <div className="col-span-2">
 
                                         <DropdownInputNew name="To Location"

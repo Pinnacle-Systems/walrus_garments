@@ -39,7 +39,7 @@ const StockTransfer = () => {
     const [tempStockItems, setTempStockItems] = useState([])
 
 
-    const { branchId, userId,  finYearId } = getCommonParams()
+    const { branchId, userId, finYearId } = getCommonParams()
     const params = {
         branchId, userId, finYearId
     };
@@ -116,33 +116,33 @@ const StockTransfer = () => {
         <>
             {form ? (
                 <StockTransferForm
-                    id={id} setId={setId}  setForm={setForm}
+                    id={id} setId={setId} setForm={setForm}
                     orderData={orderData} orderId={orderId} setOrderId={setOrderId} orderItems={orderItems} setOrderItems={setOrderItems} params={params}
                     toCustomerId={toCustomerId} setToCustomerId={setToCustomerId} setRequirementId={setRequirementId} requirementId={requirementId}
                     showAddressPopup={showAddressPopup} setShowAddressPopup={setShowAddressPopup} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                     docId={docId} setDocId={setDocId} stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
-                    readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew} 
+                    readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew}
                     date={date} setDate={setDate} toOrderId={toOrderId} setToOrderId={setToOrderId}
                     setFromOrderId={setFromOrderId} fromOrderId={fromOrderId} setTransferType={setTransferType} transferType={transferType}
                     onClose={() => { setForm(false) }} fromCustomerId={fromCustomerId} setFromCustomerId={setFromCustomerId} branchId={branchId}
                 />
             ) : (
                 <div className="p-1 bg-[#F1F1F0] h-[85%]">
-                    <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+                    <div className="flex flex-col sm:flex-row justify-between bg-white  px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">Stock Transfer</h1>
 
                         </div>
                         <button
-                            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
-                            onClick={() => { setForm(true);OnNew() }}
+                            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-sm"
+                            onClick={() => { setForm(true); OnNew() }}
                         >
                             <FaPlus /> Create New
                         </button>
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
-                  
+
                         <StockTransferReport
                             onView={handleView}
                             onEdit={handleEdit}

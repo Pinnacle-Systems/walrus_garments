@@ -545,7 +545,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     {
       header: "Item Name",
       accessor: (item) => item.name,
-      className: "font-medium text-gray-900  w-[200px]  py-1  px-2",
+      className: "font-medium text-gray-900  w-[400px]  py-1  px-2",
       search: "Item Name",
     },
     {
@@ -554,12 +554,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       className: "font-medium text-gray-900  w-[150px]  py-1  px-2",
       search: "Item Code",
     },
-    {
-      header: "HSN Code",
-      accessor: (item) => item.hsn?.name,
-      className: "font-medium text-gray-900  w-[120px]  py-1  px-2",
-      search: "HSN Code",
-    },
+    // {
+    //   header: "HSN Code",
+    //   accessor: (item) => item.hsn?.name,
+    //   className: "font-medium text-gray-900  w-[120px]  py-1  px-2",
+    //   search: "HSN Code",
+    // },
     {
       header: "Status",
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
@@ -1111,138 +1111,138 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     </div>
                   )}
                   {barcodeGenerationMethod != "STANDARD" && (
-                      <div className="grid grid-cols-12 gap-3 ">
-                        <div className={`col-span-8 w-full h-[280px]`}>
-                          <div className={`relative overflow-y-auto py-1 h-full`}>
-                            <table className="w-full border-collapse table-fixed">
-                              <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
-                                <tr>
-                                  <th className={`w-10 px-2 py-2 text-center font-medium text-[12px] `}>S.No</th>
-                                  <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Size Name</th>
+                    <div className="grid grid-cols-12 gap-3 ">
+                      <div className={`col-span-8 w-full h-[280px]`}>
+                        <div className={`relative overflow-y-auto py-1 h-full`}>
+                          <table className="w-full border-collapse table-fixed">
+                            <thead className="bg-gray-200 text-gray-900 sticky top-0 header">
+                              <tr>
+                                <th className={`w-10 px-2 py-2 text-center font-medium text-[12px] `}>S.No</th>
+                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Size Name</th>
+                                {barcodeGenerationMethod == "SIZE_COLOR" && (
+                                  <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Color Name</th>
+                                )}
+                                <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Barcode</th>
+                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sku</th>
+                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price</th>
+                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th>
+                                <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {itemPriceList.map((item, index) => (
+                                <tr
+                                  key={index}
+                                  onContextMenu={(e) => {
+                                    if (!readOnly) {
+                                      handleRightSubGridClick(e, index, "notes");
+                                    }
+                                  }}
+                                >
+                                  <td className="border border-gray-200 w-10 px-1 py-1 text-center text-xs ">{index + 1}</td>
+                                  <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                    {findFromList(item?.sizeId, sizeData?.data, "name")}
+                                  </td>
                                   {barcodeGenerationMethod == "SIZE_COLOR" && (
-                                    <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Color Name</th>
-                                  )}
-                                  <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Barcode</th>
-                                  <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sku</th>
-                                  <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price</th>
-                                  <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th>
-                                  <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {itemPriceList.map((item, index) => (
-                                  <tr
-                                    key={index}
-                                    onContextMenu={(e) => {
-                                      if (!readOnly) {
-                                        handleRightSubGridClick(e, index, "notes");
-                                      }
-                                    }}
-                                  >
-                                    <td className="border border-gray-200 w-10 px-1 py-1 text-center text-xs ">{index + 1}</td>
-                                    <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
-                                      {findFromList(item?.sizeId, sizeData?.data, "name")}
-                                    </td>
-                                    {barcodeGenerationMethod == "SIZE_COLOR" && (
-                                      <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
-                                        {findFromList(item?.colorId, colorData?.data, "name")}
-                                      </td>
-                                    )}
                                     <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
-                                      <input
-                                        type="text"
-                                        min="0"
-                                        rows={1}
-                                        onFocus={e => e.target.select()}
-                                        className="text-right rounded w-full px-1 py-1 text-xs"
-                                        value={item.barcode}
-                                        disabled={readOnly}
-                                        onChange={e => handleInputChange(e.target.value, index, "barcode")}
-                                        onBlur={e => handleInputChange(e.target.value, index, "barcode")}
-                                      />
+                                      {findFromList(item?.colorId, colorData?.data, "name")}
                                     </td>
-                                    <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
-                                      <input
-                                        type="text"
-                                        min="0"
-                                        rows={1}
-                                        onFocus={e => e.target.select()}
-                                        className="text-right rounded w-full px-1 py-1 text-xs"
-                                        value={item.sku}
-                                        disabled={readOnly}
-                                        onChange={e => handleInputChange(e.target.value, index, "sku")}
-                                        onBlur={e => handleInputChange(e.target.value, index, "sku")}
-                                      />
-                                    </td>
-                                    <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
-                                      <input
-                                        type="text"
-                                        min="0"
-                                        rows={1}
-                                        onFocus={e => e.target.select()}
-                                        className="text-right rounded w-full px-1 py-1 text-xs"
-                                        value={item.salesPrice}
-                                        disabled={readOnly}
-                                        onChange={e => handleInputChange(e.target.value, index, "salesPrice")}
-                                        onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
-                                      />
-                                    </td>
-                                    <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
-                                      <input
-                                        type="text"
-                                        min="0"
-                                        rows={1}
-                                        onFocus={e => e.target.select()}
-                                        className="text-right rounded w-full px-1 py-1 text-xs"
-                                        value={item.offerPrice}
-                                        disabled={readOnly}
-                                        onChange={e => handleInputChange(e.target.value, index, "offerPrice")}
-                                        onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
-                                      />
-                                    </td>
-                                    <td className="border border-gray-200 px-2 py-1 text-xs">
-                                      <button
-                                        type="button"
-                                        onClick={() => setGridIndex((prev) => (prev === index ? null : index))}
-                                        className={`w-full rounded-md border px-2 py-1 text-left ${gridIndex === index ? "border-indigo-400 bg-indigo-50 text-indigo-700" : "border-gray-200 bg-gray-50 text-gray-700"}`}
-                                      >
-                                        {getLowStockSummary(item)}
-                                      </button>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                  )}
+                                  <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
+                                    <input
+                                      type="text"
+                                      min="0"
+                                      rows={1}
+                                      onFocus={e => e.target.select()}
+                                      className="text-right rounded w-full px-1 py-1 text-xs"
+                                      value={item.barcode}
+                                      disabled={readOnly}
+                                      onChange={e => handleInputChange(e.target.value, index, "barcode")}
+                                      onBlur={e => handleInputChange(e.target.value, index, "barcode")}
+                                    />
+                                  </td>
+                                  <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                    <input
+                                      type="text"
+                                      min="0"
+                                      rows={1}
+                                      onFocus={e => e.target.select()}
+                                      className="text-right rounded w-full px-1 py-1 text-xs"
+                                      value={item.sku}
+                                      disabled={readOnly}
+                                      onChange={e => handleInputChange(e.target.value, index, "sku")}
+                                      onBlur={e => handleInputChange(e.target.value, index, "sku")}
+                                    />
+                                  </td>
+                                  <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                    <input
+                                      type="text"
+                                      min="0"
+                                      rows={1}
+                                      onFocus={e => e.target.select()}
+                                      className="text-right rounded w-full px-1 py-1 text-xs"
+                                      value={item.salesPrice}
+                                      disabled={readOnly}
+                                      onChange={e => handleInputChange(e.target.value, index, "salesPrice")}
+                                      onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
+                                    />
+                                  </td>
+                                  <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                    <input
+                                      type="text"
+                                      min="0"
+                                      rows={1}
+                                      onFocus={e => e.target.select()}
+                                      className="text-right rounded w-full px-1 py-1 text-xs"
+                                      value={item.offerPrice}
+                                      disabled={readOnly}
+                                      onChange={e => handleInputChange(e.target.value, index, "offerPrice")}
+                                      onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
+                                    />
+                                  </td>
+                                  <td className="border border-gray-200 px-2 py-1 text-xs">
+                                    <button
+                                      type="button"
+                                      onClick={() => setGridIndex((prev) => (prev === index ? null : index))}
+                                      className={`w-full rounded-md border px-2 py-1 text-left ${gridIndex === index ? "border-indigo-400 bg-indigo-50 text-indigo-700" : "border-gray-200 bg-gray-50 text-gray-700"}`}
+                                    >
+                                      {getLowStockSummary(item)}
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {contextMenu && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: `${contextMenu.mouseY - 40}px`,
+                            left: `${contextMenu.mouseX - 80}px`,
+                            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            zIndex: 1000,
+                          }}
+                          className="bg-gray-100"
+                          onMouseLeave={handleCloseContextMenu}
+                        >
+                          <div className="flex flex-col gap-1">
+                            <button
+                              className=" text-black text-[12px] text-left rounded px-1"
+                              onClick={() => {
+                                handleDeleteRow(contextMenu.rowId);
+                                handleCloseContextMenu();
+                              }}
+                            >
+                              Delete
+                            </button>
                           </div>
                         </div>
-
-                        {contextMenu && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: `${contextMenu.mouseY - 40}px`,
-                              left: `${contextMenu.mouseX - 80}px`,
-                              boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                              padding: "8px",
-                              borderRadius: "4px",
-                              zIndex: 1000,
-                            }}
-                            className="bg-gray-100"
-                            onMouseLeave={handleCloseContextMenu}
-                          >
-                            <div className="flex flex-col gap-1">
-                              <button
-                                className=" text-black text-[12px] text-left rounded px-1"
-                                onClick={() => {
-                                  handleDeleteRow(contextMenu.rowId);
-                                  handleCloseContextMenu();
-                                }}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        )}
+                      )}
                       <div className="col-span-4 h-[280px] min-h-0">
                         {itemPriceList[gridIndex] ? (
                           <LocationStockEditor
