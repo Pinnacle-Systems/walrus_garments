@@ -401,7 +401,11 @@ const ManualAddStock = ({ params }) => {
                     );
                   })}
                   <td className={transactionTableActionCellClassName}>
-                    <button onClick={() => removeRow(row.id)} className={`${transactionTableActionButtonClassName} text-red-500 hover:text-red-700`}><FiTrash />
+                    <button
+                      onClick={() => removeRow(row.id)}
+                      className="mx-auto inline-flex h-7 w-7 items-center justify-center rounded bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700"
+                    >
+                      <FiTrash />
                     </button>
                   </td>
                 </tr>

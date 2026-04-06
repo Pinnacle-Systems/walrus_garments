@@ -50,6 +50,13 @@ const escapeCsvValue = (value) => {
 const normalizeLookupValue = (value) => (value || "").toString().trim().toLowerCase();
 const normalizeCodeValue = (value) => value?.toString().trim().toUpperCase() || "";
 const normalizeNumericValue = (value) => (value === undefined || value === null ? "" : value);
+const normalizeManualFieldValue = (field, value) => {
+  if (field?.type === "number" || field?.type === "uom") {
+    return value;
+  }
+
+  return value?.toString().toUpperCase() ?? "";
+};
 const openingStockHeaderSelectStyles = {
   control: (base) => ({
     ...base,
@@ -286,13 +293,16 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
   }, [setStockItems]);
 
   const updateRowField = React.useCallback((rowId, fieldKey, nextValue) => {
+    const fieldDefinition = openingStockFields.find((field) => field.key === fieldKey);
+    const normalizedValue = normalizeManualFieldValue(fieldDefinition, nextValue);
+
     updateRows((previousRows) =>
       previousRows.map((row) => {
         if (row._rowId !== rowId) return row;
 
         const updatedRow = {
           ...row,
-          [fieldKey]: nextValue,
+          [fieldKey]: normalizedValue,
         };
 
         if (fieldKey === "item_name") {
@@ -314,7 +324,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
         return updatedRow;
       })
     );
-  }, [updateRows]);
+  }, [openingStockFields, updateRows]);
 
   const addManualRow = React.useCallback(() => {
     updateRows((previousRows) => [...previousRows, createManualRow()]);
@@ -1041,7 +1051,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                         <td className={transactionTableActionCellClassName}>
                           <button
                             onClick={() => updateRows((previousRows) => previousRows.filter((entry) => entry._rowId !== row._rowId))}
-                            className={`${transactionTableActionButtonClassName} inline-flex items-center justify-center bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700`}
+                            className="mx-auto inline-flex h-7 w-7 items-center justify-center rounded bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700"
                             title="Delete Row"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
