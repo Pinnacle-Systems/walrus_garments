@@ -284,6 +284,35 @@ export default function Form() {
 
     const handleNameChange = (val) => setName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
 
+    const handleTermsAndConditionKeyDown = useCallback((e) => {
+        if (e.key !== "Enter") {
+            return;
+        }
+
+        e.stopPropagation();
+
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            const textarea = e.target;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const newValue =
+                termsAndCondition.substring(0, start) +
+                "\n" +
+                termsAndCondition.substring(end);
+
+            setTermsAndCondition(newValue);
+
+            setTimeout(() => {
+                textarea.selectionStart = textarea.selectionEnd = start + 1;
+            }, 0);
+            return;
+        }
+
+        e.preventDefault();
+        toggleButtonRef.current?.focus();
+    }, [termsAndCondition, toggleButtonRef]);
+
     useEffect(() => {
         if (form && nameRef.current) {
             nameRef.current.focus();
@@ -417,28 +446,7 @@ export default function Form() {
                                                     disabled={readOnly}
                                                     onChange={(e) => setTermsAndCondition(e.target.value)}
                                                     ref={termsAndConditionRef}
-                                                    onKeyDown={(e) => {
-                                                        // // ✅ Tab from textarea moves to Toggle button
-                                                        // if (e.key === "Enter") {
-                                                        //     e.preventDefault();
-                                                        //     toggleButtonRef.current?.focus();
-                                                        // }
-                                                        // ✅ Ctrl+Enter adds new line (existing behavior)
-                                                        if (e.ctrlKey && e.key === "Enter") {
-                                                            e.preventDefault();
-                                                            const textarea = e.target;
-                                                            const start = textarea.selectionStart;
-                                                            const end = textarea.selectionEnd;
-                                                            const newValue =
-                                                                termsAndCondition.substring(0, start) +
-                                                                "\n" +
-                                                                termsAndCondition.substring(end);
-                                                            setTermsAndCondition(newValue);
-                                                            setTimeout(() => {
-                                                                textarea.selectionStart = textarea.selectionEnd = start + 1;
-                                                            }, 0);
-                                                        }
-                                                    }}
+                                                    onKeyDown={handleTermsAndConditionKeyDown}
                                                 />
                                             </div>
                                             <div className='mt-5'>
