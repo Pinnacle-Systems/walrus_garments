@@ -223,6 +223,11 @@ async function getOne(id) {
                     qty: true,
                     poNo: true,
                     poQty: true,
+                    Item: {
+                        select: {
+                            Hsn: true
+                        }
+                    },
                     returnLotDetails: {
                         select: {
                             id: true,

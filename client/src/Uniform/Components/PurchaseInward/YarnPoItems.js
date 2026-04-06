@@ -390,7 +390,7 @@ const YarnPoItems = ({
                         <tbody className="bg-white">
 
                             {(poItems ? poItems : [])?.map((row, index) =>
-                                <tr key={index} className="border border-blue-gray-200 cursor-pointer "
+                                <tr key={index} className={`border border-blue-gray-200 cursor-pointer ${index % 2 === 0 ? "bg-white" : "bg-gray-100"}`}
                                     onContextMenu={(e) => {
                                         if (!readOnly && !(parseFloat(row.stockQty) < parseFloat(row?.qty))) {
                                             handleRightClick(e, index, "shiftTimeHrs");
@@ -400,11 +400,12 @@ const YarnPoItems = ({
                                     <td className="w-12 border border-gray-300 text-[11px] text-center p-0">{index + 1}</td>
 
                                     {stockControldata?.itemWise && (
-                                        <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <td className="border border-gray-300 p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                                             <SearchableTableCellSelect
                                                 value={row.itemId}
                                                 options={itemOptions}
-                                                disabled={readOnly || id ? row.stockQty < row?.qty : false}
+                                                //  disabled={readOnly || id ? row.stockQty < row?.qty : false}
+                                                disabled={readOnly || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
                                                 addNewModalWidth="w-[90%] h-[95%]"
                                                 childComponent={ItemMaster}
@@ -415,11 +416,11 @@ const YarnPoItems = ({
                                         </td>
                                     )}
                                     {stockControldata?.sizeWise && (
-                                        <td className="border border-gray-300 bg-white p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <td className="border border-gray-300 p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                                             <SearchableTableCellSelect
                                                 value={row.sizeId}
                                                 options={getSizeOptions(row)}
-                                                disabled={readOnly || !row.itemId || id ? row.stockQty < row?.qty : false}
+                                                disabled={readOnly || !row.itemId || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
                                                 addNewModalWidth="w-[40%] h-[45%]"
                                                 // childComponent={SizeMaster}
@@ -428,11 +429,11 @@ const YarnPoItems = ({
                                         </td>
                                     )}
                                     {stockControldata?.sizeColorWise && (
-                                        <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <td className="border border-gray-300 p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                                             <SearchableTableCellSelect
                                                 value={row.colorId}
                                                 options={getColorOptions(row)}
-                                                disabled={readOnly || !row.sizeId || id ? row.stockQty < row?.qty : false}
+                                                disabled={readOnly || !row.sizeId || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
                                                 addNewModalWidth="w-[40%] h-[45%]"
                                                 // childComponent={ColorMaster}
@@ -444,18 +445,18 @@ const YarnPoItems = ({
 
 
 
-                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                    <td className="w-40 border border-gray-300 p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                                         <SearchableTableCellSelect
                                             value={row.uomId}
                                             options={uomOptions}
-                                            disabled={readOnly || !row.itemId || id ? row.stockQty < row?.qty : false}
+                                            disabled={readOnly || !row.itemId || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
                                             onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
                                             addNewModalWidth="w-[40%] h-[45%]"
                                             childComponent={UomMaster}
                                             addNewLabel="+ Add New Uom"
                                         />
                                     </td>
-                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right">
+                                    <td className="w-40 border border-gray-300 p-0 text-[11px] text-right">
                                         <div className="flex h-full min-h-[22px] items-center justify-end px-1">
                                             {row.barcode || ""}
                                         </div>
@@ -465,7 +466,7 @@ const YarnPoItems = ({
                                         // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
                                         Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
                                             <>
-                                                <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
+                                                <td className="w-40 border border-gray-300 p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
                                                     <input
                                                         onKeyDown={e => {
                                                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -476,7 +477,7 @@ const YarnPoItems = ({
                                                         onFocus={(e) => e.target.select()}
                                                         // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                                         value={row[i]}
-                                                        disabled={readOnly || !row.uomId || id ? row.stockQty < row?.qty : false}
+                                                        disabled={readOnly || !row.uomId || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
                                                         onChange={(e) =>
                                                             handleInputChange(e.target.value, index, i)
                                                         }
@@ -497,7 +498,7 @@ const YarnPoItems = ({
                                         </td>
                                     )}
 
-                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
+                                    <td className="w-40 border border-gray-300 p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
                                         <input
                                             onKeyDown={e => {
                                                 if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -509,7 +510,7 @@ const YarnPoItems = ({
                                             onFocus={(e) => e.target.select()}
                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                             value={(row?.qty)}
-                                            disabled={readOnly || !row.uomId || id ? row.stockQty < row?.qty : false}
+                                            disabled={readOnly || !row.uomId || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
                                             onChange={(e) => {
 
                                                 handleInputChange(e.target.value, index, "qty")
@@ -539,7 +540,7 @@ const YarnPoItems = ({
                                         />
                                     </td>
 
-                                    <td className="w-40 border border-gray-300 bg-white p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100 ">
+                                    <td className="w-40 border border-gray-300 p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100 ">
                                         <input
                                             onKeyDown={e => {
                                                 if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -550,7 +551,7 @@ const YarnPoItems = ({
                                             className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
                                             onFocus={(e) => e.target.select()}
                                             value={(row?.price)}
-                                            disabled={readOnly || !row.qty || id ? row.stockQty < row?.qty : false}
+                                            disabled={readOnly || !row.qty || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
                                             onChange={(e) =>
                                                 handleInputChange(e.target.value, index, "price")
                                             }
@@ -595,7 +596,7 @@ const YarnPoItems = ({
                                 </tr>
                             )}
                         </tbody>
-                        {/* <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300  font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
+                        <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300  font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
                             <tr>
                                 <td
                                     colSpan={6 + (id ? 1 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
@@ -612,7 +613,7 @@ const YarnPoItems = ({
                                 </td>
                                 <td className="px-1 py-1 bg-gray-100"></td>
                             </tr>
-                        </tfoot> */}
+                        </tfoot>
                     </table>
                 </div>
                 {contextMenu && (

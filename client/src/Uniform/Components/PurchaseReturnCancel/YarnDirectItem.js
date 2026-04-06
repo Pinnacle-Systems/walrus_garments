@@ -67,27 +67,23 @@ const YarnDirectItem = ({ itemList, uomList,
                     handleInputChangeLotNo={handleInputChangeLotNo}
                     index={index} returnLotDetails={item?.returnLotDetails ? item?.returnLotDetails : []} balanceQty={item?.balanceQty} />
             </Modal>
-            <tr key={item.poItemId} className='border border-blue-gray-200 cursor-pointer '
+            <tr key={item.poItemId} className={`border border-blue-gray-200 cursor-pointer ${index % 2 === 0 ? "bg-white" : "bg-gray-100"}`}
                 onContextMenu={(e) => {
                     if (!readOnly) {
                         handleRightClick(e, index, "shiftTimeHrs");
                     }
                 }}
             >
-                <td className='border border-gray-300 bg-white py-0.5 text-[11px] text-center'>{index + 1}</td>
-                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-left'>{findFromList(item.itemId, itemList?.data, "name")} </td>
-                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-left'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
-
-                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-left'>{findFromList(item.colorId, colorList?.data, "name")} </td>
-
-                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-left'>{findFromList(item.uomId, uomList?.data, "name")} </td>
-                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-left'>
-
-                    {item?.barcode} </td>
+                <td className='border border-gray-300 py-0.5 text-[11px] text-center'>{index + 1}</td>
+                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.itemId, itemList?.data, "name")} </td>
+                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
+                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{item?.barcode} </td>
                 {stockControlData?.data?.map(element => (
                     Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
                         <>
-                            <td className="w-40 border border-gray-300 bg-white py-0.5 text-[11px] text-right">
+                            <td className="w-40 border border-gray-300 py-0.5 text-[11px] text-right">
                                 <input
                                     onKeyDown={e => {
                                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -111,22 +107,22 @@ const YarnDirectItem = ({ itemList, uomList,
                         </>
                     ))
                 ))}
-                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-right'>{item?.allowedReturnQty}</td>
-                <td className='w-12 border border-gray-300 bg-white p-0.5 text-[11px] text-right'>{item?.stockQty}</td>
+                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-right'>{item?.allowedReturnQty}</td>
+                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-right'>{item?.stockQty}</td>
 
 
 
-                <td className='border border-gray-300 bg-white py-0.5 text-[11px] text-right' >
+                <td className='border border-gray-300 py-0.5 text-[11px] text-right' >
                     {item.price ? (parseFloat(item.price).toFixed(2)) : ""}
                 </td>
-                <td className='border border-gray-300 bg-white py-0.5 text-[11px]'>
+                <td className='border border-gray-300 py-0.5 text-[11px]'>
                     <input
                         type="number"
                         onFocus={(e) => e.target.select()}
                         className="text-right rounded py-1 w-full px-1 table-data-input"
                         value={(!item.qty) ? "" : item.qty}
-                        disabled={readOnly || !item.itemId}
                         ref={movedToNextSaveNewRef}
+                        disabled={readOnly || !item.itemId}
                         onKeyDown={(e) => {
                             if (e.key == "Tab") {
                                 handlers.handleTabKeyDown(e)
@@ -173,7 +169,7 @@ const YarnDirectItem = ({ itemList, uomList,
                     <div className='text-center'>
                     </div>
                 </td>
-                <td className='border border-gray-300 bg-white py-0.5 text-[11px] text-right'>
+                <td className='border border-gray-300 py-0.5 px-1 text-[11px] text-right'>
                     {item?.itemId ? gross : ""}
 
                 </td>

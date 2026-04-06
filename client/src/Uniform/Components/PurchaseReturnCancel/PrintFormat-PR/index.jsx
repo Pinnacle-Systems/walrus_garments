@@ -115,7 +115,6 @@ const styles = StyleSheet.create({
   poRefLabel: {
     fontSize: 7.5,
     color: COLOR.textMuted,
-    width: 85,
     textAlign: "right",
   },
   poRefSep: {
@@ -127,6 +126,7 @@ const styles = StyleSheet.create({
     fontSize: 7.5,
     color: COLOR.navy,
     fontWeight: "bold",
+    textAlign: "left",
     width: 80,
   },
   addressSection: {
@@ -144,13 +144,16 @@ const styles = StyleSheet.create({
     backgroundColor: COLOR.border,
   },
   addressSectionLabel: {
-    fontSize: 7,
+    fontSize: 7.5,
     fontWeight: "bold",
-    color: COLOR.gold,
+    color: COLOR.navy,
     textTransform: "uppercase",
-    marginBottom: 4,
-    borderBottom: `0.5 solid ${COLOR.gold}`,
-    paddingBottom: 2,
+    backgroundColor: COLOR.navyLight,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginBottom: 6,
+    borderRadius: 2,
+    width: "100%",
   },
   addressName: {
     fontSize: 9,
@@ -170,11 +173,12 @@ const styles = StyleSheet.create({
   addressLabel: {
     fontSize: 7.5,
     color: COLOR.textMuted,
-    width: 58,
+    width: 60,
   },
   addressValue: {
     fontSize: 7.5,
     color: COLOR.text,
+    flex: 1,
   },
   tableHeader: {
     flexDirection: "row",
@@ -281,36 +285,59 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
   colorList, uomList, sizeList, itemList,
 }, ref) => {
 
-  const calculateTotals = () => {
-    let subtotal = 0;
-    let taxAmount = 0;
+  const isOutsideState = (supplierDetails?.City?.state?.name || "").toLowerCase() !== (branchData?.City?.state?.name || "tamil nadu").toLowerCase();
+
+  const calculateDetailedTotals = () => {
+    let taxableAmount = 0;
+    let cgst = 0;
+    let sgst = 0;
+    let igst = 0;
+    let totalTax = 0;
 
     poItems.forEach(item => {
       const qty = parseFloat(item.qty || 0);
       const price = parseFloat(item.price || 0);
-      const taxRate = parseFloat(item.taxPercent || 0);
 
-      const lineGross = qty * price;
-      const lineTax = (lineGross * taxRate) / 100;
 
-      subtotal += lineGross;
-      taxAmount += lineTax;
+
+      const taxRate = parseFloat(item?.Item?.Hsn?.tax || 0);
+
+
+
+      const lineTaxable = qty * price;
+      const lineTax = (lineTaxable * taxRate) / 100;
+
+      taxableAmount += lineTaxable;
+      totalTax += lineTax;
+
+      if (isOutsideState) {
+        igst += lineTax;
+      } else {
+        cgst += lineTax / 2;
+        sgst += lineTax / 2;
+      }
     });
 
+    const netAmount = Math.round(taxableAmount + totalTax);
+
     return {
-      taxableAmount: subtotal,
-      totalTax: taxAmount,
-      netAmount: Math.round(subtotal + taxAmount)
+      taxableAmount,
+      cgst,
+      sgst,
+      igst,
+      totalTax,
+      netAmount
     };
   };
 
-  const totals = calculateTotals();
+  const totals = calculateDetailedTotals();
 
   const filledPoItems = [
     ...poItems,
     ...Array(Math.max(0, 10 - poItems.length)).fill({}),
   ];
   console.log(filledPoItems, "filledPoItems")
+  console.log(totals, "totals")
 
   if (isTaxHookDetailsLoading) return <Loader />;
 
@@ -358,17 +385,18 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
           <View style={styles.addressSection}>
             {/* To Section (Left) */}
             <View style={styles.addressBlock}>
-              <Text style={styles.addressSectionLabel}>To</Text>
+              <Text style={styles.addressSectionLabel}>Supplier Details</Text>
               <Text style={styles.addressName}>{supplierDetails?.name}</Text>
-              <Text style={styles.addressText}>{supplierDetails?.address}</Text>
+              <Text style={[styles.addressText, { minHeight: 25 }]}>{supplierDetails?.address}</Text>
               {[
-                { label: "Mobile No", value: supplierDetails?.contactPersonNumber },
-                { label: "GST No", value: supplierDetails?.gstNo },
+                { label: "Phone", value: supplierDetails?.contactPersonNumber },
+                { label: "GSTIN", value: supplierDetails?.gstNo },
                 { label: "Email", value: supplierDetails?.contactPersonEmail },
               ].map(({ label, value }) => (
                 <View key={label} style={styles.addressRow}>
                   <Text style={styles.addressLabel}>{label}</Text>
-                  <Text style={styles.addressValue}>: {value}</Text>
+                  <Text style={{ fontSize: 7.5, color: COLOR.textMuted, marginHorizontal: 2 }}>:</Text>
+                  <Text style={styles.addressValue}>{value || "—"}</Text>
                 </View>
               ))}
             </View>
@@ -376,8 +404,9 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
             <View style={styles.addressDivider} />
 
             {/* Reference Section (Right) */}
-            <View style={styles.addressBlock}>
-              <View style={{ marginTop: 10 }}>
+            <View style={[styles.addressBlock, { alignItems: "flex-end" }]}>
+              <Text style={[styles.addressSectionLabel, { textAlign: "right" }]}>Return Details</Text>
+              <View style={{ marginTop: 2 }}>
                 {[
                   { label: "Return No", value: poNumber },
                   { label: "Return Date", value: getDateFromDateTimeToDisplay(poDate) },
@@ -386,7 +415,7 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
                   <View key={label} style={styles.poRefBox}>
                     <Text style={styles.poRefLabel}>{label}</Text>
                     <Text style={styles.poRefSep}>:</Text>
-                    <Text style={styles.poRefValue}>{value}</Text>
+                    <Text style={styles.poRefValue}>{value || "—"}</Text>
                   </View>
                 ))}
               </View>
@@ -402,7 +431,7 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
             <Text style={[styles.th, { flex: COL.uom }]}>UOM</Text>
             <Text style={[styles.th, { flex: COL.price }]}>Price</Text>
             <Text style={[styles.th, { flex: COL.qty }]}>Qty</Text>
-            <Text style={[styles.th, { flex: COL.tax }]}>Tax%</Text>
+            {/* <Text style={[styles.th, { flex: COL.tax }]}>Tax%</Text> */}
             <Text style={[styles.th, { flex: COL.gross, borderRight: 0 }]}>Gross</Text>
           </View>
 
@@ -427,9 +456,9 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
               <Text style={[styles.td, { flex: COL.qty, textAlign: "right" }]}>
                 {val?.qty ? parseFloat(val.qty).toFixed(3) : ""}
               </Text>
-              <Text style={[styles.td, { flex: COL.tax, textAlign: "right" }]}>
-                {val?.taxPercent ? parseFloat(val.taxPercent).toFixed(2) : ""}
-              </Text>
+              {/* <Text style={[styles.td, { flex: COL.tax, textAlign: "right" }]}>
+                {val?.Item?.Hsn?.tax ? parseFloat(val.Item.Hsn.tax).toFixed(2) : ""}
+              </Text> */}
               <Text style={[styles.td, { flex: COL.gross, textAlign: "right", borderRight: 0 }]}>
                 {val?.qty && val?.price ? (parseFloat(val.qty) * parseFloat(val.price)).toFixed(2) : ""}
               </Text>
@@ -438,17 +467,43 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
 
           {/* ── Totals Footer ── */}
           <View style={{ flexDirection: "row", justifyContent: "flex-end", backgroundColor: COLOR.navyLight }}>
-            <View style={{ width: 180, borderLeft: `1 solid ${COLOR.border}` }}>
-              <View style={{ flexDirection: "row", borderBottom: `0.5 solid ${COLOR.border}`, padding: 3 }}>
-                <Text style={{ flex: 1, fontSize: 7, color: COLOR.textMuted }}>Taxable Amount:</Text>
+            <View style={{ width: 190, borderLeft: `1 solid ${COLOR.border}` }}>
+              {/* <View style={{ flexDirection: "row", borderBottom: `0.5 solid ${COLOR.border}`, padding: 3 }}>
+                <Text style={{ flex: 1.2, fontSize: 7, color: COLOR.textMuted }}>Taxable Amount</Text>
                 <Text style={{ flex: 1, fontSize: 7, textAlign: "right", fontWeight: "bold" }}>{totals.taxableAmount.toFixed(2)}</Text>
-              </View>
-              <View style={{ flexDirection: "row", borderBottom: `0.5 solid ${COLOR.border}`, padding: 3 }}>
-                <Text style={{ flex: 1, fontSize: 7, color: COLOR.textMuted }}>Tax Amount:</Text>
+              </View> */}
+
+              {/* {isOutsideState ? (
+                totals.igst > 0 && (
+                  <View style={{ flexDirection: "row", borderBottom: `0.5 solid ${COLOR.border}`, padding: 3 }}>
+                    <Text style={{ flex: 1.2, fontSize: 7, color: COLOR.textMuted }}>IGST</Text>
+                    <Text style={{ flex: 1, fontSize: 7, textAlign: "right", fontWeight: "bold" }}>{totals.igst.toFixed(2)}</Text>
+                  </View>
+                )
+              ) : (
+                <>
+                  {totals.cgst > 0 && (
+                    <View style={{ flexDirection: "row", borderBottom: `0.5 solid ${COLOR.border}`, padding: 3 }}>
+                      <Text style={{ flex: 1.2, fontSize: 7, color: COLOR.textMuted }}>CGST</Text>
+                      <Text style={{ flex: 1, fontSize: 7, textAlign: "right", fontWeight: "bold" }}>{totals.cgst.toFixed(2)}</Text>
+                    </View>
+                  )}
+                  {totals.sgst > 0 && (
+                    <View style={{ flexDirection: "row", borderBottom: `0.5 solid ${COLOR.border}`, padding: 3 }}>
+                      <Text style={{ flex: 1.2, fontSize: 7, color: COLOR.textMuted }}>SGST</Text>
+                      <Text style={{ flex: 1, fontSize: 7, textAlign: "right", fontWeight: "bold" }}>{totals.sgst.toFixed(2)}</Text>
+                    </View>
+                  )}
+                </>
+              )} */}
+
+              {/* <View style={{ flexDirection: "row", borderBottom: `1 solid ${COLOR.border}`, padding: 3, backgroundColor: COLOR.offWhite }}>
+                <Text style={{ flex: 1.2, fontSize: 7, color: COLOR.navy, fontWeight: "bold" }}>Total Tax Amount</Text>
                 <Text style={{ flex: 1, fontSize: 7, textAlign: "right", fontWeight: "bold" }}>{totals.totalTax.toFixed(2)}</Text>
-              </View>
+              </View> */}
+
               <View style={{ flexDirection: "row", padding: 4, backgroundColor: COLOR.goldLight }}>
-                <Text style={{ flex: 1, fontSize: 8, fontWeight: "bold", color: COLOR.navy }}>NET TOTAL:</Text>
+                <Text style={{ flex: 1.2, fontSize: 8, fontWeight: "bold", color: COLOR.navy }}>NET PAYABLE:</Text>
                 <Text style={{ flex: 1, fontSize: 8, textAlign: "right", fontWeight: "bold", color: COLOR.navy }}>{totals.netAmount.toFixed(2)}</Text>
               </View>
             </View>

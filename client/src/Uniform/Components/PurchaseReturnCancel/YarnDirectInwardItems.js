@@ -191,14 +191,16 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 handleRightClick={handleRightClick} addNewRow={addNewRow} stockControlData={stockControlData} movedToNextSaveNewRef={index === 0 ? movedToNextSaveNewRef : undefined}
                                 handlers={handlers}
                             />)}
-                            {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - directInwardReturnItems?.length) }).map(i =>
-                                <tr className='w-12 border border-gray-300 bg-white text-[11px] h-8 text-center p-0.5'>
-                                    {Array.from({ length: 12 }).map(i =>
-                                        <td className="border border-gray-300 bg-white p-0 text-[11px]"></td>
-                                    )}
-
-                                </tr>)
-                            }
+                            {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - (directInwardReturnItems?.length || 0)) }).map((_, i) => {
+                                const rowIndex = (directInwardReturnItems?.length || 0) + i;
+                                return (
+                                    <tr key={`placeholder-${i}`} className={`border border-gray-300 text-[11px] h-8 text-center p-0.5 ${rowIndex % 2 === 0 ? "bg-white" : "bg-gray-100"}`}>
+                                        {Array.from({ length: 12 + (stockControlData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0) || 0) }).map((_, j) =>
+                                            <td key={`placeholder-cell-${j}`} className="border border-gray-300 p-0 text-[11px]"></td>
+                                        )}
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                         <tfoot className="sticky bottom-0 z-10 border-t-2 border-gray-300 bg-gray-300 font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
                             <tr>
@@ -222,8 +224,8 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                     <div
                         style={{
                             position: "absolute",
-                            top: `${contextMenu.mouseY - 345}px`,
-                            left: `${contextMenu.mouseX - 65}px`,
+                            top: `${contextMenu.mouseY - 290}px`,
+                            left: `${contextMenu.mouseX - 35}px`,
 
                             // background: "gray",
                             boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",

@@ -13,7 +13,6 @@ async function get(req) {
                 select: {
                     DirectItems: true,
                     DirectReturnItems: true,
-                    LegacyStock: true,
                     Stock: true,
                     QuotationItems: true,
                     SaleOrderItems: true,
@@ -61,7 +60,6 @@ async function getOne(id) {
                 select: {
                     DirectItems: true,
                     DirectReturnItems: true,
-                    LegacyStock: true,
                     Stock: true,
                     QuotationItems: true,
                     SaleOrderItems: true,

@@ -49,7 +49,11 @@ const QuickAddSizeModal = ({ isOpen, onClose, sizeName, onCreated }) => {
         onCreated(response.data);
         onClose();
       } else {
-        toast.error(response.message || "Failed to create size");
+        // toast.error(response.message || "Failed to create size");
+        Swal.fire({
+          text: response.message || "Failed to create size",
+          icon: "error",
+        });
       }
     } catch (error) {
       console.error("Error creating size:", error);

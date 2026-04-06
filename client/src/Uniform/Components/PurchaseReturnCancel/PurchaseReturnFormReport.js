@@ -326,16 +326,16 @@ const PurchaseCancelFormReport = ({
                       key={dataObj.id}
                       className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                         }`}
-                      // onClick={() => onClick(dataObj.id)}
+                    // onClick={() => onClick(dataObj.id)}
                     >
                       <td className="text-center " >
                         {index + 1}
                       </td>
 
-                      <td className="py-1.5 text-center">{dataObj.docId} </td>
+                      <td className="py-1.5 text-left">{dataObj.docId} </td>
 
 
-                      <td className="py-1.5 text-center">
+                      <td className="py-1.5 text-left">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
 

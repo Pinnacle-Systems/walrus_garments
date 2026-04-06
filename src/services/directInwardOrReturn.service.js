@@ -262,7 +262,7 @@ async function getOne(id) {
     })
 
 
-    data["DirectItems"] = await getDirectInwardReturnItemsAlreadyData(data.storeId, data?.poType, data?.DirectItems)
+    data["DirectItems"] = await getDirectInwardReturnItemsAlreadyData(data.storeId, data?.poType, data?.DirectItems, data?.poInwardOrDirectInward)
     if (!data) return NoRecordFound("directInwardOrReturn");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
@@ -1409,7 +1409,8 @@ async function update(id, body) {
             data: {
                 poType, poInwardOrDirectInward,
                 supplierId: parseInt(partyId),
-                branchId: parseInt(locationId),
+                branchId: parseInt(branchId),
+                locationId: parseInt(locationId),
                 storeId: parseInt(storeId),
                 dcNo,
                 dcDate: dcDate ? new Date(dcDate) : undefined,

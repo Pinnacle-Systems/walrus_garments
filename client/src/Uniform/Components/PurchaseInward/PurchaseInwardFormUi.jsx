@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getCommonParams, isGridDatasValid } from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid, ModeChip } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import {
   DateInput,
@@ -137,11 +137,13 @@ const PurchaseInwardForm = ({
     if (inwardTyperef.current && !id) inwardTyperef.current.focus();
   }, []);
 
+  console.log(readOnly, "readOnly")
+
   const syncFormWithDb = useCallback(
     (data) => {
       const today = new Date();
-      if (id) setReadOnly(true);
-      else setReadOnly(false);
+      // if (id) setReadOnly(true);
+      // else setReadOnly(false);
       setTransType(data?.poType ?? "DyedYarn");
       setPoInwardOrDirectInward(data?.poInwardOrDirectInward ?? "DirectInward");
       setDate(
@@ -435,6 +437,8 @@ const PurchaseInwardForm = ({
 
       <TransactionEntryShell
         title="Purchase Inward"
+        readOnly={readOnly}
+        id={id}
         onClose={onClose}
         headerOpen={headerOpen}
         setHeaderOpen={setHeaderOpen}
@@ -495,6 +499,8 @@ const PurchaseInwardForm = ({
                 }}
                 required
                 ref={branchRef}
+                readOnly={readOnly}
+
               />
               <DropdownInput
                 name="Location"
@@ -511,6 +517,8 @@ const PurchaseInwardForm = ({
                 setValue={setStoreId}
                 required
                 ref={locationRef}
+                readOnly={readOnly}
+
               />
             </TransactionHeaderSection>
 
@@ -574,6 +582,7 @@ const PurchaseInwardForm = ({
                 movedToNextSaveNewRef={movedToNextSaveNewRef}
                 saveNewButtonRef={saveNewButtonRef}
                 handlers={handlers}
+                readOnly={readOnly}
               />
             )}
             {(poInwardOrDirectInward === "PurchaseInward" ||

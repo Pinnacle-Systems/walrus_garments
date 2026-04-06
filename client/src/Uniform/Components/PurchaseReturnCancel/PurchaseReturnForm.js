@@ -111,11 +111,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const syncFormWithDb = useCallback((data) => {
         const today = new Date()
-        if (id) {
-            setReadOnly(true);
-        } else {
-            setReadOnly(false);
-        }
+        // if (id) {
+        //     setReadOnly(true);
+        // } else {
+        //     setReadOnly(false);
+        // }
         setTransType(data?.poType ? data.poType : "DyedYarn");
         setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectReturn")
         setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
@@ -495,6 +495,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
             <TransactionEntryShell
                 title="Purchase Return"
+                readOnly={readOnly}
+                id={id}
                 onClose={onClose}
                 headerOpen={isHeaderOpen}
                 setHeaderOpen={setIsHeaderOpen}
@@ -565,7 +567,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                             setInwardItemSelection(true);
                                         }
                                     }}
-                                    disabled={!supplierId}
+                                    disabled={!supplierId || id}
                                     onClick={() => {
                                         if (!supplierId) {
                                             Swal.fire({
@@ -610,7 +612,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         removeItem={removeItem} transType={transType} isSupplierOutside={isSupplierOutside} directInwardReturnItems={directInwardReturnItems} setDirectInwardReturnItems={setDirectInwardReturnItems} supplierId={supplierId} setInwardItemSelection={setInwardItemSelection}
                         supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
                         branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} id={id} sizeList={sizeList}
-                        purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList} headerOpen={isHeaderOpen} movedToNextSaveNewRef={movedToNextSaveNewRef} handlers={handlers}
+                        purchaseInwardId={purchaseInwardId} itemPriceList={itemPriceList} headerOpen={isHeaderOpen} movedToNextSaveNewRef={movedToNextSaveNewRef} handlers={handlers} readOnly={readOnly}
                     />
                 </div>
             </TransactionEntryShell>

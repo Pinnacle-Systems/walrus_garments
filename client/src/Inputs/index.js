@@ -907,9 +907,12 @@ export const DropdownInput = forwardRef(({
         tabIndex={tabIndex ?? undefined}
         defaultValue={defaultValue}
         required={required}
+        // readOnly={readOnly}
+        disabled={isDisabled}
         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-          transition-all duration-150 shadow-sm
+          transition-all duration-150 shadow-sm ${isDisabled ? "bg-gray-100" : ""
+          } 
           ${className}`}
         value={value}
         onChange={(e) => {
@@ -921,7 +924,6 @@ export const DropdownInput = forwardRef(({
             e.target.click();
           }
         }}
-        disabled={isDisabled}
       >
         <option value="" hidden={!clear} className="text-gray-800">
           Select
