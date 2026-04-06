@@ -50,6 +50,41 @@ const escapeCsvValue = (value) => {
 const normalizeLookupValue = (value) => (value || "").toString().trim().toLowerCase();
 const normalizeCodeValue = (value) => value?.toString().trim().toUpperCase() || "";
 const normalizeNumericValue = (value) => (value === undefined || value === null ? "" : value);
+const openingStockHeaderSelectStyles = {
+  control: (base) => ({
+    ...base,
+    minHeight: "30px",
+    height: "30px",
+    fontSize: "12px",
+    borderRadius: "0.5rem",
+  }),
+  valueContainer: (base) => ({
+    ...base,
+    padding: "0 8px",
+    fontSize: "12px",
+  }),
+  input: (base) => ({
+    ...base,
+    margin: 0,
+    padding: 0,
+    fontSize: "12px",
+  }),
+  singleValue: (base) => ({
+    ...base,
+    fontSize: "12px",
+  }),
+  placeholder: (base) => ({
+    ...base,
+    fontSize: "12px",
+  }),
+  option: (base) => ({
+    ...base,
+    fontSize: "12px",
+  }),
+  indicatorsContainer: (base) => ({ ...base, height: "30px" }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  menu: (base) => ({ ...base, zIndex: 9999 }),
+};
 
 const createRowId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -797,12 +832,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                     placeholder="Branch..."
                     menuPortalTarget={document.body}
                     menuPosition="fixed"
-                    styles={{
-                      control: (base) => ({ ...base, minHeight: "30px", height: "30px", fontSize: "12px" }),
-                      indicatorsContainer: (base) => ({ ...base, height: "30px" }),
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                      menu: (base) => ({ ...base, zIndex: 9999 }),
-                    }}
+                    styles={openingStockHeaderSelectStyles}
                   />
                 </div>
               </div>
@@ -817,12 +847,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                     isClearable
                     menuPortalTarget={document.body}
                     menuPosition="fixed"
-                    styles={{
-                      control: (base) => ({ ...base, minHeight: "30px", height: "30px", fontSize: "12px" }),
-                      indicatorsContainer: (base) => ({ ...base, height: "30px" }),
-                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                      menu: (base) => ({ ...base, zIndex: 9999 }),
-                    }}
+                    styles={openingStockHeaderSelectStyles}
                   />
                 </div>
               </div>

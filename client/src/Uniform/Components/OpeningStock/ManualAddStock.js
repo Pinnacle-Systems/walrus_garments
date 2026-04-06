@@ -205,6 +205,16 @@ const ManualAddStock = ({ params }) => {
     input: (base) => ({ ...base, margin: 0, padding: 0 }),
     indicatorsContainer: (base) => ({ ...base, height: "30px" }),
   };
+  const headerSelectStyles = {
+    control: (base) => ({ ...base, minHeight: "30px", height: "30px", fontSize: "12px", borderRadius: "0.5rem" }),
+    valueContainer: (base) => ({ ...base, padding: "0 8px", fontSize: "12px" }),
+    input: (base) => ({ ...base, margin: 0, padding: 0, fontSize: "12px" }),
+    singleValue: (base) => ({ ...base, fontSize: "12px" }),
+    placeholder: (base) => ({ ...base, fontSize: "12px" }),
+    option: (base) => ({ ...base, fontSize: "12px" }),
+    indicatorsContainer: (base) => ({ ...base, height: "30px" }),
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  };
 
   console.log(rows, "rows")
 
@@ -240,7 +250,7 @@ const ManualAddStock = ({ params }) => {
               onChange={(o) => { setSelectedBranchId(o?.value || ""); setSelectedLocationId(""); }}
               placeholder="Branch..."
               menuPortalTarget={document.body}
-              styles={{ control: (b) => ({ ...b, minHeight: "30px", height: "30px", fontSize: "12px" }), indicatorsContainer: (b) => ({ ...b, height: "30px" }), menuPortal: (b) => ({ ...b, zIndex: 9999 }) }}
+              styles={headerSelectStyles}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -252,7 +262,7 @@ const ManualAddStock = ({ params }) => {
               placeholder="Location..."
               isClearable
               menuPortalTarget={document.body}
-              styles={{ control: (b) => ({ ...b, minHeight: "30px", height: "30px", fontSize: "12px" }), indicatorsContainer: (b) => ({ ...b, height: "30px" }), menuPortal: (b) => ({ ...b, zIndex: 9999 }) }}
+              styles={headerSelectStyles}
             />
           </div>
         </div>
