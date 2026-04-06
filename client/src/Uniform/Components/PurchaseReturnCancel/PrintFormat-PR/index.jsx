@@ -106,6 +106,22 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 3,
   },
+  poRefBox_Left: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  poRefLabel_Left: {
+    fontSize: 7.5,
+    color: COLOR.textMuted,
+    width: 65,
+  },
+  poRefValue_Left: {
+    fontSize: 7.5,
+    color: COLOR.navy,
+    fontWeight: "bold",
+    flex: 1,
+  },
   poRefBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -385,9 +401,9 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
           <View style={styles.addressSection}>
             {/* To Section (Left) */}
             <View style={styles.addressBlock}>
-              <Text style={styles.addressSectionLabel}>Supplier Details</Text>
+              <Text style={styles.addressSectionLabel}>To</Text>
               <Text style={styles.addressName}>{supplierDetails?.name}</Text>
-              <Text style={[styles.addressText, { minHeight: 25 }]}>{supplierDetails?.address}</Text>
+              <Text style={styles.addressText}>{supplierDetails?.address}</Text>
               {[
                 { label: "Phone", value: supplierDetails?.contactPersonNumber },
                 { label: "GSTIN", value: supplierDetails?.gstNo },
@@ -404,18 +420,17 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
             <View style={styles.addressDivider} />
 
             {/* Reference Section (Right) */}
-            <View style={[styles.addressBlock, { alignItems: "flex-end" }]}>
-              <Text style={[styles.addressSectionLabel, { textAlign: "right" }]}>Return Details</Text>
+            <View style={styles.addressBlock}>
               <View style={{ marginTop: 2 }}>
                 {[
                   { label: "Return No", value: poNumber },
                   { label: "Return Date", value: getDateFromDateTimeToDisplay(poDate) },
                   { label: "Branch GST", value: branchData?.gstNo },
                 ].map(({ label, value }) => (
-                  <View key={label} style={styles.poRefBox}>
-                    <Text style={styles.poRefLabel}>{label}</Text>
+                  <View key={label} style={styles.poRefBox_Left}>
+                    <Text style={styles.poRefLabel_Left}>{label}</Text>
                     <Text style={styles.poRefSep}>:</Text>
-                    <Text style={styles.poRefValue}>{value || "—"}</Text>
+                    <Text style={styles.poRefValue_Left}>{value || "—"}</Text>
                   </View>
                 ))}
               </View>
@@ -504,7 +519,7 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
 
               <View style={{ flexDirection: "row", padding: 4, backgroundColor: COLOR.goldLight }}>
                 <Text style={{ flex: 1.2, fontSize: 8, fontWeight: "bold", color: COLOR.navy }}>NET PAYABLE:</Text>
-                <Text style={{ flex: 1, fontSize: 8, textAlign: "right", fontWeight: "bold", color: COLOR.navy }}>{totals.netAmount.toFixed(2)}</Text>
+                <Text style={{ flex: 1, fontSize: 8, textAlign: "right", fontWeight: "bold", color: COLOR.navy }}>{totals.taxableAmount.toFixed(2)}</Text>
               </View>
             </View>
           </View>

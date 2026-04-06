@@ -35,10 +35,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
         );
     };
     const handleDeleteAllRows = () => {
-        setDirectInwardReturnItems((prevRows) => {
-            if (prevRows.length <= 1) return prevRows;
-            return [prevRows[0]];
-        });
+        setDirectInwardReturnItems([]);
     };
 
     useEffect(() => {

@@ -200,10 +200,7 @@ const YarnPoItems = ({
 
 
     const handleDeleteAllRows = () => {
-        setPoItems((prevRows) => {
-            if (prevRows.length <= 1) return prevRows;
-            return [prevRows[0]];
-        });
+        setPoItems([]);
     };
 
 

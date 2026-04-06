@@ -460,7 +460,6 @@ export function getUniqueArrayBySize(rowData, allData, key, itemId, itemPriceLis
 
   const item = rowData?.[0]
 
-  console.log(getItemBarcodeGenerationMethod(item) == "STANDARD", "itemitem")
 
   if (item?.barcodeGenerationMethod == "STANDARD") {
     return allData
@@ -475,7 +474,6 @@ export function getUniqueArrayBySize(rowData, allData, key, itemId, itemPriceLis
 export function getUniqueArrayByColor(rowData, allData, key, itemId, itemPriceList) {
   const item = rowData?.[0]
 
-  console.log(getItemBarcodeGenerationMethod(item) == "STANDARD", "itemitem")
 
   if (item?.barcodeGenerationMethod == "STANDARD") {
     return allData
