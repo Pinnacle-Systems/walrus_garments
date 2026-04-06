@@ -99,6 +99,26 @@ function getExistingLegacySalesPrice(item) {
   return item?.ItemPriceList?.[0]?.salesPrice;
 }
 
+function getExistingLegacyOfferPrice(item) {
+  return item?.ItemPriceList?.[0]?.offerPrice;
+}
+
+function getRowSalesPrice(row) {
+  if (row?.sales_price !== undefined && row?.sales_price !== null && `${row.sales_price}`.trim() !== "") {
+    return row.sales_price;
+  }
+
+  return 0;
+}
+
+function getRowOfferPrice(row) {
+  if (row?.offer_price !== undefined && row?.offer_price !== null && `${row.offer_price}`.trim() !== "") {
+    return row.offer_price;
+  }
+
+  return 0;
+}
+
 const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockItems }) => {
   const { branchId, companyId, finYearId, userId } = getCommonParams();
 
@@ -389,7 +409,8 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
         missingItems.push({
           name: normalizeMasterValue(row.item_name),
           itemCode: normalizeCodeValue(row.item_code),
-          price: row.price || "",
+          salesPrice: getRowSalesPrice(row),
+          offerPrice: getRowOfferPrice(row),
         });
       }
 
@@ -427,10 +448,13 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       const nextCode = existingItem.code || normalizedItemCode;
       const existingPriceRow = existingItem.ItemPriceList?.[0] || {};
       const nextBarcode = getExistingLegacyBarcode(existingItem) || normalizedItemCode;
-      const nextSalesPrice = existingPriceRow?.salesPrice || row.price || 0;
+      const nextSalesPrice = getRowSalesPrice(row);
+      const nextOfferPrice = getRowOfferPrice(row);
       const shouldHydrate = (!existingItem.code && normalizedItemCode)
         || (!getExistingLegacyBarcode(existingItem) && normalizedItemCode)
-        || (!existingPriceRow?.salesPrice && row.price);
+        || (row?.sales_price !== undefined && row?.sales_price !== null && `${row.sales_price}`.trim() !== "")
+        || (row?.offer_price !== undefined && row?.offer_price !== null && `${row.offer_price}`.trim() !== "")
+        || (getExistingLegacyOfferPrice(existingItem) === undefined && row?.offer_price !== undefined && row?.offer_price !== null && `${row.offer_price}`.trim() !== "");
 
       if (shouldHydrate) {
         await updateItem({
@@ -447,7 +471,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
               id: existingPriceRow.id,
               sizeId: null,
               colorId: null,
-              offerPrice: existingPriceRow.offerPrice || 0,
+              offerPrice: nextOfferPrice,
               salesPrice: nextSalesPrice,
               sku: existingPriceRow.sku || "",
               barcode: nextBarcode,
@@ -552,8 +576,8 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
             {
               sizeId: null,
               colorId: null,
-              salesPrice: item.price ? parseFloat(item.price) : 0,
-              offerPrice: 0,
+              salesPrice: item.salesPrice ? parseFloat(item.salesPrice) : 0,
+              offerPrice: item.offerPrice ? parseFloat(item.offerPrice) : 0,
               barcode: normalizedItemCode,
             },
           ],
@@ -592,7 +616,17 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
         companyId,
         finYearId,
         userId,
-        stockItems: mappedStockItems.map(({ _rowId, item_name, item_code, size, color, uom, ...rest }) => ({
+        stockItems: mappedStockItems.map(({
+          _rowId,
+          item_name,
+          item_code,
+          size,
+          color,
+          uom,
+          sales_price,
+          offer_price,
+          ...rest
+        }) => ({
           ...rest,
           barcode: normalizeCodeValue(item_code),
         })),
@@ -1017,7 +1051,8 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                       <tr>
                         <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Item Name</th>
                         <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Item Code</th>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Price</th>
+                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Sales Price</th>
+                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Offer Price</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1025,7 +1060,8 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                         <tr key={item.name}>
                           <td className="border border-slate-200 px-2 py-2 text-sm font-medium uppercase text-slate-700">{item.name}</td>
                           <td className="border border-slate-200 px-2 py-2 text-sm uppercase text-slate-700">{item.itemCode}</td>
-                          <td className="border border-slate-200 px-2 py-2 text-sm text-slate-700">{item.price || "0"}</td>
+                          <td className="border border-slate-200 px-2 py-2 text-sm text-slate-700">{item.salesPrice || "0"}</td>
+                          <td className="border border-slate-200 px-2 py-2 text-sm text-slate-700">{item.offerPrice || "0"}</td>
                         </tr>
                       ))}
                     </tbody>

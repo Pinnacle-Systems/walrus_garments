@@ -76,6 +76,29 @@ describe("salesCatalogRules", () => {
     });
   });
 
+  test("resolves legacy price from the item master standard row when flat price rows are absent", () => {
+    expect(
+      resolveSellablePriceRow(
+        [
+          {
+            id: 3,
+            name: "LEGACY_FLAT",
+            isLegacy: true,
+            ItemPriceList: [{ itemId: 3, sizeId: null, colorId: null, salesPrice: 160, offerPrice: 0 }],
+          },
+        ],
+        [],
+        3,
+        "",
+        ""
+      )
+    ).toMatchObject({
+      itemId: 3,
+      salesPrice: 160,
+      offerPrice: 0,
+    });
+  });
+
   test("validates rows by item-master dimensions rather than global stock-style fields", () => {
     expect(
       areSalesRowsValid(

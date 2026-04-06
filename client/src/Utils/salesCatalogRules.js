@@ -9,19 +9,55 @@ export function findCatalogItem(items = [], itemId) {
   return items.find((item) => normalizeId(item?.id) === normalizedItemId) || null;
 }
 
+function getLegacyStandardPriceRow(item = null) {
+  const standardPriceRow = item?.ItemPriceList?.[0];
+  if (standardPriceRow) return standardPriceRow;
+
+  const salesPrice = item?.salesPrice;
+  const offerPrice = item?.offerPrice;
+  const barcode = item?.barcode;
+  const sku = item?.sku;
+
+  if (
+    salesPrice === undefined &&
+    offerPrice === undefined &&
+    !normalizeId(barcode) &&
+    !normalizeId(sku)
+  ) {
+    return null;
+  }
+
+  return {
+    itemId: item?.id,
+    sizeId: null,
+    colorId: null,
+    salesPrice,
+    offerPrice,
+    barcode,
+    sku,
+  };
+}
+
 export function getSellablePriceRows(items = [], itemPriceList = [], itemId) {
   const normalizedItemId = normalizeId(itemId);
   if (!normalizedItemId) return [];
+
+  const selectedItem = findCatalogItem(items, itemId);
 
   const flatRows = (itemPriceList || []).filter(
     (priceRow) => normalizeId(priceRow?.itemId) === normalizedItemId
   );
 
+  if (selectedItem?.isLegacy) {
+    const legacyStandardPriceRow = getLegacyStandardPriceRow(selectedItem);
+    if (legacyStandardPriceRow) return [legacyStandardPriceRow];
+  }
+
   if (flatRows.length) {
     return flatRows;
   }
 
-  return findCatalogItem(items, itemId)?.ItemPriceList || [];
+  return selectedItem?.ItemPriceList || [];
 }
 
 export function isLegacyCatalogItem(items = [], itemId) {

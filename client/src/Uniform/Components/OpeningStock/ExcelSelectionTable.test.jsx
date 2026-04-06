@@ -238,7 +238,8 @@ describe("Opening stock bulk import color review", () => {
             uom: "PCS",
             uomId: 401,
             qty: "5",
-            price: "100",
+            sales_price: "120",
+            offer_price: "90",
           },
         ]}
       />
@@ -260,7 +261,8 @@ describe("Opening stock bulk import color review", () => {
           expect.objectContaining({
             id: 1001,
             barcode: "SHIRT-001",
-            salesPrice: "100",
+            salesPrice: "120",
+            offerPrice: "90",
           }),
         ],
       })
@@ -287,7 +289,8 @@ describe("Opening stock bulk import color review", () => {
             uom: "PCS",
             uomId: 401,
             qty: "5",
-            price: "100",
+            sales_price: "120",
+            offer_price: "90",
           },
         ]}
       />
@@ -330,7 +333,8 @@ describe("Opening stock bulk import color review", () => {
             uom: "PCS",
             uomId: 401,
             qty: "3",
-            price: "100",
+            sales_price: "120",
+            offer_price: "90",
           },
         ]}
       />
@@ -367,7 +371,8 @@ describe("Opening stock bulk import color review", () => {
             uom: "PCS",
             uomId: 401,
             qty: "3",
-            price: "100",
+            sales_price: "120",
+            offer_price: "90",
           },
         ]}
       />
@@ -400,7 +405,8 @@ describe("Opening stock bulk import color review", () => {
             uom: "PCS",
             uomId: 401,
             qty: "2",
-            price: "100",
+            sales_price: "110",
+            offer_price: "95",
           },
           {
             _rowId: 2,
@@ -414,7 +420,8 @@ describe("Opening stock bulk import color review", () => {
             uom: "PCS",
             uomId: 401,
             qty: "1",
-            price: "120",
+            sales_price: "140",
+            offer_price: "125",
           },
         ]}
       />
@@ -464,7 +471,7 @@ describe("Opening stock bulk import color review", () => {
     expect(payload.stockItems[1].colorId).toBe(903);
   });
 
-  it("creates missing legacy items using item code as barcode identity and row price as sales price", async () => {
+  it("creates missing legacy items using item code as barcode identity and sales price as the price-list sales price", async () => {
     render(
       <TestHarness
         initialStockItems={[
@@ -479,7 +486,8 @@ describe("Opening stock bulk import color review", () => {
             uom: "PCS",
             uomId: 401,
             qty: "2",
-            price: "220",
+            sales_price: "240",
+            offer_price: "200",
           },
         ]}
       />
@@ -506,7 +514,8 @@ describe("Opening stock bulk import color review", () => {
         itemPriceList: [
           expect.objectContaining({
             barcode: "NEW-001",
-            salesPrice: 220,
+            salesPrice: 240,
+            offerPrice: 200,
           }),
         ],
       })
@@ -532,7 +541,8 @@ describe("Opening stock bulk import color review", () => {
             uom: "PCS",
             uomId: 401,
             qty: "2",
-            price: "220",
+            sales_price: "240",
+            offer_price: "200",
           },
         ]}
       />
@@ -566,7 +576,8 @@ describe("Opening stock bulk import color review", () => {
             uom: "PCS",
             uomId: 401,
             qty: "5",
-            price: "100",
+            sales_price: "100",
+            offer_price: "80",
           },
         ]}
       />
@@ -575,12 +586,13 @@ describe("Opening stock bulk import color review", () => {
     fireEvent.click(screen.getByText("Add Row"));
 
     const tableInputs = container.querySelectorAll("tbody input");
-    fireEvent.change(tableInputs[6], { target: { value: "MIX ITEM" } });
-    fireEvent.change(tableInputs[7], { target: { value: "XL" } });
-    fireEvent.change(tableInputs[8], { target: { value: "BLUE" } });
-    fireEvent.change(tableInputs[9], { target: { value: "MIX-001" } });
-    fireEvent.change(tableInputs[10], { target: { value: "250" } });
-    fireEvent.change(tableInputs[11], { target: { value: "4" } });
+    fireEvent.change(tableInputs[7], { target: { value: "MIX ITEM" } });
+    fireEvent.change(tableInputs[8], { target: { value: "XL" } });
+    fireEvent.change(tableInputs[9], { target: { value: "BLUE" } });
+    fireEvent.change(tableInputs[10], { target: { value: "MIX-001" } });
+    fireEvent.change(tableInputs[11], { target: { value: "275" } });
+    fireEvent.change(tableInputs[12], { target: { value: "225" } });
+    fireEvent.change(tableInputs[13], { target: { value: "4" } });
 
     selectLocation();
     fireEvent.click(screen.getByText("Save Stock"));
