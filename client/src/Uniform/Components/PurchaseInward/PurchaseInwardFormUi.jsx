@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getCommonParams, isGridDatasValid, ModeChip } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import {
+  childRecordCount,
   DateInput,
   DropdownInput,
   ReusableSearchableInputNewCustomerwithBranches,
@@ -86,8 +87,7 @@ const PurchaseInwardForm = ({
   const [discountValue, setDiscountValue] = useState("");
   const [contextMenu, setContextMenu] = useState(false);
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
-
-  const childRecord = useRef(0);
+  const [childRecord, setChildRecord] = useState(0);
   const { branchId, companyId, userId, finYearId } = getCommonParams();
   const branchIdFromApi = useRef(branchId);
   const params = { branchId, companyId };
@@ -168,6 +168,7 @@ const PurchaseInwardForm = ({
       setVehicleNo(data?.vehicleNo ?? "");
       setSpecialInstructions(data?.specialInstructions ?? "");
       setRemarks(data?.remarks ?? "");
+      setChildRecord(data?._count ? childRecordCount(data?._count) : "0")
       if (data?.branchId) branchIdFromApi.current = data?.branchId;
     },
     [id],
@@ -476,6 +477,7 @@ const PurchaseInwardForm = ({
                 value={poInwardOrDirectInward}
                 setValue={setPoInwardOrDirectInward}
                 required
+                disabled={childRecord > 0}
                 readOnly={readOnly}
                 ref={inwardTyperef}
               />
@@ -497,6 +499,8 @@ const PurchaseInwardForm = ({
                   setLocationId(value);
                   setStoreId("");
                 }}
+                disabled={childRecord > 0}
+
                 required
                 ref={branchRef}
                 readOnly={readOnly}
@@ -518,6 +522,8 @@ const PurchaseInwardForm = ({
                 required
                 ref={locationRef}
                 readOnly={readOnly}
+                disabled={childRecord > 0}
+
 
               />
             </TransactionHeaderSection>
@@ -546,6 +552,8 @@ const PurchaseInwardForm = ({
                 value={dcNo}
                 setValue={setDcNo}
                 readOnly={readOnly}
+                disabled={childRecord > 0}
+
                 required
               />
               <DateInput
@@ -554,6 +562,8 @@ const PurchaseInwardForm = ({
                 setValue={setDcDate}
                 required
                 readOnly={readOnly}
+                disabled={childRecord > 0}
+
               />
             </TransactionHeaderSection>
           </div>

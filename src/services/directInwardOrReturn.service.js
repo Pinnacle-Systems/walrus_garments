@@ -255,7 +255,11 @@ async function getOne(id) {
 
 
             },
-
+            _count: {
+                select: {
+                    DirectReturnOrPoReturn: true
+                }
+            }
 
 
         },

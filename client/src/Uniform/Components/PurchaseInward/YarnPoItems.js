@@ -95,7 +95,7 @@ const YarnPoItems = ({
             if (standardPrice?.barcode) {
                 newBlend[index]["barcode"] = standardPrice.barcode;
                 if (!newBlend[index]["price"] || newBlend[index]["price"] === "0.00") {
-                    newBlend[index]["price"] = standardPrice.salesPrice || "0.00";
+                    // newBlend[index]["price"] = standardPrice.salesPrice || "0.00";
                 }
             }
         }
@@ -117,7 +117,7 @@ const YarnPoItems = ({
                 newBlend[index]["itemId"] = foundPrice.itemId;
                 newBlend[index]["sizeId"] = foundPrice.sizeId;
                 newBlend[index]["colorId"] = foundPrice.colorId;
-                newBlend[index]["price"] = foundPrice.salesPrice;
+                // newBlend[index]["price"] = foundPrice.salesPrice;
                 const sectionId = findFromList(foundPrice.itemId, itemList?.data, "sectionId")
                 newBlend[index]["sectionId"] = sectionId;
             }
@@ -134,7 +134,7 @@ const YarnPoItems = ({
                 if (foundPrice) {
                     newBlend[index]["barcode"] = foundPrice.barcode;
                     if (!newBlend[index]["price"] || newBlend[index]["price"] === "0.00") {
-                        newBlend[index]["price"] = foundPrice.salesPrice;
+                        // newBlend[index]["price"] = foundPrice.salesPrice;
                     }
                 }
             }
@@ -352,7 +352,14 @@ const YarnPoItems = ({
                                         Stock  Quantity  <span className="text-red-500">*</span>
                                     </th>
                                 )}
+                                {id && (
+                                    <th
 
+                                        className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                    >
+                                        Already Returned Qty  <span className="text-red-500">*</span>
+                                    </th>
+                                )}
                                 <th
 
                                     className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
@@ -389,11 +396,11 @@ const YarnPoItems = ({
                             {(poItems ? poItems : [])?.map((row, index) =>
                                 <tr key={index} className={`border border-blue-gray-200 cursor-pointer ${index % 2 === 0 ? "bg-white" : "bg-gray-100"}`}
                                     onContextMenu={(e) => {
-                                        if (!readOnly && !(parseFloat(row.stockQty) < parseFloat(row?.qty))) {
+                                        if (!readOnly && !(parseFloat(row.stockQty) < parseFloat(row?.qty)) && !row?.DirectReturnItems?.length) {
                                             handleRightClick(e, index, "shiftTimeHrs");
                                         }
                                     }}
-                                >
+                                >{console.log(row?.DirectReturnItems?.length, "row?.DirectReturnItems?.length")}
                                     <td className="w-12 border border-gray-300 text-[11px] text-center p-0">{index + 1}</td>
 
                                     {stockControldata?.itemWise && (
@@ -401,7 +408,6 @@ const YarnPoItems = ({
                                             <SearchableTableCellSelect
                                                 value={row.itemId}
                                                 options={itemOptions}
-                                                //  disabled={readOnly || id ? row.stockQty < row?.qty : false}
                                                 disabled={readOnly || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
                                                 addNewModalWidth="w-[90%] h-[95%]"
@@ -494,7 +500,11 @@ const YarnPoItems = ({
                                             {formatThreeDecimals(row?.stockQty)}
                                         </td>
                                     )}
-
+                                    {id && (
+                                        <td className="border border-gray-300 p-0 text-[11px] text-right">
+                                            {formatThreeDecimals(row?.alreadyReturnedQty)}
+                                        </td>
+                                    )}
                                     <td className="w-40 border border-gray-300 p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100">
                                         <input
                                             onKeyDown={e => {

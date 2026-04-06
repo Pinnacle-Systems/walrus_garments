@@ -164,12 +164,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLOR.navy,
     textTransform: "uppercase",
-    backgroundColor: COLOR.navyLight,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginBottom: 6,
-    borderRadius: 2,
-    width: "100%",
+    marginBottom: 4,
   },
   addressName: {
     fontSize: 9,
@@ -401,20 +396,26 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
           <View style={styles.addressSection}>
             {/* To Section (Left) */}
             <View style={styles.addressBlock}>
-              <Text style={styles.addressSectionLabel}>To</Text>
-              <Text style={styles.addressName}>{supplierDetails?.name}</Text>
-              <Text style={styles.addressText}>{supplierDetails?.address}</Text>
-              {[
-                { label: "Phone", value: supplierDetails?.contactPersonNumber },
-                { label: "GSTIN", value: supplierDetails?.gstNo },
-                { label: "Email", value: supplierDetails?.contactPersonEmail },
-              ].map(({ label, value }) => (
-                <View key={label} style={styles.addressRow}>
-                  <Text style={styles.addressLabel}>{label}</Text>
-                  <Text style={{ fontSize: 7.5, color: COLOR.textMuted, marginHorizontal: 2 }}>:</Text>
-                  <Text style={styles.addressValue}>{value || "—"}</Text>
+              <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 3 }}>
+                <Text style={[styles.addressSectionLabel, { marginBottom: 0 }]}>To : </Text>
+                <View style={{ flex: 1, marginLeft: 2 }}>
+                  <Text style={[styles.addressName, { marginBottom: 2 }]}>{supplierDetails?.name}</Text>
+                  <Text style={styles.addressText}>{supplierDetails?.address}</Text>
                 </View>
-              ))}
+              </View>
+              <View style={{ marginLeft: 22 }}>
+                {[
+                  { label: "Phone", value: supplierDetails?.contactPersonNumber },
+                  { label: "GSTIN", value: supplierDetails?.gstNo },
+                  { label: "Email", value: supplierDetails?.contactPersonEmail },
+                ].map(({ label, value }) => (
+                  <View key={label} style={styles.addressRow}>
+                    <Text style={styles.addressLabel}>{label}</Text>
+                    <Text style={{ fontSize: 7.5, color: COLOR.textMuted, marginHorizontal: 2 }}>:</Text>
+                    <Text style={styles.addressValue}>{value || "—"}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
 
             <View style={styles.addressDivider} />

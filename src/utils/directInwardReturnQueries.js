@@ -58,7 +58,11 @@ async function getAlreadyInwardData(poInwardOrDirectInward, directItemsId, poIte
  on DirectInwardOrReturn.id=directItems.DirectInwardOrReturnID
  WHERE  DirectInwardOrReturn.poinwardordirectinward="${poInwardOrDirectInward}" AND  directItems.ID < ${directItemsId} AND directItems.poItemsId=${poItemsId}
  AND DirectInwardOrReturn.poType="${poType}"
+
+
     `
+    console.log(sql, "sql query already return data")
+
     const alreadyInwardData = await prisma.$queryRawUnsafe(sql);
 
     return alreadyInwardData[0]
@@ -71,8 +75,8 @@ async function getAlreadyRetrunData(poInwardOrDirectInward, directItemsId, poIte
     const sql = `
    select  sum(qty) as alreadyInwardedQty,sum(noofrolls) as alreadyInwardedRolls from DirectInwardOrReturn left join directItems
  on DirectInwardOrReturn.id=directItems.DirectInwardOrReturnID
- WHERE  DirectInwardOrReturn.poinwardordirectinward="${poInwardOrDirectInward}" AND  directItems.ID < ${directItemsId} AND directItems.poItemsId=${poItemsId}
- AND DirectInwardOrReturn.poType="${poType}"
+ WHERE  DirectInwardOrReturn.poinwardordirectinward="${poInwardOrDirectInward}" AND  directItems.ID = ${directItemsId} 
+
     `
     const alreadyInwardData = await prisma.$queryRawUnsafe(sql);
 
