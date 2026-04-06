@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -26,6 +26,7 @@ import CommonFormFooter from "../ReusableComponents/CommonFormFooter";
 import { push } from "../../../redux/features/opentabs";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
+import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 
 
 
@@ -100,6 +101,8 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
   const { data: hsnList } = useGetHsnMasterQuery({ params });
   const { data: itemPriceList } = useGetItemPriceListQuery({ params });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
+  const { data: itemControlPanel } = useGetItemControlPanelMasterQuery({ params });
+  const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlPanel?.data?.[0]);
 
 
   const {
@@ -289,9 +292,6 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
 
 
   const saveData = (nextProcess) => {
-
-    let mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty", "price"];
-
     if (!validateData(data)) {
 
 
@@ -302,7 +302,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
       });
       return
     }
-    if (!isGridDatasValid((data?.invoiceItems)?.filter(i => i.itemId), false, mandatoryFields)) {
+    if (!isSalesTransactionItemsValid((data?.invoiceItems)?.filter(i => i.itemId), itemList?.data, barcodeGenerationMethod)) {
       Swal.fire({
         title: "Please fill all Quote Items Mandatory fields...!",
         icon: "warning",
@@ -713,6 +713,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
               isHeaderOpen={isHeaderOpen}
               itemPriceList={itemPriceList}
               priceTemplateList={priceTemplateList}
+              barcodeGenerationMethod={barcodeGenerationMethod}
             />
           </fieldset>
         </div>

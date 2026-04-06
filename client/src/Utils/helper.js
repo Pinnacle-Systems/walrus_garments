@@ -485,8 +485,82 @@ export function uppercase(inputValue) {
   return inputValue.toUpperCase();
 }
 
+export const VARIANT_NA_LABEL = "NA";
 export function getItemBarcodeGenerationMethod(item, fallbackMethod = DEFAULT_BARCODE_GENERATION_METHOD) {
   return item?.barcodeGenerationMethod || fallbackMethod;
+}
+
+export function getBarcodeVariantColumnVisibility(barcodeGenerationMethod = DEFAULT_BARCODE_GENERATION_METHOD) {
+  return {
+    showSizeColumn: barcodeGenerationMethod === "SIZE" || barcodeGenerationMethod === "SIZE_COLOR",
+    showColorColumn: barcodeGenerationMethod === "SIZE_COLOR",
+  };
+}
+
+export function getItemPriceRowByBarcodeGenerationMode(
+  itemPriceList,
+  itemId,
+  barcodeGenerationMethod = DEFAULT_BARCODE_GENERATION_METHOD,
+  sizeId,
+  colorId
+) {
+  if (!itemPriceList || !itemId) return null;
+
+  if (barcodeGenerationMethod === "SIZE_COLOR") {
+    if (!sizeId || !colorId) return null;
+    return itemPriceList.find(
+      (item) =>
+        String(item.itemId) === String(itemId) &&
+        String(item.sizeId) === String(sizeId) &&
+        String(item.colorId) === String(colorId)
+    ) || null;
+  }
+
+  if (barcodeGenerationMethod === "SIZE") {
+    if (!sizeId) return null;
+    return itemPriceList.find(
+      (item) =>
+        String(item.itemId) === String(itemId) &&
+        String(item.sizeId) === String(sizeId)
+    ) || null;
+  }
+
+  return itemPriceList.find(
+    (item) =>
+      String(item.itemId) === String(itemId) &&
+      !item.sizeId &&
+      !item.colorId
+  ) || itemPriceList.find((item) => String(item.itemId) === String(itemId)) || null;
+}
+
+function isMandatoryGridFieldValid(value) {
+  if (value === "" || value === null || value === undefined) return false;
+  const numericValue = parseFloat(value);
+  if (Number.isFinite(numericValue)) return numericValue !== 0;
+  return true;
+}
+
+export function getSalesTransactionMandatoryFields(item, fallbackMethod = DEFAULT_BARCODE_GENERATION_METHOD) {
+  const fields = ["itemId", "uomId", "qty", "price"];
+  const barcodeGenerationMethod = getItemBarcodeGenerationMethod(item, fallbackMethod);
+
+  if (barcodeGenerationMethod === "SIZE" || barcodeGenerationMethod === "SIZE_COLOR") {
+    fields.splice(1, 0, "sizeId");
+  }
+
+  if (barcodeGenerationMethod === "SIZE_COLOR") {
+    fields.splice(2, 0, "colorId");
+  }
+
+  return fields;
+}
+
+export function isSalesTransactionItemsValid(rows, itemList, fallbackMethod = DEFAULT_BARCODE_GENERATION_METHOD) {
+  return (rows || []).every((row) => {
+    const selectedItem = itemList?.find((item) => String(item.id) === String(row.itemId));
+    const mandatoryFields = getSalesTransactionMandatoryFields(selectedItem, fallbackMethod);
+    return mandatoryFields.every((field) => isMandatoryGridFieldValid(row?.[field]));
+  });
 }
 
 export function getItemPriceForBarcodeGenerationMode(item, barcodeGenerationMethod, sizeId, colorId) {

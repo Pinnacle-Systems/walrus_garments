@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -110,6 +110,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
   const { data: itemControlPanel } = useGetItemControlPanelMasterQuery({ params });
+  const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlPanel?.data?.[0]);
 
 
   const {
@@ -339,7 +340,10 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       });
       return
     }
-    if (!areSalesRowsValid((data?.quoteItems)?.filter(i => i.itemId), itemList?.data, itemPriceList?.data)) {
+    if (
+      !areSalesRowsValid((data?.quoteItems)?.filter(i => i.itemId), itemList?.data, itemPriceList?.data) ||
+      !isSalesTransactionItemsValid((data?.quoteItems)?.filter(i => i.itemId), itemList?.data, barcodeGenerationMethod)
+    ) {
       Swal.fire({
         title: "Please fill all Quote Items Mandatory fields...!",
         icon: "warning",
@@ -797,6 +801,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             itemPriceList={itemPriceList}
             priceTemplateList={priceTemplateList}
             itemControlPanel={itemControlPanel}
+            barcodeGenerationMethod={barcodeGenerationMethod}
             handlers={handlers}
             movedToNextSaveNewRef={movedToNextSaveNewRef}
           />

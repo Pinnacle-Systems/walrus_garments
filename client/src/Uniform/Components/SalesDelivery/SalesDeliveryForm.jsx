@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -27,6 +27,7 @@ import { push } from "../../../redux/features/opentabs";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
+import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 
 
 
@@ -98,6 +99,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
+  const { data: itemControlPanel } = useGetItemControlPanelMasterQuery({ params });
+  const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlPanel?.data?.[0]);
 
 
   const {
@@ -288,7 +291,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     const deliveryRows = (data?.deliveryItems)?.filter(i => i.itemId);
     const catalogItems = itemList?.data || [];
     const catalogPriceRows = itemPriceList?.data || [];
-
     if (!validateData(data)) {
 
 
@@ -299,7 +301,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       });
       return
     }
-    if (!areSalesRowsValid(deliveryRows, catalogItems, catalogPriceRows)) {
+    if (
+      !areSalesRowsValid(deliveryRows, catalogItems, catalogPriceRows) ||
+      !isSalesTransactionItemsValid(deliveryRows, itemList?.data, barcodeGenerationMethod)
+    ) {
       Swal.fire({
         title: "Please fill all Delivery Items Mandatory fields...!",
         icon: "warning",
@@ -748,6 +753,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
               isHeaderOpen={isHeaderOpen}
               itemPriceList={itemPriceList}
               priceTemplateList={priceTemplateList}
+              barcodeGenerationMethod={barcodeGenerationMethod}
               restrictSourceLineEdits={Boolean(convertSaleOrderId && !id)}
             />
           </fieldset>

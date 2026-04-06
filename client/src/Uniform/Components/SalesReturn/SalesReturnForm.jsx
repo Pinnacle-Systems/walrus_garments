@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -25,6 +25,7 @@ import SalesReturnItems from "./SalesReturnItems";
 import { useAddSalesReturnMutation, useGetSalesReturnByIdQuery, useGetSalesReturnQuery, useUpdateSalesReturnMutation } from "../../../redux/uniformService/salesReturnServices";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
+import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 
 
 
@@ -96,6 +97,8 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   const salesItemParams = { ...params, active: true };
   const { data: itemList } = useGetItemMasterQuery({ params: salesItemParams });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: itemControlPanel } = useGetItemControlPanelMasterQuery({ params });
+  const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlPanel?.data?.[0]);
 
 
   const {
@@ -319,16 +322,6 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
 
   const saveData = (nextProcess) => {
-    const mandatoryFields = ["itemId", "uomId", "qty", "price"];
-    const salesRows = (data?.deliveryItems || []).filter(i => i.itemId);
-    const requiresLegacyAwareVariantFields = salesRows.some((row) => {
-      const selectedItem = itemList?.data?.find((item) => String(item.id) === String(row.itemId));
-      return !selectedItem?.isLegacy;
-    });
-    const finalMandatoryFields = requiresLegacyAwareVariantFields
-      ? [...mandatoryFields, "sizeId", "colorId"]
-      : mandatoryFields;
-
     if (!validateData(data)) {
 
 
@@ -339,7 +332,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       });
       return
     }
-    if (!isGridDatasValid(salesRows, false, finalMandatoryFields)) {
+    if (!isSalesTransactionItemsValid((data?.deliveryItems)?.filter(i => i.itemId), itemList?.data, barcodeGenerationMethod)) {
       Swal.fire({
         title: "Please fill all Delivery Items Mandatory fields...!",
         icon: "warning",
@@ -711,7 +704,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
             <SalesReturnItems
               deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
               handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
-              itemList={itemList} sizeList={sizeList}
+              itemList={itemList} sizeList={sizeList} barcodeGenerationMethod={barcodeGenerationMethod}
             />
           </fieldset>
         </div>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -26,6 +26,7 @@ import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTem
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
+import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 
 
 
@@ -84,6 +85,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const { data: hsnList } = useGetHsnMasterQuery({ params });
   const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
+  const { data: itemControlPanel } = useGetItemControlPanelMasterQuery({ params });
+  const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlPanel?.data?.[0]);
 
 
   const {
@@ -291,7 +294,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       });
       return
     }
-    if (!areSalesRowsValid((data?.saleOrderItems)?.filter(i => i.itemId), itemList?.data, itemPriceList?.data)) {
+    if (
+      !areSalesRowsValid((data?.saleOrderItems)?.filter(i => i.itemId), itemList?.data, itemPriceList?.data) ||
+      !isSalesTransactionItemsValid((data?.saleOrderItems)?.filter(i => i.itemId), itemList?.data, barcodeGenerationMethod)
+    ) {
       Swal.fire({
         title: "Please fill all Sale Order Items Mandatory fields...!",
         icon: "warning",
@@ -716,6 +722,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
               isHeaderOpen={isHeaderOpen}
               itemPriceList={itemPriceList}
               priceTemplateList={priceTemplateList}
+              barcodeGenerationMethod={barcodeGenerationMethod}
             />
           </fieldset>
         </div>
