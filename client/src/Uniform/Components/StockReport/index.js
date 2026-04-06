@@ -136,13 +136,13 @@ const StockReport = () => {
                                 className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'
                                 onClick={() => {
 
-                                    // if (!(localStoreId && localEndDate)) {
-                                    //     Swal.fire({
-                                    //         icon: "warning",
-                                    //         title: "Choose Item,  , End Date ... ",
-                                    //     });
-                                    //     return
-                                    // }
+                                    if (!(storeId)) {
+                                        Swal.fire({
+                                            icon: "warning",
+                                            title: "Choose Location... ",
+                                        });
+                                        return
+                                    }
                                     fetchData(
                                         {
                                             params:
@@ -172,7 +172,7 @@ const StockReport = () => {
                     </div>
 
 
-                    <div>
+                    <div className="overflow-auto max-h-[calc(100vh-300px)] border border-gray-300 rounded-md">
                         {
                             stockList.length == 0 ?
                                 <div className="flex justify-center items-center text-blue-900  text-3xl sm:mt-52">
@@ -182,7 +182,7 @@ const StockReport = () => {
 
 
                                 <table className="min-w-[1250px] border-collapse table-fixed">
-                                    <thead className="bg-gray-200 text-gray-800">
+                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10 font-bold shadow-sm">
 
                                         <tr>
 
@@ -190,6 +190,7 @@ const StockReport = () => {
                                             <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Item </td>
                                             <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Size </td>
                                             <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Color </td>
+                                            <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Barcode </td>
 
                                             <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Total Qty </td>
 
@@ -204,14 +205,13 @@ const StockReport = () => {
                                     <tbody>
 
                                         {stockList?.map((yarn, index) => (
-                                            <tr
-
-                                            >
+                                            <tr key={index} className="hover:bg-blue-50 transition-colors duration-150">
 
                                                 <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
                                                 <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Item}</td>
                                                 <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Size}</td>
                                                 <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Color}</td>
+                                                <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Barcode}</td>
 
                                                 <td className="border border-gray-300 px-2 py-1 text-right text-[11px] ">{parseFloat(yarn?.total_qty).toFixed(3)}</td>
 

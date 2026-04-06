@@ -783,6 +783,7 @@ export async function getStockReport(req) {
       I.name AS Item,
       S.name AS  Size,
 	  C.name AS  Color,
+      ST.barcode As Barcode,
       SUM(ST.qty) AS total_qty
   FROM stock ST
   LEFT JOIN Item I ON I.id = ST.itemId
@@ -793,13 +794,15 @@ export async function getStockReport(req) {
   GROUP BY
        I.name,
        S.name,
-       C.name
+       C.name,
+       ST.barcode
 HAVING 
     SUM(ST.qty) > 0
   ORDER BY
        I.name,
        S.name,
-       C.name
+       C.name,
+       ST.barcode
 `
 
 
