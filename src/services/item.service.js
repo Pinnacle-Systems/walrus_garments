@@ -1,6 +1,7 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 import { normalizeLegacyBarcode, validateLegacyPriceRowShape } from './legacyStockRules.js';
+import { validateUniqueBarcodesWithinPayload } from './itemBarcodeRules.js';
 import {
     getBarcodeGenerationMethod,
     validateVariantRows,
@@ -112,6 +113,41 @@ async function validateLegacyItemPayload({
 
     if (conflictingBarcodeRow?.item && conflictingBarcodeRow.item.name !== itemName) {
         throw Error(`Legacy barcode ${normalizedBarcode} is already associated with item ${conflictingBarcodeRow.item.name}.`);
+    }
+}
+
+async function ensureUniqueItemBarcodes({ itemId, itemPriceList = [] }) {
+    const barcodeEntries = validateUniqueBarcodesWithinPayload(itemPriceList);
+    const barcodes = [...new Set(barcodeEntries.map((entry) => entry.barcode))];
+
+    if (!barcodes.length) {
+        return;
+    }
+
+    const conflictingRows = await prisma.itemPriceList.findMany({
+        where: {
+            barcode: {
+                in: barcodes,
+            },
+            item: itemId
+                ? {
+                    id: { not: parseInt(itemId) },
+                }
+                : undefined,
+        },
+        include: {
+            item: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            }
+        }
+    });
+
+    const conflictingRow = conflictingRows[0];
+    if (conflictingRow?.item?.name) {
+        throw Error(`Barcode ${conflictingRow.barcode} is already associated with item ${conflictingRow.item.name}.`);
     }
 }
 
@@ -347,6 +383,9 @@ async function create(body) {
         itemPriceList,
         creationSource,
     });
+    await ensureUniqueItemBarcodes({
+        itemPriceList,
+    });
     validateVariantRows({
         flowType: "canonical",
         isLegacy: normalizedIsLegacy,
@@ -562,6 +601,10 @@ async function update(id, body) {
         isLegacy: normalizedIsLegacy,
         itemPriceList,
         existingItem: dataFound,
+    });
+    await ensureUniqueItemBarcodes({
+        itemId: id,
+        itemPriceList,
     });
     validateVariantRows({
         flowType: "canonical",

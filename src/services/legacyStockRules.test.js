@@ -5,6 +5,7 @@ import {
     buildReconciliationEntries,
     compareReconciliationEntries,
     validateLegacyPriceRowShape,
+    resolveOpeningStockLegacyItems,
     validateResolvedOpeningStockLegacyItems,
 } from "./legacyStockRules.js";
 
@@ -56,6 +57,48 @@ test("validateResolvedOpeningStockLegacyItems rejects barcode mismatches", () =>
     assert.throws(
         () => validateResolvedOpeningStockLegacyItems(stockItems, itemMap),
         /barcode does not match legacy item/i
+    );
+});
+
+test("resolveOpeningStockLegacyItems fills a missing itemId from a unique barcode match", () => {
+    const stockItems = [{ itemId: null, barcode: "LEG-001" }];
+    const items = [
+        {
+            id: 10,
+            name: "LEGACY SHIRT RENAMED",
+            active: true,
+            isLegacy: true,
+            ItemPriceList: [{ barcode: "LEG-001", sizeId: null, colorId: null }],
+        }
+    ];
+
+    const resolvedItems = resolveOpeningStockLegacyItems(stockItems, items);
+
+    assert.equal(resolvedItems[0].itemId, 10);
+});
+
+test("resolveOpeningStockLegacyItems rejects ambiguous barcode matches", () => {
+    const stockItems = [{ itemId: null, barcode: "LEG-001" }];
+    const items = [
+        {
+            id: 10,
+            name: "LEGACY SHIRT A",
+            active: true,
+            isLegacy: true,
+            ItemPriceList: [{ barcode: "LEG-001", sizeId: null, colorId: null }],
+        },
+        {
+            id: 11,
+            name: "LEGACY SHIRT B",
+            active: true,
+            isLegacy: true,
+            ItemPriceList: [{ barcode: "LEG-001", sizeId: null, colorId: null }],
+        }
+    ];
+
+    assert.throws(
+        () => resolveOpeningStockLegacyItems(stockItems, items),
+        /matches multiple existing items/i
     );
 });
 

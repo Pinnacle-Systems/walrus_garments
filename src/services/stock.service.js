@@ -3,7 +3,11 @@ import { prisma } from '../lib/prisma.js';
 import { getStockProperty } from '../utils/helper.js';
 import { getFinishedGoodsStockReport, getStockReportForCuttingDelivery } from '../utils/stockHelper.js';
 import moment from "moment"
-import { buildBarcodeSnapshotMatches, validateResolvedOpeningStockLegacyItems } from './legacyStockRules.js';
+import {
+    buildBarcodeSnapshotMatches,
+    resolveOpeningStockLegacyItems,
+    validateResolvedOpeningStockLegacyItems
+} from './legacyStockRules.js';
 import { pickStockRuntimeFieldValues, STOCK_RUNTIME_FIELD_KEYS } from './stockRuntimeFields.js';
 
 const xprisma = prisma.$extends({
@@ -393,13 +397,35 @@ export async function createOpeningStock(body) {
                 .filter(Boolean)
                 .map((itemId) => parseInt(itemId))
         )];
+        const rowBarcodes = [...new Set(
+            stockItems
+                .map((item) => item?.barcode_no ? String(item.barcode_no).trim() : item?.barcode ? String(item.barcode).trim() : "")
+                .filter(Boolean)
+        )];
 
-        const items = uniqueItemIds.length > 0
+        const items = uniqueItemIds.length > 0 || rowBarcodes.length > 0
             ? await tx.item.findMany({
                 where: {
-                    id: {
-                        in: uniqueItemIds,
-                    }
+                    OR: [
+                        uniqueItemIds.length > 0
+                            ? {
+                                id: {
+                                    in: uniqueItemIds,
+                                }
+                            }
+                            : undefined,
+                        rowBarcodes.length > 0
+                            ? {
+                                ItemPriceList: {
+                                    some: {
+                                        barcode: {
+                                            in: rowBarcodes,
+                                        }
+                                    }
+                                }
+                            }
+                            : undefined,
+                    ].filter(Boolean)
                 },
                 include: {
                     ItemPriceList: true,
@@ -407,11 +433,12 @@ export async function createOpeningStock(body) {
             })
             : [];
 
+        const resolvedStockItems = resolveOpeningStockLegacyItems(stockItems, items);
         const itemMap = new Map(items.map((item) => [item.id, item]));
 
-        validateResolvedOpeningStockLegacyItems(stockItems, itemMap);
+        validateResolvedOpeningStockLegacyItems(resolvedStockItems, itemMap);
 
-        const formattedData = stockItems.map((item) => ({
+        const formattedData = resolvedStockItems.map((item) => ({
             inOrOut: "OpeningStock",
             itemId: item?.itemId ? parseInt(item.itemId) : undefined,
             sizeId: item?.sizeId ? parseInt(item.sizeId) : undefined,
@@ -948,7 +975,6 @@ export {
     update,
     remove,
 }
-
 
 
 

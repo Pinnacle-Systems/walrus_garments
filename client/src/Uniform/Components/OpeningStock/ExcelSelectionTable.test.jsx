@@ -560,6 +560,22 @@ describe("Opening stock bulk import color review", () => {
     expect(itemCodeInput.closest("td")?.className).toContain("bg-red-50");
   });
 
+  it("uses the sales-style item select for manual rows and autofills the matched legacy item", () => {
+    const { container } = render(<TestHarness initialStockItems={[]} />);
+
+    fireEvent.click(screen.getByText("Add Row"));
+
+    const rowSelects = container.querySelectorAll("tbody select");
+    const rowInputs = container.querySelectorAll("tbody input");
+
+    fireEvent.change(rowSelects[0], { target: { value: "101" } });
+
+    expect(rowSelects[0].value).toBe("101");
+    expect(rowInputs[0].value).toBe("SHIRT");
+    expect(rowInputs[1].value).toBe("0");
+    expect(rowInputs[2].value).toBe("0");
+  });
+
   it("uses one shared review flow for a mixed batch with existing and newly added rows", async () => {
     const { container } = render(
       <TestHarness

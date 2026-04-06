@@ -30,6 +30,7 @@ import TransactionLineItemsSection, {
   transactionTableNumberInputClassName,
   transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
+import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 import {
   createOpeningStockRowDefaults,
   getOpeningStockFieldDefinitions,
@@ -161,6 +162,40 @@ function getRowOfferPrice(row) {
   return 0;
 }
 
+function normalizeComparablePrice(value) {
+  if (value === undefined || value === null || `${value}`.trim() === "") {
+    return "";
+  }
+
+  return String(value).trim();
+}
+
+function applyResolvedLegacyItemToRow(row, resolvedItem) {
+  if (!resolvedItem) {
+    return row;
+  }
+
+  const existingPriceRow = resolvedItem.ItemPriceList?.[0] || {};
+
+  return {
+    ...row,
+    itemId: resolvedItem.id || row.itemId || "",
+    item_name: resolvedItem.name || row.item_name || "",
+    item_code: row.item_code || resolvedItem.code || existingPriceRow.barcode || "",
+    sales_price: normalizeComparablePrice(row.sales_price) ? row.sales_price : (existingPriceRow.salesPrice ?? row.sales_price),
+    offer_price: normalizeComparablePrice(row.offer_price) ? row.offer_price : (existingPriceRow.offerPrice ?? row.offer_price),
+  };
+}
+
+function clearResolvedLegacyItemFromRow(row) {
+  return {
+    ...row,
+    itemId: "",
+    item_name: "",
+    item_code: "",
+  };
+}
+
 const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockItems }) => {
   const { branchId, companyId, finYearId, userId } = getCommonParams();
 
@@ -219,6 +254,14 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     () => new Map(legacyItems.map((item) => [normalizeLookupValue(item.name), item])),
     [legacyItems]
   );
+  const itemLookupOptions = React.useMemo(
+    () => legacyItems.map((item) => ({
+      value: String(item.id),
+      label: item.name || "",
+      code: item.code || getExistingLegacyBarcode(item) || "",
+    })),
+    [legacyItems]
+  );
   const sizeByName = React.useMemo(
     () => new Map((sizeList?.data || []).map((size) => [normalizeLookupValue(size.name), size])),
     [sizeList]
@@ -245,6 +288,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     const pcsUom = findByName("PCS", uomList?.data || []);
     return {
       _rowId: createRowId(),
+      _entryMode: "manual",
       ...createOpeningStockRowDefaults(openingStockFields),
       uom: pcsUom?.name || "",
       uomId: pcsUom?.id || "",
@@ -307,6 +351,10 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
 
         if (fieldKey === "item_name") {
           updatedRow.itemId = "";
+          const resolvedItem = itemByName.get(normalizeLookupValue(normalizedValue));
+          if (resolvedItem) {
+            return applyResolvedLegacyItemToRow(updatedRow, resolvedItem);
+          }
         }
 
         if (fieldKey === "size") {
@@ -324,7 +372,21 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
         return updatedRow;
       })
     );
-  }, [openingStockFields, updateRows]);
+  }, [itemByName, openingStockFields, updateRows]);
+
+  const updateRowItemSelection = React.useCallback((rowId, itemId) => {
+    updateRows((previousRows) =>
+      previousRows.map((row) => {
+        if (row._rowId !== rowId) return row;
+        if (!itemId) {
+          return clearResolvedLegacyItemFromRow(row);
+        }
+
+        const resolvedItem = legacyItems.find((item) => String(item.id) === String(itemId));
+        return applyResolvedLegacyItemToRow(row, resolvedItem);
+      })
+    );
+  }, [legacyItems, updateRows]);
 
   const addManualRow = React.useCallback(() => {
     updateRows((previousRows) => [...previousRows, createManualRow()]);
@@ -480,6 +542,49 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     };
   }, [getResolvedColor, getResolvedItem, getResolvedSize, stockItems, stockMaintenance.trackColor, stockMaintenance.trackSize]);
 
+  const getExistingLegacyConflicts = React.useCallback(() => {
+    const conflicts = [];
+
+    stockItems.forEach((row, index) => {
+      const existingItem = getResolvedItem(row);
+      if (!existingItem) {
+        return;
+      }
+
+      const rowName = normalizeMasterValue(row?.item_name || "");
+      const itemName = normalizeMasterValue(existingItem?.name || "");
+      if (rowName && itemName && rowName !== itemName) {
+        conflicts.push(`Row ${index + 1} item name differs from Item Master (${existingItem.name}). Update Item Master before loading stock.`);
+      }
+
+      const rowCode = normalizeCodeValue(row?.item_code);
+      const itemCode = normalizeCodeValue(existingItem?.code);
+      if (rowCode && itemCode && rowCode !== itemCode) {
+        conflicts.push(`Row ${index + 1} item code ${rowCode} differs from Item Master code ${itemCode}. Update Item Master before loading stock.`);
+      }
+
+      const rowBarcode = normalizeCodeValue(row?.item_code);
+      const itemBarcode = getExistingLegacyBarcode(existingItem);
+      if (rowBarcode && itemBarcode && rowBarcode !== itemBarcode) {
+        conflicts.push(`Row ${index + 1} barcode ${rowBarcode} differs from Item Master barcode ${itemBarcode}. Update Item Master before loading stock.`);
+      }
+
+      const rowSalesPrice = normalizeComparablePrice(getRowSalesPrice(row));
+      const itemSalesPrice = normalizeComparablePrice(getExistingLegacySalesPrice(existingItem));
+      if (rowSalesPrice && itemSalesPrice && rowSalesPrice !== itemSalesPrice) {
+        conflicts.push(`Row ${index + 1} sales price ${rowSalesPrice} differs from Item Master sales price ${itemSalesPrice}. Update Item Master before loading stock.`);
+      }
+
+      const rowOfferPrice = normalizeComparablePrice(getRowOfferPrice(row));
+      const itemOfferPrice = normalizeComparablePrice(getExistingLegacyOfferPrice(existingItem));
+      if (rowOfferPrice && itemOfferPrice && rowOfferPrice !== itemOfferPrice) {
+        conflicts.push(`Row ${index + 1} offer price ${rowOfferPrice} differs from Item Master offer price ${itemOfferPrice}. Update Item Master before loading stock.`);
+      }
+    });
+
+    return conflicts;
+  }, [getResolvedItem, stockItems]);
+
   const hydrateExistingLegacyItems = React.useCallback(async () => {
     const hydratedItemIds = new Set();
 
@@ -493,13 +598,12 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       const nextCode = existingItem.code || normalizedItemCode;
       const existingPriceRow = existingItem.ItemPriceList?.[0] || {};
       const nextBarcode = getExistingLegacyBarcode(existingItem) || normalizedItemCode;
-      const nextSalesPrice = getRowSalesPrice(row);
-      const nextOfferPrice = getRowOfferPrice(row);
+      const nextSalesPrice = normalizeComparablePrice(getExistingLegacySalesPrice(existingItem)) || getRowSalesPrice(row);
+      const nextOfferPrice = normalizeComparablePrice(getExistingLegacyOfferPrice(existingItem)) || getRowOfferPrice(row);
       const shouldHydrate = (!existingItem.code && normalizedItemCode)
         || (!getExistingLegacyBarcode(existingItem) && normalizedItemCode)
-        || (row?.sales_price !== undefined && row?.sales_price !== null && `${row.sales_price}`.trim() !== "")
-        || (row?.offer_price !== undefined && row?.offer_price !== null && `${row.offer_price}`.trim() !== "")
-        || (getExistingLegacyOfferPrice(existingItem) === undefined && row?.offer_price !== undefined && row?.offer_price !== null && `${row.offer_price}`.trim() !== "");
+        || (!normalizeComparablePrice(getExistingLegacySalesPrice(existingItem)) && normalizeComparablePrice(row?.sales_price))
+        || (!normalizeComparablePrice(getExistingLegacyOfferPrice(existingItem)) && normalizeComparablePrice(row?.offer_price));
 
       if (shouldHydrate) {
         await updateItem({
@@ -548,6 +652,12 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     const missingRequiredRowMessage = getMissingRequiredRowMessage();
     if (missingRequiredRowMessage) {
       toast.warning(missingRequiredRowMessage);
+      return;
+    }
+
+    const existingLegacyConflicts = getExistingLegacyConflicts();
+    if (existingLegacyConflicts.length > 0) {
+      toast.error(existingLegacyConflicts[0]);
       return;
     }
 
@@ -704,6 +814,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     companyId,
     finYearId,
     getMissingRequiredRowMessage,
+    getExistingLegacyConflicts,
     getResolvedColor,
     getResolvedItem,
     getResolvedSize,
@@ -766,6 +877,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
         .map((row) => {
           const nextRow = {
             _rowId: createRowId(),
+            _entryMode: "import",
             ...createOpeningStockRowDefaults(openingStockFields),
           };
 
@@ -1029,6 +1141,20 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                                     }),
                                     indicatorsContainer: (base) => ({ ...base, height: "30px" }),
                                   }}
+                                />
+                              </td>
+                            );
+                          }
+
+                          if (field.key === "item_name" && row?._entryMode === "manual") {
+                            return (
+                              <td key={field.key} className={cellClassName}>
+                                <SearchableTableCellSelect
+                                  value={row.itemId ? String(row.itemId) : ""}
+                                  options={itemLookupOptions}
+                                  disabled={false}
+                                  onChange={(nextValue) => updateRowItemSelection(row._rowId, nextValue)}
+                                  placeholder=""
                                 />
                               </td>
                             );

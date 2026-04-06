@@ -126,7 +126,7 @@ const SearchableTableCellSelect = ({
         }}
         onChange={(event) => {
           setIsOpen(true);
-          setSearch(event.target.value);
+          setSearch(String(event.target.value ?? "").toUpperCase());
         }}
         onKeyDown={(event) => {
           if (event.key === "Escape") {

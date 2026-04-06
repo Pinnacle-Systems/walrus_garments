@@ -27,6 +27,52 @@ export function validateLegacyPriceRowShape(itemPriceList = []) {
     };
 }
 
+function getOpeningStockRowBarcode(item = {}) {
+    return item?.barcode_no ? String(item.barcode_no).trim() : item?.barcode ? String(item.barcode).trim() : "";
+}
+
+export function resolveOpeningStockLegacyItems(stockItems = [], items = []) {
+    const itemMap = new Map(items.map((item) => [item.id, item]));
+    const barcodeMap = new Map();
+
+    items.forEach((item) => {
+        const normalizedBarcode = normalizeLegacyBarcode(item?.ItemPriceList?.[0]?.barcode);
+        if (!normalizedBarcode) {
+            return;
+        }
+
+        const existingItems = barcodeMap.get(normalizedBarcode) || [];
+        existingItems.push(item);
+        barcodeMap.set(normalizedBarcode, existingItems);
+    });
+
+    return stockItems.map((item, index) => {
+        const itemId = item?.itemId ? parseInt(item.itemId) : undefined;
+        if (itemId && itemMap.has(itemId)) {
+            return item;
+        }
+
+        const rowBarcode = getOpeningStockRowBarcode(item);
+        if (!rowBarcode) {
+            return item;
+        }
+
+        const barcodeMatches = barcodeMap.get(rowBarcode) || [];
+        if (barcodeMatches.length > 1) {
+            throw Error(`Opening stock row ${index + 1} barcode ${rowBarcode} matches multiple existing items.`);
+        }
+
+        if (barcodeMatches.length === 1) {
+            return {
+                ...item,
+                itemId: barcodeMatches[0].id,
+            };
+        }
+
+        return item;
+    });
+}
+
 export function validateResolvedOpeningStockLegacyItems(stockItems = [], itemMap = new Map()) {
     stockItems.forEach((item, index) => {
         const itemId = item?.itemId ? parseInt(item.itemId) : undefined;
@@ -56,7 +102,7 @@ export function validateResolvedOpeningStockLegacyItems(stockItems = [], itemMap
             throw Error(`Legacy item ${existingItem.name} cannot use size or color pricing rows.`);
         }
 
-        const rowBarcode = item?.barcode_no ? String(item.barcode_no).trim() : item?.barcode ? String(item.barcode).trim() : "";
+        const rowBarcode = getOpeningStockRowBarcode(item);
         const legacyBarcode = legacyPriceRow?.barcode ? String(legacyPriceRow.barcode).trim() : "";
 
         if (!rowBarcode) {
