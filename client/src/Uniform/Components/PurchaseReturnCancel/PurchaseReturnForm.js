@@ -547,7 +547,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     show="isSupplier"
                                     required
                                     disabled={id}
-                                    isShow={false}
+                                // isShow={false}
                                 />
                             </div>
 
