@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, getFirstInvalidSalesTransactionField, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -27,7 +27,6 @@ import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
-import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
 
 
 
@@ -340,12 +339,11 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       });
       return
     }
-    if (
-      !areSalesRowsValid((data?.quoteItems)?.filter(i => i.itemId), itemList?.data, itemPriceList?.data) ||
-      !isSalesTransactionItemsValid((data?.quoteItems)?.filter(i => i.itemId), itemList?.data, barcodeGenerationMethod)
-    ) {
+    const quoteRows = (data?.quoteItems)?.filter(i => i.itemId);
+    const firstInvalidQuoteField = getFirstInvalidSalesTransactionField(quoteRows, itemList?.data, barcodeGenerationMethod);
+    if (firstInvalidQuoteField && !isSalesTransactionItemsValid(quoteRows, itemList?.data, barcodeGenerationMethod)) {
       Swal.fire({
-        title: "Please fill all Quote Items Mandatory fields...!",
+        title: `Row ${firstInvalidQuoteField.rowNumber}: ${firstInvalidQuoteField.label} is required`,
         icon: "warning",
       });
       return;

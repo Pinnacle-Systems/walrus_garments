@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, getFirstInvalidSalesTransactionField, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -25,7 +25,6 @@ import { push } from "../../../redux/features/opentabs";
 import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTemplateService";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
-import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
 import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 
 
@@ -294,12 +293,11 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       });
       return
     }
-    if (
-      !areSalesRowsValid((data?.saleOrderItems)?.filter(i => i.itemId), itemList?.data, itemPriceList?.data) ||
-      !isSalesTransactionItemsValid((data?.saleOrderItems)?.filter(i => i.itemId), itemList?.data, barcodeGenerationMethod)
-    ) {
+    const saleOrderRows = (data?.saleOrderItems)?.filter(i => i.itemId);
+    const firstInvalidSaleOrderField = getFirstInvalidSalesTransactionField(saleOrderRows, itemList?.data, barcodeGenerationMethod);
+    if (firstInvalidSaleOrderField && !isSalesTransactionItemsValid(saleOrderRows, itemList?.data, barcodeGenerationMethod)) {
       Swal.fire({
-        title: "Please fill all Sale Order Items Mandatory fields...!",
+        title: `Row ${firstInvalidSaleOrderField.rowNumber}: ${firstInvalidSaleOrderField.label} is required`,
         icon: "warning",
       });
       return;

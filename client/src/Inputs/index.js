@@ -3289,7 +3289,8 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       disabled,
       show,
       id,
-      isShow = true
+      isShow = true,
+      nextRef = null,
     },
 
     ref

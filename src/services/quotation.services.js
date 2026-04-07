@@ -4,6 +4,12 @@ import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 
+function parseIntOrUndefined(value) {
+    if (value === undefined || value === null || value === "") return undefined;
+    const parsedValue = parseInt(value, 10);
+    return Number.isNaN(parsedValue) ? undefined : parsedValue;
+}
+
 
 
 
@@ -178,11 +184,11 @@ async function create(body) {
                     createMany: quoteItems?.length > 0 ? {
                         data: quoteItems?.filter(temp => temp.itemId).map((temp) => {
                             let newItem = {}
-                            newItem["itemId"] = parseInt(temp["itemId"]);
-                            newItem["sizeId"] = parseInt(temp["sizeId"]);
-                            newItem["colorId"] = parseInt(temp["colorId"]);
-                            newItem["hsnId"] = parseInt(temp["hsnId"]);
-                            newItem["uomId"] = parseInt(temp["uomId"]);
+                            newItem["itemId"] = parseIntOrUndefined(temp["itemId"]);
+                            newItem["sizeId"] = parseIntOrUndefined(temp["sizeId"]);
+                            newItem["colorId"] = parseIntOrUndefined(temp["colorId"]);
+                            newItem["hsnId"] = parseIntOrUndefined(temp["hsnId"]);
+                            newItem["uomId"] = parseIntOrUndefined(temp["uomId"]);
                             newItem["qty"] = String(temp["qty"]);
                             newItem["price"] = String(temp["price"]);
 
@@ -213,11 +219,11 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
             },
             data: {
                 quotationId: parseInt(quotationId),
-                itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
-                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                hsnId: item["hsnId"] ? parseInt(item["hsnId"]) : 0,
-                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+                itemId: parseIntOrUndefined(item["itemId"]),
+                sizeId: parseIntOrUndefined(item["sizeId"]),
+                colorId: parseIntOrUndefined(item["colorId"]),
+                hsnId: parseIntOrUndefined(item["hsnId"]) || 0,
+                uomId: parseIntOrUndefined(item["uomId"]),
                 qty: item["qty"] ? item["qty"] : 0,
                 price: item["price"] ? item["price"] : 0,
 
@@ -242,11 +248,11 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
         let data = await tx.quoteItems.create({
             data: {
                 quotationId: parseInt(quotationId),
-                itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
-                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-                hsnId: item["hsnId"] ? parseInt(item["hsnId"]) : undefined,
+                itemId: parseIntOrUndefined(item["itemId"]),
+                sizeId: parseIntOrUndefined(item["sizeId"]),
+                colorId: parseIntOrUndefined(item["colorId"]),
+                uomId: parseIntOrUndefined(item["uomId"]),
+                hsnId: parseIntOrUndefined(item["hsnId"]),
                 qty: item["qty"] ? String(item["qty"]) : "",
                 price: item["price"] ? String(item["price"]) : "",
 

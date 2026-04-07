@@ -3,7 +3,14 @@ import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
-import { capitalizeFirstLetter, findFromList, sumArray } from "../../../Utils/helper";
+import {
+    VARIANT_NA_LABEL,
+    capitalizeFirstLetter,
+    findFromList,
+    getBarcodeVariantColumnVisibility,
+    getItemBarcodeGenerationMethod,
+    sumArray,
+} from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
@@ -56,6 +63,7 @@ const QuotationItems = ({
     itemPriceList,
     priceTemplateList,
     itemControlPanel,
+    barcodeGenerationMethod,
     handlers,
     movedToNextSaveNewRef
 }) => {
@@ -69,11 +77,13 @@ const QuotationItems = ({
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false)
     const catalogItems = itemList?.data || [];
     const catalogPriceRows = itemPriceList?.data || [];
-    const { showSize, showColor } = getCatalogColumnVisibility(catalogItems, catalogPriceRows);
+    const { showSizeColumn, showColorColumn } = getBarcodeVariantColumnVisibility(barcodeGenerationMethod);
     const findSelectedItem = (itemId) => catalogItems.find((item) => String(item.id) === String(itemId));
     const isLegacyRow = (row) => isLegacyCatalogItem(catalogItems, row?.itemId);
-    const rowRequiresSize = (row) => itemUsesSize(catalogItems, catalogPriceRows, row?.itemId);
-    const rowRequiresColor = (row) => itemUsesColor(catalogItems, catalogPriceRows, row?.itemId);
+    const rowRequiresSize = (row) =>
+        !isLegacyRow(row) && ["SIZE", "SIZE_COLOR"].includes(getItemBarcodeGenerationMethod(findSelectedItem(row?.itemId), barcodeGenerationMethod));
+    const rowRequiresColor = (row) =>
+        !isLegacyRow(row) && getItemBarcodeGenerationMethod(findSelectedItem(row?.itemId), barcodeGenerationMethod) === "SIZE_COLOR";
     const isSizeReady = (row) => !rowRequiresSize(row) || Boolean(row.itemId);
     const isColorReady = (row) => !rowRequiresColor(row) || Boolean(rowRequiresSize(row) ? row.sizeId : row.itemId);
     const isUomReady = (row) => {
@@ -419,14 +429,14 @@ const QuotationItems = ({
                                     >
                                         Item
                                     </th>
-                                    {showSize && (
+                                    {showSizeColumn && (
                                     <th
                                         className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Size
                                     </th>
                                     )}
-                                    {showColor && (
+                                    {showColorColumn && (
                                     <th
                                         className={`${compactHeaderCellClassName} w-32`}
                                     >
@@ -537,6 +547,8 @@ const QuotationItems = ({
                                     }
 
 
+                                    const showSizeNa = showSizeColumn && row.itemId && !rowRequiresSize(row);
+                                    const showColorNa = showColorColumn && row.itemId && !rowRequiresColor(row);
                                     return (
 
 
@@ -565,87 +577,55 @@ const QuotationItems = ({
                                                 />
                                             </td>
 
-                                            {showSize && (
+                                            {showSizeColumn && (
                                             <td className={compactFocusCellClassName}>
-                                                {/* <select
-                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                                    tabIndex={"0"} className={compactSelectClassName}
-                                                    value={row.sizeId}
-                                                    onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
-                                                    onBlur={(e) => {
-                                                        handleInputChange((e.target.value), index, "sizeId")
-                                                    }
-                                                    }
-                                                    disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
-                                                >
-                                                    <option >
-                                                    </option>
-                                                    {getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map((blend) =>
-                                                        <option value={blend.id} key={blend.id}>
-                                                            {blend?.name}
-                                                        </option>)}
-                                                </select> */}
-                                                <SearchableTableCellSelect
-                                                    value={row.sizeId}
-                                                    options={
-                                                        id ?
-                                                            sizeList?.data?.map((item) => ({
-                                                                value: item.id,
-                                                                label: item?.name || "",
-                                                            })) :
-                                                            getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map((item) => ({
-                                                                value: item.id,
-                                                                label: item?.name || "",
-                                                            }))}
+                                                {showSizeNa ? (
+                                                    <span className="block px-1 py-0.5 text-[10px] text-slate-500">{VARIANT_NA_LABEL}</span>
+                                                ) : (
+                                                    <SearchableTableCellSelect
+                                                        value={row.sizeId}
+                                                        options={
+                                                            id ?
+                                                                sizeList?.data?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                })) :
+                                                                getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                }))}
 
-                                                    disabled={readOnly || !isSizeReady(row)}
-                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
-                                                    addNewModalWidth="w-[90%] h-[95%]"
-
-                                                />
+                                                        disabled={readOnly || !isSizeReady(row)}
+                                                        onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
+                                                        addNewModalWidth="w-[90%] h-[95%]"
+                                                    />
+                                                )}
                                             </td>
                                             )}
 
-                                            {showColor && (
+                                            {showColorColumn && (
                                             <td className={compactFocusCellClassName}>
-                                                {/* <select
-                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                                    className={compactSelectClassName} value={row.colorId}
-                                                    onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
-                                                    onBlur={(e) => {
-                                                        handleInputChange((e.target.value), index, "colorId")
-                                                    }
-                                                    }
-                                                    disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
+                                                {showColorNa ? (
+                                                    <span className="block px-1 py-0.5 text-[10px] text-slate-500">{VARIANT_NA_LABEL}</span>
+                                                ) : (
+                                                    <SearchableTableCellSelect
+                                                        value={row.colorId}
+                                                        options={
+                                                            id ?
+                                                                colorList?.data?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                })) :
+                                                                getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                }))}
 
-                                                >
-                                                    <option hidden>
-                                                    </option>
-                                                    {getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((blend) =>
-                                                        <option value={blend.id} key={blend.id}>
-                                                            {blend?.name}
-                                                        </option>
-                                                    )}
-                                                </select> */}
-
-                                                <SearchableTableCellSelect
-                                                    value={row.colorId}
-                                                    options={
-                                                        id ?
-                                                            colorList?.data?.map((item) => ({
-                                                                value: item.id,
-                                                                label: item?.name || "",
-                                                            })) :
-                                                            getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((item) => ({
-                                                                value: item.id,
-                                                                label: item?.name || "",
-                                                            }))}
-
-                                                    disabled={readOnly || !isColorReady(row)}
-                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
-                                                    addNewModalWidth="w-[90%] h-[95%]"
-
-                                                />
+                                                        disabled={readOnly || !isColorReady(row)}
+                                                        onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
+                                                        addNewModalWidth="w-[90%] h-[95%]"
+                                                    />
+                                                )}
                                             </td>
                                             )}
 
@@ -860,7 +840,7 @@ const QuotationItems = ({
                                                     onKeyDown={(e) => {
                                                         if (e.key === "Enter") {
                                                             e.preventDefault();
-                                                            if (index === quotationItems.length - 1) {
+                                                            if (index === quoteItems.length - 1) {
                                                                 addNewRow(index);
                                                             }
 

@@ -542,6 +542,9 @@ function isMandatoryGridFieldValid(value) {
 
 export function getSalesTransactionMandatoryFields(item, fallbackMethod = DEFAULT_BARCODE_GENERATION_METHOD) {
   const fields = ["itemId", "uomId", "qty", "price"];
+  if (item?.isLegacy) {
+    return fields;
+  }
   const barcodeGenerationMethod = getItemBarcodeGenerationMethod(item, fallbackMethod);
 
   if (barcodeGenerationMethod === "SIZE" || barcodeGenerationMethod === "SIZE_COLOR") {
@@ -561,6 +564,36 @@ export function isSalesTransactionItemsValid(rows, itemList, fallbackMethod = DE
     const mandatoryFields = getSalesTransactionMandatoryFields(selectedItem, fallbackMethod);
     return mandatoryFields.every((field) => isMandatoryGridFieldValid(row?.[field]));
   });
+}
+
+const SALES_TRANSACTION_FIELD_LABELS = {
+  itemId: "Item",
+  sizeId: "Size",
+  colorId: "Color",
+  uomId: "UOM",
+  qty: "Quantity",
+  price: "Price",
+};
+
+export function getFirstInvalidSalesTransactionField(rows, itemList, fallbackMethod = DEFAULT_BARCODE_GENERATION_METHOD) {
+  const normalizedRows = rows || [];
+
+  for (let index = 0; index < normalizedRows.length; index += 1) {
+    const row = normalizedRows[index];
+    const selectedItem = itemList?.find((item) => String(item.id) === String(row.itemId));
+    const mandatoryFields = getSalesTransactionMandatoryFields(selectedItem, fallbackMethod);
+    const invalidField = mandatoryFields.find((field) => !isMandatoryGridFieldValid(row?.[field]));
+
+    if (invalidField) {
+      return {
+        rowNumber: index + 1,
+        field: invalidField,
+        label: SALES_TRANSACTION_FIELD_LABELS[invalidField] || invalidField,
+      };
+    }
+  }
+
+  return null;
 }
 
 export function getItemPriceForBarcodeGenerationMode(item, barcodeGenerationMethod, sizeId, colorId) {

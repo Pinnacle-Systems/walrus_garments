@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, getFirstInvalidSalesTransactionField, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -332,9 +332,11 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       });
       return
     }
-    if (!isSalesTransactionItemsValid((data?.deliveryItems)?.filter(i => i.itemId), itemList?.data, barcodeGenerationMethod)) {
+    const salesReturnRows = (data?.deliveryItems)?.filter(i => i.itemId);
+    const firstInvalidSalesReturnField = getFirstInvalidSalesTransactionField(salesReturnRows, itemList?.data, barcodeGenerationMethod);
+    if (firstInvalidSalesReturnField && !isSalesTransactionItemsValid(salesReturnRows, itemList?.data, barcodeGenerationMethod)) {
       Swal.fire({
-        title: "Please fill all Delivery Items Mandatory fields...!",
+        title: `Row ${firstInvalidSalesReturnField.rowNumber}: ${firstInvalidSalesReturnField.label} is required`,
         icon: "warning",
       });
       return;

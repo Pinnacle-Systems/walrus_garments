@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
+import {
+    VARIANT_NA_LABEL,
+    getBarcodeVariantColumnVisibility,
+    getItemBarcodeGenerationMethod,
+} from "../../../Utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
@@ -18,6 +23,7 @@ import TransactionLineItemsSection, {
     transactionTableRowClassName,
     transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
+import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 import {
     getCatalogColorOptions,
     getCatalogColumnVisibility,
@@ -49,7 +55,8 @@ const SaleOrderItems = ({
     setTaxMethod,
     isHeaderOpen,
     itemPriceList,
-    priceTemplateList
+    priceTemplateList,
+    barcodeGenerationMethod,
 }) => {
     const compactHeaderCellClassName = transactionTableHeaderCellClassName;
     const compactCellClassName = transactionTableCellClassName;
@@ -62,7 +69,8 @@ const SaleOrderItems = ({
 
     const catalogItems = itemList?.data || [];
     const catalogPriceRows = itemPriceList?.data || [];
-    const { showSize, showColor } = getCatalogColumnVisibility(catalogItems, catalogPriceRows);
+    const { showSizeColumn, showColorColumn } = getBarcodeVariantColumnVisibility(barcodeGenerationMethod);
+    const getSelectedItem = (itemId) => catalogItems?.find((item) => String(item.id) === String(itemId));
 
     const getPriceFromTemplate = (itemId, qty) => {
         if (!priceTemplateList?.data || !itemId || !qty) return null;
@@ -83,7 +91,7 @@ const SaleOrderItems = ({
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(saleOrderItems);
         if (field === "itemId") {
-            const selectedItem = catalogItems?.find(item => String(item.id) === String(value));
+            const selectedItem = getSelectedItem(value);
             if (selectedItem) {
                 newBlend[index]["sectionId"] = selectedItem.sectionId;
                 newBlend[index]["hsnId"] = selectedItem.hsnId;
@@ -195,8 +203,10 @@ const SaleOrderItems = ({
     const { data: colorList } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined } });
     const { data: hsnList } = useGetHsnMasterQuery({ params });
     const isLegacyRow = (row) => isLegacyCatalogItem(catalogItems, row?.itemId);
-    const rowRequiresSize = (row) => itemUsesSize(catalogItems, catalogPriceRows, row?.itemId);
-    const rowRequiresColor = (row) => itemUsesColor(catalogItems, catalogPriceRows, row?.itemId);
+    const rowRequiresSize = (row) =>
+        !isLegacyRow(row) && ["SIZE", "SIZE_COLOR"].includes(getItemBarcodeGenerationMethod(getSelectedItem(row?.itemId), barcodeGenerationMethod));
+    const rowRequiresColor = (row) =>
+        !isLegacyRow(row) && getItemBarcodeGenerationMethod(getSelectedItem(row?.itemId), barcodeGenerationMethod) === "SIZE_COLOR";
     const isSizeReady = (row) => !rowRequiresSize(row) || Boolean(row.itemId);
     const isColorReady = (row) => !rowRequiresColor(row) || Boolean(rowRequiresSize(row) ? row.sizeId : row.itemId);
     const isUomReady = (row) => {
@@ -237,6 +247,21 @@ const SaleOrderItems = ({
         return { subTotal, taxTotal, total: subTotal + taxTotal };
     };
 
+    const itemOptions = (itemList?.data || []).map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
+    const hsnOptions = (hsnList?.data || []).map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
+    const uomOptions = ((id ? uomList?.data : uomList?.data?.filter(item => item.active)) || []).map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
     return (
         <>
             <fieldset className="h-full min-h-0">
@@ -250,8 +275,8 @@ const SaleOrderItems = ({
                                 <tr>
                                     <th className={`${compactHeaderCellClassName} w-12`}>S.No</th>
                                     <th className={`${compactHeaderCellClassName} w-52`}>Item</th>
-                                    {showSize && <th className={`${compactHeaderCellClassName} w-16`}>Size</th>}
-                                    {showColor && <th className={`${compactHeaderCellClassName} w-32`}>Color</th>}
+                                    {showSizeColumn && <th className={`${compactHeaderCellClassName} w-16`}>Size</th>}
+                                    {showColorColumn && <th className={`${compactHeaderCellClassName} w-32`}>Color</th>}
                                     <th className={`${compactHeaderCellClassName} w-20`}>Hsn</th>
                                     <th className={`${compactHeaderCellClassName} w-12`}>UOM</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Quantity</th>
@@ -268,6 +293,8 @@ const SaleOrderItems = ({
                             <tbody>
                                 {(saleOrderItems || []).map((row, index) => {
                                     const { subTotal, taxTotal, total } = getLineTotals(row);
+                                    const showSizeNa = showSizeColumn && row.itemId && !rowRequiresSize(row);
+                                    const showColorNa = showColorColumn && row.itemId && !rowRequiresColor(row);
                                     return (
                                         <tr
                                             key={index}
@@ -280,92 +307,70 @@ const SaleOrderItems = ({
 
                                             {/* Item */}
                                             <td className={compactFocusCellClassName}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "itemId"); }}
-                                                    tabIndex="0" disabled={readOnly}
-                                                    className={compactSelectClassName}
+                                                <SearchableTableCellSelect
                                                     value={row.itemId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "itemId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "itemId")}
-                                                >
-                                                    <option></option>
-                                                    {itemList?.data?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                    ))}
-                                                </select>
+                                                    options={itemOptions}
+                                                    disabled={readOnly}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
+                                                />
                                             </td>
 
                                             {/* Size */}
-                                            {showSize && (
+                                            {showSizeColumn && (
                                             <td className={compactFocusCellClassName}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "sizeId"); }}
-                                                    tabIndex="0"
-                                                    className={compactSelectClassName}
-                                                    value={row.sizeId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "sizeId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "sizeId")}
-                                                    disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
-                                                >
-                                                    <option></option>
-                                                    {getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                    ))}
-                                                </select>
+                                                {showSizeNa ? (
+                                                    <span className="block px-1 py-0.5 text-[10px] text-slate-500">{VARIANT_NA_LABEL}</span>
+                                                ) : (
+                                                    <SearchableTableCellSelect
+                                                        value={row.sizeId}
+                                                        options={(getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId) || []).map((item) => ({
+                                                            value: item.id,
+                                                            label: item?.name || "",
+                                                        }))}
+                                                        disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
+                                                        onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
+                                                    />
+                                                )}
                                             </td>
                                             )}
 
                                             {/* Color */}
-                                            {showColor && (
+                                            {showColorColumn && (
                                             <td className={compactFocusCellClassName}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "colorId"); }}
-                                                    className={compactSelectClassName}
-                                                    value={row.colorId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "colorId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "colorId")}
-                                                    disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
-                                                >
-                                                    <option hidden></option>
-                                                    {getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                    ))}
-                                                </select>
+                                                {showColorNa ? (
+                                                    <span className="block px-1 py-0.5 text-[10px] text-slate-500">{VARIANT_NA_LABEL}</span>
+                                                ) : (
+                                                    <SearchableTableCellSelect
+                                                        value={row.colorId}
+                                                        options={(getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId) || []).map((item) => ({
+                                                            value: item.id,
+                                                            label: item?.name || "",
+                                                        }))}
+                                                        disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
+                                                        onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
+                                                    />
+                                                )}
                                             </td>
                                             )}
 
                                             {/* HSN */}
                                             <td className={compactFocusCellClassName}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "hsnId"); }}
-                                                    className={compactSelectClassName}
+                                                <SearchableTableCellSelect
                                                     value={row.hsnId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "hsnId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "hsnId")}
+                                                    options={hsnOptions}
                                                     disabled={readOnly || !row.itemId}
-                                                >
-                                                    <option hidden></option>
-                                                    {hsnList?.data?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "hsnId")}
+                                                />
                                             </td>
 
                                             {/* UOM */}
                                             <td className={`${compactFocusCellClassName} w-40`}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "uomId"); }}
-                                                    className={compactSelectClassName}
+                                                <SearchableTableCellSelect
                                                     value={row.uomId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "uomId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "uomId")}
+                                                    options={uomOptions}
                                                     disabled={readOnly || !isUomReady(row)}
-                                                >
-                                                    <option hidden></option>
-                                                    {(id ? uomList?.data : uomList?.data?.filter(item => item.active))?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend.name}</option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
+                                                />
                                             </td>
 
                                             {/* Qty */}

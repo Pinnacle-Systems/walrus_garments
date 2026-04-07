@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, getFirstInvalidSalesTransactionField, isSalesTransactionItemsValid, resolveBarcodeGenerationMethod, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -26,7 +26,6 @@ import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintForm
 import { push } from "../../../redux/features/opentabs";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
-import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
 import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 
 
@@ -289,8 +288,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
   const saveData = (nextProcess) => {
     const deliveryRows = (data?.deliveryItems)?.filter(i => i.itemId);
-    const catalogItems = itemList?.data || [];
-    const catalogPriceRows = itemPriceList?.data || [];
     if (!validateData(data)) {
 
 
@@ -301,12 +298,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       });
       return
     }
-    if (
-      !areSalesRowsValid(deliveryRows, catalogItems, catalogPriceRows) ||
-      !isSalesTransactionItemsValid(deliveryRows, itemList?.data, barcodeGenerationMethod)
-    ) {
+    const firstInvalidDeliveryField = getFirstInvalidSalesTransactionField(deliveryRows, itemList?.data, barcodeGenerationMethod);
+    if (firstInvalidDeliveryField && !isSalesTransactionItemsValid(deliveryRows, itemList?.data, barcodeGenerationMethod)) {
       Swal.fire({
-        title: "Please fill all Delivery Items Mandatory fields...!",
+        title: `Row ${firstInvalidDeliveryField.rowNumber}: ${firstInvalidDeliveryField.label} is required`,
         icon: "warning",
       });
       return;
