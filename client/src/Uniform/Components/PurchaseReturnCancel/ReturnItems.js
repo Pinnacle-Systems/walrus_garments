@@ -74,7 +74,18 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
             newBlend[index]["balanceQty"] = poItem?.balanceQty ? parseFloat(poItem.balanceQty).toFixed(3) : "0.000";
             newBlend[index]["stockQty"] = parseFloat(poItem?.stockQty).toFixed(3)
             newBlend[index]["allowedReturnQty"] = parseFloat(poItem?.allowedReturnQty).toFixed(3)
-            newBlend[index]["barcode"] = foundPrice?.barcode
+            newBlend[index]["barcode"] = poItem?.barcode
+            newBlend[index]["field1"] = poItem?.field1
+            newBlend[index]["field2"] = poItem?.field2
+            newBlend[index]["field3"] = poItem?.field3
+            newBlend[index]["field4"] = poItem?.field4
+            newBlend[index]["field5"] = poItem?.field5
+            newBlend[index]["field6"] = poItem?.field6
+            newBlend[index]["field7"] = poItem?.field7
+            newBlend[index]["field8"] = poItem?.field8
+            newBlend[index]["field9"] = poItem?.field9
+            newBlend[index]["field10"] = poItem?.field10
+
         } else {
             newBlend[index][field] = value
 

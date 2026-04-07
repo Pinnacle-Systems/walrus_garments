@@ -1270,8 +1270,8 @@ async function create(body) {
         payTermId, processValid = false,
         vehicleNo, specialInstructions, remarks, orderId, locationId,
         branchId, active, userId, finYearId } = await body
-    await validateActiveItemsForInward(directInwardReturnItems);
-    await validateInventoryVariantRows(directInwardReturnItems, `${poInwardOrDirectInward} row`);
+    // await validateActiveItemsForInward(directInwardReturnItems);
+    // await validateInventoryVariantRows(directInwardReturnItems, `${poInwardOrDirectInward} row`);
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let docId = await getNextDocId(branchId, poInwardOrDirectInward, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
