@@ -17,7 +17,8 @@ import {
     useGetDirectCancelOrReturnByIdQuery, useUpdateDirectCancelOrReturnMutation
 }
     from "../../../redux/uniformService/DirectCancelOrReturnServices";
-import { getCommonParams, sumArray } from "../../../Utils/helper";
+import { getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import { directOrPoreturn } from "../../../Utils/DropdownData";
 import InwardItemsSelection from "./InwardItemsSelection";
 
@@ -98,6 +99,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
     } = useGetDirectCancelOrReturnByIdQuery(id, { skip: !id });
+
+    const { data: stockControlData } = useGetStockReportControlQuery({ params: { branchId, companyId, userId, finYearId } });
 
     const [addData] = useAddDirectCancelOrReturnMutation();
     const [updateData] = useUpdateDirectCancelOrReturnMutation();
@@ -234,6 +237,19 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
     const saveData = (nextProcess) => {
+        const config = stockControlData?.data?.[0];
+        const mandatoryFields = [
+            ...(config?.itemWise ? ["itemId"] : []),
+            ...(config?.sizeWise ? ["sizeId"] : []),
+            ...(config?.sizeColorWise ? ["colorId"] : []),
+            ...Object.keys(config || {})
+                .filter((key) => key.toLowerCase().includes("field") && !!config[key])
+                .map((key) => key),
+            "uomId",
+            "barcode",
+            "qty",
+            "price",
+        ];
 
         if (!validateData(data)) {
 
@@ -244,6 +260,21 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
             }); return
         }
+
+        if (
+            !isGridDatasValid(
+                data?.directReturnItems?.filter((i) => i.itemId),
+                false,
+                mandatoryFields,
+            )
+        ) {
+            Swal.fire({
+                title: "Please fill all Return Items Mandatory fields...!",
+                icon: "warning",
+            });
+            return;
+        }
+
         if (!window.confirm("Are you sure save the details ...?")) {
             return
         }

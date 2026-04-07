@@ -131,6 +131,8 @@ const PurchaseInwardForm = ({
     isLoading: isSingleLoading,
   } = useGetDirectInwardOrReturnByIdQuery(id, { skip: !id });
 
+  const { data: stockControlData } = useGetStockReportControlQuery({ params });
+
   // const [addData] = useAddDirectInwardOrReturnMutation();
   const [updateData] = useUpdateDirectInwardOrReturnMutation();
 
@@ -263,10 +265,14 @@ const PurchaseInwardForm = ({
     "";
 
   const saveData = (nextProcess) => {
+    const config = stockControlData?.data?.[0];
     const mandatoryFields = [
-      "itemId",
-      "sizeId",
-      "colorId",
+      ...(config?.itemWise ? ["itemId"] : []),
+      ...(config?.sizeWise ? ["sizeId"] : []),
+      ...(config?.sizeColorWise ? ["colorId"] : []),
+      ...Object.keys(config || {})
+        .filter((key) => key.toLowerCase().includes("field") && !!config[key])
+        .map((key) => key),
       "uomId",
       "barcode",
       "qty",

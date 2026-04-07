@@ -555,12 +555,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       className: "font-medium text-gray-900  w-[150px]  py-1  px-2",
       search: "Item Code",
     },
-    {
-      header: "HSN Code",
-      accessor: (item) => item.hsn?.name,
-      className: "font-medium text-gray-900  w-[120px]  py-1  px-2",
-      search: "HSN Code",
-    },
+    // {
+    //   header: "HSN Code",
+    //   accessor: (item) => item.hsn?.name,
+    //   className: "font-medium text-gray-900  w-[120px]  py-1  px-2",
+    //   search: "HSN Code",
+    // },
     {
       header: "Status",
       accessor: (item) => (item.active ? ACTIVE : INACTIVE),
