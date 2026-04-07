@@ -203,12 +203,15 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                 });
             } else {
-                await Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, });
+                await Swal.fire({
+                    icon: "success", title: `${text || "Saved"} Successfully`,
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
                 if (returnData.statusCode === 0) {
                     if (nextProcess === "new") {
                         setIsPrintOpen(true)
                         // syncFormWithDb(undefined)
-                        console.log(isPrintOpen, "isPrintOpen", nextProcess)
 
                     } else {
                         onClose()
@@ -445,7 +448,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             </Modal>
             <Modal
                 isOpen={printModalOpen}
-                onClose={() => setPrintModalOpen(false)}
+                onClose={() => { setPrintModalOpen(false); syncFormWithDb(undefined) }}
                 widthClass={"w-[90%] h-[90%]"}
             >
                 <PDFViewer style={tw("w-full h-full")}>
@@ -471,7 +474,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         deliveryTo={deliveryTo} taxGroupWise={taxGroupWise} sizeList={sizeList}
                     />
                 </PDFViewer>
-            </Modal>
+            </Modal >
 
 
 

@@ -437,9 +437,9 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                               const selected = sizeOptions.find(o => o.value === v);
                               updateRow(row.id, "sizeId", v || "", { size: selected?.label || "" });
                             }}
-                            addNewModalWidth="w-[40%] h-[45%]"
-                            childComponent={SizeMaster}
-                            addNewLabel="+ Add New Size"
+                          // addNewModalWidth="w-[40%] h-[45%]"
+                          // childComponent={SizeMaster}
+                          // addNewLabel="+ Add New Size"
                           />
                         </td>
                       )}
@@ -453,9 +453,9 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                               const selected = colorOptions.find(o => o.value === v);
                               updateRow(row.id, "colorId", v || "", { color: selected?.label || "" });
                             }}
-                            addNewModalWidth="w-[40%] h-[45%]"
-                            childComponent={ColorMaster}
-                            addNewLabel="+ Add New Color"
+                          // addNewModalWidth="w-[40%] h-[45%]"
+                          // childComponent={ColorMaster}
+                          // addNewLabel="+ Add New Color"
                           />
                         </td>
                       )}
