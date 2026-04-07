@@ -25,6 +25,8 @@ const YarnPoItems = ({
     transType,
     poItems,
     setPoItems,
+    setDirectInwardReturnItems,
+    directInwardReturnItems,
     readOnly,
     params,
     isSupplierOutside,
@@ -170,10 +172,12 @@ const YarnPoItems = ({
 
 
     useEffect(() => {
-        if (poItems?.length >= standardTransactionPlaceholderRowCount) return;
+        const targetRows = standardTransactionPlaceholderRowCount;
+        if (poItems?.length >= targetRows) return;
+        console.log(poItems, "poItems for error check", targetRows)
 
         setPoItems((prev) => {
-            const newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, () => ({
+            const newArray = Array.from({ length: targetRows - prev.length }, () => ({
                 itemId: "",
                 barcode: "",
                 qty: "0.00",
@@ -190,7 +194,7 @@ const YarnPoItems = ({
             }));
             return [...prev, ...newArray];
         });
-    }, [transType, setPoItems, poItems, headerOpen, id]);
+    }, [setPoItems, poItems, headerOpen]);
 
 
     const addNewRow = () => {
@@ -411,11 +415,11 @@ const YarnPoItems = ({
                             {(poItems ? poItems : [])?.map((row, index) =>
                                 <tr key={index} className={`border border-blue-gray-200 cursor-pointer ${index % 2 === 0 ? "bg-white" : "bg-gray-100"}`}
                                     onContextMenu={(e) => {
-                                        if (!readOnly && !(parseFloat(row.stockQty) < parseFloat(row?.qty)) && !row?.alreadyReturnedQty || !row?.alreadyReturnedQty) {
+                                        if (!readOnly && !(parseFloat(row.stockQty) < parseFloat(row?.qty)) && (!row?.alreadyReturnedQty || !row?.alreadyReturnedQty)) {
                                             handleRightClick(e, index, "shiftTimeHrs");
                                         }
                                     }}
-                                >{console.log(row?.DirectReturnItems?.length, "row?.DirectReturnItems?.length")}
+                                >{console.log(readOnly, "readOnly", !readOnly)}
                                     <td className="w-12 border border-gray-300 text-[11px] text-center p-0">{index + 1}</td>
 
                                     {stockControldata?.itemWise && (
@@ -607,6 +611,7 @@ const YarnPoItems = ({
 
                                                 }
                                             }}
+                                            disabled={readOnly}
                                             className="h-full w-full rounded-none bg-blue-50 py-0"
                                         >
                                             +

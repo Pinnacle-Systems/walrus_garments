@@ -9,6 +9,7 @@ import { toast } from 'react-toastify'
 import { useGetDirectItemByIdQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices'
 import { FaPlus, FaTrashAlt } from 'react-icons/fa'
 import Swal from 'sweetalert2'
+import e from 'cors'
 
 const YarnDirectItem = ({ itemList, uomList,
     colorList, sizeList, designList, gsmList,
@@ -38,6 +39,7 @@ const YarnDirectItem = ({ itemList, uomList,
 
         }
 
+        console.log(readOnly, "readOnly for return Items")
 
     }, [isFetching, isLoading, data, purchaseInwardId])
 
@@ -142,8 +144,10 @@ const YarnDirectItem = ({ itemList, uomList,
                                 handleInputChange(0, index, "qty");
                                 return
                             }
-                            const stock = parseFloat(item?.stockQty)
+
+
                             const value = parseFloat(event.target.value)
+                            const stock = parseFloat(item?.stockQty)
                             const returnQty = parseFloat(item?.allowedReturnQty)
 
                             console.log(value, "valuevalue")
@@ -153,22 +157,22 @@ const YarnDirectItem = ({ itemList, uomList,
                                     title: "Return Qty Cannot be more than Stock Qty",
                                     icon: "error",
                                 });
-                                return
-                            }
-                            else {
-                                handleInputChange((value), index, "qty")
+                                return false
                             }
 
                             if (value > returnQty) {
                                 Swal.fire({
-                                    title: "Return Qty Cannot be more than Allowed Return Qty Qty",
+                                    title: "Return Qty Cannot be more than Allowed Return Qty",
                                     icon: "error",
                                 });
                                 return
-                            } else {
-                                handleInputChange((value), index, "qty")
+
                             }
+                            handleInputChange((value), index, "qty")
+
                         }}
+
+
 
 
                     />

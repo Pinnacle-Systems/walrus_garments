@@ -22,7 +22,7 @@ const SearchableTableCellSelect = ({
   const listRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [highlightedIndex, setHighlightedIndex] = useState(-2);
   const [showAddNew, setShowAddNew] = useState(false);
   const [openUp, setOpenUp] = useState(false);
 
@@ -76,7 +76,7 @@ const SearchableTableCellSelect = ({
   const closeDropdown = () => {
     setIsOpen(false);
     setSearch("");
-    setHighlightedIndex(0);
+    setHighlightedIndex(-2);
   };
 
   const commitSelection = (nextValue) => {
@@ -91,7 +91,7 @@ const SearchableTableCellSelect = ({
   };
 
   useEffect(() => {
-    setHighlightedIndex(0);
+    setHighlightedIndex(-2);
   }, [search]);
 
   const scrollIntoView = (index) => {
@@ -104,8 +104,8 @@ const SearchableTableCellSelect = ({
   const displayValue = isOpen ? search : selectedOption?.label || "";
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className="relative h-full w-full"
       onBlur={handleBlur}
     >
@@ -121,7 +121,7 @@ const SearchableTableCellSelect = ({
           if (disabled) return;
           setIsOpen(true);
           setSearch("");
-          setHighlightedIndex(0);
+          setHighlightedIndex(-2);
           requestAnimationFrame(() => event.target.select());
         }}
         onChange={(event) => {
@@ -146,33 +146,45 @@ const SearchableTableCellSelect = ({
 
             if (highlightedIndex === -1 && childComponent) {
               event.preventDefault();
+              event.stopPropagation();
               setIsOpen(false);
               setSearch("");
               setShowAddNew(true);
               return;
             }
 
-            if (filteredOptions.length > 0) {
+            if (highlightedIndex >= 0 && highlightedIndex <= maxIdx) {
               event.preventDefault();
-              const idx = (highlightedIndex >= 0 && highlightedIndex <= maxIdx)
-                ? highlightedIndex
-                : 0;
-              commitSelection(filteredOptions[idx].value);
+              commitSelection(filteredOptions[highlightedIndex].value);
+              if (handlers?.handleTabKeyDown) {
+                handlers.handleTabKeyDown(event);
+              }
+              return;
             }
+
+            event.preventDefault();
+            event.stopPropagation();
+            // Toggle dropdown if no selection is made
+            setIsOpen((prev) => !prev);
+            if (isOpen) setSearch(""); 
             return;
           }
 
           if (event.key === "ArrowDown") {
             event.preventDefault();
+            const minIdx = childComponent ? -1 : 0;
+            const maxIdx = filteredOptions.length - 1;
+
+            if (maxIdx < minIdx) return;
+
             if (!isOpen) {
               setIsOpen(true);
               return;
             }
-            const minIdx = childComponent ? -1 : 0;
-            const maxIdx = filteredOptions.length - 1;
 
             setHighlightedIndex((prev) => {
-              const next = prev < maxIdx ? prev + 1 : minIdx;
+              const startIdx = prev === -2 ? minIdx - 1 : prev;
+              const next = startIdx < maxIdx ? startIdx + 1 : minIdx;
               scrollIntoView(next);
               return next;
             });
@@ -181,15 +193,18 @@ const SearchableTableCellSelect = ({
 
           if (event.key === "ArrowUp") {
             event.preventDefault();
+            const minIdx = childComponent ? -1 : 0;
+            const maxIdx = filteredOptions.length - 1;
+
+            if (maxIdx < minIdx) return;
+
             if (!isOpen) {
               setIsOpen(true);
               return;
             }
-            const minIdx = childComponent ? -1 : 0;
-            const maxIdx = filteredOptions.length - 1;
 
             setHighlightedIndex((prev) => {
-              const next = prev > minIdx ? prev - 1 : maxIdx;
+              const next = (prev > minIdx && prev !== -2) ? prev - 1 : maxIdx;
               scrollIntoView(next);
               return next;
             });

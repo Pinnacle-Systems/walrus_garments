@@ -82,6 +82,7 @@ const useInvalidateTags = () => {
             type: `itemMaster/invalidateTags`,
             payload: ["ItemMaster"],
         },
+
         {
             type: `priceTemplate/invalidateTags`,
             payload: ["priceTemplate"],

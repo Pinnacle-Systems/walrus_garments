@@ -154,7 +154,12 @@ const PurchaseInwardForm = ({
           ? moment.utc(data.createdAt).format("YYYY-MM-DD")
           : moment.utc(today).format("YYYY-MM-DD"),
       );
-      setDirectInwardReturnItems(data?.DirectItems ?? []);
+      setDirectInwardReturnItems(data?.DirectItems ? data?.DirectItems?.map(i => ({
+        ...i,
+        qty: i.qty ? parseInt(i.qty).toFixed(3) : "0.000",
+        price: i.price ? parseInt(i.price).toFixed(2) : "0.00",
+
+      })) : [])
       if (data?.docId) setDocId(data?.docId);
       if (data?.date) setDate(data?.date);
       setPartyId(data?.supplierId ?? "");
@@ -370,6 +375,8 @@ const PurchaseInwardForm = ({
           tabIndex={0}
           onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
           className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+          disabled={readOnly}
+
         >
           <HiOutlineRefresh className="mr-2 h-4 w-4" />
           Save & Close
@@ -378,6 +385,8 @@ const PurchaseInwardForm = ({
           onClick={() => hasPermission(() => saveData("new"), "create")}
           ref={saveNewButtonRef}
           onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
+          disabled={readOnly}
+
           className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
         >
           <FiSave className="mr-2 h-4 w-4" />
@@ -388,6 +397,7 @@ const PurchaseInwardForm = ({
         <button
           className="flex items-center rounded-md bg-yellow-600 px-4 py-1 text-sm text-white hover:bg-yellow-700"
           onClick={() => hasPermission(() => setReadOnly(false), "edit")}
+
         >
           <FiEdit2 className="mr-2 h-4 w-4" />
           Edit
@@ -406,6 +416,8 @@ const PurchaseInwardForm = ({
             }
             setBarcodePrintOpen(true);
           }}
+          disabled={readOnly}
+
         >
           <FiPrinter className="mr-2 h-4 w-4" />
           Barcode
@@ -584,6 +596,8 @@ const PurchaseInwardForm = ({
                 id={id}
                 poItems={directInwardReturnItems}
                 setPoItems={setDirectInwardReturnItems}
+                setDirectInwardReturnItems={setDirectInwardReturnItems}
+                directInwardReturnItems={directInwardReturnItems}
                 setInwardItemSelection={setInwardItemSelection}
                 supplierId={partyId}
                 handleRightClick={handleRightClick}

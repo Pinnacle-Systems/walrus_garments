@@ -44,7 +44,7 @@ import PopUp from "./Pop.js";
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList, hasPermission, invalidateTagsDispatch, onNew
+    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList, hasPermission, invalidateTagsDispatch, onNew, readOnly, setReadOnly
 
 }) => {
 
@@ -55,7 +55,6 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
 
-    const [readOnly, setReadOnly] = useState(false);
     const [docId, setDocId] = useState("New")
     const [date, setDate] = useState();
     const [payTermId, setPayTermId] = useState("");
@@ -114,11 +113,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
     const syncFormWithDb = useCallback((data) => {
         const today = new Date()
-        // if (id) {
-        //     setReadOnly(true);
-        // } else {
-        //     setReadOnly(false);
-        // }
+
         setTransType(data?.poType ? data.poType : "DyedYarn");
         setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectReturn")
         setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
@@ -147,8 +142,10 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     });
 
     useEffect(() => {
-        focusFirstInput();
-    }, [focusFirstInput]);
+        if (!isPrintOpen && !printModalOpen && !inwardItemSelection) {
+            focusFirstInput();
+        }
+    }, [focusFirstInput, isPrintOpen, printModalOpen, inwardItemSelection]);
 
     useEffect(() => {
         if (id) {
@@ -387,9 +384,10 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                     <button
                         onClick={() => hasPermission(() => saveData("close"), "create")}
-                        // ref={saveCloseButtonRef}
+                        ref={saveCloseButtonRef}
                         tabIndex={0}
                         onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
+                        disabled={readOnly}
                         className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
                     >
                         <HiOutlineRefresh className="mr-2 h-4 w-4" />
@@ -399,6 +397,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         onClick={() => hasPermission(() => saveData("new"), "create")}
                         ref={saveNewButtonRef}
                         onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
+                        disabled={readOnly}
+
                         className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
                     >
                         <FiSave className="mr-2 h-4 w-4" />
@@ -415,6 +415,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     </button>
                     <button
                         className="flex items-center rounded-md bg-blue-600 px-4 py-1 text-sm text-white hover:bg-blue-700"
+                        disabled={readOnly}
+
                         onClick={() => {
                             if (
                                 directInwardReturnItems?.filter((i) => i.itemId)?.length === 0
@@ -448,7 +450,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             <Modal
                 isOpen={isPrintOpen}
                 // onClose={() => setIsPrintOpen(false)}
-                widthClass={"px-2 h-[38%] w-[40%]"} >
+                widthClass={"px-2 h-[48%] w-[40%]"} >
 
                 <PopUp setIsPrintOpen={setIsPrintOpen} onClose={() => setIsPrintOpen(false)} setPrintModalOpen={setPrintModalOpen}
                     nextprocess={nextprocess} formclose={onClose} syncFormWithDb={syncFormWithDb} onNew={onNew} inputRef={nameRef}
@@ -476,10 +478,16 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         />
                 }
 
-            </Modal>
+            </Modal>{console.log(isPrintOpen, "isPrintOpen")}
             <Modal
                 isOpen={printModalOpen}
-                onClose={() => { setPrintModalOpen(false); syncFormWithDb(undefined) }}
+                onClose={() => {
+                    setPrintModalOpen(false);
+                    if (isPrintOpen) {
+                        setIsPrintOpen(false)
+                        syncFormWithDb(undefined)
+                    }
+                }}
                 widthClass={"w-[90%] h-[90%]"}
             >
                 <PDFViewer style={tw("w-full h-full")}>

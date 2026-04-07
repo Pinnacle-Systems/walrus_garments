@@ -56,7 +56,7 @@ const ItemMasterApi = createApi({
                     params
                 };
             },
-            providesTags: ["DirectInwardOrReturn"],
+            providesTags: ["ItemMaster"],
         }),
 
         addItemMaster: builder.mutation({

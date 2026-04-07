@@ -35,11 +35,15 @@ const TransactionEntryShell = ({
     <div className={["flex h-full min-h-0 flex-col gap-2 overflow-hidden", contentClassName].filter(Boolean).join(" ")}>
       <div className={["w-full shrink-0 rounded-md bg-[#f1f1f0] px-2 py-1 shadow-md", titleBarClassName].filter(Boolean).join(" ")}>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">{title} <ModeChip id={id} readOnly={readOnly} />
+          <h1 className="text-2xl font-bold text-gray-800">{title}
           </h1>
-          <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
-            <IoArrowBackCircleSharp className="w-7 h-7" />
-          </button>
+          <div className="flex flex-row gap-3">
+            <ModeChip id={id} readOnly={readOnly} />
+            <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
+              <IoArrowBackCircleSharp className="w-7 h-7" />
+            </button>
+          </div>
+
         </div>
       </div>
 

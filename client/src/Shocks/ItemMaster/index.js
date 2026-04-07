@@ -350,12 +350,17 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         return;
       }
       if (onSuccess) {
+
         onSuccess(returnData?.data);
+        dispatchInvalidate();
+
         return;
       }
-      setId("")
 
+
+      setId("")
       dispatchInvalidate();
+
       Swal.fire({
         title: text + "  " + "Successfully",
         icon: "success",
@@ -1033,7 +1038,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                               disabled={id ? disableLinkedRecordField : false}
                             />
                           </div>
-                          <div className="col-span-3 col-start-7 max-w-[230px]">
+                          {/* <div className="col-span-3 col-start-7 max-w-[230px]">
                             <button
                               type="button"
                               onClick={() => setGridIndex((prev) => (prev === 0 ? null : 0))}
@@ -1041,10 +1046,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                             >
                               Stock Alerts: {getLowStockSummary(itemPriceList?.[0])}
                             </button>
-                          </div>
+                          </div> */}
                         </div>
                       </div>
-                      <div className="col-span-4 h-[220px] min-h-0">
+                      {/* <div className="col-span-4 h-[220px] min-h-0">
                         {gridIndex === 0 && itemPriceList[0] ? (
                           <LocationStockEditor
                             rows={itemPriceList[0]?.MinimumStockQty || []}
@@ -1058,7 +1063,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                             Select the stock alerts button to edit location-wise stock alerts.
                           </div>
                         )}
-                      </div>
+                      </div> */}
                     </div>
                   )}
                   {effectivePricingMode != "STANDARD" && (
@@ -1146,7 +1151,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sku</th>
                                 <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price</th>
                                 <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th>
-                                <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th>
+                                {/* <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th> */}
                               </tr>
                             </thead>
                             <tbody>
@@ -1220,7 +1225,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                       onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
                                     />
                                   </td>
-                                  <td className="border border-gray-200 px-2 py-1 text-xs">
+                                  {/* <td className="border border-gray-200 px-2 py-1 text-xs">
                                     <button
                                       type="button"
                                       onClick={() => setGridIndex((prev) => (prev === index ? null : index))}
@@ -1228,7 +1233,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                     >
                                       {getLowStockSummary(item)}
                                     </button>
-                                  </td>
+                                  </td> */}
                                 </tr>
                               ))}
                             </tbody>
@@ -1263,7 +1268,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                           </div>
                         </div>
                       )}
-                      <div className="col-span-4 h-[280px] min-h-0">
+                      {/* <div className="col-span-4 h-[280px] min-h-0">
                         {itemPriceList[gridIndex] ? (
                           <LocationStockEditor
                             rows={itemPriceList[gridIndex]?.MinimumStockQty || []}
@@ -1280,7 +1285,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                             Select a row to edit location-wise stock alerts.
                           </div>
                         )}
-                      </div>
+                      </div> */}
                     </div>
                   )}
                 </div>
@@ -1783,7 +1788,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                           <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sku</th>
                                           <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price</th>
                                           <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th>
-                                          <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th>
+                                          {/* <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th> */}
                                         </tr>
                                       </thead>
                                       <tbody>
@@ -1857,7 +1862,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                                 onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
                                               />
                                             </td>
-                                            <td className="border border-gray-200 px-2 py-1 text-xs">
+                                            {/* <td className="border border-gray-200 px-2 py-1 text-xs">
                                               <button
                                                 type="button"
                                                 onClick={() => setGridIndex((prev) => (prev === index ? null : index))}
@@ -1865,7 +1870,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                               >
                                                 {getLowStockSummary(item)}
                                               </button>
-                                            </td>
+                                            </td> */}
                                           </tr>
                                         ))}
                                       </tbody>
@@ -1899,7 +1904,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                     </div>
                                   </div>
                                 )}
-
+                                {/* 
                                 <div className="col-span-4 h-[280px] min-h-0">
                                   {itemPriceList[gridIndex] ? (
                                     <LocationStockEditor
@@ -1917,7 +1922,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                       Select a row to edit location-wise stock alerts.
                                     </div>
                                   )}
-                                </div>
+                                </div> */}
                               </div>
                             </>
                           )}

@@ -16,7 +16,11 @@ const PopUp = ({
   const secondInputRef = useRef(null)
 
   useEffect(() => {
-    firstInputRef?.current?.focus();
+    // Standard focus on mount
+    const timer = setTimeout(() => {
+      firstInputRef.current?.focus();
+    }, 250);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -37,10 +41,13 @@ const PopUp = ({
       <div className="flex-1 flex flex-row items-center justify-center gap-4 p-6">
         <button
           className="flex-1 max-w-[140px] flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 transition duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          ref={firstInputRef}
+          ref={(el) => {
+            firstInputRef.current = el;
+            if (el) el.focus();
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              onClose();
+              // onClose();
               setPrintModalOpen(true);
             }
             if (e.key === "ArrowRight") {
@@ -48,7 +55,7 @@ const PopUp = ({
             }
           }}
           onClick={() => {
-            onClose();
+            // onClose();
             setPrintModalOpen(true);
           }}
         >

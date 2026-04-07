@@ -149,7 +149,7 @@ export default function Form() {
             onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} supplierId={supplierId} setSupplierId={setSupplierId}
             supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
             branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} locationData={locationData}
-            termsAndCondition={termsAndCondition} sizeList={sizeList} hasPermission={hasPermission} invalidateTagsDispatch={invalidateTagsDispatch} onNew={onNew}
+            termsAndCondition={termsAndCondition} sizeList={sizeList} hasPermission={hasPermission} invalidateTagsDispatch={invalidateTagsDispatch} onNew={onNew} readOnly={readOnly} setReadOnly={setReadOnly}
           />
         </div>
 
