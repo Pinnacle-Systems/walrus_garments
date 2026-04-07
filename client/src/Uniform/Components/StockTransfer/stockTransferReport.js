@@ -305,14 +305,14 @@ const StockTransferReport = ({
                                                     {index + 1}
                                                 </td>
 
-                                                <td className="py-1.5 text-center">
+                                                <td className="py-1.5 text-left">
                                                     {dataObj?.docId || ""}
                                                 </td>
-                                                <td className="py-1.5 text-center">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
+                                                <td className="py-1.5 text-left">{moment.utc(dataObj.createdAt).format("YYYY-MM-DD")}</td>
 
-                                                <td className="py-1.5 text-center"> {dataObj?.FromLocation?.storeName}</td>
+                                                <td className="py-1.5 text-left"> {dataObj?.FromLocation?.storeName}</td>
 
-                                                <td className="py-1.5 text-center"> {dataObj?.ToLocation?.storeName}</td>
+                                                <td className="py-1.5 text-left"> {dataObj?.ToLocation?.storeName}</td>
                                                 {rowActions && (
                                                     <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                                                         <div className="flex">
