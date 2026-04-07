@@ -129,7 +129,7 @@ const YarnDirectItem = ({ itemList, uomList,
                         onFocus={(e) => e.target.select()}
                         className="text-right rounded py-1 w-full px-1 table-data-input"
                         value={(!item.qty) ? "" : item.qty}
-                        ref={movedToNextSaveNewRef}
+                        ref={index === 0 ? movedToNextSaveNewRef : null}
                         disabled={readOnly || !item.itemId}
                         onKeyDown={(e) => {
                             if (e.key == "Tab") {

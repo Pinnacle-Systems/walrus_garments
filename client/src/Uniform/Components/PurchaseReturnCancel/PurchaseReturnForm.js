@@ -142,10 +142,10 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     });
 
     useEffect(() => {
-        if (!isPrintOpen && !printModalOpen && !inwardItemSelection) {
+        if (!isPrintOpen && !printModalOpen && !inwardItemSelection && directInwardReturnItems.length === 0) {
             focusFirstInput();
         }
-    }, [focusFirstInput, isPrintOpen, printModalOpen, inwardItemSelection]);
+    }, [focusFirstInput, isPrintOpen, printModalOpen, inwardItemSelection, directInwardReturnItems.length]);
 
     useEffect(() => {
         if (id) {
