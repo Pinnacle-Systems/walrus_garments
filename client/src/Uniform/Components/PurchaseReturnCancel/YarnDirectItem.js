@@ -75,9 +75,15 @@ const YarnDirectItem = ({ itemList, uomList,
                 }}
             >
                 <td className='border border-gray-300 py-0.5 text-[11px] text-center'>{index + 1}</td>
-                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.itemId, itemList?.data, "name")} </td>
-                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
-                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+                {stockControlData?.data?.[0]?.itemWise && (
+                    <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.itemId, itemList?.data, "name")} </td>
+                )}
+                {stockControlData?.data?.[0]?.sizeWise && (
+                    <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
+                )}
+                {stockControlData?.data?.[0]?.sizeColorWise && (
+                    <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+                )}
                 <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{findFromList(item.uomId, uomList?.data, "name")} </td>
                 <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-left'>{item?.barcode} </td>
                 {stockControlData?.data?.map(element => (

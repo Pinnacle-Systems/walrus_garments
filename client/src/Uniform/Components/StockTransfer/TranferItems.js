@@ -44,7 +44,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
         <>
             <tr
                 key={index}
-                className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                className={`hover:bg-gray-50  transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                     }`}
                 onContextMenu={(e) => {
                     if (!readOnly) {
@@ -52,33 +52,34 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                     }
                 }}
             >
-                <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
+                <td className="w-5 border border-gray-300 text-center text-xs px-2">
                     {index + 1}
                 </td>
-                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2 text-left">
-                    {item?.barcode ? item?.barcode : ""}
-                </td>
-                <td className="w-72 border border-gray-300 px-2 py-1 text-left text-xs">
+
+                <td className="w-72 border border-gray-300 text-left text-xs px-2">
                     {findFromList(item?.itemId, itemList, "name")}
                 </td>
-                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
+                <td className="w-48 border border-gray-300 text-[11px]  px-2">
                     {findFromList(item?.sizeId, sizeList, "name")}
 
                 </td>
-                <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
+                <td className="w-48 border border-gray-300 text-[11px]  px-2">
                     {findFromList(item?.colorId, colorList, "name")}
                 </td>
+                <td className="w-48 border border-gray-300 text-[11px]  text-left px-2">
+                    {item?.barcode ? item?.barcode : ""}
+                </td>
                 {stockDrivenFields.map((field) => (
-                    <td key={field.key} className="w-32 border border-gray-300 text-[11px] py-1 px-2">
+                    <td key={field.key} className="w-32 border border-gray-300 text-[11px]  px-2">
                         {item?.[field.key] || ""}
                     </td>
                 ))}
-                <td className="w-12 border border-gray-300 text-[11px] text-right py-1 px-2">
+                <td className="w-12 border border-gray-300 text-[11px] text-right   px-2">
                     {item?.stockQty}
                 </td>
 
                 {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
-                    <td className="w-48 border border-gray-300 text-[11px] py-1 px-2">
+                    <td className="w-48 border border-gray-300 text-[11px]  px-2">
                         <input
                             className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                             type="number"
@@ -112,7 +113,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
 
 
 
-                <td className="w-12 border border-gray-300 text-right text-[11px] py-1 px-2 text-xs">
+                <td className="w-12 border border-gray-300 text-right text-[11px]    text-xs px-2">
                     <input
                         className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
                         type="number"

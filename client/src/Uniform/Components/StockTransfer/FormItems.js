@@ -158,66 +158,66 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                 titleClassName="font-bold"
                 contentClassName="h-[380px]"
             >
-                                <table className={transactionTableClassName}>
-                                    <thead className={transactionTableHeadClassName}>
-                                        <tr>
-                                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">BarCode</th>
-                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Item</th>
-                                            <th className="w-16 px-4 py-1.5 border border-gray-300 text-center  text-xs">Size</th>
-                                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
-                                            {stockDrivenFields.map((field) => (
-                                                <th key={field.key} className="w-32 px-4 py-1.5 border border-gray-300 text-center text-xs">{field.label}</th>
-                                            ))}
-                                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Pcs)</th>
-                                            {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
+                <table className={transactionTableClassName}>
+                    <thead className={transactionTableHeadClassName}>
+                        <tr>
+                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
+                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Item</th>
+                            <th className="w-16 px-4 py-1.5 border border-gray-300 text-center  text-xs">Size</th>
+                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
+                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">BarCode</th>
+                            {stockDrivenFields.map((field) => (
+                                <th key={field.key} className="w-32 px-4 py-1.5 border border-gray-300 text-center text-xs">{field.label}</th>
+                            ))}
+                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Pcs)</th>
+                            {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
 
-                                                <th className="w-20 px-4 py-1.5 border border-gray-300 text-center text-xs">Discount Price</th>
-                                            )}
-                                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Pcs)<span className="text-red-500">*</span></th>
-
-                                        </tr>
-                                    </thead>
-
-
-                                    <tbody>
-                                        {stockItems?.map((item, index) => <TransferItems
-                                            item={item} index={index} handleRightClickFromOrder={handleRightClickFromOrder}
-                                            readOnly={readOnly} handleInputChangeFromOrder={handleInputChangeFromOrder}
-                                            itemList={itemList} sizeList={sizeList} colorList={colorList} fromLocationId={fromLocationId}
-                                            stockItems={stockItems} toLocationId={toLocationId} locationData={locationData}
-                                            stockDrivenFields={stockDrivenFields}
-                                        />)}
-                                    </tbody>
-                                </table>
-
-                            {contextMenuFromOrder && (
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        top: `${contextMenuFromOrder.mouseY - 50}px`,
-                                        left: `${contextMenuFromOrder.mouseX + 20}px`,
-                                        boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                                        padding: "8px",
-                                        borderRadius: "4px",
-                                        zIndex: 1000,
-                                    }}
-                                    className="bg-gray-100"
-                                    onMouseLeave={handleCloseContextMenuFromOrder}
-                                >
-                                    <div className="flex flex-col gap-1">
-                                        <button
-                                            className="text-black text-[12px] text-left rounded px-1"
-                                            onClick={() => {
-                                                deleteFromOrderRow(contextMenuFromOrder.rowId);
-                                                handleCloseContextMenuFromOrder();
-                                            }}
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                </div>
+                                <th className="w-20 px-4 py-1.5 border border-gray-300 text-center text-xs">Discount Price</th>
                             )}
+                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Pcs)<span className="text-red-500">*</span></th>
+
+                        </tr>
+                    </thead>
+
+
+                    <tbody>
+                        {stockItems?.map((item, index) => <TransferItems
+                            item={item} index={index} handleRightClickFromOrder={handleRightClickFromOrder}
+                            readOnly={readOnly} handleInputChangeFromOrder={handleInputChangeFromOrder}
+                            itemList={itemList} sizeList={sizeList} colorList={colorList} fromLocationId={fromLocationId}
+                            stockItems={stockItems} toLocationId={toLocationId} locationData={locationData}
+                            stockDrivenFields={stockDrivenFields}
+                        />)}
+                    </tbody>
+                </table>
+
+                {contextMenuFromOrder && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: `${contextMenuFromOrder.mouseY - 50}px`,
+                            left: `${contextMenuFromOrder.mouseX + 20}px`,
+                            boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            zIndex: 1000,
+                        }}
+                        className="bg-gray-100"
+                        onMouseLeave={handleCloseContextMenuFromOrder}
+                    >
+                        <div className="flex flex-col gap-1">
+                            <button
+                                className="text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                    deleteFromOrderRow(contextMenuFromOrder.rowId);
+                                    handleCloseContextMenuFromOrder();
+                                }}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                )}
             </TransactionLineItemsSection>
 
 

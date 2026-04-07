@@ -40,6 +40,7 @@ const YarnPoItem = ({ yarnList, uomList,
                 requirementPlanningItemsId: poItem?.requirementPlanningItemsId,
 
                 yarnId: poItem?.yarnId,
+                sizeId: poItem?.sizeId,
                 colorId: poItem?.colorId,
                 gaugeId: poItem?.gaugeId,
                 gsmId: poItem?.gsmId,
@@ -157,21 +158,24 @@ const YarnPoItem = ({ yarnList, uomList,
             >
                 <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{index + 1}</td>
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{item?.poNo}</td>
-                <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "name")} </td>
-                <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+                {allData?.data?.[0]?.itemWise && (
+                    <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "name")} </td>
+                )}
+                {allData?.data?.[0]?.sizeWise && (
+                    <td className='py-0.5 border border-gray-300 text-[11px]'>{item?.Size?.name || ""} </td>
+                )}
+                {allData?.data?.[0]?.sizeColorWise && (
+                    <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+                )}
                 <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.uomId, uomList?.data, "name")}</td>
                 {allData?.data?.map(element => (
-                    // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
                     Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
-                        <>
-                            <th
-                                key={i}
-                                className={`w-28 px-4 py-2 text-center font-medium text-[13px] `}
-                            >
-                                {element?.[i]}
-                            </th>
-                         
-                        </>
+                        <td
+                            key={i}
+                            className={`w-28 px-4 py-2 text-center font-medium text-[11px] border border-gray-300 `}
+                        >
+                            {item?.[i]}
+                        </td>
                     ))
                 ))}
 
