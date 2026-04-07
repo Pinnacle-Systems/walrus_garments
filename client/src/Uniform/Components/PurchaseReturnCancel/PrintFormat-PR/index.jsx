@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   poRefLabel_Left: {
     fontSize: 7.5,
     color: COLOR.textMuted,
-    width: 65,
+    width: 85,
   },
   poRefValue_Left: {
     fontSize: 7.5,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLOR.navy,
     textTransform: "uppercase",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   addressName: {
     fontSize: 9,
@@ -378,8 +378,6 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
 
             <View style={styles.headerCenter}>
               <Text style={styles.companyName}>{branchData.branchName}</Text>
-              <View style={{ height: 1.5, backgroundColor: COLOR.gold, width: 100, marginVertical: 3 }} />
-              <Text style={styles.tagline}>Walrus Garments</Text>
             </View>
 
             <Image src={Sangeethatex} style={styles.logo} />
@@ -395,8 +393,8 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
           {/* ── Address & Reference Section ── */}
           <View style={styles.addressSection}>
             {/* To Section (Left) */}
-            <View style={styles.addressBlock}>
-              <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 3 }}>
+            <View style={[styles.addressBlock, { flex: 0.8 }]}>
+              <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
                 <Text style={[styles.addressSectionLabel, { marginBottom: 0 }]}>To : </Text>
                 <View style={{ flex: 1, marginLeft: 2 }}>
                   <Text style={[styles.addressName, { marginBottom: 2 }]}>{supplierDetails?.name}</Text>
@@ -421,11 +419,11 @@ const YarnPurchaseOrderReturnPrintFormat = React.forwardRef(({
             <View style={styles.addressDivider} />
 
             {/* Reference Section (Right) */}
-            <View style={styles.addressBlock}>
+            <View style={[styles.addressBlock, { flex: 1.2 }]}>
               <View style={{ marginTop: 2 }}>
                 {[
-                  { label: "Return No", value: poNumber },
-                  { label: "Return Date", value: getDateFromDateTimeToDisplay(poDate) },
+                  { label: "Purchase Return No", value: poNumber },
+                  { label: "Purchase Return Date", value: getDateFromDateTimeToDisplay(poDate) },
                   { label: "Branch GST", value: branchData?.gstNo },
                 ].map(({ label, value }) => (
                   <View key={label} style={styles.poRefBox_Left}>

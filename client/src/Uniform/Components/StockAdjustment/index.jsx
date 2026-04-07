@@ -161,30 +161,32 @@ const StockAdjustment = () => {
   return (
     <>
       {showManufacturer ? (
-        <StockAdjustmentFrom
-          onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
-          docId={docId} setDocId={setDocId} date={date} setDate={setDate} readOnly={readOnly} setReadOnly={setReadOnly}
-          transType={transType} setTransType={setTransType} dcNo={dcNo} setDcNo={setDcNo} dcDate={dcDate} setDcDate={setDcDate}
-          customerId={customerId} setCustomerId={setCustomerId} payTermId={payTermId} setPayTermId={setPayTermId}
-          locationId={locationId} setLocationId={setLocationId} storeId={storeId} setStoreId={setStoreId}
-          poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward}
-          inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
-          saleOrderItems={saleOrderItems} setSaleOrderItems={setSaleOrderItems}
-          partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-          supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} convertQuotationId={convertQuotationId}
-          hasPermission={hasPermission}
+        <div className="h-[calc(100vh-6rem)] min-h-0 overflow-hidden">
+          <StockAdjustmentFrom
+            onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
+            docId={docId} setDocId={setDocId} date={date} setDate={setDate} readOnly={readOnly} setReadOnly={setReadOnly}
+            transType={transType} setTransType={setTransType} dcNo={dcNo} setDcNo={setDcNo} dcDate={dcDate} setDcDate={setDcDate}
+            customerId={customerId} setCustomerId={setCustomerId} payTermId={payTermId} setPayTermId={setPayTermId}
+            locationId={locationId} setLocationId={setLocationId} storeId={storeId} setStoreId={setStoreId}
+            poInwardOrDirectInward={poInwardOrDirectInward} setPoInwardOrDirectInward={setPoInwardOrDirectInward}
+            inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
+            saleOrderItems={saleOrderItems} setSaleOrderItems={setSaleOrderItems}
+            partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
+            supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} convertQuotationId={convertQuotationId}
+            hasPermission={hasPermission}
 
 
-        />
+          />
+        </div>
 
       ) : (
         <div className="p-2 bg-[#F1F1F0] min-h-screen">
-          <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
 
             <h1 className="text-2xl font-bold text-gray-800">Stock Adjustment</h1>
 
             <button
-              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm"
+              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-sm"
               onClick={() => { setShowManufacturer(true); onNew() }}
             >
               <FaPlus /> Create New
