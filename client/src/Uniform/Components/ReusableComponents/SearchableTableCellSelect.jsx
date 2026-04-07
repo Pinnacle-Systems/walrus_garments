@@ -91,8 +91,12 @@ const SearchableTableCellSelect = ({
   };
 
   useEffect(() => {
-    setHighlightedIndex(-2);
-  }, [search]);
+    if (search.trim() !== "" && filteredOptions.length > 0) {
+      setHighlightedIndex(0);
+    } else {
+      setHighlightedIndex(-2);
+    }
+  }, [search, filteredOptions]);
 
   const scrollIntoView = (index) => {
     if (!listRef.current) return;

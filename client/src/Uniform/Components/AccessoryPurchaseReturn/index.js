@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useGetPartyQuery, useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
+import { useSelector, useDispatch } from 'react-redux';
+import { useGetAccessoryPurchaseInwardByIdQuery } from "../../../redux/uniformService/AccessoryInwardServices";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 import { toast } from "react-toastify";
 
@@ -43,6 +45,34 @@ export default function Form() {
     branchId, userId, finYearId
   };
   const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
+  const [purchaseInwardId, setPurchaseInwardId] = useState("");
+
+  const openTabsState = useSelector((state) => state.openTabs);
+  const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "ACCESSORY PURCHASE RETURN");
+  const convertInwardId = currentTab?.projectId;
+
+  const { data: inwardToConvertData } =
+    useGetAccessoryPurchaseInwardByIdQuery(convertInwardId, { skip: !convertInwardId });
+
+  useEffect(() => {
+    if (inwardToConvertData?.data && convertInwardId) {
+      const inwardData = inwardToConvertData.data;
+      setId("");
+      setSupplierId(inwardData.supplierId);
+      setPurchaseInwardId(inwardData.id);
+      setReadOnly(false);
+      setShowManufacturer(true);
+      setPoInwardOrDirectInward("PurchaseReturn");
+
+      const items = (inwardData.AccessoryInwardItems || []).map(item => ({
+        ...item,
+        poItemsId: item.id,
+        inwardQty: item.qty,
+      }));
+      setDirectInwardReturnItems(items);
+      dispatch(push({ name: currentTab.name, projectId: null }));
+    }
+  }, [inwardToConvertData, convertInwardId, dispatch, currentTab.name]);
   // const { data: allData, isLoading, isFetching } = useGetDirectCancelOrReturnQuery({ params: { branchId, poInwardOrDirectInward, finYearId } });
 
 
@@ -135,6 +165,7 @@ export default function Form() {
           supplierList={supplierList} supplierDetails={supplierDetails}  branchList={branchList}
           branchdata={branchdata}  locationData={locationData}  supplierId ={supplierId} setSupplierId = {setSupplierId}
         termsAndCondition={termsAndCondition} 
+        purchaseInwardIdProp={purchaseInwardId}
         />
 
       ) : (

@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetPartyQuery, useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
+import { useSelector, useDispatch } from 'react-redux';
+import { useGetDirectInwardOrReturnByIdQuery } from "../../../redux/uniformService/DirectInwardOrReturnServices";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 
@@ -28,6 +30,7 @@ import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterS
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { usePermissionForUsers } from "../../../Basic/components/HasPermission";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+import { push } from "../../../redux/features/opentabs";
 
 const MODEL = "Purchase Return / Direct Return";
 
@@ -42,6 +45,35 @@ export default function Form() {
   const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectReturn");
   const [supplierId, setSupplierId] = useState("");
   const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
+  const [purchaseInwardId, setPurchaseInwardId] = useState("");
+
+  const openTabsState = useSelector((state) => state.openTabs);
+  const currentTab = openTabsState?.tabs?.find(t => t.active && (t.name === "PURCHASE RETURN" || t.name === "ACCESSORY PURCHASE RETURN"));
+  const convertInwardId = currentTab?.projectId;
+
+  const { data: inwardToConvertData } =
+    useGetDirectInwardOrReturnByIdQuery(convertInwardId, { skip: !convertInwardId });
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (inwardToConvertData?.data && convertInwardId) {
+      const inwardData = inwardToConvertData.data;
+      setId("");
+      setSupplierId(inwardData.supplierId);
+      setPurchaseInwardId(inwardData.id);
+      setReadOnly(false);
+      setShowManufacturer(true);
+      setPoInwardOrDirectInward("PurchaseReturn");
+
+      const items = (inwardData.DirectItems || []).map(item => ({
+        ...item,
+        poItemsId: item.id,
+        inwardQty: item.qty,
+      }));
+      setDirectInwardReturnItems(items);
+      dispatch(push({ name: currentTab?.name, projectId: null }));
+    }
+  }, [inwardToConvertData, convertInwardId, dispatch, currentTab?.name]);
 
   const params = {
     branchId, userId, finYearId
@@ -150,6 +182,7 @@ export default function Form() {
             supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
             branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} locationData={locationData}
             termsAndCondition={termsAndCondition} sizeList={sizeList} hasPermission={hasPermission} invalidateTagsDispatch={invalidateTagsDispatch} onNew={onNew} readOnly={readOnly} setReadOnly={setReadOnly}
+            purchaseInwardIdProp={purchaseInwardId}
           />
         </div>
 

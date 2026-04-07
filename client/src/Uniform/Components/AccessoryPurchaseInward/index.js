@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { getCommonParams } from "../../../Utils/helper";
 import { FaPlus } from "react-icons/fa";
+import { useDispatch } from 'react-redux';
+import { push } from '../../../redux/features/opentabs';
 import PurchaseInwardForm from "./PurchaseInwardFormUi";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService";
@@ -102,6 +104,12 @@ export default function Form() {
         setId(orderId)
         setShowManufacturer(true)
         setReadOnly(false);
+    };
+
+    const dispatch = useDispatch();
+
+    const handleConvertToReturn = (dataObj) => {
+        dispatch(push({ name: "ACCESSORY PURCHASE RETURN", projectId: dataObj.id }));
     };
 
 
@@ -213,6 +221,7 @@ export default function Form() {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            onConvertToReturn={handleConvertToReturn}
                         />
                     </div>
                 </div>

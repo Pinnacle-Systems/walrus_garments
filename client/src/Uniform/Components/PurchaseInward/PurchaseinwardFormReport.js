@@ -25,6 +25,7 @@ const PurchaseInwardFormReport = ({
   itemsPerPage = 10,
   onEdit,
   onDelete,
+  onConvertToReturn,
   rowActions = true,
 }) => {
 
@@ -383,7 +384,17 @@ const PurchaseInwardFormReport = ({
 
                                     </div>
                                   )}
+
                               </div>
+                              {onConvertToReturn && (
+                                <button
+                                  className="text-orange-600 flex items-center gap-1 px-1 bg-orange-50 rounded ml-1"
+                                  onClick={(e) => { e.stopPropagation(); onConvertToReturn(dataObj); }}
+                                  title="Convert to Purchase Return"
+                                >
+                                  :
+                                </button>
+                              )}
                             </div>
                           </td>
                         )}

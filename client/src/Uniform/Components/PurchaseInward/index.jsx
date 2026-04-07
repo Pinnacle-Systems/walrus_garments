@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { FaPlus } from "react-icons/fa";
+import { useDispatch } from 'react-redux';
+import { push } from '../../../redux/features/opentabs';
 import { findFromList, getCommonParams } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import CommonTable from '../../../Shocks/CommonReport/CommonTable';
@@ -91,6 +93,12 @@ const PurchaseInward = () => {
         setId(orderId)
         setShowManufacturer(true)
         setReadOnly(false);
+    };
+
+    const dispatch = useDispatch();
+
+    const handleConvertToReturn = (dataObj) => {
+        dispatch(push({ name: "PURCHASE RETURN", projectId: dataObj.id }));
     };
 
     const handleDelete = async (id, childRecord) => {
@@ -185,6 +193,7 @@ const PurchaseInward = () => {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            onConvertToReturn={handleConvertToReturn}
                         />
                     </div>
                 </div>

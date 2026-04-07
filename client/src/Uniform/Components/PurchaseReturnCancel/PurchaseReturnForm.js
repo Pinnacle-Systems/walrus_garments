@@ -44,7 +44,8 @@ import PopUp from "./Pop.js";
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
     supplierList, supplierDetails, payTermList, branchList,
-    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList, hasPermission, invalidateTagsDispatch, onNew, readOnly, setReadOnly
+    branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList, hasPermission, invalidateTagsDispatch, onNew, readOnly, setReadOnly,
+    purchaseInwardIdProp
 
 }) => {
 
@@ -71,7 +72,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [specialInstructions, setSpecialInstructions] = useState("")
     const [inwardItemSelection, setInwardItemSelection] = useState(false)
     const { branchId, companyId, finYearId, userId } = getCommonParams()
-    const [purchaseInwardId, setPurchaseInwardId] = useState("")
+    const [purchaseInwardId, setPurchaseInwardId] = useState(purchaseInwardIdProp || "")
 
     const [taxTemplateId, setTaxTemplateId] = useState("4");
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
@@ -130,7 +131,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
         setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
         setRemarks(data?.remarks ? data?.remarks : "")
-        setPurchaseInwardId(data?.purchaseInwardId ? data?.purchaseInwardId : "")
+        if (data?.purchaseInwardId) setPurchaseInwardId(data.purchaseInwardId)
     }, [id]);
 
 

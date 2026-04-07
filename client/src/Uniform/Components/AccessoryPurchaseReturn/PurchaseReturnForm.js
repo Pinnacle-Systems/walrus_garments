@@ -47,7 +47,8 @@ import AccessoryPurchaseOrderReturnPrintFormat from "./PrintFormat-PR/index.jsx"
 
 
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems, supplierId, setSupplierId,
-    colorList, uomList, accessoryList, sizeList, supplierList, supplierDetails, branchList, branchdata, locationData, termsAndCondition
+    colorList, uomList, accessoryList, sizeList, supplierList, supplierDetails, branchList, branchdata, locationData, termsAndCondition,
+    purchaseInwardIdProp
 
 }) => {
 
@@ -68,6 +69,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [specialInstructions, setSpecialInstructions] = useState("")
     const [inwardItemSelection, setInwardItemSelection] = useState(false)
     const { branchId, companyId, finYearId, userId } = getCommonParams()
+    const [purchaseInwardId, setPurchaseInwardId] = useState(purchaseInwardIdProp || "")
     const [showExtraCharge, setShowExtraCharge] = useState(false)
     const [showDiscount, setShowDiscount] = useState(false)
     const [term, setTerm] = useState("");
@@ -150,6 +152,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
         setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
         setRemarks(data?.remarks ? data?.remarks : "")
+        if (data?.purchaseInwardId) setPurchaseInwardId(data.purchaseInwardId)
         // if (data?.branchId) {
         //     branchIdFromApi.current = data?.branchId
         // }
@@ -182,7 +185,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
         remarks,
         specialInstructions,
         vehicleNo,
-        finYearId
+        finYearId,
+        purchaseInwardId
     }
 
     function isSupplierOutside() {
