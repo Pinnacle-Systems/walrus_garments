@@ -896,7 +896,7 @@ export const DropdownInput = forwardRef(({
   return (
     <div className={` ${width}`}>
       {name && (
-        <label className="block text-xs font-bold text-slate-700 mb-2">
+        <label className="block text-xs font-bold text-slate-700 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
         </label>
       )}
@@ -1238,7 +1238,7 @@ export const DateInput = ({
     <div className="flex flex-col gap-1 w-full">
       <label
         htmlFor={name}
-        className={`text-[12px] font-medium text-gray-700 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
+        className={`text-[12px] font-bold text-gray-600 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
           }`}
       >
         {inputHead ?? name}
@@ -1322,7 +1322,7 @@ export const DateInputNew = forwardRef(({
   return (
     <div className="grid-cols-1 md:grid-cols-3 items-center md:px-1">
       {name && (
-        <label className={`mb-1 block text-[12px] font-bold text-slate-700 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
+        <label className={` block text-[12px] font-bold text-slate-700 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
           }`}>
           {name}
         </label>
@@ -2943,7 +2943,7 @@ export const DropdownInputNew = forwardRef(({
       setValue(e.target.value);
     };
     return (
-      <div className={`mb-1 ${width}`}>
+      <div className={` ${width}`}>
         {name && (
           <label className="block text-xs font-bold text-slate-700 mb-1">
             {required ? <RequiredLabel name={name} /> : name}
@@ -3281,7 +3281,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       placeholder,
       onDeleteItem,
       component,
-      setSearchTerm,   // selected value (partyId)
+      setSearchTerm,
       searchTerm,
       readOnly,
       required,
@@ -3289,11 +3289,11 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       disabled,
       show,
       id,
-      isShow = true
+      isShow = true,
+      isInwardRetuenParties = false,
+      supplierId
     },
-
     ref
-
   ) => {
     /* ---------------------------------- DATA ---------------------------------- */
 
@@ -3305,11 +3305,12 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     );
 
     const { data: partyList } = useGetPartyQuery({
-      params: { companyId, userId, isAddressCombined: true },
+      params: { companyId, userId, isAddressCombined: true, isInwardRetuenParties },
     });
     const [removeData] = useDeletePartyMutation();
 
-    console.log(searchTerm, "searchTerm")
+    console.log("searchTerm", partyList?.data)
+
 
     /* ---------------------------------- STATE --------------------------------- */
 
@@ -3369,13 +3370,15 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
         return;
       }
 
-      const filtered = partyList?.data?.filter((item) =>
+      let filtered = partyList?.data;
+
+      filtered = filtered?.filter((item) =>
 
         item?.name?.toLowerCase().includes(search.toLowerCase())
       );
 
       setFilteredPages(filtered);
-    }, [search, partyList]);
+    }, [search, partyList, id, supplierId]);
 
 
     /* ---------------------------- ARROW NAVIGATION --------------------------- */
@@ -3493,7 +3496,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
           ref={containerRef}
         >
           {label && (
-            <label className="mb-1 block text-[12px] font-bold text-gray-600">
+            <label className=" block text-[12px] font-bold text-gray-600">
               {required ? <RequiredLabel name={label || name} /> : label}
             </label>
           )}
@@ -3577,7 +3580,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
                   </button>
 
                   {tooltipVisible && (
-                    <div className="absolute z-10 top-full right-0 mt-1 w-64 bg-indigo-800 text-white text-xs rounded p-2"
+                    <div className="absolute z-20 top-full right-0 mt-1 w-64 bg-indigo-800 text-white text-xs rounded p-2"
 
                     >
                       <FaInfoCircle className="inline mr-1" />

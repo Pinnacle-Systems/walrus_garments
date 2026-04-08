@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 import { toast } from "react-toastify";
-import { DropdownInput, DateInput, TextInput, ReusableSearchableInput, DateInputNew, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInputNew1 } from "../../../Inputs";
+import { DropdownInput, DateInput, TextInput, ReusableSearchableInput, DateInputNew, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInputNew1, DropdownInputNew } from "../../../Inputs";
 import { dropDownListObject, } from '../../../Utils/contructObject';
 // import { poTypes, } from '../../../Utils/DropdownData';
 // eslint-disable-next-line no-unused-vars
@@ -45,7 +45,7 @@ import PopUp from "./Pop.js";
 const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectInward, setPoInwardOrDirectInward, id, setId, allData, directInwardReturnItems, setDirectInwardReturnItems,
     supplierList, supplierDetails, payTermList, branchList,
     branchdata, itemList, colorList, uomList, supplierId, setSupplierId, locationData, termsAndCondition, sizeList, hasPermission, invalidateTagsDispatch, onNew, readOnly, setReadOnly,
-    purchaseInwardIdProp
+    purchaseInwardId, convertInwardId, setPurchaseInwardId, locationId, setLocationId, storeId, setStoreId
 
 }) => {
 
@@ -57,14 +57,14 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
     const [docId, setDocId] = useState("New")
-    const [date, setDate] = useState();
+    const [date, setDate] = useState(moment.utc(new Date()).format("YYYY-MM-DD"));
     const [payTermId, setPayTermId] = useState("");
     const [dcDate, setDcDate] = useState(moment.utc(new Date()).format("YYYY-MM-DD"));
     const [transType, setTransType] = useState("DyedYarn");
     const [discountType, setDiscountType] = useState("Percentage");
     const [discountValue, setDiscountValue] = useState(0);
-    const [locationId, setLocationId] = useState('');
-    const [storeId, setStoreId] = useState("")
+    // const [locationId, setLocationId] = useState('');
+    // const [storeId, setStoreId] = useState("")
     const [dcNo, setDcNo] = useState("")
     const [searchValue, setSearchValue] = useState("");
     const [vehicleNo, setVehicleNo] = useState("");
@@ -72,7 +72,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     const [specialInstructions, setSpecialInstructions] = useState("")
     const [inwardItemSelection, setInwardItemSelection] = useState(false)
     const { branchId, companyId, finYearId, userId } = getCommonParams()
-    const [purchaseInwardId, setPurchaseInwardId] = useState(purchaseInwardIdProp || "")
+    // const [purchaseInwardId, setPurchaseInwardId] = useState(purchaseInwardIdProp || "")
 
     const [taxTemplateId, setTaxTemplateId] = useState("4");
     const [isHeaderOpen, setIsHeaderOpen] = useState(true);
@@ -113,6 +113,11 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     });
 
     const syncFormWithDb = useCallback((data) => {
+
+        console.log(convertInwardId, "convertInwardId")
+
+        if (convertInwardId) return
+
         const today = new Date()
 
         setTransType(data?.poType ? data.poType : "DyedYarn");
@@ -298,7 +303,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
 
     useEffect(() => {
-        if (id) return
+        if (id || convertInwardId) return
         setDirectInwardReturnItems([]);
         setSupplierId("")
     }, [transType])
@@ -479,11 +484,12 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         />
                 }
 
-            </Modal>{console.log(isPrintOpen, "isPrintOpen")}
+            </Modal>
             <Modal
                 isOpen={printModalOpen}
                 onClose={() => {
                     setPrintModalOpen(false);
+                    console.log(isPrintOpen, "isPrintOpen")
                     if (isPrintOpen) {
                         setIsPrintOpen(false)
                         syncFormWithDb(undefined)
@@ -549,7 +555,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     <div className="grid grid-cols-1 gap-2 md:grid-cols-[1.2fr_1.2fr_0.75fr_1fr_1.1fr]">
 
 
-                        <TransactionHeaderSection title="Return Details" className="col-span-1" bodyClassName="grid-cols-2 md:grid-cols-[minmax(0,2fr)_minmax(0,2.4fr)]">
+                        <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2 md:grid-cols-[minmax(0,2fr)_minmax(0,2.4fr)]">
                             <ReusableInput label="Purchase Return No" value={docId} required={true} readOnly
                             />
                             <DateInputNew name="Purchase Return Date" value={date} type={"date"} required={true} readOnly={readOnly}
@@ -575,7 +581,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
 
                         </TransactionHeaderSection>
 
-                        <TransactionHeaderSection title="Supplier Details" className="col-span-3" bodyClassName="grid-cols-5 gap-2">
+                        <TransactionHeaderSection title="Supplier Details" className="col-span-3" bodyClassName="grid-cols-5 gap-2 pb-2">
 
                             <div className="col-span-3">
 
@@ -590,11 +596,14 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                                     show="isSupplier"
                                     required
                                     disabled={id}
+                                    id={id}
+                                    isInwardRetuenParties={id ? false : true}
+                                    supplierId={supplierId}
                                 // isShow={false}
                                 />
                             </div>
 
-                            <DropdownInput name="Purchase Inward No"
+                            <DropdownInputNew name="Purchase Inward No"
                                 options={dropDownListObject(id ? purchaseInwardData?.data : purchaseInwardData?.data?.filter(i => i.supplierId == supplierId), "docId", "id")}
                                 value={purchaseInwardId} setValue={setPurchaseInwardId} required={true} readOnly={id || readOnly}
 

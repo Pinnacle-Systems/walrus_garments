@@ -152,6 +152,53 @@ async function validateInventoryVariantRows(directInwardReturnItems = [], rowLab
 }
 
 
+
+function getPurchaseInwardStatus(inward) {
+
+
+    console.log(inward?.DirectItems?.flatMap((item) => item?.DirectReturnItems), "selvamani")
+
+
+    const inwardItems = inward.DirectItems || [];
+    const returnItems = inward?.DirectItems?.flatMap((item) => item?.DirectReturnItems)
+    // const billItems = inward?.DirectItems?.DirectBillItems || [];
+
+    const totalInwardQty = inwardItems.reduce(
+        (sum, item) => sum + (item.qty || 0),
+        0,
+    );
+
+    const totalReturnQty = returnItems.reduce(
+        (sum, item) => sum + (item.qty || 0),
+        0,
+    );
+
+    // const totalBilledQty = billItems.reduce(
+    //     (sum, item) => sum + (item.qty || 0),
+    //     0,
+    // );
+
+    console.log(totalInwardQty, "find ststaus", totalReturnQty)
+    if (totalInwardQty === 0) return "Pending";
+
+    if (totalReturnQty > 0 && totalReturnQty < totalInwardQty) return "Partially Returned";
+
+
+    if (totalReturnQty >= totalInwardQty) return "Fully Returned";
+
+    // if (totalBilledQty >= totalInwardQty) return "Fully Billed";
+
+    // if (totalBilledQty > 0 && totalReturnQty > 0)
+    //     return "Partially Billed & Returned";
+
+    // if (totalBilledQty > 0) return "Partially Billed";
+
+    // if (totalReturnQty > 0) return "Partially Returned";
+
+    return "empty";
+}
+
+
 async function get(req) {
     const { branchId, active, poInwardOrDirectInward, pageNumber, dataPerPage, serachDocNo, searchDate, supplier,
         searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId } = req.query
@@ -209,7 +256,17 @@ async function get(req) {
                     select: {
                         DirectReturnOrPoReturn: true
                     }
-                }
+                },
+                DirectItems: {
+                    select: {
+                        qty: true,
+                        id: true,
+                        DirectReturnItems: true
+
+                    }
+                },
+
+
 
             }
         });
@@ -252,7 +309,15 @@ async function get(req) {
                     select: {
                         DirectItems: true
                     }
-                }
+                },
+                DirectItems: {
+                    select: {
+                        qty: true,
+                        id: true,
+                        DirectReturnItems: true
+
+                    }
+                },
             }
         });
 
@@ -260,11 +325,19 @@ async function get(req) {
     let docId = await getNextDocId(branchId, poInwardOrDirectInward, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
 
 
-    return { statusCode: 0, data, nextDocId: docId, totalCount };
+    return {
+        statusCode: 0,
+        data: data.map((item) => ({
+            ...item,
+            status: getPurchaseInwardStatus(item),
+
+        })),
+        nextDocId: docId, totalCount
+    };
 }
 
 
-async function getOne(id) {
+async function getOne(id, isReturnBalanceInwardItems) {
     const childRecord = 0;
     const data = await prisma.directInwardOrReturn.findUnique({
         where: {
@@ -354,8 +427,12 @@ async function getOne(id) {
     })
 
 
-    data["DirectItems"] = await getDirectInwardReturnItemsAlreadyData(data.storeId, data?.poType, data?.DirectItems, data?.poInwardOrDirectInward)
+    data["DirectItems"] = await getDirectInwardReturnItemsAlreadyData(data.storeId, data?.poType, data?.DirectItems, data?.poInwardOrDirectInward, isReturnBalanceInwardItems)
     if (!data) return NoRecordFound("directInwardOrReturn");
+
+
+
+
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
@@ -634,17 +711,17 @@ export async function getDirectItemById(id, billEntryId, directReturnOrPoReturnI
 
     let alreadyInwardLotWiseData = [];
     let inwardQty = parseFloat(data?.qty || 0).toFixed(3)
-    let alreadyInwardedQty = data?.qty ? parseFloat(data?.qty).toFixed(3) : "0.000";
+    let alreadyInwardedQty = data?.qty ? parseFloat(data?.qty).toFixed(3) : "0.00";
     let alreadyInwardedRolls = data?.noOfRolls ? parseInt(data?.noOfRolls) : "0";
     let alreadyReturnedRolls = alreadyReturnedData?._sum?.noOfRolls ? parseInt(alreadyReturnedData._sum?.noOfRolls) : "0";
     let alreadyReturnedQty = alreadyReturnedData?._sum?.qty ? parseFloat(alreadyReturnedData._sum?.qty).toFixed(3) : "0.000";
-
     let balanceQty = substract(alreadyInwardedQty, alreadyReturnedQty)
     let allowedReturnRolls = substract(alreadyInwardedRolls, alreadyReturnedRolls)
-    console.log(alreadyInwardedQty, "alreadyInwardedQty", alreadyReturnedQty, "alreadyReturnedQty")
     let allowedReturnQty = substract(alreadyInwardedQty, alreadyReturnedQty)
-    console.log(substract(alreadyInwardedQty, alreadyReturnedQty), "allowedReturnQty")
 
+    console.log(alreadyInwardedQty, "alreadyInwardedQty", alreadyReturnedQty, "alreadyReturnedQty")
+
+    console.log(substract(alreadyInwardedQty, alreadyReturnedQty), "allowedReturnQty")
 
     let stockQty = parseFloat((await getStockQty(storeId, data?.itemId, data?.sizeId, data?.colorId, data?.uomId))?.stockQty || 0)
 

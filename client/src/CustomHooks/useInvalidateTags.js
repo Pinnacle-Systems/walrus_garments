@@ -35,7 +35,7 @@ const useInvalidateTags = () => {
             payload: ["FinYear"],
         },
         {
-            type: `PartyMaster/invalidateTags`,
+            type: `partyMaster/invalidateTags`,
             payload: ["Party"],
         },
         {

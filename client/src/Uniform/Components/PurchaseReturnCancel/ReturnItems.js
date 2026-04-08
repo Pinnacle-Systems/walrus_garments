@@ -85,6 +85,7 @@ export default function ReturnItems({ isSupplierOutside, transType, poInwardOrDi
             newBlend[index]["field8"] = poItem?.field8
             newBlend[index]["field9"] = poItem?.field9
             newBlend[index]["field10"] = poItem?.field10
+            newBlend[index]["inwardQty"] = poItem?.inwardQty
 
         } else {
             newBlend[index][field] = value

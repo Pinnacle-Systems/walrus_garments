@@ -21,6 +21,7 @@ const SearchableTableCellSelect = ({
   const inputRef = useRef(null);
   const listRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [search, setSearch] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-2);
   const [showAddNew, setShowAddNew] = useState(false);
@@ -32,6 +33,7 @@ const SearchableTableCellSelect = ({
   );
 
   const filteredOptions = useMemo(() => {
+    if (!isSearching && isOpen) return options;
     const query = normalize(search);
     if (!query) return options;
 
@@ -75,6 +77,7 @@ const SearchableTableCellSelect = ({
 
   const closeDropdown = () => {
     setIsOpen(false);
+    setIsSearching(false);
     setSearch("");
     setHighlightedIndex(-2);
   };
@@ -105,7 +108,7 @@ const SearchableTableCellSelect = ({
     if (item) item.scrollIntoView({ block: "nearest" });
   };
 
-  const displayValue = isOpen ? search : selectedOption?.label || "";
+  const displayValue = (isOpen && isSearching) ? search : selectedOption?.label || "";
 
   return (
     <div
@@ -124,12 +127,14 @@ const SearchableTableCellSelect = ({
         onFocus={(event) => {
           if (disabled) return;
           setIsOpen(true);
+          setIsSearching(false);
           setSearch("");
           setHighlightedIndex(-2);
           requestAnimationFrame(() => event.target.select());
         }}
         onChange={(event) => {
           setIsOpen(true);
+          setIsSearching(true);
           setSearch(String(event.target.value ?? "").toUpperCase());
         }}
         onKeyDown={(event) => {
@@ -165,12 +170,23 @@ const SearchableTableCellSelect = ({
               }
               return;
             }
+            console.log(isOpen, isSearching, search.trim() === "", "isOpen, isSearching, search.trim()")
+
+            if (isOpen && isSearching && search.trim() === "") {
+              event.preventDefault();
+              event.stopPropagation();
+
+              commitSelection("");
+              setIsOpen(false);
+              setSearch("");
+              return;
+            }
 
             event.preventDefault();
             event.stopPropagation();
             // Toggle dropdown if no selection is made
             setIsOpen((prev) => !prev);
-            if (isOpen) setSearch(""); 
+            if (isOpen) setSearch("");
             return;
           }
 

@@ -25,17 +25,17 @@ const TransactionEntryShell = ({
   titleBarClassName = "",
   contentClassName = "",
   headerPanelClassName = "",
-  headerBodyClassName = "px-2 pb-2 overflow-visible",
+  headerBodyClassName = " overflow-visible",
   footerClassName = "",
   openStateClassName = "max-h-[360px] opacity-100 overflow-visible",
 }) => {
   const visibleSummaryItems = summaryItems.filter((item) => item && item.label);
 
   return (
-    <div className={["flex h-full min-h-0 flex-col gap-2 overflow-hidden", contentClassName].filter(Boolean).join(" ")}>
-      <div className={["w-full shrink-0 rounded-md bg-[#f1f1f0] px-2 py-1 shadow-md", titleBarClassName].filter(Boolean).join(" ")}>
+    <div className={["flex h-full min-h-0 flex-col   overflow-hidden", contentClassName].filter(Boolean).join(" ")}>
+      <div className={["w-full shrink-0 rounded-md bg-white px-2 py-1 shadow-md", titleBarClassName].filter(Boolean).join(" ")}>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">{title}
+          <h1 className="text-lg font-bold text-gray-800">{title}
           </h1>
           <div className="flex flex-row gap-3">
             <ModeChip id={id} readOnly={readOnly} />
@@ -48,8 +48,8 @@ const TransactionEntryShell = ({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-        <div className={["shrink-0 rounded-md border border-slate-200 bg-white shadow-sm", headerPanelClassName].filter(Boolean).join(" ")}>
-          <button
+        <div className={["shrink-0 bg-[#F1F1F0] rounded-md mt-2 shadow-sm", headerPanelClassName].filter(Boolean).join(" ")}>
+          {/* <button
             type="button"
             onClick={() => setHeaderOpen((open) => !open)}
             className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-slate-50"
@@ -72,13 +72,13 @@ const TransactionEntryShell = ({
             <FiChevronDown
               className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${headerOpen ? "rotate-180" : "rotate-0"}`}
             />
-          </button>
+          </button> */}
 
           <div
-            className={`transition-all duration-300 ease-in-out ${headerOpen ? openStateClassName : "max-h-0 opacity-0 overflow-hidden"
+            className={`transition-all  duration-300 ease-in-out ${headerOpen ? openStateClassName : "max-h-0 opacity-0 overflow-hidden"
               }`}
           >
-            <div className={["px-3 pb-3 overflow-visible", headerBodyClassName].filter(Boolean).join(" ")}>
+            <div className={["p-0 overflow-visible", headerBodyClassName].filter(Boolean).join(" ")}>
               {headerContent}
             </div>
           </div>

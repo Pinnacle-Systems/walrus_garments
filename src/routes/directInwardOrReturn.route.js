@@ -13,7 +13,7 @@ router.get('/getDirectItems/:id/:purchaseInwardReturnId/:stockId/:storeId/:billE
 
 router.get('/getPoItemsandDirectInwardItems', getPoItemsandDirectInwardItems);
 
-router.get('/:id', getOne);
+router.get('/:id/:isReturnBalanceInwardItems', getOne);
 
 router.get('/search/:searchKey', getSearch);
 

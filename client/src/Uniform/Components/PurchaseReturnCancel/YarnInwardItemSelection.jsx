@@ -242,7 +242,7 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                                         </td>
                                     </tr>
                                 ) : (
-                                    poItems?.data?.map((item, index) => (
+                                    poItems?.data?.filter(i => i.balanceQty > 0)?.map((item, index) => (
                                         <tr
                                             key={index}
                                             className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"

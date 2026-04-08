@@ -120,7 +120,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 </th>
                                 <th
 
-                                    className="w-20 bg-gray-200 px-1 py-1 text-left font-medium text-[12px]"
+                                    className="w-20 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Barcode
                                 </th>
@@ -137,18 +137,29 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                         </>
                                     ))
                                 ))}
-
                                 <th
 
                                     className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
-                                    Allowed Return Qty
+                                    Inward Qty
+                                </th>
+                                <th
+
+                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                >
+                                    Already Return Qty
                                 </th>
                                 <th
 
                                     className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Stock Qty
+                                </th>
+                                <th
+
+                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                >
+                                    Balance Qty
                                 </th>
                                 <th
 
@@ -165,12 +176,12 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 </th>
 
 
-                                <th
+                                {/* <th
 
                                     className="w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Gross
-                                </th>
+                                </th> */}
 
                                 {/* <th
 
@@ -205,7 +216,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                             <td key={`placeholder-cell-${j}`} className="border border-gray-300 p-0 text-[11px]"></td>
                                         )}
                                         <td className="border border-gray-300 p-0 text-[11px]"></td>
-                                        <td className="border border-gray-300 p-0 text-[11px]"></td>
+                                        {/* <td className="border border-gray-300 p-0 text-[11px]"></td> */}
                                     </tr>
                                 );
                             })}
@@ -226,12 +237,16 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                     Total:
                                 </td>
                                 <td className="bg-gray-300 px-1 py-1 text-right text-[11px]"></td>
+                                <td className="bg-gray-300 px-1 py-1 text-right text-[11px]"></td>
+
+                                <td className="bg-gray-300 px-1 py-1 text-right text-[11px]"></td>
+
                                 <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
                                     {(directInwardReturnItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.qty || 0), 0).toFixed(3)}
                                 </td>
-                                <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
+                                {/* <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
                                     {(directInwardReturnItems || [])?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0).toFixed(3)}
-                                </td>
+                                </td> */}
                             </tr>
                         </tfoot>
                     </table>

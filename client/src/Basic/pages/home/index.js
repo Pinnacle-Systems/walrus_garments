@@ -22,23 +22,23 @@ const Home = () => {
   const openTabs = useSelector((state) => state.openTabs);
 
 
-      // const [isLoggedIn, setIsLoggedIn] = useState(false);
-    
-      
-      // const handleLogout = () => {
-      //   secureLocalStorage.clear();
-      //   sessionStorage.clear();
-      //   window.location.href = '/';
-    
-      // };
-    
-      // console.log('isLoggedIn status:', isLoggedIn);  
-    
-      // useEffect(() => {
-      //   setIsLoggedIn(!!sessionStorage.getItem("sessionId"));
-      // }, []); 
-      
-      // useIdleLogout(handleLogout, isLoggedIn);
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+
+  // const handleLogout = () => {
+  //   secureLocalStorage.clear();
+  //   sessionStorage.clear();
+  //   window.location.href = '/';
+
+  // };
+
+  // console.log('isLoggedIn status:', isLoggedIn);  
+
+  // useEffect(() => {
+  //   setIsLoggedIn(!!sessionStorage.getItem("sessionId"));
+  // }, []); 
+
+  // useIdleLogout(handleLogout, isLoggedIn);
   return (
     <>
       <Modal
@@ -77,9 +77,9 @@ const Home = () => {
             <Header profile={profile} setProfile={setProfile} />
 
             <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />
-            <div className="mt-[30px]  p-5 bg-gray-100  :tab">
-              <ActiveTabList  isSuperAdmin={isSuperAdmin} />
-              {openTabs.tabs.length === 0 ? <Dashboard   /> : ''}
+            <div className="mt-[30px]  py-5 px-2 bg-[#f1f1f0]  :tab">
+              <ActiveTabList isSuperAdmin={isSuperAdmin} />
+              {openTabs.tabs.length === 0 ? <Dashboard /> : ''}
             </div>
 
 

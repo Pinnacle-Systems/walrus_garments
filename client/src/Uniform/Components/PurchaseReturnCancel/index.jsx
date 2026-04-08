@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useGetPartyQuery, useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 import { useSelector, useDispatch } from 'react-redux';
-import { useGetDirectInwardOrReturnByIdQuery } from "../../../redux/uniformService/DirectInwardOrReturnServices";
+import { useGetDirectInwardOrReturnByIdQuery, useGetDirectItemByIdQuery, useLazyGetDirectItemByIdQuery } from "../../../redux/uniformService/DirectInwardOrReturnServices";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 // import { useGetTaxTemplateQuery } from '../../../redux/ErpServices/TaxTemplateServices';
 
@@ -46,34 +46,77 @@ export default function Form() {
   const [supplierId, setSupplierId] = useState("");
   const [directInwardReturnItems, setDirectInwardReturnItems] = useState([]);
   const [purchaseInwardId, setPurchaseInwardId] = useState("");
+  const [locationId, setLocationId] = useState('');
+  const [storeId, setStoreId] = useState("")
+
 
   const openTabsState = useSelector((state) => state.openTabs);
-  const currentTab = openTabsState?.tabs?.find(t => t.active && (t.name === "PURCHASE RETURN" || t.name === "ACCESSORY PURCHASE RETURN"));
+  const currentTab = openTabsState?.tabs?.find(t => t.active && (t.name === "PURCHASE RETURN"));
+
+  console.log(openTabsState?.tabs, "currentTab")
+
   const convertInwardId = currentTab?.projectId;
 
   const { data: inwardToConvertData } =
-    useGetDirectInwardOrReturnByIdQuery(convertInwardId, { skip: !convertInwardId });
+    useGetDirectInwardOrReturnByIdQuery({ id: convertInwardId, isReturnBalanceInwardItems: true }, { skip: !convertInwardId });
+
   const dispatch = useDispatch();
+
+  const [getDirectItemDetail] = useLazyGetDirectItemByIdQuery();
+
+
+
+
 
   useEffect(() => {
     if (inwardToConvertData?.data && convertInwardId) {
       const inwardData = inwardToConvertData.data;
+
+      console.log(inwardData, "inwardData")
+
       setId("");
       setSupplierId(inwardData.supplierId);
+      setLocationId(inwardData.branchId);
+      setStoreId(inwardData.storeId);
       setPurchaseInwardId(inwardData.id);
       setReadOnly(false);
       setShowManufacturer(true);
-      setPoInwardOrDirectInward("PurchaseReturn");
 
-      const items = (inwardData.DirectItems || []).map(item => ({
-        ...item,
-        poItemsId: item.id,
-        inwardQty: item.qty,
-      }));
-      setDirectInwardReturnItems(items);
-      dispatch(push({ name: currentTab?.name, projectId: null }));
+      const fetchItems = async () => {
+        const items = await Promise.all((inwardData.DirectItems || []).map(async (item) => {
+          try {
+            const res = await getDirectItemDetail({ id: item.id, purchaseInwardId: inwardData.id, storeId: inwardData.storeId }).unwrap();
+            const poItem = res?.data;
+            return {
+              ...item,
+              ...poItem,
+              poItemsId: item.id,
+              inwardQty: item.qty,
+              qty: 0,
+              returnLotDetails: poItem?.alreadyInwardLotWiseData || [],
+            };
+          } catch (error) {
+            console.error("Error fetching item details", error);
+            return {
+              ...item,
+              poItemsId: item.id,
+              inwardQty: item.qty,
+              qty: 0,
+            };
+          }
+        }));
+        setDirectInwardReturnItems(items);
+      }
+
+      // ✅ Wait for fetchItems to complete, then dispatch
+      fetchItems().then(() => {
+        dispatch(push({ name: currentTab?.name, projectId: null }));
+      });
     }
-  }, [inwardToConvertData, convertInwardId, dispatch, currentTab?.name]);
+  }, [inwardToConvertData, convertInwardId, dispatch, currentTab?.name, getDirectItemDetail]);
+
+  console.log(supplierId, "supplierId")
+
 
   const params = {
     branchId, userId, finYearId
@@ -182,7 +225,7 @@ export default function Form() {
             supplierList={supplierList} supplierDetails={supplierDetails} payTermList={payTermList} branchList={branchList}
             branchdata={branchdata} itemList={itemList} colorList={colorList} uomList={uomList} locationData={locationData}
             termsAndCondition={termsAndCondition} sizeList={sizeList} hasPermission={hasPermission} invalidateTagsDispatch={invalidateTagsDispatch} onNew={onNew} readOnly={readOnly} setReadOnly={setReadOnly}
-            purchaseInwardIdProp={purchaseInwardId}
+            purchaseInwardId={purchaseInwardId} convertInwardId={convertInwardId} setPurchaseInwardId={setPurchaseInwardId} locationId={locationId} setLocationId={setLocationId} storeId={storeId} setStoreId={setStoreId}
           />
         </div>
 
@@ -190,7 +233,9 @@ export default function Form() {
         <div className="p-2 bg-[#F1F1F0] ">
           <div className="flex flex-col sm:flex-row justify-between bg-white  px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
 
-            <h1 className="text-2xl font-bold text-gray-800">Purchase Return</h1>
+            <h1 className="text-lg font-bold text-gray-800">
+              Purchase Return Report
+            </h1>
 
             <button
               className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-xs"

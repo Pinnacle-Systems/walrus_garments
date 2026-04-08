@@ -115,9 +115,12 @@ const YarnDirectItem = ({ itemList, uomList,
                         </>
                     ))
                 ))}
-                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-right'>{item?.allowedReturnQty}</td>
+                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-right'>{item?.inwardQty}</td>
+
+                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-right'>{item?.alreadyReturnedQty}</td>
                 <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-right'>{item?.stockQty}</td>
 
+                <td className='w-12 border border-gray-300 p-0.5 text-[11px] text-right'>{item?.allowedReturnQty}</td>
 
 
                 <td className='border border-gray-300 py-0.5 text-[11px] text-right' >
@@ -179,10 +182,10 @@ const YarnDirectItem = ({ itemList, uomList,
                     <div className='text-center'>
                     </div>
                 </td>
-                <td className='border border-gray-300 py-0.5 px-1 text-[11px] text-right'>
+                {/* <td className='border border-gray-300 py-0.5 px-1 text-[11px] text-right'>
                     {item?.itemId ? gross : ""}
 
-                </td>
+                </td> */}
 
 
 

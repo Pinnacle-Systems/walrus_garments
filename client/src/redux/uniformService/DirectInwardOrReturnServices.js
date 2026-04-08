@@ -34,9 +34,9 @@ const DirectInwardOrReturnApi = createApi({
       providesTags: ["DirectInwardOrReturn"],
     }),
     getDirectInwardOrReturnById: builder.query({
-      query: (id) => {
+      query: ({ id, isReturnBalanceInwardItems }) => {
         return {
-          url: `${DIRECT_INWARD_OR_RETURN_API}/${id}`,
+          url: `${DIRECT_INWARD_OR_RETURN_API}/${id}/${isReturnBalanceInwardItems ? isReturnBalanceInwardItems : false}`,
           method: "GET",
           headers: {
             "Content-type": "application/json; charset=UTF-8",
@@ -118,6 +118,7 @@ export const {
   useGetPoItemsandDirectInwardItemsQuery,
   useGetDirectItemsQuery,
   useGetDirectItemByIdQuery,
+  useLazyGetDirectItemByIdQuery,
   useAddDirectInwardOrReturnMutation,
   useUpdateDirectInwardOrReturnMutation,
   useDeleteDirectInwardOrReturnMutation,

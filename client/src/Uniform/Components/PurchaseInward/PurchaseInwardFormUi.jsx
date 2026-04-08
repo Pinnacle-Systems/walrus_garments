@@ -4,6 +4,7 @@ import { ReusableInput } from "../Order/CommonInput";
 import {
   childRecordCount,
   DateInput,
+  DateInputNew,
   DropdownInput,
   ReusableSearchableInputNewCustomerwithBranches,
   TextInput,
@@ -129,7 +130,7 @@ const PurchaseInwardForm = ({
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetDirectInwardOrReturnByIdQuery(id, { skip: !id });
+  } = useGetDirectInwardOrReturnByIdQuery({ id, isReturnBalanceInwardItems: false }, { skip: !id });
 
   const { data: stockControlData } = useGetStockReportControlQuery({ params });
 
@@ -463,9 +464,9 @@ const PurchaseInwardForm = ({
         headerOpen={headerOpen}
         setHeaderOpen={setHeaderOpen}
         summaryItems={summaryItems}
-        openStateClassName="max-h-[320px] opacity-100 overflow-visible"
+        openStateClassName="max-h-[320px] headerContent opacity-100 overflow-visible"
         headerContent={
-          <div className="grid grid-cols-1 gap-2 overflow-visible md:grid-cols-3">
+          <div className="grid grid-cols-1  gap-3 overflow-visible md:grid-cols-3">
             <TransactionHeaderSection
               title="Basic Details"
               bodyClassName="grid-cols-2"

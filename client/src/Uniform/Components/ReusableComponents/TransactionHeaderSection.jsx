@@ -6,15 +6,21 @@ const TransactionHeaderSection = ({
   titleClassName = "",
 }) => {
   const sectionClasses = [
-    "relative mt-2 rounded-md border border-slate-200 bg-white px-2 pb-2 pt-4 shadow-sm",
+    "relative  rounded-md bg-white px-2 pt-2 pb-0 shadow-sm",
     className,
   ]
     .filter(Boolean)
     .join(" ");
 
-  const bodyClasses = ["grid gap-1 overflow-visible", bodyClassName].filter(Boolean).join(" ");
+  const bodyClasses = ["grid gap-1 pt-2  overflow-visible", bodyClassName].filter(Boolean).join(" ");
+  // const legendClasses = [
+  //   "absolute -top-3 left-3 bg-gray-200 px-2 py-1  text-[12px] font-medium text-slate-800",
+  //   titleClassName,
+  // ]
+  //   .filter(Boolean)
+  //   .join(" ");
   const legendClasses = [
-    "absolute -top-3 left-3 bg-white px-2 text-[12px] font-medium text-slate-700",
+    "text-md font-bold text-gray-800",
     titleClassName,
   ]
     .filter(Boolean)

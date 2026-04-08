@@ -199,7 +199,7 @@ async function getStockQtyLocationWise(storeId, itemId, sizeId, colorId, uomId) 
 
 
 
-export async function getDirectInwardReturnItemsAlreadyData(storeId, poType, directItems, poInwardOrDirectInward) {
+export async function getDirectInwardReturnItemsAlreadyData(storeId, poType, directItems, poInwardOrDirectInward, isReturnBalanceInwardItems) {
 
     console.log(directItems, 'directItems  for stockQty')
     let directItemsData = [];
@@ -215,8 +215,20 @@ export async function getDirectInwardReturnItemsAlreadyData(storeId, poType, dir
 
         }
 
+        console.log(Number(directItem?.qty), Number(obj?.alreadyReturnedQty), "obj for stockQty",)
 
-        directItemsData.push(obj)
+        if (isReturnBalanceInwardItems == "true" || isReturnBalanceInwardItems == true) {
+            console.log(isReturnBalanceInwardItems, "isReturnBalanceInwardItems")
+            if (Number(directItem?.qty) != Number(obj?.alreadyReturnedQty)) {
+                directItemsData.push(obj)
+                // return
+            }
+        } else {
+            directItemsData.push(obj)
+
+        }
+
+
 
     }
 

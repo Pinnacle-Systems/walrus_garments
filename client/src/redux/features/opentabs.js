@@ -20,6 +20,8 @@ export const openTabs = createSlice({
 
       );
       console.log(existingIndex, "existingIndex")
+      console.log(action, "actionaction")
+
       state.tabs = state.tabs.map((tab) => {
         return { ...tab, active: false };
       });

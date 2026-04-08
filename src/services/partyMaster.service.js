@@ -4,7 +4,7 @@ import { exclude, getRemovedItems } from '../utils/helper.js';
 import { parse } from 'path';
 
 async function get(req) {
-    const { companyId, active, isAddressCombined } = req.query
+    const { companyId, active, isAddressCombined, isInwardRetuenParties, supplierId, id } = req.query
 
 
     let data
@@ -30,6 +30,18 @@ async function get(req) {
             },
             PartyMaterials: true,
             PartyContactDetails: true,
+            DirectInwardOrReturn: {
+                select: {
+                    id: true,
+                    DirectItems: true
+                }
+            },
+            DirectReturnOrPoReturn: {
+                select: {
+                    id: true,
+                    directReturnItems: true
+                }
+            },
             _count: {
                 select: {
                     DirectInwardOrReturn: true,
@@ -53,8 +65,36 @@ async function get(req) {
                 }${i?.City?.name ? ` / ${i.City.name}` : ""}`
 
         }))
-        console.log(data, "datadata")
+        // console.log(data, "datadata")
 
+    }
+
+
+    console.log(typeof (Boolean(isInwardRetuenParties)), "isInwardRetuenParties")
+
+    if (isInwardRetuenParties === true || isInwardRetuenParties === "true") {
+        data = data.filter(party => {
+
+            const Inward = party.DirectInwardOrReturn.reduce((partySum, supplier) => {
+                const inwardQty = supplier.DirectItems.reduce(
+                    (sum, item) => sum + (item.qty || 0),
+                    0
+                );
+                return partySum + inwardQty;
+            }, 0);
+
+            const Return = party.DirectReturnOrPoReturn.reduce((partySum, invoice) => {
+                const returnQty = invoice.directReturnItems.reduce(
+                    (sum, item) => sum + (item.qty || 0),
+                    0
+                );
+                return partySum + returnQty;
+            }, 0);
+
+            console.log({ Inward, Return }, "invoiceQty");
+
+            return Inward > 0 && Inward != Return;
+        });
     }
 
     data = data.map((item) => {

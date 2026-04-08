@@ -305,9 +305,9 @@ const YarnPoItems = ({
                 <div className="h-full overflow-x-auto overflow-y-auto ">
                     <table className={transactionTableClassName}>
                         <thead className={`${transactionTableHeadClassName} shadow-sm`}>
-                            <tr className="py-2">
+                            <tr className="py-2  bg-gray-00">
                                 <th
-                                    className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                    className={`w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     S.No
                                 </th>
@@ -315,7 +315,7 @@ const YarnPoItems = ({
 
                                     <th
 
-                                        className={`w-52 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                        className={`w-52 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                     >
                                         Item  <span className="text-red-500">*</span>
                                     </th>
@@ -323,7 +323,7 @@ const YarnPoItems = ({
                                 {stockControldata?.sizeWise && (
                                     <th
 
-                                        className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                        className={`w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                     >
                                         Size  <span className="text-red-500">*</span>
                                     </th>
@@ -331,7 +331,7 @@ const YarnPoItems = ({
                                 {stockControldata?.sizeColorWise && (
                                     <th
 
-                                        className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                        className={`w-32 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                     >
                                         Color  <span className="text-red-500">*</span>
                                     </th>
@@ -339,13 +339,13 @@ const YarnPoItems = ({
 
                                 <th
 
-                                    className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                    className={`w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     UOM  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
-                                    className={`w-20 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                    className={`w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Barcode  <span className="text-red-500">*</span>
                                 </th>
@@ -355,7 +355,7 @@ const YarnPoItems = ({
                                         <>
                                             <th
                                                 key={i}
-                                                className={`w-20 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                                className={`w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                             >
                                                 {capitalizeFirstLetter(element?.[i])}  <span className="text-red-500">*</span>
                                             </th>
@@ -366,7 +366,7 @@ const YarnPoItems = ({
                                 {id && (
                                     <th
 
-                                        className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                        className={`w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                     >
                                         Stock  Quantity  <span className="text-red-500">*</span>
                                     </th>
@@ -374,20 +374,20 @@ const YarnPoItems = ({
                                 {id && (
                                     <th
 
-                                        className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                        className={`w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                     >
                                         Already Returned Qty  <span className="text-red-500">*</span>
                                     </th>
                                 )}
                                 <th
 
-                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                    className={`w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Quantity  <span className="text-red-500">*</span>
                                 </th>
                                 <th
 
-                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                    className={`w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Price  <span className="text-red-500">*</span>
                                 </th>
@@ -395,7 +395,7 @@ const YarnPoItems = ({
 
                                 <th
 
-                                    className={`w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px] `}
+                                    className={`w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
                                     Gross
                                 </th>
@@ -403,7 +403,7 @@ const YarnPoItems = ({
 
                                 <th
 
-                                    className={`w-7 bg-gray-200 px-0 py-1 text-center font-medium text-[12px] `}
+                                    className={`w-7 bg-gray-300 px-0 py-1 text-center font-medium text-[12px] `}
                                 >
 
                                 </th>
@@ -438,7 +438,7 @@ const YarnPoItems = ({
                                         </td>
                                     )}
                                     {showSize && (
-                                        <td className="border border-gray-300 bg-white p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <td className="border border-gray-300  p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                                             <SearchableTableCellSelect
                                                 value={row.sizeId}
                                                 options={getSizeOptions(row)}
@@ -451,7 +451,7 @@ const YarnPoItems = ({
                                         </td>
                                     )}
                                     {showColor && (
-                                        <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <td className="border border-gray-300  p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                                             <SearchableTableCellSelect
                                                 value={row.colorId}
                                                 options={getColorOptions(row)}
@@ -638,7 +638,7 @@ const YarnPoItems = ({
                                 <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
                                     {formatTwoDecimals((poItems || [])?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0))}
                                 </td>
-                                <td className="px-1 py-1 bg-gray-100"></td>
+                                <td className="px-1 py-1 bg-gray-300"></td>
                             </tr>
                         </tfoot>
                     </table>

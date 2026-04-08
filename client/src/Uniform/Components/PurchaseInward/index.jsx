@@ -97,8 +97,9 @@ const PurchaseInward = () => {
 
     const dispatch = useDispatch();
 
-    const handleConvertToReturn = (dataObj) => {
-        dispatch(push({ name: "PURCHASE RETURN", projectId: dataObj.id }));
+    const handleConvertToReturn = async (dataObj) => {
+        console.log(dataObj?.id, "dataObj for Purchase Inward");
+        await dispatch(push({ name: "PURCHASE RETURN", projectId: dataObj.id }));
     };
 
     const handleDelete = async (id, childRecord) => {
@@ -174,8 +175,9 @@ const PurchaseInward = () => {
                 <div className="p-2 bg-[#F1F1F0] min-h-screen">
                     <div className="flex flex-col sm:flex-row justify-between bg-white px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
 
-                        <h1 className="text-2xl font-bold text-gray-800">Purchase Inward</h1>
-
+                        <h1 className="text-lg font-bold text-gray-800">
+                            Purchase Inward Report
+                        </h1>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-xs"
                             onClick={() => hasPermission(handleCreatefunction, "create")}
