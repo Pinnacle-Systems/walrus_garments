@@ -248,28 +248,28 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                 <table className="table-fixed text-center w-full">
                     <thead className="border-2 table-header">
                         <tr className=''>
-                            <th className="table-data  w-12 text-center p-0.5 text-xs">S.no</th>
-                            <th className="table-data w-44 text-xs">Product Name</th>
-                            <th className="table-data w-64 text-xs">Description</th>
-                            <th className="table-data w-20 text-xs">Hsn</th>
+                            <th className="tx-table-cell  w-12 text-center p-0.5 text-xs">S.no</th>
+                            <th className="tx-table-cell w-44 text-xs">Product Name</th>
+                            <th className="tx-table-cell w-64 text-xs">Description</th>
+                            <th className="tx-table-cell w-20 text-xs">Hsn</th>
 
-                            <th className="table-data w-20 text-xs">Uom</th>
-                            <th className="table-data  w-24 text-xs">Qty</th>
+                            <th className="tx-table-cell w-20 text-xs">Uom</th>
+                            <th className="tx-table-cell  w-24 text-xs">Qty</th>
 
-                            <th className="table-data  w-24 text-xs">Plan Start Date</th>
-                            <th className="table-data  w-24 text-xs">Lead Days</th>
-                            <th className="table-data  w-24 text-xs">Plan End Date</th>
+                            <th className="tx-table-cell  w-24 text-xs">Plan Start Date</th>
+                            <th className="tx-table-cell  w-24 text-xs">Lead Days</th>
+                            <th className="tx-table-cell  w-24 text-xs">Plan End Date</th>
                             {(!readOnly) &&
-                                <th className="table-data  w-12 p-0.5 text-xs" onClick={addNewRow} >  <span className='text-2xl' >+</span></th>
+                                <th className="tx-table-cell  w-12 p-0.5 text-xs" onClick={addNewRow} >  <span className='text-2xl' >+</span></th>
                             }
                             {(!readOnly) &&
-                                <th className="table-data  w-12 p-0.5 text-xs"  >  <span className='text-2xl' ></span>Edit</th>
+                                <th className="tx-table-cell  w-12 p-0.5 text-xs"  >  <span className='text-2xl' ></span>Edit</th>
                             }
                             {(!readOnly) &&
-                                <th className="table-data  w-12 p-0.5 text-xs"  >  <span className='text-2xl' ></span>Save</th>
+                                <th className="tx-table-cell  w-12 p-0.5 text-xs"  >  <span className='text-2xl' ></span>Save</th>
                             }
                             {(!readOnly) &&
-                                <th className="table-data  w-12 p-0.5 text-xs"  >  <span className='text-2xl' ></span>Add.Sub</th>
+                                <th className="tx-table-cell  w-12 p-0.5 text-xs"  >  <span className='text-2xl' ></span>Add.Sub</th>
                             }
 
                         </tr>
@@ -278,10 +278,10 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                         {(lineItems || []).map((item, index) => (
                             <Fragment key={index}  >
                                 <tr key={index} className={`w-full bg-gray-300 text-xs`}>
-                                    <td className="table-data w-9 text-left px-1 py-1 text-xs">
+                                    <td className="tx-table-cell w-9 text-left px-1 py-1 text-xs">
                                         {index + 1}
                                     </td>
-                                    <td className='table-data text-xs'>
+                                    <td className='tx-table-cell text-xs'>
                                         <DropdownWithSearch value={item.productId}
 
                                             readOnly={(id ? lineEditableIndex !== index : item?.isQuote)}
@@ -291,7 +291,7 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
 
 
                                     </td>
-                                    <td className="table-data w-9 text-left px-1 py-1 text-xs">
+                                    <td className="tx-table-cell w-9 text-left px-1 py-1 text-xs">
                                         <textarea readOnly={id ? lineEditableIndex !== index : item?.isQuote} className=" w-full overflow-auto focus:outline-none border border-gray-500 rounded py-1 text-xs"
                                             value={item.description}
                                             onChange={(e) => handleInputChange(e.target.value, index, "description")}
@@ -300,21 +300,21 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                                         </textarea>
 
                                     </td>
-                                    <td className="table-data w-9 text-left px-1 py-1 text-xs">
+                                    <td className="tx-table-cell w-9 text-left px-1 py-1 text-xs">
                                         {item?.id ? (item?.Product?.hsnCode) : item.hsnCode}
                                     </td>
 
-                                    <td className="table-data w-9 text-left px-1 py-1 text-xs">
+                                    <td className="tx-table-cell w-9 text-left px-1 py-1 text-xs">
                                         {item?.id ? (item?.Uom?.name || findFromList(item.uomId, uomList?.data, "name")) : findFromList(item.uomId, uomList?.data, "name")}
 
 
                                     </td>
-                                    <td className='table-data text-xs'>
+                                    <td className='tx-table-cell text-xs'>
 
                                         <input
                                             type="number"
                                             readOnly={lineEditableIndex !== index}
-                                            className="text-right rounded py-1 px-1 w-full h-10  table-data-input "
+                                            className="text-right rounded py-1 px-1 w-full h-10  tx-table-input "
                                             value={item.qty == 0 ? '' : item.qty}
                                             // disabled={lineEditableIndex !== index}
                                             onChange={(e) =>
@@ -326,11 +326,11 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                                             }
                                         />
                                     </td>
-                                    <td className='table-data text-xs'>
+                                    <td className='tx-table-cell text-xs'>
                                         <input
                                             type="date"
                                             readOnly={lineEditableIndex !== index}
-                                            className="text-right rounded py-1 px-1 w-full table-data-input"
+                                            className="text-right rounded py-1 px-1 w-full tx-table-input"
                                             value={item?.planStartDate ? moment(item?.planStartDate).format("YYYY-MM-DD") : 0}
                                             // disabled={lineEditableIndex !== index || readOnly ? false : true}
 
@@ -339,10 +339,10 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                                             }
                                         />
                                     </td>
-                                    <td className='table-data text-xs'>
+                                    <td className='tx-table-cell text-xs'>
                                         <input
                                             type="number"
-                                            className="text-right rounded py-1 px-1 w-full h-10 table-data-input"
+                                            className="text-right rounded py-1 px-1 w-full h-10 tx-table-input"
                                             value={item?.leadDays || ""}
                                             readOnly={lineEditableIndex !== index}
                                             onChange={(e) =>
@@ -350,10 +350,10 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                                             }
                                         />
                                     </td>
-                                    <td className='table-data text-xs'>
+                                    <td className='tx-table-cell text-xs'>
                                         <input
                                             type="date"
-                                            className="text-right rounded py-1 px-1 w-full table-data-input"
+                                            className="text-right rounded py-1 px-1 w-full tx-table-input"
                                             value={item?.planEndDate ? moment(item?.planEndDate).format("YYYY-MM-DD") : 0}
 
                                             readOnly={lineEditableIndex !== index}
@@ -364,7 +364,7 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                                     </td>
 
                                     {(!readOnly) &&
-                                        <td className=" text-xs text-center table-data">
+                                        <td className=" text-xs text-center tx-table-cell">
                                             <button
                                                 type='button'
                                                 onClick={() => {
@@ -376,7 +376,7 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                                     }
 
                                     {(!readOnly) &&
-                                        <td className=" text-xs text-center table-data">
+                                        <td className=" text-xs text-center tx-table-cell">
                                             <button
                                                 type='button'
                                                 onClick={() => isEditable(index)}
@@ -386,7 +386,7 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                                     }
 
                                     {(!readOnly) &&
-                                        <td className=" text-xs text-center table-data">
+                                        <td className=" text-xs text-center tx-table-cell">
                                             <button
 
                                                 type='button'
@@ -397,7 +397,7 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                                     }
 
                                     {(!readOnly) &&
-                                        <td className=" text-xs text-center table-data">
+                                        <td className=" text-xs text-center tx-table-cell">
                                             <button
 
                                                 type='button'
@@ -412,25 +412,25 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
                                 {
                                     item?.subLineItems?.length > 0 ?
                                         <tr className='bg-green-200  '>
-                                            <th className="table-data  w-12 text-center p-0.5 text-xs ">S.no</th>
-                                            <th className="table-data w-44 text-xs">Name</th>
-                                            <th className="table-data w-64 text-xs">Description</th>
-                                            <th className="table-data w-20 text-xs">Category</th>
-                                            <th className="table-data w-20 text-xs">Res.Person</th>
+                                            <th className="tx-table-cell  w-12 text-center p-0.5 text-xs ">S.no</th>
+                                            <th className="tx-table-cell w-44 text-xs">Name</th>
+                                            <th className="tx-table-cell w-64 text-xs">Description</th>
+                                            <th className="tx-table-cell w-20 text-xs">Category</th>
+                                            <th className="tx-table-cell w-20 text-xs">Res.Person</th>
 
 
-                                            <th className="table-data  w-24 text-xs">Plan Start Date</th>
-                                            <th className="table-data  w-24 text-xs">Lead Days</th>
-                                            <th className="table-data  w-24 text-xs">Plan End Date</th>
-                                            <th className="table-data  w-24 text-xs">IsCompleted</th>
+                                            <th className="tx-table-cell  w-24 text-xs">Plan Start Date</th>
+                                            <th className="tx-table-cell  w-24 text-xs">Lead Days</th>
+                                            <th className="tx-table-cell  w-24 text-xs">Plan End Date</th>
+                                            <th className="tx-table-cell  w-24 text-xs">IsCompleted</th>
                                             {(!readOnly) &&
-                                                <th className="table-data  w-12 text-xs" onClick={() => addSubLineNewRow(index)} >  <span className='text-2xl' >+</span></th>
+                                                <th className="tx-table-cell  w-12 text-xs" onClick={() => addSubLineNewRow(index)} >  <span className='text-2xl' >+</span></th>
                                             }
                                             {(!readOnly) &&
-                                                <th className="table-data  w-12 p-0.5 text-xs" onClick={addNewRow} >  <span className='text-2xl' ></span>Edit</th>
+                                                <th className="tx-table-cell  w-12 p-0.5 text-xs" onClick={addNewRow} >  <span className='text-2xl' ></span>Edit</th>
                                             }
                                             {(!readOnly) &&
-                                                <th className="table-data  w-12 p-0.5 text-xs" onClick={addNewRow} >  <span className='text-2xl' ></span>Save</th>
+                                                <th className="tx-table-cell  w-12 p-0.5 text-xs" onClick={addNewRow} >  <span className='text-2xl' ></span>Save</th>
                                             }
                                         </tr>
                                         :
@@ -449,9 +449,9 @@ const LineItems = ({ lineEditableIndex, setLineEditableIndex, readOnly, lineItem
 
                         ))}
                         <tr className='bg-blue-200 w-full border border-gray-400 h-7 font-bold'>
-                            <td className="table-data  w-10 text-right pr-1"></td>
-                            <td className="table-data text-center w-10 font-bold" colSpan={readOnly ? 7 : 10}>Total</td>
-                            <td className="table-data  w-10 text-right pr-1" ></td>
+                            <td className="tx-table-cell  w-10 text-right pr-1"></td>
+                            <td className="tx-table-cell text-center w-10 font-bold" colSpan={readOnly ? 7 : 10}>Total</td>
+                            <td className="tx-table-cell  w-10 text-right pr-1" ></td>
 
                         </tr>
                     </tbody>

@@ -9,18 +9,18 @@ const TaxDetail = ({ items, taxTemplateId, discountType, discountValue, taxKey }
     return (
         <>{console.log(items,"items")}
             <tr className='border border-gray-500 text-xs'>
-                <td className='table-data'>
+                <td className='tx-table-cell'>
                     CGST@{parseFloat(taxKey)/2}%
                 </td>
-                <td className='table-data text-right'>
+                <td className='tx-table-cell text-right'>
                     {parseFloat(taxDetails.cgstAmount).toFixed(3)}
                 </td>
             </tr>
             <tr className='border border-gray-500 text-xs'>
-                <td className='table-data'>
+                <td className='tx-table-cell'>
                     SGST@{parseFloat(taxKey)/2}%
                 </td>
-                <td className='table-data text-right'>
+                <td className='tx-table-cell text-right'>
                     {parseFloat(taxDetails.sgstAmount).toFixed(3)}
                 </td>
             </tr>

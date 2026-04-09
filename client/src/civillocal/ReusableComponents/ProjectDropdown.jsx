@@ -10,7 +10,7 @@ const ProjectDropdown = ({ multiSelect = true, withoutLabel = true, readOnly, na
     return (
         <>
             {withoutLabel ?
-                <select value={selected} onChange={(e) => setSelected(e.target.value)} className='w-full table-data-input'>
+                <select value={selected} onChange={(e) => setSelected(e.target.value)} className='w-full tx-table-input'>
                     <option value="">Select</option>
                     {(projectList ? projectList.data : []).map(item =>
                         <option key={item.id} value={item.id}>{item.docId}</option>

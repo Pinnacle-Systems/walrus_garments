@@ -212,7 +212,7 @@ const StudentList = ({
 
                             <tr
                                 key={item.id}
-                                className="border-2 table-row "
+                                className="border-2 tx-table-row "
                             >
                                 <td
                                     className="border-2  top-0 stick-bg"
@@ -223,7 +223,7 @@ const StudentList = ({
                                     <select
                                         readOnly={readOnly}
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "itemTypeId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                         value={item.itemTypeId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "itemTypeId")}
                                     >
@@ -240,7 +240,7 @@ const StudentList = ({
                                     <select
                                         readOnly={readOnly}
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "itemId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                         value={item.itemId || ""}
                                         onChange={(e) => handleInputChange(e.target.value, index, "itemId")}
                                     >
@@ -271,7 +271,7 @@ const StudentList = ({
                                         {VIEW}
                                     </button>
                                     {/* <MultiSelect
-                                        className={`text-left w-full rounded  table-data-input`}
+                                        className={`text-left w-full rounded  tx-table-input`}
                                         options={multiSelectOption((classList?.data || []), 'name', 'id')}
                                         value={(item?.classIds || [])?.map((val) => ({ value: val?.classId, label: findFromList(val.classId, (classList?.data || []), "name") }))}
                                         onChange={(value) => { handleInputChange(value.map(i => ({ classId: i.value })), index, "classIds") }}
@@ -282,7 +282,7 @@ const StudentList = ({
                                     <select
                                         readOnly={readOnly}
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "gender") } }}
-                                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                         value={item.gender || ""}
                                         onChange={(e) => handleInputChange(e.target.value, index, "gender")}
                                     >
@@ -299,7 +299,7 @@ const StudentList = ({
                                     <select
                                         readOnly={readOnly}
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                         value={item.colorId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                     >
@@ -316,7 +316,7 @@ const StudentList = ({
                                     <select
                                         readOnly={readOnly}
                                       
-                                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                         value={item.bottomColorId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "bottomColorId")}
                                     >
@@ -334,7 +334,7 @@ const StudentList = ({
                                     <select
                                         readOnly={readOnly}
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                         value={item.sizeId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                                     >
@@ -351,7 +351,7 @@ const StudentList = ({
                                     <select
                                         readOnly={readOnly}
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "bottomSizeId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                         value={item.bottomSizeId || ""}
                                         onChange={(e) => handleInputChange(e.target.value, index, "bottomSizeId")}
                                     >

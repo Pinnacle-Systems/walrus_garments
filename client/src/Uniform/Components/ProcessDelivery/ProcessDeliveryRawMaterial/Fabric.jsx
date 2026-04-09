@@ -75,56 +75,56 @@ const Fabric = ({ rawMaterials, setRawMaterials, readOnly, getIssuedProperty, se
                 <table className="border border-gray-500 text-xs table-auto w-full">
                     <thead className='bg-blue-200 top-0'>
                         <tr className='h-8'>
-                            <th className=' table-data '>
+                            <th className=' tx-table-cell '>
                                 S.no
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 Fabric Name
                             </th>
-                            <th className=' table-data'>
+                            <th className=' tx-table-cell'>
                                 Color
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 Design
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 Gauge
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 LL
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 Gsm
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 K-Dia
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 F-Dia
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 Uom
                             </th>
-                            <th className='table-data  w-16'>
+                            <th className='tx-table-cell  w-16'>
                                 Lot No.
                             </th>
-                            <th className='table-data '>
+                            <th className='tx-table-cell '>
                                 Prev. Process
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 Stock Rolls
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 Stock qty
                             </th>
-                            <th className="table-data ">
+                            <th className="tx-table-cell ">
                                 No. of Rolls.
                             </th>
-                            <th className="table-data">
+                            <th className="tx-table-cell">
                                 Issue qty
                             </th>
                             {!readOnly &&
-                                <th className='table-data'>
+                                <th className='tx-table-cell'>
                                     <div onClick={() => setFillGrid(true)}
                                         className='hover:cursor-pointer py-2 flex items-center justify-center bg-green-600 text-white'>
                                         {PLUS}
@@ -135,55 +135,55 @@ const Fabric = ({ rawMaterials, setRawMaterials, readOnly, getIssuedProperty, se
                     </thead>
                     <tbody className='overflow-y-auto border border-gray-600 h-full w-full'>
                         {rawMaterials.map((item, index) => (
-                            <tr key={index} className="w-full table-row">
-                                <td className='text-left px-1 table-data shadow-xl '>
+                            <tr key={index} className="w-full tx-table-row">
+                                <td className='text-left px-1 tx-table-cell shadow-xl '>
                                     {index + 1}
                                 </td>
-                                <td className='text-left px-1 table-data shadow-xl'>
+                                <td className='text-left px-1 tx-table-cell shadow-xl'>
                                     {findFromList(item.fabricId, fabricList.data, "aliasName")}
                                 </td>
-                                <td className='text-left  table-data shadow-xl'>
+                                <td className='text-left  tx-table-cell shadow-xl'>
                                     {findFromList(item.colorId, colorList.data, "name")}
                                 </td>
-                                <td className='text-left px-1 table-data shadow-xl'>
+                                <td className='text-left px-1 tx-table-cell shadow-xl'>
                                     {findFromList(item.designId, designList.data, "name")}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {findFromList(item.gaugeId, gaugeList.data, "name")}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {findFromList(item.loopLengthId, loopLengthList.data, "name")}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {findFromList(item.gsmId, gsmList.data, "name")}
                                 </td>
-                                <td className='text-right px-1  table-data shadow-xl'>
+                                <td className='text-right px-1  tx-table-cell shadow-xl'>
                                     {findFromList(item.kDiaId, diaList.data, "name")}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {findFromList(item.fDiaId, diaList.data, "name")}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {findFromList(item.uomId, uomList.data, "name")}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     {item.lotNo}
                                 </td>
-                                <td className=' px-1 table-data shadow-xl '>
+                                <td className=' px-1 tx-table-cell shadow-xl '>
                                     {findFromList(item.processId, processList.data, "name")}
                                 </td>
-                                <td className='shadow-xl text-right table-data '>
+                                <td className='shadow-xl text-right tx-table-cell '>
                                     {item.stockRolls}
                                 </td>
-                                <td className='shadow-xl text-right table-data '>
+                                <td className='shadow-xl text-right tx-table-cell '>
                                     {parseFloat(item.stockQty).toFixed(3)}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input
                                         min={"0"}
                                         type="number"
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0", index, "noOfRolls") } }}
-                                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                                        className="text-right rounded py-1 px-1 w-full tx-table-input"
                                         value={(!item.noOfRolls) ? 0 : item.noOfRolls}
                                         disabled={readOnly}
                                         onChange={(e) => {
@@ -196,13 +196,13 @@ const Fabric = ({ rawMaterials, setRawMaterials, readOnly, getIssuedProperty, se
                                         }
                                     />
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input
                                         min={"0"}
                                         type="number"
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "qty") } }}
                                         onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                                        className="text-right rounded py-1 px-1 w-full tx-table-input"
                                         value={(!item.qty) ? 0 : item.qty}
                                         disabled={readOnly}
                                         onChange={(e) => {
@@ -219,7 +219,7 @@ const Fabric = ({ rawMaterials, setRawMaterials, readOnly, getIssuedProperty, se
                                     />
                                 </td>
                                 {!readOnly &&
-                                    <td className='table-data w-12'>
+                                    <td className='tx-table-cell w-12'>
                                         <div tabIndex={-1} onClick={() => removeItem(item)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
                                             {DELETE}
                                         </div>
@@ -229,32 +229,32 @@ const Fabric = ({ rawMaterials, setRawMaterials, readOnly, getIssuedProperty, se
                         ))}
                         {Array.from({ length: 2 - rawMaterials.length }).map(i =>
                             <tr className='w-full font-bold h-6 border-gray-400 border'>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                 </td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
                                 {!readOnly &&
-                                    <td className="table-data   "></td>
+                                    <td className="tx-table-cell   "></td>
                                 }
                             </tr>)
                         }
                         <tr className='bg-blue-200 w-full font-bold'>
-                            <td className="table-data  font-bold text-center" colSpan={14}>Total</td>
-                            <td className="table-data    text-right">{getTotals("noOfRolls")}</td>
-                            <td className="table-data    text-right">{getTotals("qty").toFixed(3)}</td>
+                            <td className="tx-table-cell  font-bold text-center" colSpan={14}>Total</td>
+                            <td className="tx-table-cell    text-right">{getTotals("noOfRolls")}</td>
+                            <td className="tx-table-cell    text-right">{getTotals("qty").toFixed(3)}</td>
                             {!readOnly &&
-                                <td className="table-data   "></td>
+                                <td className="tx-table-cell   "></td>
                             }
                         </tr>
                     </tbody>

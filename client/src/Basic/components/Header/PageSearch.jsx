@@ -145,19 +145,19 @@ const PageSearch = ({ pageList }) => {
     };
 
     return (
-        <div className='relative flex flex-col text-black z-10' ref={inputRef}>
+        <div className='relative z-10 flex flex-col text-black' ref={inputRef}>
 
             {/* Input */}
-            <div className='flex items-center text-[12px] border rounded-full relative mr-3'>
+            <div className='relative mr-3 flex h-9 items-center rounded-full border bg-white text-[12px]'>
                 <input
-                    className='px-2 py-1 w-60 text-[12px] rounded-full'
+                    className='h-full w-60 rounded-full bg-transparent px-3 pr-9 text-[12px] leading-none outline-none'
                     placeholder='Global Search...'
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onFocus={() => setIsListShow(true)}
                     onKeyDown={handleKeyDown} // ✅ KEY HERE
                 />
-                <div className='absolute right-2 text-neutral-500'>
+                <div className='pointer-events-none absolute right-3 flex h-4 w-4 items-center justify-center text-neutral-500'>
                     <Search size={15} />
                 </div>
             </div>

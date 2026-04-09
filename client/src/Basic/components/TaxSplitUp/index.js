@@ -11,37 +11,37 @@ const TaxDetail = ({ items, taxTemplateId, discountType, discountValue, taxKey, 
             {isSupplierOutside
                 ?
                 <tr className='border border-gray-500 text-xs '>
-                    <td className='table-data'>
+                    <td className='tx-table-cell'>
                         IGST
                     </td>
-                    <td className='table-data text-right'>
+                    <td className='tx-table-cell text-right'>
                         {parseFloat(taxKey)}%
                     </td>
-                    <td className='table-data text-right'>
+                    <td className='tx-table-cell text-right'>
                         {parseFloat(taxDetails.igstAmount).toFixed(2)}
                     </td>
                 </tr>
                 :
                 <>
                     <tr className='border border-gray-500 text-xs '>
-                        <td className='table-data'>
+                        <td className='tx-table-cell'>
                             CGST
                         </td>
-                        <td className='table-data text-right'>
+                        <td className='tx-table-cell text-right'>
                             {parseFloat(taxKey) / 2}%
                         </td>
-                        <td className='table-data text-right'>
+                        <td className='tx-table-cell text-right'>
                             {parseFloat(taxDetails.cgstAmount).toFixed(2)}
                         </td>
                     </tr>
                     <tr className='border border-gray-500 text-xs'>
-                        <td className='table-data'>
+                        <td className='tx-table-cell'>
                             SGST
                         </td>
-                        <td className='table-data text-right'>
+                        <td className='tx-table-cell text-right'>
                             {parseFloat(taxKey) / 2}%
                         </td>
-                        <td className='table-data text-right'>
+                        <td className='tx-table-cell text-right'>
                             {parseFloat(taxDetails.sgstAmount).toFixed(2)}
                         </td>
                     </tr>

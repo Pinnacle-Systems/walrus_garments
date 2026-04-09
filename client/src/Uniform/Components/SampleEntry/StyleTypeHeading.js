@@ -35,7 +35,7 @@ const StyleTypeHeading = ({ noOfSet, index, item, handleInputChange, readOnly, c
                     <select
                         readOnly={readOnly}
                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "itemTypeId") } }}
-                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                         value={item.itemTypeId}
                         onChange={(e) => handleInputChange(e.target.value, index, "itemTypeId")}
                     >

@@ -54,26 +54,26 @@ const ProductionDeliveryDetails = ({ isPacking, isIroning, isForStitchingCost, i
                             border-gray-600  max-h-[280px] overflow-auto'>
       <legend className='sub-heading'>Production Delivery Details</legend>
       <div className={`relative w-full overflow-y-auto p-1`}>
-        <table className="table-data border border-gray-500 text-xs table-auto w-full">
+        <table className="tx-table-cell border border-gray-500 text-xs table-auto w-full">
           <thead className='bg-gray-300 border border-gray-500 top-0'>
             <tr className='border border-gray-500'>
-              <th className="table-data w-2 text-center">S.no</th>
-              <th className="table-data w-48">Item</th>
+              <th className="tx-table-cell w-2 text-center">S.no</th>
+              <th className="tx-table-cell w-48">Item</th>
               {
                 !isStitching() &&
                 <th className="border border-gray-500 w-48">panel</th>
               }
 
-              <th className="table-data w-48">Colors</th>
-              <th className="table-data w-32">Size</th>
-              {/* <th className="table-data w-20">Uom</th> */}
-              <th className="table-data w-20">Stock Qty</th>
-              <th className="table-data w-20">Del. Qty</th>
+              <th className="tx-table-cell w-48">Colors</th>
+              <th className="tx-table-cell w-32">Size</th>
+              {/* <th className="tx-table-cell w-20">Uom</th> */}
+              <th className="tx-table-cell w-20">Stock Qty</th>
+              <th className="tx-table-cell w-20">Del. Qty</th>
               {
                 !(!isForStitchingCost() || !isPacking() || !isIroning()) &&
                 <>
-                  <th className="table-data w-20">Process Cost</th>
-                  <th className="table-data w-20">Amount</th>
+                  <th className="tx-table-cell w-20">Process Cost</th>
+                  <th className="tx-table-cell w-20">Amount</th>
                 </>
               }
 
@@ -94,41 +94,41 @@ const ProductionDeliveryDetails = ({ isPacking, isIroning, isForStitchingCost, i
               }
             </tr>
           </thead>
-          <tbody className='overflow-y-auto table-data h-full w-full'>{console.log(productionDeliveryDetails, "productionDeliveryDetails")}
+          <tbody className='overflow-y-auto tx-table-cell h-full w-full'>{console.log(productionDeliveryDetails, "productionDeliveryDetails")}
             {(productionDeliveryDetails || [])?.map((row, index) => (
-              <tr key={index} className="w-full table-row">
-                <td className='table-data'>{index + 1}</td>
-                <td className='table-data '>
+              <tr key={index} className="w-full tx-table-row">
+                <td className='tx-table-cell'>{index + 1}</td>
+                <td className='tx-table-cell '>
                   {/* {getStockItem(row, "itemName") || ""} */}
                   {findFromList(row?.itemId, itemList?.data, "name")}
                 </td>
                 {
                   !isStitching() &&
                   <>
-                    <td className='table-data '>
+                    <td className='tx-table-cell '>
 
                       {findFromList(row?.panelId, panelList?.data, "name")}
                     </td>
-                    <td className='table-data '>
+                    <td className='tx-table-cell '>
                       {/* {getStockItem(row, "colorName") || ""} */}
                       {findFromList(row?.panelColorId, colorList?.data, "name")}
                     </td>
                   </>
                 }
-                <td className='table-data '>
+                <td className='tx-table-cell '>
                   {/* {getStockItem(row, "colorName") || ""} */}
                   {findFromList(row?.colorId, colorList?.data, "name")}
                 </td>
-                <td className='table-data'>
+                <td className='tx-table-cell'>
                   {/* {getStockItem(row, "sizeName") || ""} */}
                   {findFromList(row?.sizeId, sizeList?.data, "name")}
                 </td>
 
-                <td className='table-data text-right'>
+                <td className='tx-table-cell text-right'>
                   {/* {getStockItem(row, "qty") || 0} */}
                   {row?.qty}
                 </td>
-                <td className='table-data'>
+                <td className='tx-table-cell'>
                   <input type="number"
                     onFocus={(e) => e.target.select()}
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.00", index, "delQty") } }}
@@ -141,7 +141,7 @@ const ProductionDeliveryDetails = ({ isPacking, isIroning, isForStitchingCost, i
                       }
                       handleInputChange(e.target.value, index, "delQty")
                     }}
-                    className="text-right rounded py-1 w-full px-1 table-data-input"
+                    className="text-right rounded py-1 w-full px-1 tx-table-input"
                     inputMode='decimal'
                     onBlur={(e) =>
                       handleInputChange(parseFloat(e.target.value).toFixed(2), index, "delQty")
@@ -150,24 +150,24 @@ const ProductionDeliveryDetails = ({ isPacking, isIroning, isForStitchingCost, i
                 {
                   !(!isForStitchingCost() || !isPacking() || !isIroning()) &&
                   <>
-                    <td className='table-data'>
+                    <td className='tx-table-cell'>
                       <input type="number"
                         onFocus={(e) => e.target.select()}
                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.00", index, "processCost") } }}
                         value={(!row.processCost) ? 0 : row.processCost}
                         onChange={(e) => { handleInputChange(e.target.value, index, "processCost") }}
-                        className="text-right rounded py-1 w-full px-1 table-data-input"
+                        className="text-right rounded py-1 w-full px-1 tx-table-input"
                         inputMode='decimal'
                         onBlur={(e) =>
                           handleInputChange(parseFloat(e.target.value).toFixed(2), index, "processCost")
                         } />
                     </td>
-                    <td className='table-data'>
+                    <td className='tx-table-cell'>
                       <input
                         type="number"
                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.00", index, "gross") } }}
                         onFocus={(e) => e.target.select()}
-                        className="text-right w-full rounded py-1  px-1 table-data-input"
+                        className="text-right w-full rounded py-1  px-1 tx-table-input"
                         value={(!row.delQty || !row.processCost) ? 0 : (parseFloat(row.delQty) * parseFloat(row.processCost)).toFixed(2)}
                         disabled={true}
                         onBlur={(e) =>
@@ -182,7 +182,7 @@ const ProductionDeliveryDetails = ({ isPacking, isIroning, isForStitchingCost, i
                   ?
                   ""
                   :
-                  <td className='table-data w-20'>
+                  <td className='tx-table-cell w-20'>
                     <div tabIndex={-1} onClick={() => handleDeleteRow(index)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer'>
                       {DELETE}
                     </div>

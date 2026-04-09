@@ -219,7 +219,7 @@ const AccessoryPoItemSelection = ({ poType, supplierId, isItemAdded, handleChang
                                                         ?.map((dataObj, index) => (
                                                             <tr
                                                                 key={dataObj.id}
-                                                                className="border-2 table-row text-xs "
+                                                                className="border-2 tx-table-row text-xs "
                                                                 onClick={() => handleChange(dataObj.id, dataObj?.accessoryId ? true : false)}
                                                             >
                                                                 <td className='py-1'>

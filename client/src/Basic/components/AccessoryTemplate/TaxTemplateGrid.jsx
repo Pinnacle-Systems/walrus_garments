@@ -96,10 +96,10 @@ const TaxTemplateGrid = ({ templateItems, setTemplateItems, readOnly, params, ac
                             <table className=" border border-gray-600 text-xs table-auto w-full">
                                 <thead className='bg-gray-100 top-0'>
                                     <tr>
-                                        <th className="table-data border border-gray-600 w-28">A Name</th>
-                                        <th className="table-data border border-gray-600 w-32">Display Name</th>
-                                        <th className="table-data border border-gray-600 ">Value</th>
-                                        <th className="table-data border border-gray-600">Amount</th>
+                                        <th className="tx-table-cell border border-gray-600 w-28">A Name</th>
+                                        <th className="tx-table-cell border border-gray-600 w-32">Display Name</th>
+                                        <th className="tx-table-cell border border-gray-600 ">Value</th>
+                                        <th className="tx-table-cell border border-gray-600">Amount</th>
                                         <th className={` ${readOnly ? "hidden" : "w-5"}`}>
                                             {readOnly ?
                                                 "" :
@@ -251,7 +251,7 @@ const TaxTemplateGrid = ({ templateItems, setTemplateItems, readOnly, params, ac
                                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryGroupId") } }}
-                                        disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryGroupId}
+                                        disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryGroupId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "accessoryGroupId")}
                                         onBlur={(e) => {
 
@@ -272,7 +272,7 @@ const TaxTemplateGrid = ({ templateItems, setTemplateItems, readOnly, params, ac
                                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryCategoryId") } }}
-                                        disabled={readOnly || !row.accessoryGroupId} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryCategoryId}
+                                        disabled={readOnly || !row.accessoryGroupId} className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryCategoryId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "accessoryCategoryId")}
                                         onBlur={(e) => {
 
@@ -293,7 +293,7 @@ const TaxTemplateGrid = ({ templateItems, setTemplateItems, readOnly, params, ac
                                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryId") } }}
-                                        disabled={readOnly || !row.accessoryCategoryId} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
+                                        disabled={readOnly || !row.accessoryCategoryId} className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "accessoryId")}
                                         onBlur={(e) => {
 
@@ -314,7 +314,7 @@ const TaxTemplateGrid = ({ templateItems, setTemplateItems, readOnly, params, ac
                                 {/* <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                        disabled={readOnly || !row.accessoryId} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                                        disabled={readOnly || !row.accessoryId} className='text-left w-full rounded py-1 tx-table-input' value={row.colorId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                         onBlur={(e) => {
 
@@ -335,7 +335,7 @@ const TaxTemplateGrid = ({ templateItems, setTemplateItems, readOnly, params, ac
                                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                        disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
+                                        disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 tx-table-input' value={row.sizeId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                                         onBlur={(e) => {
 
@@ -356,7 +356,7 @@ const TaxTemplateGrid = ({ templateItems, setTemplateItems, readOnly, params, ac
                                 {/* <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                        disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
+                                        disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 tx-table-input' value={row.uomId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                         onBlur={(e) => {
 

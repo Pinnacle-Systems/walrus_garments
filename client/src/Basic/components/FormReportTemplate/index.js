@@ -63,7 +63,7 @@ export default function FormReport({
                   <label className={`md:text-start flex `}>Expense </label>
                   <select
 
-                    className='text-left w-40 ml-1.5 rounded py-1 table-data-input border border-gray-400'
+                    className='text-left w-40 ml-1.5 rounded py-1 tx-table-input border border-gray-400'
                     value={formExpenseType}
                     onChange={(e) => setFormExpenseType(e.target.value)}
                   >
@@ -120,17 +120,17 @@ export default function FormReport({
                           <tbody className="border-2">{console.log(data, "data")}
                             {data?.map((dataObj, index) => (
                               <>
-                                <tr key={index} className="border-2 table-row" onClick={() => setId(dataObj.id)} >
+                                <tr key={index} className="border-2 tx-table-row" onClick={() => setId(dataObj.id)} >
 
-                                  <td key={index} className="table-data" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
+                                  <td key={index} className="tx-table-cell" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
                                     {dataObj?.expenseType}
                                   </td>
-                                  <td key={index} className="table-data" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
+                                  <td key={index} className="tx-table-cell" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
                                     {findTotalAmount(dataObj.id)}
                                   </td>
 
                                 </tr>
-                                <tr key={index} className="border-2 table-row" >
+                                <tr key={index} className="border-2 tx-table-row" >
 
                                 </tr>
 
@@ -155,9 +155,9 @@ export default function FormReport({
                           :
                           <tbody className="border-2">
                             {data?.map((dataObj, index) => (
-                              <tr key={index} className="border-2 table-row" onClick={() => setId(dataObj.id)} >
+                              <tr key={index} className="border-2 tx-table-row" onClick={() => setId(dataObj.id)} >
                                 {tableDataNames.map((data, index) => (
-                                  <td key={index} className="table-data" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
+                                  <td key={index} className="tx-table-cell" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
                                     {data === "dataObj?.userDate" ? moment.utc(dataObj?.userDate).format("DD-MM-YYYY") : eval(data)}
                                   </td>
                                 ))}
@@ -195,17 +195,17 @@ export default function FormReport({
                         <tbody className="border-2">
                           {data?.map((dataObj, index) => (
                             <>
-                              <tr key={index} className="border-2 table-row" onClick={() => setId(dataObj.id)} >
+                              <tr key={index} className="border-2 tx-table-row" onClick={() => setId(dataObj.id)} >
 
-                                <td key={index} className="table-data" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
+                                <td key={index} className="tx-table-cell" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
                                   {dataObj?.expenseType}
                                 </td>
-                                <td key={index} className="table-data" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
+                                <td key={index} className="tx-table-cell" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
                                   {findTotalAmount(dataObj.id)}
                                 </td>
 
                               </tr>
-                              <tr key={index} className="border-2 table-row" >
+                              <tr key={index} className="border-2 tx-table-row" >
 
                               </tr>
 
@@ -230,9 +230,9 @@ export default function FormReport({
                         :
                         <tbody className="border-2">
                           {data?.map((dataObj, index) => (
-                            <tr key={index} className="border-2 table-row" onClick={() => setId(dataObj.id)} >
+                            <tr key={index} className="border-2 tx-table-row" onClick={() => setId(dataObj.id)} >
                               {tableDataNames.map((data, index) => (
-                                <td key={index} className="table-data" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
+                                <td key={index} className="tx-table-cell" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
                                   {data === "dataObj?.userDate" ? moment.utc(dataObj?.userDate).format("DD-MM-YYYY") : eval(data)}
                                 </td>
                               ))}

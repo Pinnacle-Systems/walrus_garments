@@ -215,12 +215,12 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
                                 directInwardReturnItems={directInwardReturnItems} allData={allData}
                             />)}
                             {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - directInwardReturnItems?.length) }).map(i =>
-                                <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                                <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
                                     {Array.from({ length: 10 }).map(i =>
-                                        <td className="table-data   "></td>
+                                        <td className="tx-table-cell   "></td>
                                     )}
                                     {!readOnly &&
-                                        <td className="table-data w-10"></td>
+                                        <td className="tx-table-cell w-10"></td>
                                     }
                                 </tr>)
                             }

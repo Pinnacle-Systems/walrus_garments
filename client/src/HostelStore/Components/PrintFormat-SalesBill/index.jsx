@@ -46,20 +46,20 @@ export default function Form({ poBillItems, innerRef, date, name, contactMobile,
         <table className="print  text-xs table-auto  w-full ">
           <thead className='bg-blue-200 top-0'>
             <tr className='border-none bor'>
-              <th className=" table-data  w-2 text-center p-0.5">S.no</th>
+              <th className=" tx-table-cell  w-2 text-center p-0.5">S.no</th>
 
 
 
-              <th className=" table-data w-full text-left p-2">Product Name<span className="text-red-500 ">*</span></th>
+              <th className=" tx-table-cell w-full text-left p-2">Product Name<span className="text-red-500 ">*</span></th>
 
 
-              <th className="table-data  w-20 p-2">Qty<span className="text-red-500 p-0.5">*</span></th>
+              <th className="tx-table-cell  w-20 p-2">Qty<span className="text-red-500 p-0.5">*</span></th>
 
-              <th className="table-data  w-16 p-2">Rate<span className="text-red-500 p-0.5">*</span></th>
+              <th className="tx-table-cell  w-16 p-2">Rate<span className="text-red-500 p-0.5">*</span></th>
 
 
 
-              <th className="table-data  w-16 p-0.5">Amount</th>
+              <th className="tx-table-cell  w-16 p-0.5">Amount</th>
 
 
 
@@ -70,20 +70,20 @@ export default function Form({ poBillItems, innerRef, date, name, contactMobile,
 
 
             {(poBillItems ? poBillItems.filter(item => item?.Product?.name) : []).map((item, index) =>
-              <tr key={index} className="w-full table-row bor ">
-                <td className="table-data w-2 text-left px-1 py-3">
+              <tr key={index} className="w-full tx-table-row bor ">
+                <td className="tx-table-cell w-2 text-left px-1 py-3">
                   {index + 1}
                 </td>
-                <td className="table-data  text-left px-1 p-2">
+                <td className="tx-table-cell  text-left px-1 p-2">
                   {item?.Product?.name}
                 </td>
-                <td className="table-data  text-left px-1 p-2">
+                <td className="tx-table-cell  text-left px-1 p-2">
                   {item.qty}
                 </td>
-                <td className="table-data  text-left px-1 p-2">
+                <td className="tx-table-cell  text-left px-1 p-2">
                   {item.salePrice}
                 </td>
-                <td className="table-data  text-left px-1 p-2">
+                <td className="tx-table-cell  text-left px-1 p-2">
                   {item.salePrice * item.qty}
                 </td>
               </tr>
@@ -91,8 +91,8 @@ export default function Form({ poBillItems, innerRef, date, name, contactMobile,
 
             <tr className="border-b-2 border-dashed border-gray-600 "></tr>
             <tr className='bg-blue-200   font-bold bor '>
-              <td className="table-data text-center w-10 font-bold p-3" colSpan={4}>Total</td>
-              <td className="table-data   text-right pr-1">{getTotal("qty", "salePrice").toFixed(2)}</td>
+              <td className="tx-table-cell text-center w-10 font-bold p-3" colSpan={4}>Total</td>
+              <td className="tx-table-cell   text-right pr-1">{getTotal("qty", "salePrice").toFixed(2)}</td>
             </tr>
 
           </tbody>

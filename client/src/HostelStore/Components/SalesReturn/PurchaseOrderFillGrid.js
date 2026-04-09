@@ -177,7 +177,7 @@ const PurchaseOrderFillGrid = ({
                    
                     tabIndex={0}
                     key={dataObj.id}
-                    className="border-2 table-row cursor-pointer"
+                    className="border-2 tx-table-row cursor-pointer"
                     onClick={() => { setPurchaseOrderId(dataObj.id); setPurchaseOrderFillGrid(false); setPurchaseBillFillGrid(true); }}>
                     <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
                     <td className='py-1'> {dataObj.docId}</td>

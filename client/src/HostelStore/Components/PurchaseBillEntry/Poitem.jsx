@@ -24,15 +24,15 @@ const PoItem = ({ item, index, handleInputChange, id, readOnly }) => {
     }
     
     return (
-        <tr key={index} className="w-full table-row">
-        <td className="table-data w-2 text-left px-1 py-1">
+        <tr key={index} className="w-full tx-table-row">
+        <td className="tx-table-cell w-2 text-left px-1 py-1">
             {index + 1}
         </td>
     
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "productBrandId") } }}
-                    className='text-left w-full rounded py-1 table-data-input'
+                    className='text-left w-full rounded py-1 tx-table-input'
                     value={item.productBrandId}
                     onChange={(e) => handleInputChange(e.target.value, index, "productBrandId")}
                     onBlur={(e) => {
@@ -48,10 +48,10 @@ const PoItem = ({ item, index, handleInputChange, id, readOnly }) => {
                         </option>)}
                 </select>
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "productCategoryId") } }}
-                    className='text-left w-full rounded py-1 table-data-input'
+                    className='text-left w-full rounded py-1 tx-table-input'
                     value={item.productCategoryId}
                     onChange={(e) => handleInputChange(e.target.value, index, "productCategoryId")}
                     onBlur={(e) => {
@@ -68,11 +68,11 @@ const PoItem = ({ item, index, handleInputChange, id, readOnly }) => {
                 </select>
             </td>
             { productList? (
-    <td className='table-data'>
+    <td className='tx-table-cell'>
 
         <select
             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "productId") } }}
-            className='text-left w-full rounded py-1 table-data-input'
+            className='text-left w-full rounded py-1 tx-table-input'
             value={item.productId}
             onChange={(e) => handleInputChange(e.target.value, index, "productId")}
             onBlur={(e) => {
@@ -88,10 +88,10 @@ const PoItem = ({ item, index, handleInputChange, id, readOnly }) => {
         </select>
     </td>
 ):''}
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId"); setPrice() } }}
-                    className='text-left w-full rounded py-1 table-data-input'
+                    className='text-left w-full rounded py-1 tx-table-input'
                     value={item.uomId}
                     onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                     onBlur={(e) => {
@@ -108,10 +108,10 @@ const PoItem = ({ item, index, handleInputChange, id, readOnly }) => {
                             )}
                 </select>
             </td> 
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
-                    className="text-right rounded py-1 px-1 w-16 table-data-input"
+                    className="text-right rounded py-1 px-1 w-16 tx-table-input"
 
                     value={(!item.qty) ? 0 : item.qty}
                     disabled={readOnly}
@@ -124,10 +124,10 @@ const PoItem = ({ item, index, handleInputChange, id, readOnly }) => {
                     }
                 />
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
-                    className="text-right rounded py-1 px-1 w-16 table-data-input"
+                    className="text-right rounded py-1 px-1 w-16 tx-table-input"
                     value={item.price}
                     disabled={readOnly}
                     onChange={(e) =>
@@ -135,10 +135,10 @@ const PoItem = ({ item, index, handleInputChange, id, readOnly }) => {
                     }
                 />
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
-                    className="text-right rounded py-1 px-1 w-16 table-data-input"
+                    className="text-right rounded py-1 px-1 w-16 tx-table-input"
 
                     value={(!item.qty || !item.price) ? 0 : (parseFloat(item.qty) * parseFloat(item.price)).toFixed(2)}
                     disabled={readOnly}
@@ -170,17 +170,17 @@ export default PoItem
 //     const { data: productList } = useGetProductCategoryQuery({ params });
 
 //     return (
-//         <tr key={index} className="w-full table-row">
-//             <td className="table-data w-2 text-left px-1 py-1">
+//         <tr key={index} className="w-full tx-table-row">
+//             <td className="tx-table-cell w-2 text-left px-1 py-1">
 //                 {index + 1}
 //             </td>
          
 //             {/* Add the rest of your JSX elements here */}
 //             {/* For example, uncomment and modify the following lines as needed */}
-//             {/* <td className='table-data'>
+//             {/* <td className='tx-table-cell'>
 //                 <select
 //                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "productBrandId") } }}
-//                     className='text-left w-full rounded py-1 table-data-input'
+//                     className='text-left w-full rounded py-1 tx-table-input'
 //                     value={item.productBrandId}
 //                     onChange={(e) => handleInputChange(e.target.value, index, "productBrandId")}
 //                     onBlur={(e) => {

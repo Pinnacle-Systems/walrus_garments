@@ -223,12 +223,12 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                                             item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} storeId={storeId}
                                             readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
                                                 {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - directInwardReturnItems?.length) }).map(i =>
-                                                    <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                                                    <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
                                                         {Array.from({ length: 13 }).map(i =>
-                                                            <td className="table-data w-14  "></td>
+                                                            <td className="tx-table-cell w-14  "></td>
                                                         )}
                                                         {!readOnly &&
-                                                            <td className="table-data w-14"></td>
+                                                            <td className="tx-table-cell w-14"></td>
                                                         }
                                                     </tr>)
                 }       

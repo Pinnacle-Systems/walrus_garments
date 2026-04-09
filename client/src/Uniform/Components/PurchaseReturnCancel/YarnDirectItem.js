@@ -98,7 +98,7 @@ const YarnDirectItem = ({ itemList, uomList,
                                         if (e.key === "Delete") { handleInputChange("0.000", index, element?.[i]) }
                                     }}
 
-                                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                                    className="text-right rounded py-1 px-1 w-full tx-table-input"
                                     onFocus={(e) => e.target.select()}
                                     value={item[i]}
                                     disabled={true}
@@ -130,7 +130,7 @@ const YarnDirectItem = ({ itemList, uomList,
                     <input
                         type="number"
                         onFocus={(e) => e.target.select()}
-                        className="text-right rounded py-1 w-full px-1 table-data-input"
+                        className="text-right rounded py-1 w-full px-1 tx-table-input"
                         value={(!item.qty) ? "" : item.qty}
                         ref={index === 0 ? movedToNextSaveNewRef : null}
                         disabled={readOnly || !item.itemId}

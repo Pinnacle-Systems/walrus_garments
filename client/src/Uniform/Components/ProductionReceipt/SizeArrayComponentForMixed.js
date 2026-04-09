@@ -239,7 +239,7 @@ const SizeArrayComponentForMixed = ({ id, findReadOnly, markRead, value, valueIn
                                         <input
                                             type="number"
                                             onFocus={(e) => e.target.select()}
-                                            className="text-right rounded py-1 px-1 w-[55px] h-full  table-data-input"
+                                            className="text-right rounded py-1 px-1 w-[55px] h-full  tx-table-input"
 
                                             value={(!value.totalInwardQty) ? 0 : value.totalInwardQty}
 
@@ -296,7 +296,7 @@ const SizeArrayComponentForMixed = ({ id, findReadOnly, markRead, value, valueIn
                                         <input
                                             type="number"
                                             onFocus={(e) => e.target.select()}
-                                            className="text-right rounded py-1 px-1 w-[55px] h-full table-data-input"
+                                            className="text-right rounded py-1 px-1 w-[55px] h-full tx-table-input"
 
                                             value={(!value.maleInwardQty) ? 0 : value.maleInwardQty}
 
@@ -347,7 +347,7 @@ const SizeArrayComponentForMixed = ({ id, findReadOnly, markRead, value, valueIn
                                         <input
                                             type="number"
                                             onFocus={(e) => e.target.select()}
-                                            className="text-right rounded py-1 px-1 w-[55px] h-full table-data-input"
+                                            className="text-right rounded py-1 px-1 w-[55px] h-full tx-table-input"
 
                                             value={(!value.femaleInwardQty) ? 0 : value.femaleInwardQty}
 
@@ -391,7 +391,7 @@ const SizeArrayComponentForMixed = ({ id, findReadOnly, markRead, value, valueIn
                     <input
                         type="number"
                         onFocus={(e) => e.target.select()}
-                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        className="text-right rounded py-1 px-1 w-full tx-table-input"
 
                         value={(!value.maleInwardQty) ? 0 : value.maleInwardQty}
 
@@ -409,7 +409,7 @@ const SizeArrayComponentForMixed = ({ id, findReadOnly, markRead, value, valueIn
                     <input
                         type="number"
                         onFocus={(e) => e.target.select()}
-                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        className="text-right rounded py-1 px-1 w-full tx-table-input"
 
                         value={(!value.femaleInwardQty) ? 0 : value.femaleInwardQty}
 

@@ -252,7 +252,7 @@
 //                                     <td className="w-40 border border-gray-300 text-[11px] py-0.5">
 //                                         <select
 //                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-//                                             disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+//                                             disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
 //                                             onBlur={(e) => {
 //                                                 handleInputChange((e.target.value), index, "uomId")
 //                                             }
@@ -276,7 +276,7 @@
 //                                             // }}
 //                                             min={"0"}
 //                                             type="number"
-//                                             className="text-right rounded py-1 px-1 w-full table-data-input"
+//                                             className="text-right rounded py-1 px-1 w-full tx-table-input"
 //                                             onFocus={(e) => e.target.select()}
 //                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
 //                                             value={row?.qty || 0.00}
@@ -299,7 +299,7 @@
 //                                             // }}
 //                                             min={"0"}
 //                                             type="number"
-//                                             className="text-right rounded py-1 px-1 w-full table-data-input"
+//                                             className="text-right rounded py-1 px-1 w-full tx-table-input"
 //                                             onFocus={(e) => e.target.select()}
 //                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
 //                                             value={row?.price || 0}
@@ -316,7 +316,7 @@
 //                                     <td className="border border-gray-300 px-2 py-1 text-right text-xs">     <input
 //                                         type="number"
 //                                         onFocus={(e) => e.target.select()}
-//                                         className="text-right rounded py-1 w-16 px-1 table-data-input"
+//                                         className="text-right rounded py-1 w-16 px-1 tx-table-input"
 //                                         value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price)).toFixed(2)}
 //                                         disabled={true}
 //                                     /></td>

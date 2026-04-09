@@ -34,10 +34,10 @@ export default function BranchReport({companyId, onNew}) {
                 </thead>
                 <tbody className='border-2'>
                     {allData.data.map((dataObj, index) =>
-                        <tr key={index} className='border-2 table-row hover:bg-inherit'>
-                            <td className='table-data'>{dataObj.branchName}</td>
-                            <td className='table-data'>{dataObj.branchCode}</td>
-                            <td className='table-data'>{dataObj.active ? ACTIVE : INACTIVE}</td>
+                        <tr key={index} className='border-2 tx-table-row hover:bg-inherit'>
+                            <td className='tx-table-cell'>{dataObj.branchName}</td>
+                            <td className='tx-table-cell'>{dataObj.branchCode}</td>
+                            <td className='tx-table-cell'>{dataObj.active ? ACTIVE : INACTIVE}</td>
                         </tr>
                     )}
                 </tbody>

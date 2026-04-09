@@ -109,40 +109,40 @@ const Form = forwardRef(({
               <table className=" text-xs border  border-gray-500 table-auto w-full ">
                 <thead className=' border border-gray-500 top-0 bg-green-200'>
                   <tr className='h-8'>
-                    <th className="table-data text-center w-16">S.no</th>
-                    <th className="table-data ">Item</th>
-                    <th className="table-data ">Color</th>
-                    <th className="table-data  ">UOM</th>
-                    <th className="table-data  ">No. Of Bags</th>
-                    <th className="table-data  "> Qty</th>
-                    <th className="table-data  ">Rate</th>
-                    <th className="table-data  w-16">Tax(%)</th>
-                    <th className="table-data  w-16">Amount</th>
+                    <th className="tx-table-cell text-center w-16">S.no</th>
+                    <th className="tx-table-cell ">Item</th>
+                    <th className="tx-table-cell ">Color</th>
+                    <th className="tx-table-cell  ">UOM</th>
+                    <th className="tx-table-cell  ">No. Of Bags</th>
+                    <th className="tx-table-cell  "> Qty</th>
+                    <th className="tx-table-cell  ">Rate</th>
+                    <th className="tx-table-cell  w-16">Tax(%)</th>
+                    <th className="tx-table-cell  w-16">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {poItems.map((value, index) => (
                     <tr className='border  border-gray-500 w-full' key={index}>
-                      <td className='table-data text-center px-1'>{index + 1} </td>
+                      <td className='tx-table-cell text-center px-1'>{index + 1} </td>
 
-                      <td className='table-data  px-1 '>
+                      <td className='tx-table-cell  px-1 '>
                         {findFromList(value.yarnId,yarnList?.data,"name" )}
                       </td>
-                      <td className='table-data text-center px-1 '>
+                      <td className='tx-table-cell text-center px-1 '>
                         {findFromList(value.colorId,colorList?.data,"name" )}
                       </td>
-                      <td className='table-data text-center px-1  '>
+                      <td className='tx-table-cell text-center px-1  '>
                         {findFromList(value.uomId,uomList?.data,"name" )}
                       </td>
-                      <td className='table-data text-right px-1 '>{parseFloat(value.noOfBags).toFixed(3)}</td>
-                      <td className='table-data text-right px-1 '>{parseFloat(value.qty).toFixed(3)}</td>
-                      <td className='table-data text-right px-1 '>{parseFloat(value.price).toFixed(3)}</td>
-                      <td className='table-data text-right px-1 '>{parseFloat(value.taxPercent).toFixed(3)}</td>
-                      <td className='table-data text-right px-1  '>{parseFloat(parseFloat(value.qty) * parseFloat(value.price)).toFixed(3)}</td>
+                      <td className='tx-table-cell text-right px-1 '>{parseFloat(value.noOfBags).toFixed(3)}</td>
+                      <td className='tx-table-cell text-right px-1 '>{parseFloat(value.qty).toFixed(3)}</td>
+                      <td className='tx-table-cell text-right px-1 '>{parseFloat(value.price).toFixed(3)}</td>
+                      <td className='tx-table-cell text-right px-1 '>{parseFloat(value.taxPercent).toFixed(3)}</td>
+                      <td className='tx-table-cell text-right px-1  '>{parseFloat(parseFloat(value.qty) * parseFloat(value.price)).toFixed(3)}</td>
                     </tr>
                   ))}
                   <tr className='border  border-gray-500'>
-                    <th className='table-data text-center px-1  font-bold text-xs' colSpan={8}>TOTAL</th>
+                    <th className='tx-table-cell text-center px-1  font-bold text-xs' colSpan={8}>TOTAL</th>
                     <td className='px-1 h-8  text-right'>{parseFloat(taxDetails.taxableAmount).toFixed(2)}</td>
                   </tr>
                 </tbody>
@@ -154,18 +154,18 @@ const Form = forwardRef(({
                   <tr className='border border-gray-500 '><th className='p-2 bg-green-200 text-xs' colSpan={2}>Tax Details</th></tr>
                   <TaxDetails items={poItems} taxTemplateId={taxTemplateId} discountType={discountType} discountValue={discountValue} />
                   <tr className='border border-gray-500 text-xs '>
-                    <td className='table-data p-1'>
+                    <td className='tx-table-cell p-1'>
                       ROUNDOFF
                     </td>
-                    <td className='table-data text-right p-1'>
+                    <td className='tx-table-cell text-right p-1'>
                       {parseFloat(taxDetails?.roundOffAmount).toFixed(3)}
                     </td>
                   </tr>
                   <tr className='border border-gray-500 text-xs'>
-                    <td className='table-data p-1 bg-green-200 text-xs'>
+                    <td className='tx-table-cell p-1 bg-green-200 text-xs'>
                       NET AMOUNT
                     </td>
-                    <td className='table-data p-1 text-xs text-right' >
+                    <td className='tx-table-cell p-1 text-xs text-right' >
                       {parseFloat(taxDetails?.netAmount).toFixed(3)}
                     </td>
                   </tr>

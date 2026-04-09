@@ -292,10 +292,10 @@ export default function Form() {
                           </tr>
                           <tr className=''>
 
-                            <th className="table-data py-2">PURCHASE.PRICE<span className="text-red-500 p-0.5">*</span></th>
-                            <th className="table-data  py-2">Economy %</th>
-                            <th className="table-data  py-2">Standard %</th>
-                            <th className="table-data  py-2">Premium %</th>
+                            <th className="tx-table-cell py-2">PURCHASE.PRICE<span className="text-red-500 p-0.5">*</span></th>
+                            <th className="tx-table-cell  py-2">Economy %</th>
+                            <th className="tx-table-cell  py-2">Standard %</th>
+                            <th className="tx-table-cell  py-2">Premium %</th>
 
                           </tr>
                         </thead>
@@ -303,13 +303,13 @@ export default function Form() {
 
 
 
-                          <tr className="w-full table-row">
+                          <tr className="w-full tx-table-row">
 
 
-                            <td className='table-data'>
+                            <td className='tx-table-cell'>
                               <input
                                 type="number"
-                                className="text-right rounded py-2 px-1 w-full table-data-input"
+                                className="text-right rounded py-2 px-1 w-full tx-table-input"
 
                                 value={price ? price : 0}
 
@@ -319,10 +319,10 @@ export default function Form() {
                                 }
                               />
                             </td>
-                            <td className='table-data'>
+                            <td className='tx-table-cell'>
                               <input
                                 type="text"
-                                className="text-right rounded py-2 px-1 w-full table-data-input"
+                                className="text-right rounded py-2 px-1 w-full tx-table-input"
 
                                 value={lowPrice ? lowPrice : ""}
                                 disabled={readOnly}
@@ -333,10 +333,10 @@ export default function Form() {
 
                               />
                             </td>
-                            <td className='table-data'>
+                            <td className='tx-table-cell'>
                               <input
                                 type="text"
-                                className="text-right rounded py-2 px-1 w-full table-data-input"
+                                className="text-right rounded py-2 px-1 w-full tx-table-input"
 
                                 value={mediumPrice ? mediumPrice : ""}
                                 disabled={readOnly}
@@ -351,10 +351,10 @@ export default function Form() {
 
 
 
-                            <td className='table-data'>
+                            <td className='tx-table-cell'>
                               <input
                                 type="text"
-                                className="text-right rounded py-2 px-1 w-full table-data-input"
+                                className="text-right rounded py-2 px-1 w-full tx-table-input"
 
                                 value={highPrice ? highPrice : ""}
                                 disabled={readOnly}

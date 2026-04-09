@@ -173,7 +173,7 @@ const ProcessDeliveryFormReport = ({
             {allData.data.map((dataObj, index) => (
               <tr
                 key={index}
-                className="border-2 table-row "
+                className="border-2 tx-table-row "
                 onClick={() => onClick(dataObj.id)}>
                 <td className='py-1'> {(index + 1) + (dataPerPage * (currentPageNumber - 1))}</td>
                 <td className='py-1'>{dataObj.docId}</td>

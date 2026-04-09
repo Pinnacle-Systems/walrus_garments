@@ -92,23 +92,23 @@ const PoBillItems = ({ id, readOnly, setPoBillItems, poBillItems, date, readonly
                 <table className=" border border-gray-500 text-xs table-auto  w-full">
                     <thead className='bg-blue-200 top-0 border-b border-gray-500'>
                         <tr className=''>
-                            <th className="table-data  w-2 text-center p-0.5">S.no</th>
-                            <th className="table-data ">Product Brand<span className="text-red-500 p-0.5">*</span></th>
-                            <th className="table-data ">Product Category<span className="text-red-500 p-0.5">*</span></th>
+                            <th className="tx-table-cell  w-2 text-center p-0.5">S.no</th>
+                            <th className="tx-table-cell ">Product Brand<span className="text-red-500 p-0.5">*</span></th>
+                            <th className="tx-table-cell ">Product Category<span className="text-red-500 p-0.5">*</span></th>
 
 
-                            <th className="table-data ">Product Name<span className="text-red-500 p-5">*</span></th>
+                            <th className="tx-table-cell ">Product Name<span className="text-red-500 p-5">*</span></th>
 
 
-                            <th className="table-data ">UOM type<span className="text-red-500 p-5">*</span></th>
-                            <th className="table-data  w-16">SalesPrice<span className="text-red-500 p-0.5">*</span></th>
-                            <th className="table-data  w-20">Stock.Qty</th>
+                            <th className="tx-table-cell ">UOM type<span className="text-red-500 p-5">*</span></th>
+                            <th className="tx-table-cell  w-16">SalesPrice<span className="text-red-500 p-0.5">*</span></th>
+                            <th className="tx-table-cell  w-20">Stock.Qty</th>
 
-                            <th className="table-data  w-20">Qty<span className="text-red-500 p-0.5">*</span></th>
+                            <th className="tx-table-cell  w-20">Qty<span className="text-red-500 p-0.5">*</span></th>
 
-                            <th className="table-data  w-16 p-0.5">Amount</th>
+                            <th className="tx-table-cell  w-16 p-0.5">Amount</th>
                             {!readOnly &&
-                                <th className="table-data  w-16 p-0.5" >  <button className='text-2xl' onClick={addNewRow}>+</button></th>
+                                <th className="tx-table-cell  w-16 p-0.5" >  <button className='text-2xl' onClick={addNewRow}>+</button></th>
                             }
                         </tr>
                     </thead>
@@ -117,11 +117,11 @@ const PoBillItems = ({ id, readOnly, setPoBillItems, poBillItems, date, readonly
 
                         {(poBillItems ? poBillItems : []).map((item, index) =>
 
-                            <tr key={index} className="w-full table-row">
-                                <td className="table-data w-2 text-left px-1 py-1">
+                            <tr key={index} className="w-full tx-table-row">
+                                <td className="tx-table-cell w-2 text-left px-1 py-1">
                                     {index + 1}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <DropdownWithSearch value={item.productBrandId}
                                         readOnly={readOnly}
                                         setValue={(value) => handleInputChange(value, index, "productBrandId")}
@@ -129,24 +129,24 @@ const PoBillItems = ({ id, readOnly, setPoBillItems, poBillItems, date, readonly
                                             (id ? productBrandList?.data : productBrandList?.data.filter(i => i?.active))
                                         ) : []} />
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <DropdownWithSearch value={item.productCategoryId}
                                         readOnly={readOnly}
 
                                         setValue={(value) => handleInputChange(value, index, "productCategoryId")} options={(productCategoryList?.data ? (id ? productCategoryList?.data : productCategoryList?.data.filter(i => i?.active)) : [])} />
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <DropdownWithSearch value={item.productId}
                                         readOnly={readOnly}
 
                                         setValue={(value) => handleInputChange(value, index, "productId")}
                                         options={productList.data.filter(value => parseInt(value.productBrandId) === parseInt(item.productBrandId) && parseInt(value.productCategoryId) === parseInt(item.productCategoryId)).filter(item => item?.active)} />
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <select
                                         disabled={readOnly}
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input'
+                                        className='text-left w-full rounded py-1 tx-table-input'
                                         value={item.uomId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                         onBlur={(e) => {
@@ -190,8 +190,8 @@ const PoBillItems = ({ id, readOnly, setPoBillItems, poBillItems, date, readonly
                             </tr>
                         )}
                         <tr className='bg-blue-200 w-full border border-gray-400 h-7 font-bold'>
-                            <td className="table-data text-center w-10 font-bold" colSpan={8}>Total</td>
-                            <td className="table-data  w-10 text-right pr-1">{getTotal("qty", "salePrice").toFixed(2)}</td>
+                            <td className="tx-table-cell text-center w-10 font-bold" colSpan={8}>Total</td>
+                            <td className="tx-table-cell  w-10 text-right pr-1">{getTotal("qty", "salePrice").toFixed(2)}</td>
                         </tr>
 
                     </tbody>

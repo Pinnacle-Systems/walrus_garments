@@ -171,7 +171,7 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
     let count = 1;
 
     return (
-        <div className='table-data bg-gray-200'>
+        <div className='tx-table-cell bg-gray-200'>
             <div className="md:flex md:items-center md:justify-between page-heading p-1">
                 <div className="heading text-center md:mx-10 text-xs"> Store Items</div>
                 <div className=" sub-heading justify-center md:justify-start items-center">
@@ -191,61 +191,61 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
                                 checked={getSelectAll()}
                             />
                         </th>
-                        <th className=' w-8  table-data  '>
+                        <th className=' w-8  tx-table-cell  '>
                             S.no
                         </th>
-                        <th className='w-24 table-data  '>
+                        <th className='w-24 tx-table-cell  '>
                             Fabric
                         </th>
-                        <th className='w-16 table-data  '>
+                        <th className='w-16 tx-table-cell  '>
                             Color
                         </th>
-                        <th className='w-16  table-data '>
+                        <th className='w-16  tx-table-cell '>
                             Design
                         </th>
-                        <th className='w-12  table-data '>
+                        <th className='w-12  tx-table-cell '>
                             Gauge
                         </th>
-                        <th className='w-12 table-data  '>
+                        <th className='w-12 tx-table-cell  '>
                             LL
                         </th>
-                        <th className='w-12  table-data '>
+                        <th className='w-12  tx-table-cell '>
                             Gsm
                         </th>
-                        <th className='w-12 table-data  '>
+                        <th className='w-12 tx-table-cell  '>
                             K-Dia
                         </th>
-                        <th className='w-12  table-data '>
+                        <th className='w-12  tx-table-cell '>
                             F-Dia
                         </th>
-                        <th className='w-12 table-data  '>
+                        <th className='w-12 tx-table-cell  '>
                             Uom
                         </th>
-                        <th className='table-data  w-16'>
+                        <th className='tx-table-cell  w-16'>
                             Prev. Process
                         </th>
-                        <th className='table-data  w-16'>
+                        <th className='tx-table-cell  w-16'>
                             Stock Rolls
                         </th>
-                        <th className='table-data  w-16'>
+                        <th className='tx-table-cell  w-16'>
                             Stock qty
                         </th>
 
                     </tr>
                 </thead>
                 <tbody>
-                    <tr className='sticky top-5 table-row'>
-                        <td className='table-data  shadow-xl'>
+                    <tr className='sticky top-5 tx-table-row'>
+                        <td className='tx-table-cell  shadow-xl'>
                         </td>
-                        <td className='table-data shadow-xl'>
+                        <td className='tx-table-cell shadow-xl'>
                         </td>
-                        <td className='   table-data  shadow-xl'>
+                        <td className='   tx-table-cell  shadow-xl'>
                             <input className='w-full p-2' type="text" onFocus={(e) => e.target.select()}
                                 onChange={(e) => {
                                     setSearchFabricAliasName(e.target.value);
                                 }} />
                         </td>
-                        <td className=' table-data  shadow-xl'>
+                        <td className=' tx-table-cell  shadow-xl'>
                             <input className='w-full p-2' type="text"
                                 onFocus={(e) => e.target.select()}
                                 onChange={(e) => {
@@ -253,7 +253,7 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
                                 }}
                             />
                         </td>
-                        <td className='  table-data  shadow-xl'>
+                        <td className='  tx-table-cell  shadow-xl'>
                             <input className='w-full p-2' type="text"
                                 onFocus={(e) => e.target.select()}
                                 onChange={(e) => {
@@ -261,7 +261,7 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
                                 }}
                             />
                         </td>
-                        <td className='  table-data  shadow-xl'>
+                        <td className='  tx-table-cell  shadow-xl'>
                             <input className='w-full p-2' type="text"
                                 onFocus={(e) => e.target.select()}
                                 onChange={(e) => {
@@ -269,7 +269,7 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
                                 }}
                             />
                         </td>
-                        <td className='  table-data  shadow-xl'>
+                        <td className='  tx-table-cell  shadow-xl'>
                             <input className='w-full p-2' type="text"
                                 onFocus={(e) => e.target.select()}
                                 onChange={(e) => {
@@ -277,7 +277,7 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
                                 }}
                             />
                         </td>
-                        <td className='  table-data  shadow-xl'>
+                        <td className='  tx-table-cell  shadow-xl'>
                             <input className='w-full p-2' type="text"
                                 onFocus={(e) => e.target.select()}
                                 onChange={(e) => {
@@ -285,7 +285,7 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
                                 }}
                             />
                         </td>
-                        <td className='  table-data  shadow-xl'>
+                        <td className='  tx-table-cell  shadow-xl'>
                             <input className='w-full p-2' type="text"
                                 onFocus={(e) => e.target.select()}
                                 onChange={(e) => {
@@ -293,7 +293,7 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
                                 }}
                             />
                         </td>
-                        <td className='  table-data  shadow-xl'>
+                        <td className='  tx-table-cell  shadow-xl'>
                             <input className='w-full p-2' type="text"
                                 onFocus={(e) => e.target.select()}
                                 onChange={(e) => {
@@ -301,7 +301,7 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
                                 }}
                             />
                         </td>
-                        <td className='  table-data  shadow-xl'>
+                        <td className='  tx-table-cell  shadow-xl'>
                             <input className='w-full p-2' type="text"
                                 onFocus={(e) => e.target.select()}
                                 onChange={(e) => {
@@ -309,12 +309,12 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
                                 }}
                             />
                         </td>
-                        <td className='  table-data  shadow-xl'>
+                        <td className='  tx-table-cell  shadow-xl'>
                         </td>
 
                     </tr>
                     {(stockData?.data ? stockData.data : []).map((item, index) =>
-                        <tr key={index} className='py-2 table-row'
+                        <tr key={index} className='py-2 tx-table-row'
                             onClick={() => {
                                 handleCheckBoxChange(!isItemChecked(item), {
                                     ...item,
@@ -323,64 +323,64 @@ const FabricStockFillGrid = ({ setLocalRawMaterials, getIssuedProperty, rawMater
                                 })
                             }}
                         >
-                            <td className=' p-1  table-data  shadow-xl'>
-                                <input type="checkbox" className='w-full table-data-input'
+                            <td className=' p-1  tx-table-cell  shadow-xl'>
+                                <input type="checkbox" className='w-full tx-table-input'
                                     checked={isItemChecked(item)} />
                             </td>
-                            <td className='  table-data   shadow-xl'>
+                            <td className='  tx-table-cell   shadow-xl'>
                                 {count++}
                             </td>
-                            <td className='  table-data   shadow-xl'>
+                            <td className='  tx-table-cell   shadow-xl'>
                                 {findFromList(item.fabricId, fabricList.data, "aliasName")}
                             </td>
-                            <td className='  table-data   shadow-xl'>
+                            <td className='  tx-table-cell   shadow-xl'>
                                 {findFromList(item.colorId, colorList.data, "name")}
                             </td>
-                            <td className='   table-data  shadow-xl'>
+                            <td className='   tx-table-cell  shadow-xl'>
                                 {findFromList(item.designId, designList.data, "name")}
                             </td>
-                            <td className='   table-data  shadow-xl'>
+                            <td className='   tx-table-cell  shadow-xl'>
                                 {findFromList(item.gaugeId, gaugeList.data, "name")}
                             </td>
-                            <td className='  table-data   shadow-xl'>
+                            <td className='  tx-table-cell   shadow-xl'>
                                 {findFromList(item.loopLengthId, loopList.data, "name")}
                             </td>
-                            <td className='  table-data   shadow-xl'>
+                            <td className='  tx-table-cell   shadow-xl'>
                                 {findFromList(item.gsmId, gsmList.data, "name")}
                             </td>
-                            <td className='   table-data  shadow-xl'>
+                            <td className='   tx-table-cell  shadow-xl'>
                                 {findFromList(item.kDiaId, diaList.data, "name")}
                             </td>
-                            <td className='  table-data   shadow-xl'>
+                            <td className='  tx-table-cell   shadow-xl'>
                                 {findFromList(item.fDiaId, diaList.data, "name")}
                             </td>
-                            <td className='  table-data   shadow-xl'>
+                            <td className='  tx-table-cell   shadow-xl'>
                                 {findFromList(item.uomId, uomList.data, "name")}
                             </td>
-                            <td className=' px-1 table-data shadow-xl '>
+                            <td className=' px-1 tx-table-cell shadow-xl '>
                                 {findFromList(item.processId, processList.data, "name")}
                             </td>
-                            <td className=' table-data  text-right'>
+                            <td className=' tx-table-cell  text-right'>
                                 {substract(item._sum.noOfRolls, getIssuedProperty(item, "noOfRolls"))}
                             </td>
-                            <td className=' table-data  text-right'>
+                            <td className=' tx-table-cell  text-right'>
                                 {substract(item._sum.qty, getIssuedProperty(item, "qty")).toFixed(3)}
                             </td>
                         </tr>
                     )
                     }
                     <tr className='bg-blue-200 w-full font-bold'>
-                        <td className="table-data   w-10"></td>
-                        <td className="table-data   w-10"></td>
-                        <td className="table-data   w-10"></td>
-                        <td className="table-data   w-10"></td>
-                        <td className="table-data   w-10"></td>
-                        <td className="table-data   w-10"></td>
-                        <td className="table-data   w-10"></td>
-                        <td className="table-data   w-10"></td>
-                        <td className="table-data   w-10"></td>
-                        <td className="table-data   w-10"></td>
-                        <td className="table-data   w-10 font-bold">Total</td>
+                        <td className="tx-table-cell   w-10"></td>
+                        <td className="tx-table-cell   w-10"></td>
+                        <td className="tx-table-cell   w-10"></td>
+                        <td className="tx-table-cell   w-10"></td>
+                        <td className="tx-table-cell   w-10"></td>
+                        <td className="tx-table-cell   w-10"></td>
+                        <td className="tx-table-cell   w-10"></td>
+                        <td className="tx-table-cell   w-10"></td>
+                        <td className="tx-table-cell   w-10"></td>
+                        <td className="tx-table-cell   w-10"></td>
+                        <td className="tx-table-cell   w-10 font-bold">Total</td>
                     </tr>
                 </tbody>
             </table>

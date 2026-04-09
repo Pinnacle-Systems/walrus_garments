@@ -77,12 +77,12 @@ const ProductionReceiptDetailItemForMixed = ({ id, item, index, groupData, setGr
 
 
     return (
-        <tr key={index} className='py-2 table-row'>{console.log(productionReceiptDetails, "productionreceipt")}
-            <td className='table-data   '>
+        <tr key={index} className='py-2 tx-table-row'>{console.log(productionReceiptDetails, "productionreceipt")}
+            <td className='tx-table-cell   '>
                 {index + 1}
             </td>
 
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {/* {findFromList(item?.classId, classList?.data, "name")} */}
                 {
                     item?.items?.filter(
@@ -97,7 +97,7 @@ const ProductionReceiptDetailItemForMixed = ({ id, item, index, groupData, setGr
 
 
 
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {
                     item?.items?.filter(
                         (obj, index, self) => index === self.findIndex((t) => t.sizeId === obj.sizeId)
@@ -110,7 +110,7 @@ const ProductionReceiptDetailItemForMixed = ({ id, item, index, groupData, setGr
 
 
 
-            {/* <td className='  table-data text-right px-1'>
+            {/* <td className='  tx-table-cell text-right px-1'>
 
 
 
@@ -120,7 +120,7 @@ const ProductionReceiptDetailItemForMixed = ({ id, item, index, groupData, setGr
             </td>
 
 
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
 
                 {id ? 0 : item?.items?.reduce((accumulation, currentValue) => {
                     return (parseFloat(accumulation) + parseFloat(currentValue?.femaleInwardQty ? currentValue?.femaleInwardQty : 0))
@@ -129,7 +129,7 @@ const ProductionReceiptDetailItemForMixed = ({ id, item, index, groupData, setGr
 
 
             </td> */}
-            <td className='  table-data text-right'>
+            <td className='  tx-table-cell text-right'>
                 {id ? getReceivedQty(item) : (parseFloat(item?.items?.reduce((accumulation, currentValue) => {
                     return (parseFloat(accumulation) + parseFloat(currentValue?.maleInwardQty ? currentValue?.maleInwardQty : 0))
                 }, 0) || 0) + parseFloat(item?.items?.reduce((accumulation, currentValue) => {
@@ -139,14 +139,14 @@ const ProductionReceiptDetailItemForMixed = ({ id, item, index, groupData, setGr
                 }, 0)}
             </td>
 
-            <td className='table-data text-right px-1'>{item?.box}
+            <td className='tx-table-cell text-right px-1'>{item?.box}
 
             </td>
 
 
             {!readOnly
                 &&
-                <td className='table-data '>
+                <td className='tx-table-cell '>
                     <button className='w-full' onClick={() => deleteItem(item?.box)}>
                         {DELETE}
                     </button>

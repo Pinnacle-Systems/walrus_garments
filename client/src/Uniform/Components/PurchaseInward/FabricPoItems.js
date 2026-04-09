@@ -191,25 +191,25 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                             <table className="border border-gray-500 text-xs table-fixed w-full">
                                 <thead className='bg-gray-300 top-0 border border-gray-500'>
                                     <tr>
-                                        <th className="table-data w-10 text-center">S.no</th>
-                                        <th className="table-data ">Items<span className="text-red-500">*</span></th>
-                                        <th className="table-data ">Colors<span className="text-red-500">*</span></th>
-                                        <th className="table-data ">Design<span className="text-red-500">*</span></th>
-                                        <th className="table-data  w-20">Gauge<span className="text-red-500">*</span></th>
-                                        <th className="table-data  w-20">LL<span className="text-red-500">*</span></th>
-                                        <th className="table-data  w-20">GSM<span className="text-red-500">*</span></th>
-                                        <th className="table-data  w-20">K Dia<span className="text-red-500">*</span></th>
-                                        <th className="table-data  w-20">F Dia<span className="text-red-500">*</span></th>
-                                        <th className="table-data  w-20">UOM<span className="text-red-500">*</span></th>
-                                        <th className="table-data  w-10">Lot Det.<span className="text-red-500">*</span></th>
-                                        <th className="table-data  w-16">No. Of Rolls<span className="text-red-500">*</span></th>
-                                        <th className="table-data  w-16">Quantity<span className="text-red-500">*</span></th>
-                                        <th className="table-data  w-16">Price<span className="text-red-500">*</span></th>
-                                        {/* <th className="table-data  w-16">Price(with Tax)<span className="text-red-500">*</span></th> */}
-                                        <th className="table-data  w-16">Gross</th>
-                                        <th className="table-data  w-16">Tax</th>
+                                        <th className="tx-table-cell w-10 text-center">S.no</th>
+                                        <th className="tx-table-cell ">Items<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell ">Colors<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell ">Design<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell  w-20">Gauge<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell  w-20">LL<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell  w-20">GSM<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell  w-20">K Dia<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell  w-20">F Dia<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell  w-20">UOM<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell  w-10">Lot Det.<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell  w-16">No. Of Rolls<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell  w-16">Quantity<span className="text-red-500">*</span></th>
+                                        <th className="tx-table-cell  w-16">Price<span className="text-red-500">*</span></th>
+                                        {/* <th className="tx-table-cell  w-16">Price(with Tax)<span className="text-red-500">*</span></th> */}
+                                        <th className="tx-table-cell  w-16">Gross</th>
+                                        <th className="tx-table-cell  w-16">Tax</th>
 
-                                        {/* <th className="table-data  w-16">View Tax</th> */}
+                                        {/* <th className="tx-table-cell  w-16">View Tax</th> */}
                                         {readOnly ?
                                             "" :
                                             <th className='w-20  bg-green-600 text-white'>
@@ -223,11 +223,11 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                 </thead>
                                 <tbody className='overflow-y-auto  h-full w-full'>
                                     {poItems.map((row, index) => (
-                                        <tr key={index} className="w-full table-row">
-                                            <td className="table-data  text-left px-1">
+                                        <tr key={index} className="w-full tx-table-row">
+                                            <td className="tx-table-cell  text-left px-1">
                                                 {index + 1}
                                             </td>
-                                            <td className='table-data text-left px-1'>
+                                            <td className='tx-table-cell text-left px-1'>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "fabricId") } }}
                                                     onBlur={(e) => {
@@ -235,7 +235,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                         handleInputChange(e.target.value, index, "fabricId")
                                                     }
                                                     }
-                                                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.fabricId}
+                                                    disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.fabricId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "fabricId")}>
                                                     <option hidden>
                                                     </option>
@@ -246,10 +246,10 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     )}
                                                 </select>
                                             </td>
-                                            <td className='table-data text-left px-1'>
+                                            <td className='tx-table-cell text-left px-1'>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                                                    disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.colorId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                                     onBlur={(e) => {
                                                         handleInputChange(e.target.value, index, "colorId")
@@ -265,7 +265,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     )}
                                                 </select>
                                             </td>
-                                            <td className='table-data text-left px-1'>
+                                            <td className='tx-table-cell text-left px-1'>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "designId") } }}
                                                     onBlur={(e) => {
@@ -274,7 +274,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
 
                                                     }
                                                     }
-                                                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.designId}
+                                                    disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.designId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "designId")}>
                                                     <option hidden>
                                                     </option>
@@ -285,7 +285,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     )}
                                                 </select>
                                             </td>
-                                            <td className='table-data text-right px-1'>
+                                            <td className='tx-table-cell text-right px-1'>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "gaugeId") } }}
                                                     onBlur={(e) => {
@@ -294,7 +294,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
 
                                                     }
                                                     }
-                                                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.gaugeId}
+                                                    disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.gaugeId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "gaugeId")}>
                                                     <option hidden>
                                                     </option>
@@ -305,10 +305,10 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     )}
                                                 </select>
                                             </td>
-                                            <td className='table-data text-right px-1'>
+                                            <td className='tx-table-cell text-right px-1'>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "loopLengthId") } }}
-                                                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.loopLengthId}
+                                                    disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.loopLengthId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "loopLengthId")}
                                                     onBlur={(e) => {
 
@@ -326,10 +326,10 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     )}
                                                 </select>
                                             </td>
-                                            <td className='table-data text-right px-1'>
+                                            <td className='tx-table-cell text-right px-1'>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "gsmId") } }}
-                                                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.gsmId}
+                                                    disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.gsmId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "gsmId")}
                                                     onBlur={(e) => {
 
@@ -347,7 +347,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     )}
                                                 </select>
                                             </td>
-                                            <td className='table-data text-right px-1'>
+                                            <td className='tx-table-cell text-right px-1'>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "kDiaId") } }}
                                                     onBlur={(e) => {
@@ -356,7 +356,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
 
                                                     }
                                                     }
-                                                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.kDiaId} onChange={(e) => handleInputChange(e.target.value, index, "kDiaId")}>
+                                                    disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.kDiaId} onChange={(e) => handleInputChange(e.target.value, index, "kDiaId")}>
                                                     <option hidden>
                                                     </option>
                                                     {(id ? diaList.data : diaList.data.filter(item => item.active)?.filter(val => val.kDia)).map((blend) =>
@@ -366,7 +366,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     )}
                                                 </select>
                                             </td>
-                                            <td className='table-data text-right px-1'>
+                                            <td className='tx-table-cell text-right px-1'>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "fDiaId") } }}
                                                     onBlur={(e) => {
@@ -375,7 +375,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
 
                                                     }
                                                     }
-                                                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.fDiaId}
+                                                    disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.fDiaId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "fDiaId")}>
                                                     <option hidden>
                                                     </option>
@@ -386,12 +386,12 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     )}
                                                 </select>
                                             </td>
-                                            <td className='table-data text-left px-1'>
+                                            <td className='tx-table-cell text-left px-1'>
                                                 <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
 
 
-                                                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                                                    disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                                     onBlur={(e) => {
 
                                                         handleInputChange(e.target.value, index, "uomId")
@@ -408,12 +408,12 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     )}
                                                 </select>
                                             </td>
-                                            <td className='text-center table-data'>
+                                            <td className='text-center tx-table-cell'>
                                                 <button onClick={() => setCurrentSelectedLotGrid(index)} className='w-full'>
                                                     {VIEW}
                                                 </button>
                                             </td>
-                                            <td className='table-data '>
+                                            <td className='tx-table-cell '>
                                                 <input
                                                     type="number"
                                                     onKeyDown={e => {
@@ -422,7 +422,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     }}
                                                     min={"0"}
                                                     onFocus={(e) => e.target.select()}
-                                                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                    className="text-right rounded py-1 px-1 w-full tx-table-input"
                                                     // value={sumArray(row?.inwardLotDetails ? row?.inwardLotDetails : [], "noOfRolls")}
                                                     value={row?.noOfRolls ? row?.noOfRolls : 0}
                                                     disabled={true}
@@ -438,7 +438,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     }
                                                 />
                                             </td>
-                                            <td className='table-data '>
+                                            <td className='tx-table-cell '>
                                                 <input
                                                     type="number"
                                                     onKeyDown={e => {
@@ -447,7 +447,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     }}
                                                     min={"0"}
                                                     onFocus={(e) => e.target.select()}
-                                                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                    className="text-right rounded py-1 px-1 w-full tx-table-input"
                                                     // value={sumArray(row?.inwardLotDetails ? row?.inwardLotDetails : [], "qty")}
                                                     value={row?.qty ? row?.qty : 0}
 
@@ -461,7 +461,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     }
                                                 />
                                             </td>
-                                            <td className='table-data '>
+                                            <td className='tx-table-cell '>
                                                 <input
                                                     onKeyDown={e => {
                                                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -470,7 +470,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     min={"0"}
                                                     type="number"
                                                     onFocus={(e) => e.target.select()}
-                                                    className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                                    className="text-right rounded py-1 px-1 w-16 tx-table-input"
                                                     value={(!row.price) ? 0 : row.price}
                                                     disabled={readOnly}
                                                     onChange={(e) =>
@@ -484,18 +484,18 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     }
                                                 />
                                             </td>
-                                            {/* <td className='table-data text-right px-1 '>
+                                            {/* <td className='tx-table-cell text-right px-1 '>
                                                 {priceWithTax(row.price, row.taxPercent).toFixed(2)}
                                             </td> */}
-                                            <td className='table-data '>
+                                            <td className='tx-table-cell '>
                                                 <input
-                                                    className="text-right  rounded py-1 px-1 w-16 table-data-input"
+                                                    className="text-right  rounded py-1 px-1 w-16 tx-table-input"
                                                     value={(!row.price || !row.price) ? 0 : (parseFloat(sumArray(row?.inwardLotDetails ? row?.inwardLotDetails : [], "qty")) * parseFloat(row.price)).toFixed(2)}
                                                     disabled={true}
                                                     onFocus={(e) => e.target.select()}
                                                 />
                                             </td>
-                                            <td className='table-data '>
+                                            <td className='tx-table-cell '>
                                                 <input
                                                     type="number"
                                                     onKeyDown={e => {
@@ -504,7 +504,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     }}
                                                     min={"0"}
                                                     onFocus={(e) => e.target.select()}
-                                                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                    className="text-right rounded py-1 px-1 w-full tx-table-input"
                                                     value={(!row.taxPercent) ? 0 : row.taxPercent}
                                                     disabled={readOnly || Boolean(row?.alreadyInwardedData?._sum?.tax)}
                                                     onChange={(e) =>
@@ -519,7 +519,7 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                                     }
                                                 />
                                             </td>
-                                            {/* <td className='table-data text-right px-1 w-16 table-data-input'>
+                                            {/* <td className='tx-table-cell text-right px-1 w-16 tx-table-input'>
                                                 <button
                                                     className="text-center rounded py-1 w-full"
                                                     onKeyDown={(e) => {
@@ -549,16 +549,16 @@ const FabricPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, i
                                         </tr>
                                     ))}
                                     <tr className='bg-gray-300 w-full border border-gray-400 h-7 font-bold'>
-                                        <td className="table-data text-center w-10 font-bold" colSpan={10}>Total</td>
-                                        <td className="table-data  w-10"></td>
-                                        <td className="table-data   w-10"></td>
-                                        <td className="table-data text-right px-1 w-10">{getTotals("qty").toFixed(3)}</td>
-                                        <td className="table-data   w-10"></td>
-                                        <td className="table-data text-right px-1  w-10">{getGross("qty", "price").toFixed(2)} </td>
-                                        <td className="table-data   w-10"></td>
+                                        <td className="tx-table-cell text-center w-10 font-bold" colSpan={10}>Total</td>
+                                        <td className="tx-table-cell  w-10"></td>
+                                        <td className="tx-table-cell   w-10"></td>
+                                        <td className="tx-table-cell text-right px-1 w-10">{getTotals("qty").toFixed(3)}</td>
+                                        <td className="tx-table-cell   w-10"></td>
+                                        <td className="tx-table-cell text-right px-1  w-10">{getGross("qty", "price").toFixed(2)} </td>
+                                        <td className="tx-table-cell   w-10"></td>
 
                                         {!readOnly &&
-                                            <td className="table-data w-10"></td>
+                                            <td className="tx-table-cell w-10"></td>
                                         }
                                     </tr>
                                 </tbody>

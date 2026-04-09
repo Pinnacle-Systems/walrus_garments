@@ -73,7 +73,7 @@ const ClassWiseQty = ({ setClassGridOpen, params, readOnly, setCurrentSelectedIn
                                         <select
                                             readOnly={readOnly}
                                             onKeyDown={e => { if (e.key === "Delete") { handleClassQty("", itemIndex, "classId") } }}
-                                            className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                            className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                             value={item.classId}
                                             onChange={(e) => handleClassQty(e.target.value, itemIndex, "classId")}
                                         >
@@ -92,7 +92,7 @@ const ClassWiseQty = ({ setClassGridOpen, params, readOnly, setCurrentSelectedIn
                                         <select
                                             readOnly={readOnly}
                                             onKeyDown={e => { if (e.key === "Delete") { handleClassQty("", itemIndex, "sizeId") } }}
-                                            className='text-left text-xs h-full w-full rounded py-2 px-2 table-data-input border border-gray-400'
+                                            className='text-left text-xs h-full w-full rounded py-2 px-2 tx-table-input border border-gray-400'
                                             value={item.sizeId}
                                             onChange={(e) => handleClassQty(e.target.value, itemIndex, "sizeId")}
                                         >

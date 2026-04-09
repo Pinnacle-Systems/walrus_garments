@@ -63,10 +63,10 @@ const TaxTemplateGrid = ({ taxTemplateItems, setTaxTemplateItems, readOnly, para
                             <table className=" border border-gray-600 text-xs table-auto w-full">
                                 <thead className='bg-gray-100 top-0'>
                                     <tr>
-                                        <th className="table-data border border-gray-600 w-28">Tax Name</th>
-                                        <th className="table-data border border-gray-600 w-32">Display Name</th>
-                                        <th className="table-data border border-gray-600 ">Value</th>
-                                        <th className="table-data border border-gray-600">Amount</th>
+                                        <th className="tx-table-cell border border-gray-600 w-28">Tax Name</th>
+                                        <th className="tx-table-cell border border-gray-600 w-32">Display Name</th>
+                                        <th className="tx-table-cell border border-gray-600 ">Value</th>
+                                        <th className="tx-table-cell border border-gray-600">Amount</th>
                                         <th className={` ${readOnly ? "hidden" : "w-5"}`}>
                                             {readOnly ?
                                                 "" :

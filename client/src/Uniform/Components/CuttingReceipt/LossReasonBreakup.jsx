@@ -67,11 +67,11 @@ const LossReasonBreakup = ({ currentIndex, setCurrentSelectedIndex, cuttingRecei
                 </thead>
                 <tbody>
                     {(currentConsumption?.lossDetails ? currentConsumption?.lossDetails : []).map((item, lotIndex) =>
-                        <tr className='table-row' key={lotIndex}>
-                            <td className='text-center table-data '>
+                        <tr className='tx-table-row' key={lotIndex}>
+                            <td className='text-center tx-table-cell '>
                                 <select
                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", lotIndex, "uomId") } }}
-                                    disabled={readOnly} className='text-left rounded py-1 table-data-input'
+                                    disabled={readOnly} className='text-left rounded py-1 tx-table-input'
                                     value={item.lossReasonId} onChange={(e) => handleInputChange(e.target.value, lotIndex, "lossReasonId")}
                                     onBlur={(e) => {
                                         handleInputChange((e.target.value), lotIndex, "lossReasonId")
@@ -87,7 +87,7 @@ const LossReasonBreakup = ({ currentIndex, setCurrentSelectedIndex, cuttingRecei
                                     )}
                                 </select>
                             </td>
-                            <td className='text-center table-data'>
+                            <td className='text-center tx-table-cell'>
                                 <input
                                     onKeyDown={e => {
                                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -96,7 +96,7 @@ const LossReasonBreakup = ({ currentIndex, setCurrentSelectedIndex, cuttingRecei
                                     }}
                                     min={"0"}
                                     type="number"
-                                    className="text-right rounded py-1   w-full table-data-input"
+                                    className="text-right rounded py-1   w-full tx-table-input"
                                     value={item.lossQty}
                                     disabled={readOnly}
                                     onChange={(event) => {
@@ -115,7 +115,7 @@ const LossReasonBreakup = ({ currentIndex, setCurrentSelectedIndex, cuttingRecei
                                 />
                             </td>
                             {!readOnly &&
-                                <th className='table-data text-center'>
+                                <th className='tx-table-cell text-center'>
                                     <Delete onClick={() => { removeLotNo(lotIndex) }} />
                                 </th>
                             }

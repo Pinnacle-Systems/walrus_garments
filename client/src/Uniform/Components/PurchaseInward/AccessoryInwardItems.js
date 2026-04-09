@@ -103,36 +103,36 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                 <table className="border border-gray-500 text-xs table-auto w-full  ">
                     <thead className='bg-gray-300 border border-gray-500 top-0'>
                         <tr className='h-8 '>
-                            <th className="table-data w-5  text-center">S.no</th>
-                            <th className="table-data  w-16 text-center">Po.no</th>
-                            <th className="table-data  ">Accessory Name</th>
-                            <th className="table-data  ">Accessory Items</th>
-                            <th className="table-data  ">Accessory Group</th>
-                            <th className="table-data  ">Colors</th>
-                            <th className="table-data  ">Size</th>
-                            <th className="table-data   ">UOM</th>
-                            <th className="table-data  w-14">Po. Qty</th>
-                            <th className="table-data  w-14"> Can. Qty</th>
-                            <th className="table-data  w-14"> A. In Qty</th>
-                            <th className="table-data  w-14"> A. Return Qty</th>
-                            <th className="table-data  w-14">Bal. Qty</th>
-                            <th className="table-data  w-14">In. Qty</th>
-                            <th className="table-data  w-14">Po Price</th>
-                            <th className="table-data  w-14">Gross</th>
+                            <th className="tx-table-cell w-5  text-center">S.no</th>
+                            <th className="tx-table-cell  w-16 text-center">Po.no</th>
+                            <th className="tx-table-cell  ">Accessory Name</th>
+                            <th className="tx-table-cell  ">Accessory Items</th>
+                            <th className="tx-table-cell  ">Accessory Group</th>
+                            <th className="tx-table-cell  ">Colors</th>
+                            <th className="tx-table-cell  ">Size</th>
+                            <th className="tx-table-cell   ">UOM</th>
+                            <th className="tx-table-cell  w-14">Po. Qty</th>
+                            <th className="tx-table-cell  w-14"> Can. Qty</th>
+                            <th className="tx-table-cell  w-14"> A. In Qty</th>
+                            <th className="tx-table-cell  w-14"> A. Return Qty</th>
+                            <th className="tx-table-cell  w-14">Bal. Qty</th>
+                            <th className="tx-table-cell  w-14">In. Qty</th>
+                            <th className="tx-table-cell  w-14">Po Price</th>
+                            <th className="tx-table-cell  w-14">Gross</th>
                             {!readOnly &&
-                                <th className='table-data border  w-12'>Delete</th>
+                                <th className='tx-table-cell border  w-12'>Delete</th>
                             }
                         </tr>
                     </thead>
                     <tbody className='overflow-y-auto  h-full w-full'>{console.log(inwardItems,"InwardItems")}
                         {inwardItems?.map((item, index) => <AccessoryPoItem uomList={uomList} sizeList={sizeList} accessoryList={accessoryList} colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} removeItem={removeItem} readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
                         {Array.from({ length: 1 - inwardItems?.length }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                            <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
                                 {Array.from({ length: 16 }).map(i =>
-                                    <td className="table-data   "></td>
+                                    <td className="tx-table-cell   "></td>
                                 )}
                                 {!readOnly &&
-                                    <td className="table-data w-14"></td>
+                                    <td className="tx-table-cell w-14"></td>
                                 }
                             </tr>)
                         }
@@ -280,12 +280,12 @@ const AccessoryInwardItems = ({ inwardItems, setInwardItems, readOnly, removeIte
                                             {inwardItems?.map((item, index) => <AccessoryPoItem uomList={uomList} sizeList={sizeList} accessoryList={accessoryList} colorList={colorList} item={item} purchaseInwardId={purchaseInwardId} deleteRow={deleteRow} 
                                             readOnly={readOnly} key={item.poItemsId} index={index} handleInputChange={handleInputChange} />)}
                                                 {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - inwardItems?.length) }).map(i =>
-                                                    <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                                                    <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
                                                         {Array.from({ length: 15 }).map(i =>
-                                                            <td className="table-data   "></td>
+                                                            <td className="tx-table-cell   "></td>
                                                         )}
                                                         {!readOnly &&
-                                                            <td className="table-data w-14"></td>
+                                                            <td className="tx-table-cell w-14"></td>
                                                         }
                                                     </tr>)
                 }       

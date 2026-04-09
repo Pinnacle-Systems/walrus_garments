@@ -151,76 +151,76 @@ const FabricInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, 
                 <table className={transactionTableClassName}>
                     <thead className={transactionTableHeadClassName}>
                         <tr className='h-8'>
-                            <th className='text-center w-8 table-data '>
+                            <th className='text-center w-8 tx-table-cell '>
                                 S.no
                             </th>
-                            <th className='text-center w-24 table-data'>
+                            <th className='text-center w-24 tx-table-cell'>
                                 Po.no
                             </th>
-                            <th className='w-24 table-data'>
+                            <th className='w-24 tx-table-cell'>
                                 Fabric Name
                             </th>
-                            <th className='w-16 table-data'>
+                            <th className='w-16 tx-table-cell'>
                                 Color
                             </th>
-                            <th className='w-16 table-data'>
+                            <th className='w-16 tx-table-cell'>
                                 Design
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 Gauge
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 LL
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 Gsm
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 K-Dia
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 F-Dia
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 Uom
                             </th>
-                            {/* <th className='w-12 table-data'>
+                            {/* <th className='w-12 tx-table-cell'>
                                 Stock Rolls
                             </th> */}
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 Stock qty
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 A. Inwarded Rolls
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 A. Inwarded qty
                             </th>
-                            <th className="table-data w-14">
+                            <th className="tx-table-cell w-14">
                                 A. Return Rolls
                             </th>
-                            <th className="table-data w-14">
+                            <th className="tx-table-cell w-14">
                                 A. Return Qty
                             </th>
-                            {/* <th className='table-data'>
+                            {/* <th className='tx-table-cell'>
                                 Allowed Return Rolls
                             </th> */}
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 Allowed Return Qty
                             </th>
-                            <th className="table-data  w-10">Lot Det.<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">No. of Rolls<span className="text-red-500">*</span></th>
-                            <th className='table-data w-16'>
+                            <th className="tx-table-cell  w-10">Lot Det.<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">No. of Rolls<span className="text-red-500">*</span></th>
+                            <th className='tx-table-cell w-16'>
                                 Return Qty
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 Price
                             </th>
-                            <th className='w-16 table-data'>
+                            <th className='w-16 tx-table-cell'>
                                 Gross
                             </th>
                             {!readOnly &&
-                                <th className='table-data table-data w-12'>Delete</th>
+                                <th className='tx-table-cell tx-table-cell w-12'>Delete</th>
                             }
                         </tr>
                     </thead>
@@ -233,34 +233,34 @@ const FabricInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, 
                             item={item} handleInputChangeLotNo={handleInputChangeLotNo} stockId={item.stockId} noOfRolls={item.noOfRolls} removeItem={removeItem} key={item.poItemsId}
                             qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
                         {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - inwardItems.length) }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                <td className='table-data'>
+                            <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
+                                <td className='tx-table-cell'>
                                 </td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
 
 
-                                <td className="table-data   "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
                                 {!readOnly &&
-                                    <td className="table-data w-10"></td>
+                                    <td className="tx-table-cell w-10"></td>
                                 }
                             </tr>)
                         }

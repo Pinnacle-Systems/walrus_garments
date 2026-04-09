@@ -63,92 +63,92 @@ const CuttingDeliveryFabricConsumptionFillGrid = ({ id, cuttingReceiptFabricCons
                 <table className=" text-xs table-fixed w-full">
                     <thead className='bg-blue-200 top-0'>
                         <tr>
-                            <th className="table-data w-10"></th>
-                            <th className="table-data w-10">S.no</th>
-                            <th className="table-data  w-32">Doc Id<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-32">Fabric<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-32">Color<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Design<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Gauge<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">LL<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">GSM<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">K Dia<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">F Dia<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">UOM<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Del. Qty<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">A. Used Qty<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Bal. Qty<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell w-10"></th>
+                            <th className="tx-table-cell w-10">S.no</th>
+                            <th className="tx-table-cell  w-32">Doc Id<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-32">Fabric<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-32">Color<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">Design<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">Gauge<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">LL<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">GSM<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">K Dia<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">F Dia<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">UOM<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">Del. Qty<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">A. Used Qty<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">Bal. Qty<span className="text-red-500">*</span></th>
                         </tr>
                     </thead>
                     <tbody className='overflow-y-auto  h-full w-full'>{console.log(cuttingReceiptFabricConsumptionFillData, "cuttingReceiptFabricConsumptionFillData")}
                         {cuttingReceiptFabricConsumptionFillData.filter((row) => substract(row.delQty, row?.alreadyUsedQty ? row?.alreadyUsedQty : 0) > 0).map((row, index) => {
-                            return <tr key={index} className="w-full table-row" onClick={() => { handleChangeInwardProgramDetails(row.id, row) }} >
-                                <td className="table-data  text-center p-0.5">
+                            return <tr key={index} className="w-full tx-table-row" onClick={() => { handleChangeInwardProgramDetails(row.id, row) }} >
+                                <td className="tx-table-cell  text-center p-0.5">
                                     <input type='checkbox' checked={isItemSelected(row.id)} />
                                 </td>
-                                <td className="table-data  ">
+                                <td className="tx-table-cell  ">
                                     {index + 1}
                                 </td>
-                                <td className='text-left px-1 table-data shadow-xl '>
+                                <td className='text-left px-1 tx-table-cell shadow-xl '>
                                     {row.docId}
                                 </td>
-                                <td className='text-left px-1 table-data shadow-xl'>
+                                <td className='text-left px-1 tx-table-cell shadow-xl'>
                                     {row.Fabric.name}
                                 </td>
-                                <td className='text-left  table-data shadow-xl'>
+                                <td className='text-left  tx-table-cell shadow-xl'>
                                     {row.Color.name}
                                 </td>
-                                <td className='text-left px-1 table-data shadow-xl'>
+                                <td className='text-left px-1 tx-table-cell shadow-xl'>
                                     {row.Design.name}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {row.Gauge.name}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {row.LoopLength.name}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {row.Gsm.name}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {row.KDia.name}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {row.FDia.name}
                                 </td>
-                                <td className='text-right px-1 table-data shadow-xl'>
+                                <td className='text-right px-1 tx-table-cell shadow-xl'>
                                     {row.Uom.name}
                                 </td>
-                                <td className='table-data text-right'>
+                                <td className='tx-table-cell text-right'>
                                     {(row.delQty) ? row.delQty : 0}
                                 </td>
-                                <td className='text-right table-data'>
+                                <td className='text-right tx-table-cell'>
                                     {row.alreadyUsedQty}
                                 </td>
-                                <td className='text-right table-data'>
+                                <td className='text-right tx-table-cell'>
                                     {substract(row.delQty, row?.alreadyUsedQty ? row?.alreadyUsedQty : 0).toFixed(3)}
                                 </td>
                             </tr>
                         }
                         )}
                         {Array.from({ length: 5 - cuttingReceiptFabricConsumptionFillData.length }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                <td className='table-data'>
+                            <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
+                                <td className='tx-table-cell'>
                                 </td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data  "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data    "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell  "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell    "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
                             </tr>)
                         }
                     </tbody>

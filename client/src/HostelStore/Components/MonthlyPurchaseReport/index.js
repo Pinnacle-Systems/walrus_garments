@@ -135,7 +135,7 @@ const MonthlyPurchase = () => {
               {(filterData()?.filter(item => partyList.find(i => parseInt(i.value) === parseInt(item.supplierId)))).map((dataObj, index) => (
 
                 <tr
-                  className={` table-row`}
+                  className={` tx-table-row`}
                 >
                   <td className='py-1 border border-gray-700'> {(index + 1)} </td>
                   <td className='py-1 text-left border border-gray-700 px-2'> {getDateFromDateTimeToDisplay(dataObj?.createdAt)}</td>
@@ -224,7 +224,7 @@ const MonthlyPurchase = () => {
                   </thead>
                   <tbody>
                     {purchaseList.map((data, i) =>
-                      <tr key={i} className='py-2 w-full table-row'>
+                      <tr key={i} className='py-2 w-full tx-table-row'>
                         <td className='text-center border border-gray-500'>{i+1}</td>
                         {Object.keys(data).map((heading, i) =>
                         <> 

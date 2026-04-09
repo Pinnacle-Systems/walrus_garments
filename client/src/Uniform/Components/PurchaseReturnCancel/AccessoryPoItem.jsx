@@ -41,21 +41,21 @@ console.log(index,"index")
     // if (isLoading || isFetching) return <Loader />
 
     return (
-        // <tr key={item.poItemsId} className='table-row'>
-        //     <td className='text-left   table-data'>{index + 1}</td>
-        //     <td className='text-left px-1 table-data'>{item?.poNo}</td>
-        //     <td className='text-left px-1 table-data'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
-        //     <td className='text-left   table-data'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
-        //     <td className='text-left   table-data'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
-        //     <td className='text-left px-1 table-data'>{findFromList(item.colorId, colorList?.data, "name")} </td>
-        //     <td className='text-left px-1 table-data'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
-        //     <td className='text-left px-1 table-data'>{findFromList(item.uomId, uomList?.data, "name")} </td>
-        //     <td className='text-right px-1  table-data'>{item?.poQty || 0}</td>
-        //     <td className='text-right px-1  table-data'>{item?.cancelQty || 0}</td>
-        //     <td className='text-right px-1  table-data'>{item?.alreadyInwardedQty || 0}</td>
-        //     <td className='text-right px-1  table-data'>{item?.alreadyReturnedQty || 0}</td>
-        //     <td className='text-right px-1  table-data'>{item?.allowedReturnQty || item?.balanceQty}</td>
-        //     <td className='   table-data text-right'>
+        // <tr key={item.poItemsId} className='tx-table-row'>
+        //     <td className='text-left   tx-table-cell'>{index + 1}</td>
+        //     <td className='text-left px-1 tx-table-cell'>{item?.poNo}</td>
+        //     <td className='text-left px-1 tx-table-cell'>{findFromList(item.accessoryId, accessoryList?.data, "aliasName")} </td>
+        //     <td className='text-left   tx-table-cell'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryItem")}</td>
+        //     <td className='text-left   tx-table-cell'>{findAccessoryName(item.accessoryId, accessoryList?.data, "accessoryGroup")}</td>
+        //     <td className='text-left px-1 tx-table-cell'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+        //     <td className='text-left px-1 tx-table-cell'>{findFromList(item.sizeId, sizeList?.data, "name")} </td>
+        //     <td className='text-left px-1 tx-table-cell'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+        //     <td className='text-right px-1  tx-table-cell'>{item?.poQty || 0}</td>
+        //     <td className='text-right px-1  tx-table-cell'>{item?.cancelQty || 0}</td>
+        //     <td className='text-right px-1  tx-table-cell'>{item?.alreadyInwardedQty || 0}</td>
+        //     <td className='text-right px-1  tx-table-cell'>{item?.alreadyReturnedQty || 0}</td>
+        //     <td className='text-right px-1  tx-table-cell'>{item?.allowedReturnQty || item?.balanceQty}</td>
+        //     <td className='   tx-table-cell text-right'>
         //         <input
         //             onKeyDown={e => {
         //                 if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -63,7 +63,7 @@ console.log(index,"index")
         //             }}
         //             min={"0"}
         //             type="number"
-        //             className="text-right rounded   w-full py-1 table-data-input"
+        //             className="text-right rounded   w-full py-1 tx-table-input"
         //             autoFocus={index === 0}
         //             value={item.qty}
         //             disabled={readOnly}
@@ -85,10 +85,10 @@ console.log(index,"index")
         //             }}
         //         />
         //     </td>
-        //     <td className='text-right  w-12 table-data'>{parseFloat(item?.price).toFixed(2)}</td>
-        //     <td className='text-right   table-data'>{!item.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item.qty : "0.000")).toFixed(2)}</td>
+        //     <td className='text-right  w-12 tx-table-cell'>{parseFloat(item?.price).toFixed(2)}</td>
+        //     <td className='text-right   tx-table-cell'>{!item.qty ? "0.000" : (parseFloat(item?.price) * parseFloat(item.qty ? item.qty : "0.000")).toFixed(2)}</td>
         //     {!readOnly &&
-        //         <td className='table-data w-12'>
+        //         <td className='tx-table-cell w-12'>
         //             <div tabIndex={-1} onClick={() => removeItem(item.poItemsId)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
         //                 {DELETE}
         //             </div>
@@ -110,7 +110,7 @@ console.log(index,"index")
          {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
                     <input
                         type="number"
-                        className="text-right rounded py-1  px-1 w-full table-data-input"
+                        className="text-right rounded py-1  px-1 w-full tx-table-input"
                         // value={sumArray(item?.lotDetails ? item?.lotDetails : [], "noOfRolls")}
                         value={item?.noOfBags ? item?.noOfBags : 0}
                         // disabled={true}
@@ -142,7 +142,7 @@ console.log(index,"index")
                                 type="number"
                                 onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "weightPerBag") } }}
                                 onFocus={(e) => e.target.select()}
-                                className="text-right rounded py-1 w-full px-1 table-data-input"
+                                className="text-right rounded py-1 w-full px-1 tx-table-input"
                                 value={(!item.weightPerBag) ? 0 : item.weightPerBag}
                                 disabled={readOnly}
                                 inputMode='decimal'
@@ -169,7 +169,7 @@ console.log(index,"index")
                                          type="number"
                                          onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "returnQty") } }}
                                          onFocus={(e) => e.target.select()}
-                                         className="text-right rounded py-1 w-full px-1 table-data-input"
+                                         className="text-right rounded py-1 w-full px-1 tx-table-input"
                                          value={(!item.returnQty) ? 0 : item.returnQty}
                                          disabled={readOnly}
                                          onChange={(event) => {

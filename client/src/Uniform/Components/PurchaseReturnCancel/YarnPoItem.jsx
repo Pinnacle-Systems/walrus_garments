@@ -193,7 +193,7 @@ const YarnPoItem = ({ yarnList, uomList,
                         type="number"
                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "qty") } }}
                         onFocus={(e) => e.target.select()}
-                        className="text-right rounded py-1 w-full px-1 table-data-input"
+                        className="text-right rounded py-1 w-full px-1 tx-table-input"
                         value={(!item.qty) ? 0 : item.qty}
                         disabled={readOnly}
                         onChange={(event) => {
@@ -234,7 +234,7 @@ const YarnPoItem = ({ yarnList, uomList,
                     <input
                         type="number"
                         onFocus={(e) => e.target.select()}
-                        className="text-right rounded py-1 px-1 w-16 table-data-input"
+                        className="text-right rounded py-1 px-1 w-16 tx-table-input"
                         value={(item.price * item.qty).toFixed(3)}
                         disabled={true}
                     />

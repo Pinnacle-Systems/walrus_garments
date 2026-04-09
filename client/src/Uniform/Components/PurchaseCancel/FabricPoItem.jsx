@@ -42,27 +42,27 @@ const FabricPoItem = ({ fabricList, uomList,
 
     return (
         <tr key={poItemId}>
-            <td className='text-left px-1  table-data'>{index + 1}</td>
-            <td className='text-left px-1 table-data'>{item?.poNo}</td>
-            <td className='text-left px-1 table-data'>{findFromList(item.fabricId, fabricList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.colorId, colorList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.designId, designList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.gaugeId, gaugeList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.loopLengthId, loopLengthList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.gsmId, gsmList?.data, "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.kDiaId, diaList?.data?.filter(val => val.kDia), "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.fDiaId, diaList?.data?.filter(val => val.fDia), "name")} </td>
-            <td className='text-left px-1 table-data'>{findFromList(item.uomId, uomList?.data, "name")} </td>
-            <td className='text-right px-1  table-data'>{item?.poQty || 0}</td>
-            <td className='text-right   table-data'>{item?.alreadyCancelQty}</td>
-            {/* <td className='text-right   table-data'>{item?.alreadyCancelRolls}</td> */}
-            <td className='text-right   table-data'>{item?.alreadyInwardedQty}</td>
-            <td className='text-right   table-data'>{item?.alreadyInwardedRolls}</td>
-            <td className='text-right   table-data'>{item?.alreadyReturnedQty}</td>
-            <td className='text-right   table-data'>{item?.alreadyReturnedRolls || 0}</td>
-            <td className='text-right   table-data'>{item?.balanceQty}</td>
+            <td className='text-left px-1  tx-table-cell'>{index + 1}</td>
+            <td className='text-left px-1 tx-table-cell'>{item?.poNo}</td>
+            <td className='text-left px-1 tx-table-cell'>{findFromList(item.fabricId, fabricList?.data, "name")} </td>
+            <td className='text-left px-1 tx-table-cell'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+            <td className='text-left px-1 tx-table-cell'>{findFromList(item.designId, designList?.data, "name")} </td>
+            <td className='text-left px-1 tx-table-cell'>{findFromList(item.gaugeId, gaugeList?.data, "name")} </td>
+            <td className='text-left px-1 tx-table-cell'>{findFromList(item.loopLengthId, loopLengthList?.data, "name")} </td>
+            <td className='text-left px-1 tx-table-cell'>{findFromList(item.gsmId, gsmList?.data, "name")} </td>
+            <td className='text-left px-1 tx-table-cell'>{findFromList(item.kDiaId, diaList?.data?.filter(val => val.kDia), "name")} </td>
+            <td className='text-left px-1 tx-table-cell'>{findFromList(item.fDiaId, diaList?.data?.filter(val => val.fDia), "name")} </td>
+            <td className='text-left px-1 tx-table-cell'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+            <td className='text-right px-1  tx-table-cell'>{item?.poQty || 0}</td>
+            <td className='text-right   tx-table-cell'>{item?.alreadyCancelQty}</td>
+            {/* <td className='text-right   tx-table-cell'>{item?.alreadyCancelRolls}</td> */}
+            <td className='text-right   tx-table-cell'>{item?.alreadyInwardedQty}</td>
+            <td className='text-right   tx-table-cell'>{item?.alreadyInwardedRolls}</td>
+            <td className='text-right   tx-table-cell'>{item?.alreadyReturnedQty}</td>
+            <td className='text-right   tx-table-cell'>{item?.alreadyReturnedRolls || 0}</td>
+            <td className='text-right   tx-table-cell'>{item?.balanceQty}</td>
 
-            <td className='text-left table-data'>
+            <td className='text-left tx-table-cell'>
                 <input
                     onKeyDown={e => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -70,7 +70,7 @@ const FabricPoItem = ({ fabricList, uomList,
                     }}
                     min={"0"}
                     type="number"
-                    className="text-right rounded py-1   w-full  table-data-input"
+                    className="text-right rounded py-1   w-full  tx-table-input"
                     value={item?.qty}
                     disabled={readOnly}
                     onChange={(event) => {
@@ -90,10 +90,10 @@ const FabricPoItem = ({ fabricList, uomList,
                     }}
                 />
             </td>
-            <td className='text-right table-data'>{item.price}</td>
+            <td className='text-right tx-table-cell'>{item.price}</td>
 
             {!readOnly &&
-                <td className='table-data w-12'>
+                <td className='tx-table-cell w-12'>
                     <div tabIndex={-1} onClick={() => removeItem(poItemId)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
                         {DELETE}
                     </div>

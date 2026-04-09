@@ -110,10 +110,10 @@ const AccessoryDirectInwardItems = ({ storeId, directInwardReturnItems, setDirec
                         {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - directInwardReturnItems.length) }).map(i =>
                             <tr className=' text-gray-800 h-8 border border-gray-600'>
                                 {Array.from({ length: 12 }).map(i =>
-                                    <td className="table-data   "></td>
+                                    <td className="tx-table-cell   "></td>
                                 )}
                                 {!readOnly &&
-                                    <td className="table-data w-14"></td>
+                                    <td className="tx-table-cell w-14"></td>
                                 }
                             </tr>)
                         }

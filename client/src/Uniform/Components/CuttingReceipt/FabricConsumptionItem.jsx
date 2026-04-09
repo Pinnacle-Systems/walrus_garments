@@ -74,57 +74,57 @@ const FabricConsumptionItem = ({ item, id, cuttingOrderId, index, handleInputCha
     }
 
     return (
-        <tr key={index} className="w-full table-row">
-            <td className='text-left px-1 table-data shadow-xl '>
+        <tr key={index} className="w-full tx-table-row">
+            <td className='text-left px-1 tx-table-cell shadow-xl '>
                 {index + 1}
             </td>
-            <td className='text-left px-1 table-data shadow-xl '>
+            <td className='text-left px-1 tx-table-cell shadow-xl '>
                 {item?.docId || docId}
             </td>
-            <td className='text-left px-1 table-data shadow-xl'>
+            <td className='text-left px-1 tx-table-cell shadow-xl'>
                 {findFromList(item?.fabricId, fabricList?.data, "name")}
             </td>
-            <td className='text-left  table-data shadow-xl'>
+            <td className='text-left  tx-table-cell shadow-xl'>
                 {findFromList(item?.colorId, colorList?.data, "name")}
             </td>
-            <td className='text-left px-1 table-data shadow-xl'>
+            <td className='text-left px-1 tx-table-cell shadow-xl'>
                 {findFromList(item?.designId, designList?.data, "name")}
             </td>
-            <td className='text-right px-1 table-data shadow-xl'>
+            <td className='text-right px-1 tx-table-cell shadow-xl'>
                 {findFromList(item?.gaugeId, gaugeList?.data, "name")}
             </td>
-            <td className='text-right px-1 table-data shadow-xl'>
+            <td className='text-right px-1 tx-table-cell shadow-xl'>
                 {findFromList(item?.loopLengthId, loopLengthList?.data, "name")}
             </td>
-            <td className='text-right px-1 table-data shadow-xl'>
+            <td className='text-right px-1 tx-table-cell shadow-xl'>
                 {findFromList(item?.gsmId, gsmList?.data, "name")}
             </td>
-            <td className='text-right px-1 table-data shadow-xl'>
+            <td className='text-right px-1 tx-table-cell shadow-xl'>
                 {findFromList(item?.kDiaId, diaList?.data, "name")}
             </td>
-            <td className='text-right px-1 table-data shadow-xl'>
+            <td className='text-right px-1 tx-table-cell shadow-xl'>
                 {findFromList(item?.fDiaId, diaList?.data, "name")}
             </td>
-            <td className='text-right px-1 table-data shadow-xl'>
+            <td className='text-right px-1 tx-table-cell shadow-xl'>
                 {findFromList(item?.uomId, uomList?.data, "name")}
             </td>
-            <td className='text-right px-1  table-data shadow-xl '>
+            <td className='text-right px-1  tx-table-cell shadow-xl '>
                 {item?.delQty}
             </td>
-            <td className=' table-data text-right px-1 '>
+            <td className=' tx-table-cell text-right px-1 '>
                 {alreadyConsumedQty}
             </td>
-            {/* <td className=' table-data text-right px-1 '>
+            {/* <td className=' tx-table-cell text-right px-1 '>
                 {alreadyReturnExcessQty}
             </td> */}
-            <td className='  table-data text-right px-1 '>
+            <td className='  tx-table-cell text-right px-1 '>
                 {balanceQty}
             </td>
-            <td className=' table-data text-right px-1 '>
+            <td className=' tx-table-cell text-right px-1 '>
                 <input
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    className="text-right rounded py-1 px-1 w-full tx-table-input"
                     value={(!item.consumption) ? 0 : item.consumption}
                     readOnly={readOnly}
                     onChange={(e) => {
@@ -140,10 +140,10 @@ const FabricConsumptionItem = ({ item, id, cuttingOrderId, index, handleInputCha
                     }
                 />
             </td>
-            <td className='  table-data text-right'>
+            <td className='  tx-table-cell text-right'>
                 {totalLossQty?.toFixed(3) | 0}
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <button
                     className="text-center rounded py-1 w-16"
                     onKeyDown={(e) => {
@@ -158,7 +158,7 @@ const FabricConsumptionItem = ({ item, id, cuttingOrderId, index, handleInputCha
                 </button>
             </td>
             {!readOnly &&
-                <td className='table-data '>
+                <td className='tx-table-cell '>
                     <button className='w-full' onClick={deleteItem}>
                         {DELETE}
                     </button>

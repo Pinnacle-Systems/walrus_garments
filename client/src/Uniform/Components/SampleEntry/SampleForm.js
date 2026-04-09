@@ -448,7 +448,7 @@ const SampleForm = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setI
                                                                                 <th className="px-0.5 py-0.5  w-12 border border-gray-500 text-sm">Qty</th>
                                                                                 <th className="px-0.5 py-0.5  w-12 border border-gray-500 text-sm">Wt.socks</th>
 
-                                                                                <th className="table-data  w-7 p-0.5 border border-gray-500 text-sm" >
+                                                                                <th className="tx-table-cell  w-7 p-0.5 border border-gray-500 text-sm" >
                                                                                     <button className='text-2xl' onClick={addNewRow}>+</button>
                                                                                 </th>
 
@@ -586,7 +586,7 @@ const SampleForm = ({ orderDetails, setOrderDetails, readOnly, setReadOnly, setI
 
                                                                                         </select>
                                                                                     </td>
-                                                                                    <td className="table-data w-24 text-left px-1 py-1 text-xs border border-gray-300">
+                                                                                    <td className="tx-table-cell w-24 text-left px-1 py-1 text-xs border border-gray-300">
                                                                                         <textarea readOnly={readOnly} className=" w-full overflow-auto focus:outline-none  rounded text-xs"
                                                                                             value={item.description}
                                                                                             onChange={(e) => handleInputChange(e.target.value, index, "description")}
