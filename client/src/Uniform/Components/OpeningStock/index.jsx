@@ -16,7 +16,7 @@ const OpeningStock = () => {
 
 
   return (
-    <div className="h-[calc(100vh-6rem)] min-h-0 overflow-hidden">
+    <div className="h-[calc(100vh-5rem)] min-h-0 overflow-hidden">
       <ExcelSelectionTable
         params={params}
         file={file}

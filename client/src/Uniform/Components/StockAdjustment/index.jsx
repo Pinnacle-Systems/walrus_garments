@@ -161,7 +161,7 @@ const StockAdjustment = () => {
   return (
     <>
       {showManufacturer ? (
-        <div className="h-[calc(100vh-6rem)] min-h-0 overflow-hidden">
+        <div className="h-[calc(100vh-5rem)] min-h-0 overflow-hidden">
           <StockAdjustmentFrom
             onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
             docId={docId} setDocId={setDocId} date={date} setDate={setDate} readOnly={readOnly} setReadOnly={setReadOnly}
@@ -180,8 +180,8 @@ const StockAdjustment = () => {
         </div>
 
       ) : (
-        <div className=" bg-[#F1F1F0] min-h-screen">
-          <div className="flex flex-col sm:flex-row justify-between bg-white px-1 py-0.5 items-start sm:items-center mb-2 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+        <div className="flex h-[calc(100vh-5rem)] min-h-0 flex-col bg-[#F1F1F0]">
+          <div className="mb-2 flex shrink-0 flex-col items-start justify-between gap-x-4 rounded-tl-lg rounded-tr-lg border border-gray-200 bg-white px-1 py-0.5 shadow-sm sm:flex-row sm:items-center">
 
             <h1 className="text-lg font-bold text-gray-800">
               Stock Adjustment
@@ -195,7 +195,7 @@ const StockAdjustment = () => {
             </button>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white shadow-sm">
 
             <StockAdjustmentReport
               onView={handleView}
