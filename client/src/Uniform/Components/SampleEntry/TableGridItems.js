@@ -195,7 +195,7 @@ export default function TableGridItems({ item, gridIndex, id, setSampleDetails, 
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
+                                            tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input'
                                             value={row.colorId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                             onBlur={(e) => {
@@ -214,7 +214,7 @@ export default function TableGridItems({ item, gridIndex, id, setSampleDetails, 
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "yarnTypeId") } }}
-                                            tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
+                                            tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input'
                                             value={row.yarncategoryId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "yarncategoryId")}
                                             onBlur={(e) => {
@@ -235,7 +235,7 @@ export default function TableGridItems({ item, gridIndex, id, setSampleDetails, 
                                     <td className="py-0.5 border border-gray-300 text-[11px] ">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "yarnId") } }}
-                                            tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
+                                            tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input'
                                             value={row.yarnId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "yarnId")}
                                             onBlur={(e) => {
@@ -254,7 +254,7 @@ export default function TableGridItems({ item, gridIndex, id, setSampleDetails, 
                                     <td className="py-0.5 border border-gray-300 text-[11px]">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
+                                            disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input'
                                             value={row.count}
                                             onChange={(e) => handleInputChange(e.target.value, index, "count")}
                                             onBlur={(e) => {
@@ -274,7 +274,7 @@ export default function TableGridItems({ item, gridIndex, id, setSampleDetails, 
                                     <td className="py-0.5 border border-gray-300 text-[11px]">
                                         <select
                                             onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                            disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.yarnKneedleId}
+                                            disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.yarnKneedleId}
                                             onChange={(e) => handleInputChange(e.target.value, index, "yarnKneedleId")}
                                             onBlur={(e) => {
                                                 handleInputChange((e.target.value), index, "yarnKneedleId")

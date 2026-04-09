@@ -58,27 +58,27 @@ const ProductionReceiptDetailItem = ({ isIroning, isStitching, item, index, id, 
         })
     }
     return (
-        <tr key={index} className='py-2 table-row'>
-            <td className='table-data   '>
+        <tr key={index} className='py-2 tx-table-row'>
+            <td className='tx-table-cell   '>
                 {index + 1}
             </td>
 
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {findFromList(item?.itemId, itemList?.data, "name")}
             </td>
             {
 
 
                 (isStitching() || isIroning()) ?
-                    <td className='table-data'>
+                    <td className='tx-table-cell'>
                         {findFromList(item?.colorId, colorList?.data, "name")}
                     </td>
                     :
                     <>
-                        <td className='table-data'>
+                        <td className='tx-table-cell'>
                             {findFromList(item?.panelId, panelList?.data, "name")}
                         </td>
-                        <td className='table-data'>
+                        <td className='tx-table-cell'>
                             {findFromList(item?.panelColorId, colorList?.data, "name")}
                         </td>
                     </>
@@ -86,31 +86,31 @@ const ProductionReceiptDetailItem = ({ isIroning, isStitching, item, index, id, 
 
 
 
-            <td className='table-data text-right'>
+            <td className='tx-table-cell text-right'>
                 {findFromList(item?.sizeId, sizeList?.data, "name")}
             </td>
             {
                 !(isStitching() || !isIroning() || !isPacking()) &&
-                <td className='  table-data text-right px-1'>
+                <td className='  tx-table-cell text-right px-1'>
                     {item?.processCost || 0}
                 </td>
             }
 
 
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
                 {isStitching() ? (item?.cuttingQty || 0) : (item?.delQty || 0)}
             </td>
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
                 {item?.alreadyReceivedQty || 0}
             </td>
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
                 {isStitching() ? substract(item?.readyQty, item?.alreadyReceivedQty) : substract(item?.delQty, item?.alreadyReceivedQty) || 0}
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    className="text-right rounded py-1 px-1 w-full tx-table-input"
 
                     value={(!item.receivedQty) ? 0 : item.receivedQty}
 
@@ -126,7 +126,7 @@ const ProductionReceiptDetailItem = ({ isIroning, isStitching, item, index, id, 
                     }
                 />
             </td>
-            <td className='table-data text-center'>
+            <td className='tx-table-cell text-center'>
                 <button
                     className="text-center rounded py-1 w-12"
                     onKeyDown={(e) => {
@@ -140,12 +140,12 @@ const ProductionReceiptDetailItem = ({ isIroning, isStitching, item, index, id, 
                     {VIEW}
                 </button>
             </td>
-            <td className='  table-data text-right'>
+            <td className='  tx-table-cell text-right'>
                 {totalLossQty?.toFixed(3)}
             </td>
             {!readOnly
                 &&
-                <td className='table-data '>
+                <td className='tx-table-cell '>
                     <button className='w-full' onClick={deleteItem}>
                         {DELETE}
                     </button>

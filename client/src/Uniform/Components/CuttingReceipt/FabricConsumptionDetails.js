@@ -32,60 +32,60 @@ const FabricConsumptionDetails = ({ id, cuttingOrderId, cuttingReceiptFabricCons
                 <table className="border border-gray-500 text-xs table-auto w-full">
                     <thead className='bg-blue-200 top-0'>
                         <tr className='h-8'>
-                            <th className=' table-data '>
+                            <th className=' tx-table-cell '>
                                 S.no
                             </th>
-                            <th className=' table-data w-28'>
+                            <th className=' tx-table-cell w-28'>
                                 Del Dc.no
                             </th>
-                            <th className='table-data w-60'>
+                            <th className='tx-table-cell w-60'>
                                 Fabric Name
                             </th>
-                            <th className=' table-data w-20'>
+                            <th className=' tx-table-cell w-20'>
                                 Color
                             </th>
-                            <th className='table-data w-20'>
+                            <th className='tx-table-cell w-20'>
                                 Design
                             </th>
-                            <th className='table-data w-20'>
+                            <th className='tx-table-cell w-20'>
                                 Gauge
                             </th>
-                            <th className='table-data w-12'>
+                            <th className='tx-table-cell w-12'>
                                 LL
                             </th>
-                            <th className='table-data w-12'>
+                            <th className='tx-table-cell w-12'>
                                 Gsm
                             </th>
-                            <th className='table-data w-12'>
+                            <th className='tx-table-cell w-12'>
                                 K-Dia
                             </th>
-                            <th className='table-data w-12'>
+                            <th className='tx-table-cell w-12'>
                                 F-Dia
                             </th>
-                            <th className='table-data w-12'>
+                            <th className='tx-table-cell w-12'>
                                 Uom
                             </th>
-                            <th className='table-data w-12'>
+                            <th className='tx-table-cell w-12'>
                                 Del Qty
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 A.Cons.Qty
                             </th>
-                            {/* <th className='table-data'>
+                            {/* <th className='tx-table-cell'>
                                 A.Rtn.Qty
                             </th> */}
-                            <th className="table-data w-16">
+                            <th className="tx-table-cell w-16">
                                 Bal Qty
                             </th>
-                            <th className="table-data w-16">
+                            <th className="tx-table-cell w-16">
                                 Consumption Qty
                             </th>
-                            <th className="table-data w-16">
+                            <th className="tx-table-cell w-16">
                                 Loss Qty
                             </th>
-                            <th className="table-data w-20">Loss Reason</th>
+                            <th className="tx-table-cell w-20">Loss Reason</th>
                             {!readOnly &&
-                                <th className="table-data  w-5 text-green-600" onClick={() => { setFillGrid(true) }}> {PLUS} </th>
+                                <th className="tx-table-cell  w-5 text-green-600" onClick={() => { setFillGrid(true) }}> {PLUS} </th>
                             }
                         </tr>
                     </thead>
@@ -100,23 +100,23 @@ const FabricConsumptionDetails = ({ id, cuttingOrderId, cuttingReceiptFabricCons
                                 handleInputChange={handleInputChange} />
                         ))}
                         {Array.from({ length: 2 - cuttingReceiptFabricConsumptionDetails.length }).map(i =>
-                            <tr className='w-full font-bold h-6 border-gray-400 border table-row'>
-                                <td className='table-data'>
+                            <tr className='w-full font-bold h-6 border-gray-400 border tx-table-row'>
+                                <td className='tx-table-cell'>
                                 </td>
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                {/* <td className="table-data"></td> */}
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                {/* <td className="tx-table-cell"></td> */}
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
 
                             </tr>)
                         }

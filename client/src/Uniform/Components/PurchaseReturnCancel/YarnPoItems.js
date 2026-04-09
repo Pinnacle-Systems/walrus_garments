@@ -181,18 +181,18 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                 <table className=" border border-gray-500 text-xs table-auto  w-full">
                     <thead className='bg-blue-200 top-0 border-b border-gray-500'>
                         <tr >
-                            <th className="table-data  w-2 text-center">S.no</th>
-                            <th className="table-data ">Items<span className="text-red-500">*</span></th>
-                            <th className="table-data ">Colors<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-20">UOM<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-10">Lot Det.<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">No. of Bags<span className="text-red-500">*</span></th>
-                            {/* <th className="table-data  w-16">Weight Per Bag<span className="text-red-500">*</span></th> */}
-                            <th className="table-data  w-16">Quantity<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Price<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Price(with Tax)<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Gross</th>
-                            <th className="table-data  w-20">View Tax</th>
+                            <th className="tx-table-cell  w-2 text-center">S.no</th>
+                            <th className="tx-table-cell ">Items<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell ">Colors<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-20">UOM<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-10">Lot Det.<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">No. of Bags<span className="text-red-500">*</span></th>
+                            {/* <th className="tx-table-cell  w-16">Weight Per Bag<span className="text-red-500">*</span></th> */}
+                            <th className="tx-table-cell  w-16">Quantity<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">Price<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">Price(with Tax)<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">Gross</th>
+                            <th className="tx-table-cell  w-20">View Tax</th>
                             {readOnly ?
                                 "" :
                                 <th className='w-20  bg-green-600 text-white'>
@@ -207,15 +207,15 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                     <tbody className='overflow-y-auto h-full w-full'>
                         {poItems.map((row, index) => (
 
-                            <tr key={index} className="w-full table-row">
-                                <td className="table-data w-2 text-left px-1 py-1">
+                            <tr key={index} className="w-full tx-table-row">
+                                <td className="tx-table-cell w-2 text-left px-1 py-1">
                                     {index + 1}
                                 </td>
 
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "yarnId") } }}
-                                        tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 table-data-input'
+                                        tabIndex={"0"} disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input'
                                         value={row.yarnId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "yarnId")}
                                         onBlur={(e) => {
@@ -232,10 +232,10 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                     </select>
                                 </td>
 
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                        disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                                        disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.colorId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                         onBlur={(e) => {
                                             handleInputChange((e.target.value), index, "colorId")
@@ -251,10 +251,10 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                         )}
                                     </select>
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                        disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
+                                        disabled={readOnly} className='text-left w-20 rounded py-1 tx-table-input' value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                         onBlur={(e) => {
                                             handleInputChange((e.target.value), index, "uomId")
                                         }
@@ -270,12 +270,12 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                         )}
                                     </select>
                                 </td>
-                                <td className='text-center table-data'>
+                                <td className='text-center tx-table-cell'>
                                     <button onClick={() => setCurrentSelectedLotGrid(index)} className='w-full'>
                                         {VIEW}
                                     </button>
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input
                                         onKeyDown={e => {
                                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -284,7 +284,7 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                         min={"0"}
                                         type="number"
                                         onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 w-16 px-1 table-data-input"
+                                        className="text-right rounded py-1 w-16 px-1 tx-table-input"
                                         value={sumArray(row?.lotDetails ? row?.lotDetails : [], "noOfBags")}
                                         disabled={true}
                                         inputMode='decimal'
@@ -299,7 +299,7 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
 
                                     />
                                 </td>
-                                {/* <td className='table-data'>
+                                {/* <td className='tx-table-cell'>
                                         <input
                                             onKeyDown={e => {
                                                 if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -308,7 +308,7 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                             min={"0"}
                                             type="number"
                                             onFocus={(e) => e.target.select()}
-                                            className="text-right rounded py-1 w-16 px-1 table-data-input"
+                                            className="text-right rounded py-1 w-16 px-1 tx-table-input"
                                             value={(!row.weightPerBag) ? 0 : row.weightPerBag}
                                             disabled={readOnly}
                                             inputMode='decimal'
@@ -323,7 +323,7 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                             }
                                         />
                                     </td> */}
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input
                                         onKeyDown={e => {
                                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -331,7 +331,7 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                         }}
                                         min={"0"}
                                         type="number"
-                                        className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                        className="text-right rounded py-1 px-1 w-16 tx-table-input"
                                         onFocus={(e) => e.target.select()}
                                         value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                         disabled={true}
@@ -345,7 +345,7 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                     />
                                 </td>
 
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input
                                         onKeyDown={e => {
                                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -353,7 +353,7 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                         }}
                                         min={"0"}
                                         type="number"
-                                        className="text-right rounded py-1 w-16 px-1 table-data-input"
+                                        className="text-right rounded py-1 w-16 px-1 tx-table-input"
                                         onFocus={(e) => e.target.select()}
                                         value={(!row.price) ? 0 : row.price}
                                         disabled={readOnly}
@@ -367,19 +367,19 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                         }
                                     />
                                 </td>
-                                <td className='table-data text-right px-1'>
+                                <td className='tx-table-cell text-right px-1'>
                                     {priceWithTax(row.price, row.taxPercent).toFixed(2)}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input
                                         type="number"
                                         onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 w-16 px-1 table-data-input"
+                                        className="text-right rounded py-1 w-16 px-1 tx-table-input"
                                         value={(!row.price || !row.price) ? 0 : (parseFloat(sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")) * parseFloat(row.price)).toFixed(2)}
                                         disabled={true}
                                     />
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <button
                                         className="text-center rounded py-1 w-20"
                                         onKeyDown={(e) => {
@@ -398,7 +398,7 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                                     ?
                                     ""
                                     :
-                                    <td className='table-data w-20'>
+                                    <td className='tx-table-cell w-20'>
                                         <div tabIndex={-1} onClick={() => handleDeleteRow(index)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer'>
                                             {DELETE}
                                         </div>
@@ -407,16 +407,16 @@ const YarnPoItems = ({ id, transType, poItems, setPoItems, readOnly, params, isS
                             </tr>
                         ))}
                         <tr className='bg-blue-200 w-full border border-gray-400 h-7 font-bold'>
-                            <td className="table-data text-center w-10 font-bold" colSpan={4}>Total</td>
-                            <td className="table-data  w-10"></td>
-                            <td className="table-data text-right px-1 w-10">{getTotals("noOfBags").toFixed(3)}</td>
-                            <td className="table-data text-right px-1 w-10">{getTotals("qty").toFixed(3)}</td>
-                            <td className="table-data  w-10"></td>
-                            <td className="table-data  w-10"></td>
-                            <td className="table-data text-right px-1  w-10">{getGross().toFixed(2)} </td>
-                            <td className="table-data   w-10"></td>
+                            <td className="tx-table-cell text-center w-10 font-bold" colSpan={4}>Total</td>
+                            <td className="tx-table-cell  w-10"></td>
+                            <td className="tx-table-cell text-right px-1 w-10">{getTotals("noOfBags").toFixed(3)}</td>
+                            <td className="tx-table-cell text-right px-1 w-10">{getTotals("qty").toFixed(3)}</td>
+                            <td className="tx-table-cell  w-10"></td>
+                            <td className="tx-table-cell  w-10"></td>
+                            <td className="tx-table-cell text-right px-1  w-10">{getGross().toFixed(2)} </td>
+                            <td className="tx-table-cell   w-10"></td>
                             {!readOnly &&
-                                <td className="table-data w-10"></td>
+                                <td className="tx-table-cell w-10"></td>
                             }
                         </tr>
 

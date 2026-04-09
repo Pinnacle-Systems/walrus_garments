@@ -18,48 +18,48 @@ const FabricItemInwardReport = ({ inwardItems = [], item, dataObj }) => {
       </div>
       <table className='table-fixed text-xs border border-gray-500 '>
         <thead>
-          <tr className='table-row'>
+          <tr className='tx-table-row'>
             <th>Fabric</th>
-            <th className='w-10 table-data'>
+            <th className='w-10 tx-table-cell'>
               Color
             </th>
-            <th className='w-16 table-data'>
+            <th className='w-16 tx-table-cell'>
               Design
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               Gauge
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               LL
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               Gsm
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               K-Dia
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               F-Dia
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               Uom
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr className='table-row'>
-            <td className='table-data'>
+          <tr className='tx-table-row'>
+            <td className='tx-table-cell'>
               {dataObj.docId}
             </td>
-            <td className='text-left px-1 table-data'>{item?.Fabric?.aliasName}</td>
-            <td className='text-left px-1 table-data'>{item?.Color?.name}</td>
-            <td className='text-left px-1  table-data'>{item?.Design?.name}</td>
-            <td className='text-right px-1  table-data'>{item?.Gauge?.name}</td>
-            <td className='text-right px-1  table-data'>{item?.LoopLength?.name}</td>
-            <td className='text-left px-1  table-data'>{item?.Gsm?.name}</td>
-            <td className='text-right px-1  table-data'>{item?.KDia?.name}</td>
-            <td className='text-right px-1  table-data'>{item?.FDia?.name}</td>
-            <td className='text-left px-1  table-data'>{item?.Uom?.name}</td>
+            <td className='text-left px-1 tx-table-cell'>{item?.Fabric?.aliasName}</td>
+            <td className='text-left px-1 tx-table-cell'>{item?.Color?.name}</td>
+            <td className='text-left px-1  tx-table-cell'>{item?.Design?.name}</td>
+            <td className='text-right px-1  tx-table-cell'>{item?.Gauge?.name}</td>
+            <td className='text-right px-1  tx-table-cell'>{item?.LoopLength?.name}</td>
+            <td className='text-left px-1  tx-table-cell'>{item?.Gsm?.name}</td>
+            <td className='text-right px-1  tx-table-cell'>{item?.KDia?.name}</td>
+            <td className='text-right px-1  tx-table-cell'>{item?.FDia?.name}</td>
+            <td className='text-left px-1  tx-table-cell'>{item?.Uom?.name}</td>
             <td className='py-1 text-center w-8'>
               <ExcelButton onClick={() => {
 
@@ -85,35 +85,35 @@ const FabricItemInwardReport = ({ inwardItems = [], item, dataObj }) => {
       <table className='table-auto w-full text-xs border border-gray-500 '>
         <thead className=' border-b border-gray-500'>
           <tr className='bg-blue-200 border border-gray-500 sticky top-10 '>
-            <th className="table-data  w-2 text-center">S.no</th>
-            <th className="table-data  w-2 text-center">Inward No.</th>
-            <th className="table-data  w-20 text-center">Inward Date.</th>
-            <th className="table-data  w-20 text-center">DC No.</th>
-            <th className="table-data  w-20 text-center">Dc Date.</th>
-            <th className="table-data  w-10">Lot No.</th>
-            <th className="table-data  w-10">Inward Rolls</th>
-            <th className="table-data  w-10">Inward Qty</th>
+            <th className="tx-table-cell  w-2 text-center">S.no</th>
+            <th className="tx-table-cell  w-2 text-center">Inward No.</th>
+            <th className="tx-table-cell  w-20 text-center">Inward Date.</th>
+            <th className="tx-table-cell  w-20 text-center">DC No.</th>
+            <th className="tx-table-cell  w-20 text-center">Dc Date.</th>
+            <th className="tx-table-cell  w-10">Lot No.</th>
+            <th className="tx-table-cell  w-10">Inward Rolls</th>
+            <th className="tx-table-cell  w-10">Inward Qty</th>
           </tr>
         </thead>
         <tbody>
           {inwardItemsWithLot.map((item, index) =>
             <tr key={item.id}>
-              <td className='text-center   table-data'>{index + 1}</td>
-              <td className='text-left  table-data'>{item?.docId}</td>
-              <td className='text-left  table-data'>{getDateFromDateTimeToDisplay(item?.createdAt)}</td>
-              <td className='text-left  table-data'>{item?.dcNo}</td>
-              <td className='text-left  table-data'>{getDateFromDateTimeToDisplay(item?.dcDate)}</td>
-              <td className='text-right  table-data'>{item?.lotNo}</td>
-              <td className='text-right  table-data'>{item?.inwardRolls}</td>
-              <td className='text-right  table-data'>{item?.inwardQty}</td>
+              <td className='text-center   tx-table-cell'>{index + 1}</td>
+              <td className='text-left  tx-table-cell'>{item?.docId}</td>
+              <td className='text-left  tx-table-cell'>{getDateFromDateTimeToDisplay(item?.createdAt)}</td>
+              <td className='text-left  tx-table-cell'>{item?.dcNo}</td>
+              <td className='text-left  tx-table-cell'>{getDateFromDateTimeToDisplay(item?.dcDate)}</td>
+              <td className='text-right  tx-table-cell'>{item?.lotNo}</td>
+              <td className='text-right  tx-table-cell'>{item?.inwardRolls}</td>
+              <td className='text-right  tx-table-cell'>{item?.inwardQty}</td>
             </tr>
           )
           }
-          <tr className='table-row'>
-            <td colSpan={5} className='table-data'></td>
+          <tr className='tx-table-row'>
+            <td colSpan={5} className='tx-table-cell'></td>
             <td>Totals</td>
-            <td className='text-right  table-data'>{sumArray(inwardItemsWithLot.filter(item => item.inwardRolls), "inwardRolls")}</td>
-            <td className='text-right  table-data'>{sumArray(inwardItemsWithLot, "inwardQty")}</td>
+            <td className='text-right  tx-table-cell'>{sumArray(inwardItemsWithLot.filter(item => item.inwardRolls), "inwardRolls")}</td>
+            <td className='text-right  tx-table-cell'>{sumArray(inwardItemsWithLot, "inwardQty")}</td>
           </tr>
         </tbody>
       </table>

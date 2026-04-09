@@ -91,7 +91,7 @@ const YarnDetails = ({ indentItems, setOrderDetails, poItems, setPoItems, gridIn
                       <input
                         min="0"
                         type="number"
-                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        className="text-right rounded py-1 px-1 w-full tx-table-input"
                         onFocus={(e) => e.target.select()}
                         value={yarn?.purchaseQty ?? 0}
                         onChange={(e) => {

@@ -42,7 +42,7 @@ const PanelSelection = ({ processData, panelItem, colorData, panelIndex, params,
                     <select
                         readOnly={readOnly}
                         onKeyDown={e => { if (e.key === "Delete") { handlePanelIdChange("", panelIndex, "panelId") } }}
-                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                         value={panelItem.panelId}
                         onChange={(e) => handlePanelIdChange(e.target.value, panelIndex, "panelId")}
                     >
@@ -61,7 +61,7 @@ const PanelSelection = ({ processData, panelItem, colorData, panelIndex, params,
                     <select
                         readOnly={readOnly}
                         onKeyDown={e => { if (e.key === "Delete") { handlePanelColorChange("", panelIndex, "colorId") } }}
-                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                         value={panelItem.colorId}
                         onChange={(e) => handlePanelColorChange(e.target.value, panelIndex, "colorId")}
                     >

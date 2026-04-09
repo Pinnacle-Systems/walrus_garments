@@ -344,7 +344,7 @@ const ProductionEntryItems = ({
                                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     {/* <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryGroupId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input' value={row.accessoryGroupId}
+                                        className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryGroupId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "accessoryGroupId")}
                                         onBlur={(e) => {
 
@@ -392,7 +392,7 @@ const ProductionEntryItems = ({
                                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryCategoryId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input' value={row.accessoryCategoryId}
+                                        className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryCategoryId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "accessoryCategoryId")}
                                         onBlur={(e) => {
 
@@ -413,7 +413,7 @@ const ProductionEntryItems = ({
                                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
+                                        className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "accessoryId")}
                                         onBlur={(e) => {
 
@@ -435,7 +435,7 @@ const ProductionEntryItems = ({
                                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                        disabled={true} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                                        disabled={true} className='text-left w-full rounded py-1 tx-table-input' value={row.colorId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                         onBlur={(e) => {
 
@@ -455,7 +455,7 @@ const ProductionEntryItems = ({
                                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                        disabled={true} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
+                                        disabled={true} className='text-left w-20 rounded py-1 tx-table-input' value={row.sizeId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                                         onBlur={(e) => {
 
@@ -476,7 +476,7 @@ const ProductionEntryItems = ({
                                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                        disabled={true} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
+                                        disabled={true} className='text-left w-20 rounded py-1 tx-table-input' value={row.uomId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                         onBlur={(e) => {
 
@@ -503,7 +503,7 @@ const ProductionEntryItems = ({
                                         min={"0"}
                                         type="number"
                                         onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                                        className="text-right rounded py-1 px-1 w-full tx-table-input"
                                         value={(!row.requiredQty) ? 0 : row.requiredQty}
                                         disabled={true}
                                         onChange={(e) =>
@@ -527,7 +527,7 @@ const ProductionEntryItems = ({
                                         min={"0"}
                                         type="number"
                                         onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                                        className="text-right rounded py-1 px-1 w-full tx-table-input"
                                         value={(!row.alreadyPurchasedQty) ? 0 : row.alreadyPurchasedQty}
                                         disabled={true}
                                         onChange={(e) =>

@@ -91,7 +91,7 @@ const CurrentStock = () => {
             </thead>
             <tbody>
               {stockList.map((data, i) =>
-                <tr key={i} className='py-2 w-full table-row'>
+                <tr key={i} className='py-2 w-full tx-table-row'>
                   <td className='text-center border border-gray-500'>{i + 1}</td>
                   {Object.keys(data).map((heading, i) =>
                     <>
@@ -105,7 +105,7 @@ const CurrentStock = () => {
                   )}
                 </tr>
               )}
-              <tr className='py-2 w-full table-row bg-blue-400'>
+              <tr className='py-2 w-full tx-table-row bg-blue-400'>
                 <td colSpan={5} className='text-center border-2 border-gray-700 font-bold text-sm bg-blue-400'>Total</td>
                 <td className='text-right px-1 border-2 border-gray-700 font-bold text-sm bg-blue-400'>{parseFloat(totalAmount).toFixed(2)}</td>
 

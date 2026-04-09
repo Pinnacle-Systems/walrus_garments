@@ -655,7 +655,7 @@ const YarnPoItems = ({
                                         <input
                                             type="number"
                                             onFocus={(e) => e.target.select()}
-                                            className="text-right rounded py-1 w-16 px-1 table-data-input"
+                                            className="text-right rounded py-1 w-16 px-1 tx-table-input"
                                             // value={
                                             //     isFinite(parseFloat(row.qty)) && isFinite(parseFloat(row.price))
                                             //         ? (parseFloat(row.qty || 0) * parseFloat(row.price || 0)).toFixed(3)

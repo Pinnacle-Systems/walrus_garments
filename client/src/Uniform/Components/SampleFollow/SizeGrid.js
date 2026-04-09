@@ -67,12 +67,12 @@ const SizeGrid = ({ sampleSizeGrid, setSampleSizeGrid, id, readOnly }) => {
                 <table className=" border border-gray-500 text-xs table-auto w-full">
                     <thead className='bg-blue-200 top-0 border-b border-gray-500'>
                         <tr className=''>
-                            <th className="table-data  w-8 text-center p-0.5">S.no</th>
-                            <th className="table-data w-9">Size<span className="text-red-500 p-5">*</span></th>
-                            <th className="table-data">Color<span className="text-red-500 p-5">*</span></th>
+                            <th className="tx-table-cell  w-8 text-center p-0.5">S.no</th>
+                            <th className="tx-table-cell w-9">Size<span className="text-red-500 p-5">*</span></th>
+                            <th className="tx-table-cell">Color<span className="text-red-500 p-5">*</span></th>
                             {!readOnly
                                 &&
-                                <th className="table-data  w-16 p-0.5" onClick={addNewRow} >  <span className='text-2xl' >+</span></th>
+                                <th className="tx-table-cell  w-16 p-0.5" onClick={addNewRow} >  <span className='text-2xl' >+</span></th>
                             }
                         </tr>
                     </thead>
@@ -80,16 +80,16 @@ const SizeGrid = ({ sampleSizeGrid, setSampleSizeGrid, id, readOnly }) => {
                     <tbody className='overflow-y-auto h-full w-full'>{console.log(sampleSizeGrid, "sampleSizeGridsampleSizeGrid")}
                         {(sampleSizeGrid || []).map((item, index) =>
 
-                            <tr key={index} className={`w-full table-row`}>
-                                <td className="table-data w-7 text-left px-1 py-1">
+                            <tr key={index} className={`w-full tx-table-row`}>
+                                <td className="tx-table-cell w-7 text-left px-1 py-1">
                                     {index + 1}
                                 </td>
-                                <td className='table-data w-12'>
+                                <td className='tx-table-cell w-12'>
 
                                     <select
                                         readOnly={readOnly}
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                         value={item.sizeId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                                     >
@@ -103,12 +103,12 @@ const SizeGrid = ({ sampleSizeGrid, setSampleSizeGrid, id, readOnly }) => {
                                     </select>
                                 </td>
 
-                                <td className='table-data w-20'>
+                                <td className='tx-table-cell w-20'>
 
                                     <select
                                         readOnly={readOnly}
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                         value={item.colorId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                     >

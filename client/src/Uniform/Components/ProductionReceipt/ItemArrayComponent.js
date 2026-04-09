@@ -108,7 +108,7 @@ const ItemArrayComponent = ({ findReadOnly, markRead, value, valueIndex, index, 
                     <input
                         type="number"
                         onFocus={(e) => e.target.select()}
-                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        className="text-right rounded py-1 px-1 w-full tx-table-input"
 
                         value={(!value.receivedQty) ? 0 : value.receivedQty}
 

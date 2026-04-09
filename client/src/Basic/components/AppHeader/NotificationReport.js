@@ -213,36 +213,36 @@ const NotificationReport = ({
                                                             S.no.
                                                         </th>
                                                         <th
-                                                            className="w-44  top-0 stick-bg table-data "
+                                                            className="w-44  top-0 stick-bg tx-table-cell "
                                                         >
                                                             Sub.LineItems.Name
 
                                                         </th>
                                                         <th
-                                                            className="w-60  top-0 stick-bg table-data "
+                                                            className="w-60  top-0 stick-bg tx-table-cell "
                                                         >
                                                             Description
 
                                                         </th>
                                                         <th
-                                                            className="w-20 top-0 stick-bg table-data">
+                                                            className="w-20 top-0 stick-bg tx-table-cell">
                                                             Category
                                                         </th>
                                                         <th
                                                             className="w-24  top-0 stick-bg ">
                                                             ResponsiblePerson
                                                         </th>
-                                                        <th className="w-24  top-0 stick-bg table-data">
+                                                        <th className="w-24  top-0 stick-bg tx-table-cell">
                                                             PlanStartDate
                                                         </th>
 
                                                         <th
-                                                            className=" w-20  top-0 stick-bg table-data "
+                                                            className=" w-20  top-0 stick-bg tx-table-cell "
                                                         >
                                                             LeadDays
 
                                                         </th>
-                                                        <th className="w-20 top-0 stick-bg table-data">
+                                                        <th className="w-20 top-0 stick-bg tx-table-cell">
                                                             PlanEndDate
                                                         </th>
 

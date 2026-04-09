@@ -57,12 +57,12 @@ const ProductionReceiptDetailItemForIndividual = ({ item, index, groupData, setG
 
 console.log(item,"itemProduction")
     return (
-        <tr key={index} className='py-2 table-row'>
-            <td className='table-data   '>
+        <tr key={index} className='py-2 tx-table-row'>
+            <td className='tx-table-cell   '>
                 {index + 1}
             </td>
 
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {
                     item?.items?.filter(
                         (obj, index, self) => index === self.findIndex((t) => t.sizeId === obj.sizeId)
@@ -75,7 +75,7 @@ console.log(item,"itemProduction")
 
 
 
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {
                     item?.items?.filter(
                         (obj, index, self) => index === self.findIndex((t) => t.itemId === obj.itemId)
@@ -85,7 +85,7 @@ console.log(item,"itemProduction")
                 }
 
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {
                     item?.items?.filter(
                         (obj, index, self) => index === self.findIndex((t) => t.sizeId === obj.sizeId)
@@ -96,7 +96,7 @@ console.log(item,"itemProduction")
 
             </td>
 
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
 
 
 
@@ -106,7 +106,7 @@ console.log(item,"itemProduction")
             </td>
 
 
-            {/* <td className='  table-data text-right px-1'>
+            {/* <td className='  tx-table-cell text-right px-1'>
 
                 {item?.items?.reduce((accumulation, currentValue) => {
                     return (parseFloat(accumulation) + parseFloat(currentValue?.femaleInwardQty ? currentValue?.femaleInwardQty : 0))
@@ -115,7 +115,7 @@ console.log(item,"itemProduction")
 
 
             </td>
-            <td className='  table-data text-right'>
+            <td className='  tx-table-cell text-right'>
                 {(parseFloat(item?.items?.reduce((accumulation, currentValue) => {
                     return (parseFloat(accumulation) + parseFloat(currentValue?.maleInwardQty ? currentValue?.maleInwardQty : 0))
                 }, 0) || 0) + parseFloat(item?.items?.reduce((accumulation, currentValue) => {
@@ -123,11 +123,11 @@ console.log(item,"itemProduction")
                 }, 0) || 0)) || 0}
             </td> */}
 
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    className="text-right rounded py-1 px-1 w-full tx-table-input"
 
                     value={(!item?.items[0]?.box) ? 0 : item?.items[0]?.box}
 
@@ -142,7 +142,7 @@ console.log(item,"itemProduction")
 
             {!readOnly
                 &&
-                <td className='table-data '>
+                <td className='tx-table-cell '>
                     <button className='w-full' onClick={deleteItem}>
                         {DELETE}
                     </button>

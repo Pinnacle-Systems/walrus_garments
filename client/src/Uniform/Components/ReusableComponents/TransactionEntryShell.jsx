@@ -34,7 +34,7 @@ const TransactionEntryShell = ({
   const visibleSummaryItems = summaryItems.filter((item) => item && item.label);
 
   return (
-    <div className={["flex h-full min-h-0 flex-col   overflow-hidden", contentClassName].filter(Boolean).join(" ")}>
+    <div className={["flex h-full min-h-0 flex-col overflow-hidden", contentClassName].filter(Boolean).join(" ")}>
       <div className={["w-full shrink-0 rounded-md bg-white px-2 py-1 shadow-md", titleBarClassName].filter(Boolean).join(" ")}>
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold text-gray-800">{title}
@@ -96,10 +96,10 @@ const TransactionEntryShell = ({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
 
         {footer ? (
-          <div className={["shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1.5 shadow-sm", footerClassName].filter(Boolean).join(" ")}>
+          <div className={["shrink-0 rounded-md border border-slate-200 bg-white px-2 py-1.5 leading-[14px] shadow-sm", footerClassName].filter(Boolean).join(" ")}>
             {footer}
           </div>
         ) : null}

@@ -64,7 +64,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, po
                     }}
                     min={"0"}
                     type="number"
-                    className="text-right rounded   w-full py-1 table-data-input"
+                    className="text-right rounded   w-full py-1 tx-table-input"
                     value={qty}
                     disabled={readOnly}
                     onChange={(event) => {

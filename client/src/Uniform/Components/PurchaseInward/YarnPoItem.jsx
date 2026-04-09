@@ -107,7 +107,7 @@ const PurchaseYarnPoItems = ({ yarnList, uomList,
                 <td className='py-0.5 border border-gray-300 text-[11px] text-right' >
                     <input
                         type="number"
-                        className="text-right rounded py-1  px-1 w-full table-data-input"
+                        className="text-right rounded py-1  px-1 w-full tx-table-input"
                         // value={sumArray(item?.lotDetails ? item?.lotDetails : [], "qty")}
                         value={item?.qty ? item?.qty : 0}
                         // disabled={true}

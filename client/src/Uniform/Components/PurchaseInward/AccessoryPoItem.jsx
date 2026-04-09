@@ -51,7 +51,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
     // let alreadyReturnedQty = poItem.alreadyReturnedData?._sum?.qty ? parseFloat(poItem.alreadyReturnedData._sum.qty).toFixed(3) : "0.000";
     // let balanceQty = substract(substract(poQty, cancelQty), substract(alreadyInwardedQty, alreadyReturnedQty)).toFixed(3)
     return (
-        <tr key={item.poItemsId} className='table-row'>
+        <tr key={item.poItemsId} className='tx-table-row'>
             <td className='w-12 border border-gray-300 text-[11px]  text-center'>{index + 1}</td>
             <td className='w-12 border border-gray-300 text-[11px] text-left'>{item?.poNo}</td>
             <td className='w-12 border border-gray-300 text-[11px]'>{findFromList(item?.accessoryId, accessoryList?.data, "aliasName")} </td>
@@ -68,7 +68,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
  {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
                     <input
                         type="number"
-                        className="text-right rounded py-1  px-1 w-full table-data-input"
+                        className="text-right rounded py-1  px-1 w-full tx-table-input"
                         // value={sumArray(item?.lotDetails ? item?.lotDetails : [], "noOfRolls")}
                         value={item?.noOfBags ? item?.noOfBags : 0}
                         // disabled={true}
@@ -102,7 +102,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
                     }}
                     min={"0"}
                     type="number"
-                    className="text-right rounded   w-full py-1 table-data-input"
+                    className="text-right rounded   w-full py-1 tx-table-input"
                     autoFocus={index === 0}
                     value={item?.qty}
                     disabled={readOnly}

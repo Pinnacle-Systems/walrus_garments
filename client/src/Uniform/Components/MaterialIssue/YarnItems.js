@@ -356,7 +356,7 @@ const YarnIssueItems = ({ Stock, setStock, issueItems, id, setIssueItems, materi
                                                             min={"0"}
                                                             type="number"
                                                             onFocus={(e) => e.target.select()}
-                                                            className="text-right rounded  px-1 w-full table-data-input"
+                                                            className="text-right rounded  px-1 w-full tx-table-input"
                                                             value={indent.issueQty}
                                                             disabled={!calculateStockQty(indent)?.qty > 0}
                                                             onChange={(e) => {

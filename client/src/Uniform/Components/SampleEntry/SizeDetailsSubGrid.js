@@ -142,7 +142,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, uomList, colorList, gsmL
                           }}
                           min="0"
                           onFocus={e => e.target.select()}
-                          className="text-right rounded w-full py-1 text-xs table-data-input"
+                          className="text-right rounded w-full py-1 text-xs tx-table-input"
                           value={yarn?.qty}
                           disabled={readOnly || Boolean(item?.alreadyInwardedData?._sum?.qty)}
                           onChange={e => handleInputChange(e.target.value, index, "qty")}
@@ -160,7 +160,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, uomList, colorList, gsmL
                           // }}
                           min="0"
                           onFocus={e => e.target.select()}
-                          className="text-right rounded w-full py-1 text-xs table-data-input"
+                          className="text-right rounded w-full py-1 text-xs tx-table-input"
                           value={(yarn.weight)}
                           // disabled={readOnly || Boolean(item?.alreadyInwardedData?._sum?.qty)}
                           onChange={e => handleInputChange(e.target.value, index, "weight")}
@@ -179,7 +179,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, uomList, colorList, gsmL
 
 
                           onFocus={e => e.target.select()}
-                          className="text-left rounded w-full py-2 text-md table-data-input h-7"
+                          className="text-left rounded w-full py-2 text-md tx-table-input h-7"
                           value={yarn.remarks}
                           disabled={readOnly || Boolean(item?.alreadyInwardedData?._sum?.qty)}
                           onChange={e => handleInputChange(e.target.value, index, "remarks")}

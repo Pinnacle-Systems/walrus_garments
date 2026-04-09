@@ -175,15 +175,12 @@ const SalesReturnReport = ({
   };
 
   return (
-    <div
-      //   id="registrationFormReport"
-      className="flex flex-col w-full h-[78vh] overflow-auto"
-    >
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
 
       <>
-        <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[68vh]">
-            <table className="">
+        <div className="flex h-full min-h-0 flex-col rounded-lg bg-[#F1F1F0] shadow-sm">
+          <div className="min-h-0 flex-1 overflow-auto">
+            <table>
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
                   <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
@@ -373,7 +370,7 @@ const SalesReturnReport = ({
             </table>
 
           </div>
-          <div className="h-[10vh]">
+          <div className="shrink-0">
             <Pagination />
           </div>
 

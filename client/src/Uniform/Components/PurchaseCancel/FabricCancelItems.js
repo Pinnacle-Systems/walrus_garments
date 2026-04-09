@@ -107,76 +107,76 @@ const FabricCancelItems = ({ inwardItems, setInwardItems, readOnly, removeItem, 
                 <table className=" text-xs border border-gray-500  w-full">
                     <thead className='bg-gray-300 border border-gray-500 top-0'>
                         <tr className=''>
-                            <th className='text-center w-8 table-data '>
+                            <th className='text-center w-8 tx-table-cell '>
                                 S.no
                             </th>
-                            <th className='text-center table-data'>
+                            <th className='text-center tx-table-cell'>
                                 Po.no
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 Fabric Name
                             </th>
-                            <th className='w-16 table-data'>
+                            <th className='w-16 tx-table-cell'>
                                 Color
                             </th>
-                            <th className='w-16 table-data'>
+                            <th className='w-16 tx-table-cell'>
                                 Design
                             </th>
-                            <th className=' table-data'>
+                            <th className=' tx-table-cell'>
                                 Gauge
                             </th>
-                            <th className=' table-data'>
+                            <th className=' tx-table-cell'>
                                 LL
                             </th>
-                            <th className=' table-data'>
+                            <th className=' tx-table-cell'>
                                 Gsm
                             </th>
-                            <th className=' table-data'>
+                            <th className=' tx-table-cell'>
                                 K-Dia
                             </th>
-                            <th className=' table-data'>
+                            <th className=' tx-table-cell'>
                                 F-Dia
                             </th>
-                            <th className=' table-data'>
+                            <th className=' tx-table-cell'>
                                 Uom
                             </th>
-                            <th className=' table-data'>
+                            <th className=' tx-table-cell'>
                                 Po qty
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 A.Can. qty
                             </th>
-                            {/* <th className='table-data'>
+                            {/* <th className='tx-table-cell'>
                                 A.Can. Rolls
                             </th> */}
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 A.In. qty
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 A.In. Rolls
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 A.Rtn. qty
                             </th>
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 A.Rtn Rolls
                             </th>
 
-                            <th className='table-data'>
+                            <th className='tx-table-cell'>
                                 Bal.Qty
                             </th>
 
-                            {/* <th className="table-data  w-16">Bal. Rolls<span className="text-red-500">*</span></th> */}
-                            <th className='table-data w-16'><span className="text-red-500">*</span>
+                            {/* <th className="tx-table-cell  w-16">Bal. Rolls<span className="text-red-500">*</span></th> */}
+                            <th className='tx-table-cell w-16'><span className="text-red-500">*</span>
                                 Can. Qty
                             </th>
 
-                            <th className=' table-data'>
+                            <th className=' tx-table-cell'>
                                 Price
                             </th>
 
                             {!readOnly &&
-                                <th className=' table-data'>Del</th>
+                                <th className=' tx-table-cell'>Del</th>
                             }
                         </tr>
                     </thead>
@@ -186,12 +186,12 @@ const FabricCancelItems = ({ inwardItems, setInwardItems, readOnly, removeItem, 
                             loopLengthList={loopLengthList} poItemId={item.poItemsId}
                             diaList={diaList} item={item} index={index} handleInputChange={handleInputChange} purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
                         {Array.from({ length: 8 - inwardItems.length }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                            <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
                                 {Array.from({ length: 20 }).map(i =>
-                                    <td className="table-data   "></td>
+                                    <td className="tx-table-cell   "></td>
                                 )}
                                 {!readOnly &&
-                                    <td className="table-data w-10"></td>
+                                    <td className="tx-table-cell w-10"></td>
                                 }
                             </tr>)
                         }

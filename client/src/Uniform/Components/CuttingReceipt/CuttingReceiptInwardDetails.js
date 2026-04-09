@@ -13,46 +13,46 @@ const CuttingReceiptInwardDetails = ({ id, readOnly, cuttingOrderId, cuttingRece
     >
       <legend className="sub-heading">Cutting Receipt Details</legend>
       <div className={`relative w-full overflow-y-auto p-1`}>
-        <table className="table-data border border-gray-500 text-xs table-auto w-full">
+        <table className="tx-table-cell border border-gray-500 text-xs table-auto w-full">
           <thead className="bg-blue-200 border border-gray-500 top-0">
             <tr className="border border-gray-500">
-              <th className="table-data w-2 text-center">S.no</th>
-              <th className="table-data w-24">Item</th>
-              <th className="table-data w-24">Color</th>
-              <th className="table-data w-24">Panel</th>
-              <th className="table-data w-24">PanelColor</th>
-              <th className="table-data w-20">Size</th>
-              {/* <th className="table-data w-20"> Uom</th> */}
-              <th className="table-data w-20">Order Qty</th>
-              <th className="table-data w-20">Cutting Qty</th>
-              <th className="table-data w-20">Already Received Qty</th>
-              <th className="table-data w-20">Bal To Rec Qty</th>
-              {/* <th className="table-data w-20">Order Price</th> */}
-              <th className="table-data w-20">Received Qty</th>
+              <th className="tx-table-cell w-2 text-center">S.no</th>
+              <th className="tx-table-cell w-24">Item</th>
+              <th className="tx-table-cell w-24">Color</th>
+              <th className="tx-table-cell w-24">Panel</th>
+              <th className="tx-table-cell w-24">PanelColor</th>
+              <th className="tx-table-cell w-20">Size</th>
+              {/* <th className="tx-table-cell w-20"> Uom</th> */}
+              <th className="tx-table-cell w-20">Order Qty</th>
+              <th className="tx-table-cell w-20">Cutting Qty</th>
+              <th className="tx-table-cell w-20">Already Received Qty</th>
+              <th className="tx-table-cell w-20">Bal To Rec Qty</th>
+              {/* <th className="tx-table-cell w-20">Order Price</th> */}
+              <th className="tx-table-cell w-20">Received Qty</th>
               {!readOnly &&
-                <th className="table-data  w-5 text-green-600" onClick={() => { setFillGrid(true) }}> {PLUS} </th>
+                <th className="tx-table-cell  w-5 text-green-600" onClick={() => { setFillGrid(true) }}> {PLUS} </th>
               }
             </tr>
           </thead>
-          <tbody className="overflow-y-auto table-data h-full w-full">
+          <tbody className="overflow-y-auto tx-table-cell h-full w-full">
             {cuttingReceiptInwardDetails.map((item, index) =>
               <CuttingReceiptInwardDetailItem readOnly={readOnly} cuttingReceiptInwardDetailsFillData={cuttingReceiptInwardDetailsFillData} item={item} index={index} cuttingOrderId={cuttingOrderId} cuttingReceiptInwardDetails={cuttingReceiptInwardDetails} setCuttingReceiptInwardDetails={setCuttingReceiptInwardDetails} />
             )
             }
             {Array.from({ length: 5 - cuttingReceiptInwardDetails.length }).map(i =>
-              <tr key={i} className='w-full font-bold h-6 border-gray-400 border table-row'>
-                <td className='table-data'> </td>
-                {/* <td className="table-data   "></td> */}
-                <td className="table-data   "></td>
-                <td className="table-data   "></td>
-                <td className="table-data   "></td>
-                <td className="table-data   "></td>
-                {/* <td className="table-data   "></td> */}
-                <td className="table-data   "></td>
-                <td className="table-data   "></td>
-                <td className="table-data   "></td>
+              <tr key={i} className='w-full font-bold h-6 border-gray-400 border tx-table-row'>
+                <td className='tx-table-cell'> </td>
+                {/* <td className="tx-table-cell   "></td> */}
+                <td className="tx-table-cell   "></td>
+                <td className="tx-table-cell   "></td>
+                <td className="tx-table-cell   "></td>
+                <td className="tx-table-cell   "></td>
+                {/* <td className="tx-table-cell   "></td> */}
+                <td className="tx-table-cell   "></td>
+                <td className="tx-table-cell   "></td>
+                <td className="tx-table-cell   "></td>
                 {!readOnly &&
-                  <td className="table-data   "></td>
+                  <td className="tx-table-cell   "></td>
                 }
               </tr>)
             }

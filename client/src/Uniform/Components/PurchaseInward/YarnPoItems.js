@@ -303,9 +303,9 @@ const YarnPoItems = ({
                 contentClassName="overflow-hidden rounded-md border border-slate-200 !py-0"
             >
                 <div className="h-full overflow-x-auto overflow-y-auto ">
-                    <table className={transactionTableClassName}>
-                        <thead className={`${transactionTableHeadClassName} shadow-sm`}>
-                            <tr className="py-2  bg-gray-300">
+                    <table className={`${transactionTableClassName} [&_button]:leading-[14px] [&_input]:leading-[14px] [&_tbody_td]:h-[26px] [&_tbody_td]:align-middle [&_tbody_tr]:h-[26px] [&_td]:leading-[14px] [&_th]:leading-[14px]`}>
+                        <thead className={`${transactionTableHeadClassName} shadow-sm [&>tr>th]:align-middle [&>tr>th]:leading-[14px]`}>
+                            <tr className="bg-gray-00">
                                 <th
                                     className={`w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
@@ -495,7 +495,7 @@ const YarnPoItems = ({
                                                             if (e.key === "Delete") { handleInputChange("0.000", index, element?.[i]) }
                                                         }}
 
-                                                        className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
+                                                        className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none tx-table-input"
                                                         onFocus={(e) => e.target.select()}
                                                         // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                                         value={row[i]}
@@ -532,7 +532,7 @@ const YarnPoItems = ({
                                             }}
                                             min={"0"}
                                             type="number"
-                                            className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
+                                            className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none tx-table-input"
                                             onFocus={(e) => e.target.select()}
                                             // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                             value={(row?.qty)}
@@ -623,8 +623,8 @@ const YarnPoItems = ({
                                 </tr>
                             )}
                         </tbody>
-                        <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300  font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
-                            <tr className="bg-gray-300">
+                        <tfoot className="sticky bottom-0 z-20 border-t border-gray-300 font-bold">
+                            <tr>
                                 <td
                                     colSpan={(stockControldata?.itemWise ? 1 : 0) + (stockControldata?.sizeWise ? 1 : 0) + (stockControldata?.sizeColorWise ? 1 : 0) + 3 + (id ? 2 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
                                     className="bg-gray-300 px-1 py-1 text-right text-[12px]"

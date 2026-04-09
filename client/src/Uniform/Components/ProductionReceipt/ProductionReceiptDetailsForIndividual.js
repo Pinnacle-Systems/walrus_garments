@@ -53,20 +53,20 @@ const ProductionReceiptDetailsForIndividual = ({ groupData, setGroupData, packin
                 <legend className="sub-heading">Production Receipt For Individual Pack</legend>
                 <div className={`relative w-full overflow-y-auto p-1`}>
 
-                    <table className="table-data border border-gray-500 text-xs table-auto w-full">
+                    <table className="tx-table-cell border border-gray-500 text-xs table-auto w-full">
                         <thead className="bg-gray-300 border border-gray-500 top-0">
                             <tr className="border border-gray-500">
-                                <th className="table-data w-2 text-center">S.no</th>
+                                <th className="tx-table-cell w-2 text-center">S.no</th>
 
-                                <th className="table-data w-20">Size</th>
-                                <th className="table-data w-20">Item</th>
-                                <th className="table-data w-24">Color</th>
-                                <th className="table-data w-24">ReceivedQty</th>
+                                <th className="tx-table-cell w-20">Size</th>
+                                <th className="tx-table-cell w-20">Item</th>
+                                <th className="tx-table-cell w-24">Color</th>
+                                <th className="tx-table-cell w-24">ReceivedQty</th>
 
-                                <th className="table-data w-24">Box</th>
+                                <th className="tx-table-cell w-24">Box</th>
 
                                 {!readOnly &&
-                                    <th className="table-data  w-5 text-green-600" onClick={() => {
+                                    <th className="tx-table-cell  w-5 text-green-600" onClick={() => {
                                         if (isPacking()) {
                                             setProductionDeliveryDetailsFillGridForPacking(true)
                                         }
@@ -77,7 +77,7 @@ const ProductionReceiptDetailsForIndividual = ({ groupData, setGroupData, packin
                                 }
                             </tr>
                         </thead>
-                        <tbody className="overflow-y-auto table-data h-full w-full">{console.log(groupData, "groupData")}
+                        <tbody className="overflow-y-auto tx-table-cell h-full w-full">{console.log(groupData, "groupData")}
                             {
                                 (packingCategory == "SIZEWISE" && packingType == "INDIVIDUAL") &&
 

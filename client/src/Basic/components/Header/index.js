@@ -158,7 +158,7 @@ const Header = ({ profile, setProfile }) => {
 
     return (
 
-        <div className='py-1 h-10 w-full flex justify-between items-center bg-white shadow-sm fixed z-50'>
+        <div className='fixed inset-x-0 top-0 z-50 flex h-12 w-full items-center justify-between bg-white px-3 shadow-sm'>
             <Modal
                 isOpen={logout}
                 onClose={() => {
@@ -168,12 +168,12 @@ const Header = ({ profile, setProfile }) => {
             >
                 <Logout setLogout={setLogout} />
             </Modal>
-            <div className=" ms-3">
+            <div className="flex shrink-0 items-center">
                 <img className="rounded-lg h-10"
                     src={logo}
                     alt="" />
             </div>
-            <div className="mr-9 flex items-center  justify-content-between">
+            <div className="mr-9 flex items-center gap-3">
                 {/* <div className='flex items-center text-[12px] border rounded-full relative mr-3'>
                     <input className=' px-2 py-1 w-60 text-[12px] rounded-full' placeholder='search' type='text' name='password' id='password' />
                     <div className='absolute right-2  text-neutral-500'>
@@ -182,7 +182,7 @@ const Header = ({ profile, setProfile }) => {
                 </div> */}
                 <PageSearch pageList={allowedPages?.filter(i => i.active)} />
 
-                <div className="mr-3 bg-beige  rounded-full ">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-beige">
                     <NotificationBell />
                 </div>
 
@@ -191,7 +191,7 @@ const Header = ({ profile, setProfile }) => {
                         ref={ref}
                         onClick={toggleNavMenu}
                         type="button"
-                        className="md:bg-transparent inline-flex  text-2xl justify-end"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-2xl"
                         id="menu-button"
                         aria-expanded="true"
                         aria-haspopup="true"

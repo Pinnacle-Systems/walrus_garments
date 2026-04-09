@@ -57,7 +57,7 @@ const AccessoryInwardItemSelection = ({ poType, supplierId, isItemAdded, handleC
                 >
                     <table className="table-auto text-center w-full">
                         <thead className="border-2 table-header">
-                            <tr className='h-2 table-row'>
+                            <tr className='h-2 tx-table-row'>
                                 <th className='w-10'>
                                     <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, poItems?.data ? poItems.data : [])}
                                         checked={getSelectAll(poItems?.data ? poItems.data : [])}
@@ -182,7 +182,7 @@ const AccessoryInwardItemSelection = ({ poType, supplierId, isItemAdded, handleC
                                 {poItems.data.map((dataObj, index) => (
                                     <tr
                                         key={dataObj.id}
-                                        className="border-2 table-row "
+                                        className="border-2 tx-table-row "
                                         onClick={() => handleChange(dataObj.id)}
                                     >
                                         <td className='py-1'>

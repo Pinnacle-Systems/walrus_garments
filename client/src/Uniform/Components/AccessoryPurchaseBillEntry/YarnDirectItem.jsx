@@ -25,20 +25,20 @@ const YarnDirectItem = ({ item, index, handleInputChange, readOnly, removeItem, 
     let discountAmount = (item.discountType === "Percentage") ? (billAmount) / 100 * parseInt(item.discountValue) : item.discountValue
     let amount = substract(billAmount, discountAmount).toFixed(2)
     return (
-        <tr key={index} className='table-row'>
-            <td className='text-center   table-data'>{index + 1}</td>
-            <td className='text-left  table-data'>{directItem.DirectInwardOrReturn.docId}</td>
-            <td className='text-left  table-data'> <pre className='font-sans' > {directItem.Yarn.aliasName} </pre> </td>
-            <td className='text-left   table-data'>{directItem.Color.name}</td>
-            <td className='text-left   table-data'>{directItem.Uom.name}</td>
-            <td className='text-right  table-data'>{ }</td>
-            <td className='text-right  table-data'>{grnQty}</td> 
-            <td className='text-right  table-data'>{ }</td>
-            <td className='text-right  table-data'>{ }</td>
-            <td className='text-right  table-data'>{parseFloat(directItem.price).toFixed(2)}</td>
-            <td className='text-right  table-data'>{alreadyBilledQty}</td>
-            <td className='text-right  table-data'>{parseFloat(balanceQty).toFixed(3)}</td>
-            <td className='table-data text-right'>
+        <tr key={index} className='tx-table-row'>
+            <td className='text-center   tx-table-cell'>{index + 1}</td>
+            <td className='text-left  tx-table-cell'>{directItem.DirectInwardOrReturn.docId}</td>
+            <td className='text-left  tx-table-cell'> <pre className='font-sans' > {directItem.Yarn.aliasName} </pre> </td>
+            <td className='text-left   tx-table-cell'>{directItem.Color.name}</td>
+            <td className='text-left   tx-table-cell'>{directItem.Uom.name}</td>
+            <td className='text-right  tx-table-cell'>{ }</td>
+            <td className='text-right  tx-table-cell'>{grnQty}</td> 
+            <td className='text-right  tx-table-cell'>{ }</td>
+            <td className='text-right  tx-table-cell'>{ }</td>
+            <td className='text-right  tx-table-cell'>{parseFloat(directItem.price).toFixed(2)}</td>
+            <td className='text-right  tx-table-cell'>{alreadyBilledQty}</td>
+            <td className='text-right  tx-table-cell'>{parseFloat(balanceQty).toFixed(3)}</td>
+            <td className='tx-table-cell text-right'>
                 <input
                     onKeyDown={e => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -46,7 +46,7 @@ const YarnDirectItem = ({ item, index, handleInputChange, readOnly, removeItem, 
                     }}
                     min={"0"}
                     type="number"
-                    className="text-right rounded   w-full py-1 table-data-input"
+                    className="text-right rounded   w-full py-1 tx-table-input"
                     autoFocus={index === 0}
                     value={item.qty}
                     disabled={readOnly}
@@ -72,12 +72,12 @@ const YarnDirectItem = ({ item, index, handleInputChange, readOnly, removeItem, 
                     }}
                 />
             </td>
-            <td className='   table-data text-right'>
+            <td className='   tx-table-cell text-right'>
                 {parseFloat(directItem.price).toFixed(2)}
             </td>
-            <td className='text-right  table-data'>{billAmount}</td>
-            <td className='   table-data text-right'>
-                <select name='type' disabled={readOnly} className='text-center rounded   w-full py-1 table-data-input'
+            <td className='text-right  tx-table-cell'>{billAmount}</td>
+            <td className='   tx-table-cell text-right'>
+                <select name='type' disabled={readOnly} className='text-center rounded   w-full py-1 tx-table-input'
                     value={item.discountType}
                     onChange={(event) => {
                         if (event.target.value < 0) return
@@ -95,7 +95,7 @@ const YarnDirectItem = ({ item, index, handleInputChange, readOnly, removeItem, 
                     </option>)}
                 </select>
             </td>
-            <td className='table-data text-right'>
+            <td className='tx-table-cell text-right'>
                 <input
                     onKeyDown={e => {
                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -103,7 +103,7 @@ const YarnDirectItem = ({ item, index, handleInputChange, readOnly, removeItem, 
                     }}
                     min={"0"}
                     type="number"
-                    className="text-right rounded   w-full py-1 table-data-input"
+                    className="text-right rounded   w-full py-1 tx-table-input"
                     value={item.discountValue}
                     disabled={readOnly}
                     onChange={(event) => {
@@ -124,12 +124,12 @@ const YarnDirectItem = ({ item, index, handleInputChange, readOnly, removeItem, 
                     }}
                 />
             </td>
-            <td className='text-right  table-data'>{amount}</td>
-            <td className='text-right  table-data'>{directItem.taxPercent}</td>
-            <td className='text-right  table-data'>
+            <td className='text-right  tx-table-cell'>{amount}</td>
+            <td className='text-right  tx-table-cell'>{directItem.taxPercent}</td>
+            <td className='text-right  tx-table-cell'>
                 <input
                     type="text"
-                    className="text-right rounded   w-full py-1 table-data-input"
+                    className="text-right rounded   w-full py-1 tx-table-input"
                     value={item.notes}
                     disabled={readOnly}
                     onChange={(event) => {
@@ -138,7 +138,7 @@ const YarnDirectItem = ({ item, index, handleInputChange, readOnly, removeItem, 
                 />
             </td>
             {!readOnly &&
-                <td className='table-data w-12'>
+                <td className='tx-table-cell w-12'>
                     <div tabIndex={-1} onClick={() => removeItem(item.isPoItem ? item.poItemsId : item.directItemsId, item?.isPoItem ? true : false)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
                         {DELETE}
                     </div>

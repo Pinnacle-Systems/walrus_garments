@@ -82,51 +82,51 @@ const CuttingReceiptInwardDetailItem = ({ item, index, id, cuttingReceiptInwardD
     }
 
     return (
-        <tr key={index} className='py-2 table-row'>
-            <td className='table-data   '>
+        <tr key={index} className='py-2 tx-table-row'>
+            <td className='tx-table-cell   '>
                 {index + 1}
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {findFromList(item?.itemId, itemList?.data, "name")}
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {findFromList(item?.colorId, colorList?.data, "name")}
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {findFromList(item?.panelId, panelList?.data, "name")}
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {findFromList(item?.panelColorId, colorList?.data, "name")}
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {findFromList(item?.sizeId, sizeList?.data, "name")}
             </td>
-            {/* <td className='table-data'>
+            {/* <td className='tx-table-cell'>
                 {findFromList(item?.uomId, uomList?.data, "name")}
             </td> */}
-            {/* <td className='  table-data text-left'>
+            {/* <td className='  tx-table-cell text-left'>
                 {cuttingDeliveryItem?.UOM?.name}
             </td> */}
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
                 {item?.orderQty}
             </td>
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
                 {item?.cuttingQty}
             </td>
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
                 {item?.alreadyReceivedQty || 0}
             </td>
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
                 {balQty || 0}
             </td>
-            {/* <td className='  table-data text-right px-1'>
+            {/* <td className='  tx-table-cell text-right px-1'>
                 {cuttingDeliveryItem?.cuttingPrice}
             </td> */}
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    className="text-right rounded py-1 px-1 w-full tx-table-input"
 
                     value={(!item.receivedQty) ? 0 : item.receivedQty}
 
@@ -145,7 +145,7 @@ const CuttingReceiptInwardDetailItem = ({ item, index, id, cuttingReceiptInwardD
             </td>
             {!readOnly
                 &&
-                <td className='table-data '>
+                <td className='tx-table-cell '>
                     <button className='w-full' onClick={deleteItem}>
                         {DELETE}
                     </button>

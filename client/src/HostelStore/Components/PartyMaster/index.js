@@ -531,13 +531,13 @@ const Party = ({ setPartyFormOpen, setLeadPageOpen, leadPageOpen, isLead = false
                                     <thead className='bg-blue-200 top-0 border-b border-gray-500'>
 
                                         <tr className=''>
-                                            <th className="table-data  py-2 w-5">S.No</th>
+                                            <th className="tx-table-cell  py-2 w-5">S.No</th>
 
-                                            <th className="table-data  py-2 ">Address</th>
+                                            <th className="tx-table-cell  py-2 ">Address</th>
 
 
 
-                                            <th className="table-data  w-10 p-0.5">  <button onClick={addNewAddress}>{PLUS}</button></th>
+                                            <th className="tx-table-cell  w-10 p-0.5">  <button onClick={addNewAddress}>{PLUS}</button></th>
 
                                         </tr>
                                     </thead>
@@ -545,16 +545,16 @@ const Party = ({ setPartyFormOpen, setLeadPageOpen, leadPageOpen, isLead = false
 
 
                                         {(shippingAddress ? shippingAddress : []).map((item, index) =>
-                                            <tr className="w-full table-row">
-                                                <td className='table-data'>
+                                            <tr className="w-full tx-table-row">
+                                                <td className='tx-table-cell'>
                                                     {index + 1}
                                                 </td>
 
 
-                                                <td className='table-data'>
+                                                <td className='tx-table-cell'>
                                                     <input
                                                         type="text"
-                                                        className="text-left rounded py-2 px-1 w-full table-data-input"
+                                                        className="text-left rounded py-2 px-1 w-full tx-table-input"
 
                                                         value={item?.address ? item?.address : ""}
 
@@ -681,13 +681,13 @@ const Party = ({ setPartyFormOpen, setLeadPageOpen, leadPageOpen, isLead = false
                                     <thead className='bg-blue-200 top-0 border-b border-gray-500'>
 
                                         <tr className=''>
-                                            <th className="table-data  py-2">S.No</th>
+                                            <th className="tx-table-cell  py-2">S.No</th>
 
-                                            <th className="table-data  py-2">Product Name</th>
+                                            <th className="tx-table-cell  py-2">Product Name</th>
 
-                                            <th className="table-data py-2">Price</th>
+                                            <th className="tx-table-cell py-2">Price</th>
 
-                                            <th className="table-data  w-10 p-0.5">  <button onClick={addNewRow}>{PLUS}</button></th>
+                                            <th className="tx-table-cell  w-10 p-0.5">  <button onClick={addNewRow}>{PLUS}</button></th>
 
                                         </tr>
                                     </thead>
@@ -695,11 +695,11 @@ const Party = ({ setPartyFormOpen, setLeadPageOpen, leadPageOpen, isLead = false
 
 
                                         {(priceDetails ? priceDetails : []).map((item, index) =>
-                                            <tr className="w-full table-row">
-                                                <td className='table-data'>
+                                            <tr className="w-full tx-table-row">
+                                                <td className='tx-table-cell'>
                                                     {index + 1}
                                                 </td>
-                                                <td className='table-data'>
+                                                <td className='tx-table-cell'>
                                                     <DropdownWithSearch value={item?.productId}
                                                         readOnly={readOnly}
 
@@ -707,10 +707,10 @@ const Party = ({ setPartyFormOpen, setLeadPageOpen, leadPageOpen, isLead = false
                                                         options={productList?.data?.filter(item => item?.active)} />
                                                 </td>
 
-                                                <td className='table-data w-24'>
+                                                <td className='tx-table-cell w-24'>
                                                     <input
                                                         type="number"
-                                                        className="text-right rounded py-2 px-1 w-full table-data-input"
+                                                        className="text-right rounded py-2 px-1 w-full tx-table-input"
 
                                                         value={item?.price ? item?.price : 0}
 

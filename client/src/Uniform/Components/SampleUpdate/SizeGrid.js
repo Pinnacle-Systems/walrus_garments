@@ -69,12 +69,12 @@ const SizeGrid = ({ singleData, sampleSizeGrid, setSampleSizeGrid, id, readOnly 
                 <table className=" border border-gray-500 text-xs table-auto w-full">
                     <thead className='bg-blue-200 top-0 border-b border-gray-500'>
                         <tr className=''>
-                            <th className="table-data  w-8 text-center p-0.5">S.no</th>
-                            <th className="table-data w-9">Size<span className="text-red-500 p-5">*</span></th>
-                            <th className="table-data">Color<span className="text-red-500 p-5">*</span></th>
+                            <th className="tx-table-cell  w-8 text-center p-0.5">S.no</th>
+                            <th className="tx-table-cell w-9">Size<span className="text-red-500 p-5">*</span></th>
+                            <th className="tx-table-cell">Color<span className="text-red-500 p-5">*</span></th>
                             {/* {!readOnly
                                 &&
-                                <th className="table-data  w-16 p-0.5" onClick={addNewRow} >  <span className='text-2xl' >+</span></th>
+                                <th className="tx-table-cell  w-16 p-0.5" onClick={addNewRow} >  <span className='text-2xl' >+</span></th>
                             } */}
                         </tr>
                     </thead>
@@ -82,15 +82,15 @@ const SizeGrid = ({ singleData, sampleSizeGrid, setSampleSizeGrid, id, readOnly 
                     <tbody className='overflow-y-auto h-full w-full'>
                         {(sampleSizeGrid || []).map((item, index) =>
 
-                            <tr key={index} className={`w-full table-row`}>
-                                <td className="table-data w-7 text-left px-1 py-1">
+                            <tr key={index} className={`w-full tx-table-row`}>
+                                <td className="tx-table-cell w-7 text-left px-1 py-1">
                                     {index + 1}
                                 </td>
-                                <td className='table-data w-16 px-2'>
+                                <td className='tx-table-cell w-16 px-2'>
                                     {item.Size?.name || ""}
                                 </td>
 
-                                <td className='table-data w-16 px-2'>
+                                <td className='tx-table-cell w-16 px-2'>
                                     {item?.Color?.name || ""}
                                 </td>
 

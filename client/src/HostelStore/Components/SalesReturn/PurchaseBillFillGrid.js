@@ -104,18 +104,18 @@ const PurchaseBillFillGrid = ({ poReturnItems, setPoReturnItems, setPurchaseBill
                 <table className=" border border-gray-500 text-xs table-auto  w-full">
                     <thead className='bg-green-300 top-0 border-b border-gray-500'>
                         <tr className=''>
-                            <th className="table-data w-10"></th>
-                            <th className="table-data  w-2 text-center p-0.5">S.no</th>
-                            <th className="table-data ">Product Brand<span className="text-red-500 p-0.5">*</span></th>
-                            <th className="table-data ">Product Category<span className="text-red-500 p-0.5">*</span></th>
+                            <th className="tx-table-cell w-10"></th>
+                            <th className="tx-table-cell  w-2 text-center p-0.5">S.no</th>
+                            <th className="tx-table-cell ">Product Brand<span className="text-red-500 p-0.5">*</span></th>
+                            <th className="tx-table-cell ">Product Category<span className="text-red-500 p-0.5">*</span></th>
 
 
-                            <th className="table-data ">Product Name<span className="text-red-500 p-5">*</span></th>
+                            <th className="tx-table-cell ">Product Name<span className="text-red-500 p-5">*</span></th>
 
-                            <th className="table-data ">UOM type<span className="text-red-500 p-5">*</span></th>
-                            <th className="table-data  w-20">Qty<span className="text-red-500 p-0.5">*</span></th>
-                            <th className="table-data  w-16">Price<span className="text-red-500 p-0.5">*</span></th>
-                            <th className="table-data  w-16 p-0.5">Amount</th>
+                            <th className="tx-table-cell ">UOM type<span className="text-red-500 p-5">*</span></th>
+                            <th className="tx-table-cell  w-20">Qty<span className="text-red-500 p-0.5">*</span></th>
+                            <th className="tx-table-cell  w-16">Price<span className="text-red-500 p-0.5">*</span></th>
+                            <th className="tx-table-cell  w-16 p-0.5">Amount</th>
 
 
                         </tr>
@@ -125,41 +125,41 @@ const PurchaseBillFillGrid = ({ poReturnItems, setPoReturnItems, setPurchaseBill
 
                         {(purchaseBillItems ? purchaseBillItems : []).map((item, index) =>
 
-                            <tr key={index} className="w-full table-row" onClick={() => { handleChange(item.id) }}>{console.log(purchaseBillItems, 'purchase bill items')}
-                                <td className="table-data flex justify-items-center items-center ">
+                            <tr key={index} className="w-full tx-table-row" onClick={() => { handleChange(item.id) }}>{console.log(purchaseBillItems, 'purchase bill items')}
+                                <td className="tx-table-cell flex justify-items-center items-center ">
                                     <input type='checkbox' checked={isItemSelected(item.id)} />
                                 </td>
-                                <td className="table-data w-2 text-left px-1 py-1">
+                                <td className="tx-table-cell w-2 text-left px-1 py-1">
                                     {index + 1}
                                 </td>
 
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
 
                                     {item?.ProductBrand?.name}
 
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     {item?.ProductCategory?.name}
 
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     {item?.Product?.name}
 
                                 </td>
                                 <td>{getProductUomPriceDetails(item.productId).map((uom) => uom.Uom.name)}</td>
 
-                                <td className='table-data text-right pr-1'>
+                                <td className='tx-table-cell text-right pr-1'>
                                     {item?.qty}
 
                                 </td>
-                                <td className='table-data text-right pr-1'>
+                                <td className='tx-table-cell text-right pr-1'>
                                     {item?.price ? item.price : 0.000}
 
                                 </td>
 
 
 
-                                <td className='table-data text-right pr-1'>
+                                <td className='tx-table-cell text-right pr-1'>
                                     {(!item.qty || !item.price) ? 0 : (parseFloat(item.qty) * parseFloat(item.price)).toFixed(2)}
 
                                 </td>

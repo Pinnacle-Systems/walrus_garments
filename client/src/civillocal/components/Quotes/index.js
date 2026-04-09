@@ -704,35 +704,35 @@ export default function Form() {
                     <table className=" border border-gray-500 text-xs table-auto w-full">
                       <thead className='bg-blue-200 top-0 border-b border-gray-500'>
                         <tr className=''>
-                          <th className="table-data  w-12 text-center p-0.5">S.no</th>
-                          <th className="table-data">Product Name<span className="text-red-500 p-5">*</span></th>
-                          <th className="table-data">Description</th>
-                          <th className="table-data">Hsn</th>
+                          <th className="tx-table-cell  w-12 text-center p-0.5">S.no</th>
+                          <th className="tx-table-cell">Product Name<span className="text-red-500 p-5">*</span></th>
+                          <th className="tx-table-cell">Description</th>
+                          <th className="tx-table-cell">Hsn</th>
 
-                          <th className="table-data w-16">Uom</th>
-                          <th className="table-data  w-16">Qty</th>
-                          <th className="table-data  w-20">Price</th>
+                          <th className="tx-table-cell w-16">Uom</th>
+                          <th className="tx-table-cell  w-16">Qty</th>
+                          <th className="tx-table-cell  w-20">Price</th>
 
-                          <th className="table-data  w-16 p-0.5">Taxable.Amount</th>
-                          <th className="table-data  w-16 p-0.5">Tax Percent %</th>
+                          <th className="tx-table-cell  w-16 p-0.5">Taxable.Amount</th>
+                          <th className="tx-table-cell  w-16 p-0.5">Tax Percent %</th>
 
                           {
                             isIgst ?
 
-                              <th className="table-data  w-20">IGST</th>
+                              <th className="tx-table-cell  w-20">IGST</th>
                               :
                               <>
-                                <th className="table-data  w-20">CGST</th>
-                                <th className="table-data  w-20">SGST</th>
+                                <th className="tx-table-cell  w-20">CGST</th>
+                                <th className="tx-table-cell  w-20">SGST</th>
                               </>
                           }
-                          <th className="table-data  w-20">Discount</th>
+                          <th className="tx-table-cell  w-20">Discount</th>
 
 
-                          <th className="table-data  w-20">Amount</th>
+                          <th className="tx-table-cell  w-20">Amount</th>
 
                           {!(id ? !(isNewVersion) : readOnly) &&
-                            <th className="table-data  w-16 p-0.5" onClick={addNewRow} >  <span className='text-2xl' >+</span></th>
+                            <th className="tx-table-cell  w-16 p-0.5" onClick={addNewRow} >  <span className='text-2xl' >+</span></th>
                           }
                         </tr>
                       </thead>
@@ -740,11 +740,11 @@ export default function Form() {
                       <tbody className='overflow-y-auto h-full w-full'>
                         {(quotesItems || []).map((item, index) =>
                           (id ? (isNewVersion ? (item.quoteVersion === "New") : (parseInt(item.quoteVersion) === parseInt(quoteVersion))) : (true)) ?
-                            <tr key={index} className={`w-full table-row`}>
-                              <td className="table-data w-7 text-left px-1 py-1">
+                            <tr key={index} className={`w-full tx-table-row`}>
+                              <td className="tx-table-cell w-7 text-left px-1 py-1">
                                 {count++}
                               </td>
-                              <td className='table-data w-32'>
+                              <td className='tx-table-cell w-32'>
                                 <DropdownWithSearch value={item.productId}
                                   readOnly={id ? !(isNewVersion) : readOnly}
                                   setValue={(value) => handleInputChange(value, index, "productId")}
@@ -752,7 +752,7 @@ export default function Form() {
 
 
                               </td>
-                              <td className="table-data w-48 overflow-auto text-left px-1 py-1">
+                              <td className="tx-table-cell w-48 overflow-auto text-left px-1 py-1">
                                 <textarea className=" w-full h-24 overflow-auto focus:outline-none border border-gray-500 rounded p-2 text-xs"
                                   value={item.description}
                                   disabled={id ? !(isNewVersion) : readOnly}
@@ -761,10 +761,10 @@ export default function Form() {
                                 </textarea>
                               </td>
 
-                              <td className='table-data w-16 text-right px-1'>
+                              <td className='tx-table-cell w-16 text-right px-1'>
                                 <input
                                   type="number"
-                                  className="text-right rounded py-1 px-1 w-full  table-data-input border border-gray-400"
+                                  className="text-right rounded py-1 px-1 w-full  tx-table-input border border-gray-400"
                                   value={item?.hsnCode == "0" ? '' : item?.hsnCode}
                                   disabled={id ? !(isNewVersion) : readOnly}
                                   onChange={(e) =>
@@ -778,12 +778,12 @@ export default function Form() {
 
 
                               </td>
-                              <td className='table-data w-16'>
+                              <td className='tx-table-cell w-16'>
 
                                 <select
                                   disabled={id ? !(isNewVersion) : readOnly}
                                   onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                  className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                                  className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                                   value={item.uomId}
                                   onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                 >
@@ -797,10 +797,10 @@ export default function Form() {
                                 </select>
                               </td>
 
-                              <td className='table-data'>
+                              <td className='tx-table-cell'>
                                 <input
                                   type="number"
-                                  className="text-right rounded py-1 px-1 w-full  table-data-input border border-gray-400"
+                                  className="text-right rounded py-1 px-1 w-full  tx-table-input border border-gray-400"
                                   value={item.qty == 0 ? '' : item.qty}
                                   disabled={id ? !(isNewVersion) : readOnly}
                                   onChange={(e) =>
@@ -810,11 +810,11 @@ export default function Form() {
                                 />
                               </td>
 
-                              <td className='table-data text-right px-1'>
+                              <td className='tx-table-cell text-right px-1'>
 
                                 <input
                                   type="number"
-                                  className="text-right rounded py-1 px-1 w-full  table-data-input border border-gray-400"
+                                  className="text-right rounded py-1 px-1 w-full  tx-table-input border border-gray-400"
                                   value={item?.price == 0 ? '' : item?.price}
                                   disabled={id ? !(isNewVersion) : readOnly}
                                   onChange={(e) =>
@@ -827,19 +827,19 @@ export default function Form() {
                                 />
                               </td>
 
-                              <td className='table-data'>
+                              <td className='tx-table-cell'>
                                 <input
                                   type="number"
-                                  className="text-right rounded py-1 px-1 w-full table-data-input"
+                                  className="text-right rounded py-1 px-1 w-full tx-table-input"
                                   value={(!item.qty || !item.price) ? 0 : (parseFloat(parseFloat(item.qty) * parseFloat(item.price)).toFixed(2) || 0)}
                                   disabled
                                 />
                               </td>
-                              <td className='table-data'>
+                              <td className='tx-table-cell'>
                                 <input
                                   type="number"
                                   disabled={id ? !(isNewVersion) : readOnly}
-                                  className="text-right rounded py-1 px-1 w-full table-data-input"
+                                  className="text-right rounded py-1 px-1 w-full tx-table-input"
                                   value={item.taxPercent ? item.taxPercent.replace("%", "") : ""}
                                   onChange={(e) =>
                                     handleInputChange(e.target.value, index, "taxPercent")
@@ -856,27 +856,27 @@ export default function Form() {
                                 isIgst ?
 
 
-                                  <td className='table-data text-right px-1'>
+                                  <td className='tx-table-cell text-right px-1'>
                                     {(!item.qty || !item.price) ? 0 : (parseFloat((parseFloat(item.qty) * parseFloat(item.price)) * (calculateGst(index) / 100)).toFixed(2) || 0)}
                                   </td>
 
                                   :
                                   <>
-                                    <td className='table-data text-right px-1'>
+                                    <td className='tx-table-cell text-right px-1'>
                                       {(!item.qty || !item.price) ? 0 : (parseFloat((parseFloat(item.qty) * parseFloat(item.price)) * ((calculateGst(index) / 2) / 100)).toFixed(2) || 0)}
                                     </td>
 
-                                    <td className='table-data text-right px-1'>
+                                    <td className='tx-table-cell text-right px-1'>
                                       {(!item.qty || !item.price) ? 0 : (parseFloat((parseFloat(item.qty) * parseFloat(item.price)) * ((calculateGst(index) / 2) / 100)).toFixed(2) || 0)}
                                     </td>
 
                                   </>
                               }
 
-                              <td className='table-data'>
+                              <td className='tx-table-cell'>
                                 <input
                                   type="number"
-                                  className="text-right rounded py-1 px-1 w-full table-data-input border border-gray-400"
+                                  className="text-right rounded py-1 px-1 w-full tx-table-input border border-gray-400"
                                   value={item.discount == 0 ? '' : item.discount}
                                   disabled={id ? (isNewVersion && !isTotalDiscount) ? false : true : (!readOnly && !isTotalDiscount) ? false : true}
                                   onChange={(e) =>
@@ -891,10 +891,10 @@ export default function Form() {
                                 />
                               </td>
 
-                              <td className='table-data'>
+                              <td className='tx-table-cell'>
                                 <input
                                   type="number"
-                                  className="text-right rounded py-1 px-1 w-full table-data-input"
+                                  className="text-right rounded py-1 px-1 w-full tx-table-input"
                                   value={(!item.qty || !item.price) ? 0 : parseFloat(substract(parseFloat(item.qty) * parseFloat(item.price), parseFloat(item?.discount || 0)) + ((parseFloat(item.qty) * parseFloat(item.price)) * (calculateGst(index) / 100))).toFixed(2) || 0}
                                   disabled
                                 />

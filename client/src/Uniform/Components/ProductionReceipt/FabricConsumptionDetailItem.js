@@ -25,44 +25,44 @@ const FabricConsumptionDetailItem = ({ item, index, id, productionReceiptDetails
         })
     }
     return (
-        <tr key={index} className='py-2 table-row'>
-            <td className='table-data   '>
+        <tr key={index} className='py-2 tx-table-row'>
+            <td className='tx-table-cell   '>
                 {index + 1}
             </td>
 
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {productionDeliveryItem?.Item?.name}
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {productionDeliveryItem?.Panel?.name}
             </td>
 
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {productionDeliveryItem?.Color?.name}
             </td>
-            <td className=' table-data text-left px-1'>
+            <td className=' tx-table-cell text-left px-1'>
                 {productionDeliveryItem?.Size?.name}
             </td>
-            {/* <td className='  table-data text-left'>
+            {/* <td className='  tx-table-cell text-left'>
                 {productionDeliveryItem?.Uom?.name}
             </td> */}
-            {/* <td className='  table-data text-right px-1'>
+            {/* <td className='  tx-table-cell text-right px-1'>
                 {productionDeliveryItem?.processCost}
             </td> */}
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
                 {delQty}
             </td>
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
                 {alreadyReceivedQty}
             </td>
-            <td className='  table-data text-right px-1'>
+            <td className='  tx-table-cell text-right px-1'>
                 {balQty}
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    className="text-right rounded py-1 px-1 w-full tx-table-input"
 
                     value={(!item.consumption) ? 0 : item.consumption}
 
@@ -78,7 +78,7 @@ const FabricConsumptionDetailItem = ({ item, index, id, productionReceiptDetails
                     }
                 />
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <button
                     className="text-center rounded py-1 w-20"
                     onKeyDown={(e) => {
@@ -92,12 +92,12 @@ const FabricConsumptionDetailItem = ({ item, index, id, productionReceiptDetails
                     {VIEW}
                 </button>
             </td>
-            {/* <td className='  table-data text-right'>
+            {/* <td className='  tx-table-cell text-right'>
                 {totalLossQty?.toFixed(3)}
             </td> */}
             {!readOnly
                 &&
-                <td className='table-data '>
+                <td className='tx-table-cell '>
                     <button className='w-full' onClick={deleteItem}>
                         {DELETE}
                     </button>

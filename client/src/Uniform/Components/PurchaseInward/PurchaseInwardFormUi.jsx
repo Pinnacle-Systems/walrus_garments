@@ -367,7 +367,7 @@ const PurchaseInwardForm = ({
   ];
 
   const footerContent = (
-    <div className="flex flex-col justify-between gap-2 md:flex-row">
+    <div className="flex flex-col justify-between gap-2 leading-[14px] md:flex-row">
       <div className="flex flex-wrap gap-2">
 
         <button
@@ -375,7 +375,7 @@ const PurchaseInwardForm = ({
           ref={saveCloseButtonRef}
           tabIndex={0}
           onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
-          className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+          className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm leading-[14px] text-white hover:bg-indigo-600"
           disabled={readOnly}
 
         >
@@ -388,7 +388,7 @@ const PurchaseInwardForm = ({
           onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
           disabled={readOnly}
 
-          className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+          className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm leading-[14px] text-white hover:bg-indigo-600"
         >
           <FiSave className="mr-2 h-4 w-4" />
           Save & New
@@ -396,7 +396,7 @@ const PurchaseInwardForm = ({
       </div>
       <div className="flex flex-wrap gap-2">
         <button
-          className="flex items-center rounded-md bg-yellow-600 px-4 py-1 text-sm text-white hover:bg-yellow-700"
+          className="flex items-center rounded-md bg-yellow-600 px-4 py-1 text-sm leading-[14px] text-white hover:bg-yellow-700"
           onClick={() => hasPermission(() => setReadOnly(false), "edit")}
 
         >
@@ -404,7 +404,7 @@ const PurchaseInwardForm = ({
           Edit
         </button>
         <button
-          className="flex items-center rounded-md bg-blue-600 px-4 py-1 text-sm text-white hover:bg-blue-700"
+          className="flex items-center rounded-md bg-blue-600 px-4 py-1 text-sm leading-[14px] text-white hover:bg-blue-700"
           onClick={() => {
             if (
               directInwardReturnItems?.filter((i) => i.itemId)?.length === 0

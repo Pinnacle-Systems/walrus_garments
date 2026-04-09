@@ -42,9 +42,9 @@ export const transactionTableIndexCellClassName = "w-12 border border-gray-300 p
 export const transactionTableCellClassName = "border border-gray-300 bg-white p-0 text-[11px]";
 export const transactionTableFocusCellClassName = `${transactionTableCellClassName} focus-within:border-amber-700 focus-within:bg-amber-100`;
 export const transactionTableSelectInputClassName =
-  "h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-left shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input";
+  "h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-left shadow-none outline-none focus:bg-transparent focus:outline-none tx-table-input";
 export const transactionTableNumberInputClassName =
-  "h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input";
+  "h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none tx-table-input";
 export const transactionTableActionCellClassName = "w-16 border border-gray-300 p-0 text-center";
 export const transactionTableActionButtonClassName = "h-full w-full rounded-none bg-blue-50 py-0";
 

@@ -186,7 +186,7 @@ const PurchaseBillFormReport = ({
                     tabIndex={0}
                     key={dataObj.id}
 
-                    className="border-2 table-row cursor-pointer"
+                    className="border-2 tx-table-row cursor-pointer"
                     onClick={()=>onClick(dataObj.id)}>
 
 
