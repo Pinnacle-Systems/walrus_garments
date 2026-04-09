@@ -77,7 +77,7 @@ const Home = () => {
             <Header profile={profile} setProfile={setProfile} />
 
             <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />
-            <div className="mt-[30px]  py-2 px-2 bg-[#f1f1f0]  :tab">
+            <div className="pt-12 py-2 px-2 bg-[#f1f1f0] :tab">
               <ActiveTabList isSuperAdmin={isSuperAdmin} />
               {openTabs.tabs.length === 0 ? <Dashboard /> : ''}
             </div>

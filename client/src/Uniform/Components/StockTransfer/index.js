@@ -127,8 +127,8 @@ const StockTransfer = () => {
                     onClose={() => { setForm(false) }} fromCustomerId={fromCustomerId} setFromCustomerId={setFromCustomerId} branchId={branchId}
                 />
             ) : (
-                <div className=" bg-[#F1F1F0] h-[85%]">
-                    <div className="flex flex-col sm:flex-row justify-between bg-white px-1 py-0.5 items-start sm:items-center mb-2 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+                <div className="flex h-[calc(100vh-5rem)] min-h-0 flex-col bg-[#F1F1F0]">
+                    <div className="mb-2 flex shrink-0 flex-col items-start justify-between gap-x-4 rounded-tl-lg rounded-tr-lg border border-gray-200 bg-white px-1 py-0.5 shadow-sm sm:flex-row sm:items-center">
 
                         <h1 className="text-lg font-bold text-gray-800">
                             Stock Transfer Report
@@ -142,7 +142,7 @@ const StockTransfer = () => {
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden  ">
+                    <div className="min-h-0 flex-1 overflow-hidden rounded-xl bg-white shadow-sm">
 
                         <StockTransferReport
                             onView={handleView}
