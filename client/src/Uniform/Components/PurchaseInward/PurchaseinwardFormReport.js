@@ -267,12 +267,12 @@ const PurchaseInwardFormReport = ({
   };
   return (
     <div
-      className="flex flex-col w-full h-[78vh] overflow-auto"
+      className="flex flex-col w-full h-[83vh] overflow-auto"
     >
 
       <>
         <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[68vh]">
+          <div className="h-[77vh]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -281,11 +281,11 @@ const PurchaseInwardFormReport = ({
                   </th>
 
                   <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-40">
-                    <div>Purchase Inward No</div>
+                    <div>Inward No</div>
 
                   </th>
                   <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-40">
-                    <div>Purchase Inward Date</div>
+                    <div>Inward Date</div>
 
                   </th>
 
@@ -531,7 +531,7 @@ const PurchaseInwardFormReport = ({
             </table>
 
           </div>
-          <div className="h-[10vh]">
+          <div className="h-[5vh]">
             <Pagination />
           </div>
 

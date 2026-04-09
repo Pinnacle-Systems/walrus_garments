@@ -13,6 +13,8 @@ const renderSummaryValue = (value) => {
 
 const TransactionEntryShell = ({
   title,
+  isNew = false,
+  clearWorkspace,
   readOnly,
   id,
   onClose,
@@ -39,9 +41,19 @@ const TransactionEntryShell = ({
           </h1>
           <div className="flex flex-row gap-3">
             <ModeChip id={id} readOnly={readOnly} />
-            <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
-              <IoArrowBackCircleSharp className="w-7 h-7" />
-            </button>
+            {onClose && (
+              <button onClick={onClose} className="text-indigo-600 hover:text-indigo-700" title="Open Report">
+                <IoArrowBackCircleSharp className="w-7 h-7" />
+              </button>
+            )}
+            {isNew && (
+              <button className="flex items-center gap-1 rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800"
+              onClick={clearWorkspace}
+              >
+                <FaFileAlt className="h-3 w-3" />
+                New
+              </button>
+            )}
           </div>
 
         </div>

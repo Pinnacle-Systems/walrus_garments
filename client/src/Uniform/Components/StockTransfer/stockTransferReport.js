@@ -186,36 +186,37 @@ const StockTransferReport = ({
     return (
         <div
             //   id="registrationFormReport"
-            className="flex flex-col w-full h-[78vh] overflow-auto"
+            className="flex flex-col w-full h-[83vh] overflow-auto"
         >
 
             <>
                 <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
-                    <div className="h-[68vh]">
+                    <div className="h-[77vh]">
                         <table className="">
                             <thead className="bg-gray-200 text-gray-800 ">
                                 <tr className="">
-                                    <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                                    <th className=" px-1 py-1.5  font-bold text-[13px]  text-gray-900  text-center  w-12">
                                         <div className="">S No</div>
                                     </th>
 
-                                    <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                                        <div>Doc No</div>
+                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
+                                        <div>Transfer No</div>
 
                                     </th>
-                                    <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                                        <div>Doc Date</div>
+                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
+                                        <div>Transfer Date</div>
 
                                     </th>
-                                    <th className="w-40  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                                    <th className="w-40  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>From Location</div>
 
                                     </th>
-                                    <th className="w-40  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                                    <th className="w-40  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>To Location</div>
 
                                     </th>
-                                    <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                                    <th className="w-14   px-3  font-bold text-[13px]  text-gray-900  text-center "
+                                        rowSpan={2}>
                                         <div>Actions</div>
 
                                     </th>
@@ -270,9 +271,9 @@ const StockTransferReport = ({
                                             }}
                                         />
                                     </th>
-                                    <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
+                                    {/* <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
 
-                                    </th>
+                                    </th> */}
 
                                 </tr>
                             </thead>
@@ -359,7 +360,7 @@ const StockTransferReport = ({
                         </table>
 
                     </div>
-                    <div className="h-[10vh]">
+                    <div className="h-[5vh]">
                         <Pagination />
                     </div>
 

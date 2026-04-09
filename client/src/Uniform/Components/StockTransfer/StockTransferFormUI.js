@@ -26,6 +26,7 @@ import Modal from "../../../UiComponents/Modal";
 import BarCodePrintFormat from "./BarcodePrintFormat";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
+import { IoArrowBackCircleSharp } from "react-icons/io5";
 
 const StockTransferForm = ({
     docId, id, readOnly, setId, setForm,
@@ -371,17 +372,11 @@ const StockTransferForm = ({
                     itemList={itemList}
                 />
             </Modal>
-            <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md px-2 py-1 ">
-                <div className="flex justify-between items-center mb-1">
-                    <h1 className="text-2xl font-bold text-gray-800">Stock Transfer <ModeChip id={id} readOnly={readOnly} /></h1>
-                    <div className="gap-4">
-                        {/* <button
-                                        onClick={onClose}
-                                        className="text-indigo-600 hover:text-indigo-700"
-                                        title="Open Report"
-                                    >
-                                        <HiOutlineDocumentText className="w-7 h-6" />
-                                    </button> */}
+            <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md  py-1 ">
+                <div className="flex justify-between items-center mb-1 bg-white py-1 px-2">
+                    <h1 className="text-lg font-bold text-gray-800">Stock Transfer</h1>
+                    <div className="gap-4 flex flex-row ">
+                        <ModeChip id={id} readOnly={readOnly} />
                         <button
                             onClick={() => {
                                 OnNew()
@@ -391,7 +386,7 @@ const StockTransferForm = ({
                             className="text-indigo-600 hover:text-indigo-700"
                             title="Open Report"
                         >
-                            <FaFileAlt className="w-5 h-5" />
+                            <IoArrowBackCircleSharp className="w-7 h-7" />
                         </button>
                     </div>
 
@@ -402,17 +397,17 @@ const StockTransferForm = ({
 
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                            <h2 className="font-medium text-slate-700 mb-2">
+                            <h2 className="text-sm font-bold text-gray-800 mb-1">
                                 Basic Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
-                                <ReusableInput label="Doc Id" readOnly value={docId} />
-                                <ReusableInput label="Doc Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+                                <ReusableInput label="Transfer Id" readOnly value={docId} />
+                                <ReusableInput label="Transfer Date" value={date} type={"date"} required={true} readOnly={true} disabled />
 
                             </div>
                         </div>
                         <div className="col-span-4 border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                            <h2 className="font-medium text-slate-700 mb-2">Transfer Order Details</h2>
+                            <h2 className="text-sm font-bold text-gray-800 mb-1">Transfer Order Details</h2>
 
                             <div className="grid grid-cols-1">
                                 <div className="grid grid-cols-10 gap-x-3 gap-y-1">
@@ -517,7 +512,7 @@ const StockTransferForm = ({
 
 
                     </div>
-                    <div className="h-[430px]">
+                    <div className="h-[430px] mt-0">
                         <FormItems id={id} orderItems={orderItems} setOrderItems={setOrderItems} setRequirementId={setRequirementId} requirementId={requirementId} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
                             colorList={colorList?.data} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                             stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} singleData={singleData}
@@ -534,15 +529,19 @@ const StockTransferForm = ({
                         <div className="flex gap-2 flex-wrap">
                             <button
                                 onClick={() => saveData("new")}
+                                disabled={readOnly}
                                 className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
                                 <FiSave className="w-4 h-4 mr-2" />
                                 Save & New
                             </button>
                             <button
-                                // onClick={() => saveData("close")}
+                                onClick={() => saveData("close")}
+                                disabled={readOnly}
+
                                 className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
                                 <HiOutlineRefresh className="w-4 h-4 mr-2" />
                                 Save & Close
+
                             </button>
 
                         </div>

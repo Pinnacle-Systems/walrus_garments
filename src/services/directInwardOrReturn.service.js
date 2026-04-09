@@ -195,7 +195,7 @@ function getPurchaseInwardStatus(inward) {
 
     // if (totalReturnQty > 0) return "Partially Returned";
 
-    return "empty";
+    return "Items Received";
 }
 
 

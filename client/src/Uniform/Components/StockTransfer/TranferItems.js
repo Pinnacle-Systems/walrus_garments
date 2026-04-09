@@ -52,7 +52,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                     }
                 }}
             >
-                <td className="w-5 border border-gray-300 text-center text-xs px-2">
+                <td className="w-5 border border-gray-300 text-center text-xs px-2 py-1">
                     {index + 1}
                 </td>
 
@@ -113,9 +113,9 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
 
 
 
-                <td className="w-12 border border-gray-300 text-right text-[11px]    text-xs px-2">
+                <td className="w-40 border border-gray-300 p-0 text-[11px] text-right focus-within:border-amber-600 focus-within:bg-amber-100 px-2">
                     <input
-                        className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                        className=" h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
                         type="number"
                         step="0.01"
                         min="0"
@@ -146,7 +146,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                         }}
 
 
-                        placeHolder="0.000"
+                    // placeHolder="0.000"
                     />
                 </td>
 

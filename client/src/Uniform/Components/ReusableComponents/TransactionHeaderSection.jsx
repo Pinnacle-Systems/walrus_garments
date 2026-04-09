@@ -12,7 +12,7 @@ const TransactionHeaderSection = ({
     .filter(Boolean)
     .join(" ");
 
-  const bodyClasses = ["grid gap-1 pt-2  overflow-visible", bodyClassName].filter(Boolean).join(" ");
+  const bodyClasses = ["grid gap-1 pt-1  overflow-visible", bodyClassName].filter(Boolean).join(" ");
   // const legendClasses = [
   //   "absolute -top-3 left-3 bg-gray-200 px-2 py-1  text-[12px] font-medium text-slate-800",
   //   titleClassName,
@@ -20,7 +20,7 @@ const TransactionHeaderSection = ({
   //   .filter(Boolean)
   //   .join(" ");
   const legendClasses = [
-    "text-md font-bold text-gray-800",
+    "text-sm font-bold text-gray-800",
     titleClassName,
   ]
     .filter(Boolean)

@@ -78,13 +78,13 @@ const YarnPoItems = ({
         if (!itemPriceList?.data || !itemId) return null;
         const itemRows = itemPriceList.data.filter(item => String(item.itemId) === String(itemId));
         if (!itemRows.length) return null;
-        if (!sizeId) {
-            return itemRows.find(item => !item.sizeId && !item.colorId) || itemRows[0];
-        }
-        if (!colorId) {
-            return itemRows.find(item => String(item.sizeId) === String(sizeId) && !item.colorId) ||
-                itemRows.find(item => String(item.sizeId) === String(sizeId));
-        }
+        // if (!sizeId) {
+        //     return itemRows.find(item => !item.sizeId && !item.colorId) || itemRows[0];
+        // }
+        // if (!colorId) {
+        //     return itemRows.find(item => String(item.sizeId) === String(sizeId) && !item.colorId) ||
+        //         itemRows.find(item => String(item.sizeId) === String(sizeId));
+        // }
         return itemRows.find(item =>
             String(item.itemId) === String(itemId) &&
             String(item.sizeId) === String(sizeId) &&
@@ -305,7 +305,7 @@ const YarnPoItems = ({
                 <div className="h-full overflow-x-auto overflow-y-auto ">
                     <table className={transactionTableClassName}>
                         <thead className={`${transactionTableHeadClassName} shadow-sm`}>
-                            <tr className="py-2  bg-gray-00">
+                            <tr className="py-2  bg-gray-300">
                                 <th
                                     className={`w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px] `}
                                 >
@@ -419,7 +419,7 @@ const YarnPoItems = ({
                                             handleRightClick(e, index, "shiftTimeHrs");
                                         }
                                     }}
-                                >{console.log(readOnly, "readOnly", !readOnly)}
+                                >
                                     <td className="w-12 border border-gray-300 text-[11px] text-center p-0">{index + 1}</td>
 
                                     {stockControldata?.itemWise && (
@@ -612,7 +612,7 @@ const YarnPoItems = ({
                                                 }
                                             }}
                                             disabled={readOnly}
-                                            className="h-full w-full rounded-none bg-blue-50 py-0"
+                                            className="h-full w-full rounded-none bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700 py-0"
                                         >
                                             +
                                         </button>
@@ -624,7 +624,7 @@ const YarnPoItems = ({
                             )}
                         </tbody>
                         <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300  font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
-                            <tr>
+                            <tr className="bg-gray-300">
                                 <td
                                     colSpan={(stockControldata?.itemWise ? 1 : 0) + (stockControldata?.sizeWise ? 1 : 0) + (stockControldata?.sizeColorWise ? 1 : 0) + 3 + (id ? 2 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
                                     className="bg-gray-300 px-1 py-1 text-right text-[12px]"
@@ -647,7 +647,7 @@ const YarnPoItems = ({
                     <div
                         style={{
                             position: "absolute",
-                            top: `${contextMenu.mouseY - 355}px`,
+                            top: `${contextMenu.mouseY - 240}px`,
                             left: `${contextMenu.mouseX - 40}px`,
 
                             // background: "gray",
@@ -671,6 +671,7 @@ const YarnPoItems = ({
                             </button>
                             <button
                                 className=" text-black text-[12px] text-left rounded px-1"
+                                disabled={poItems?.some(i => i.alreadyReturnedQty > 0)}
                                 onClick={() => {
                                     handleDeleteAllRows();
                                     handleCloseContextMenu();

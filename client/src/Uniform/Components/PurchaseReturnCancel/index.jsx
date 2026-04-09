@@ -230,8 +230,8 @@ export default function Form() {
         </div>
 
       ) : (
-        <div className="p-2 bg-[#F1F1F0] ">
-          <div className="flex flex-col sm:flex-row justify-between bg-white  px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+        <div className=" bg-[#F1F1F0] ">
+          <div className="flex flex-col sm:flex-row justify-between bg-white  px-1  py-0.5 items-start sm:items-center mb-2 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
 
             <h1 className="text-lg font-bold text-gray-800">
               Purchase Return Report

@@ -180,14 +180,16 @@ const StockAdjustment = () => {
         </div>
 
       ) : (
-        <div className="p-2 bg-[#F1F1F0] min-h-screen">
-          <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-1 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+        <div className=" bg-[#F1F1F0] min-h-screen">
+          <div className="flex flex-col sm:flex-row justify-between bg-white px-1 py-0.5 items-start sm:items-center mb-2 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
 
-            <h1 className="text-2xl font-bold text-gray-800">Stock Adjustment</h1>
-
+            <h1 className="text-lg font-bold text-gray-800">
+              Stock Adjustment
+            </h1>
             <button
-              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-sm"
+              className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-xs"
               onClick={() => { setShowManufacturer(true); onNew() }}
+
             >
               <FaPlus /> Create New
             </button>

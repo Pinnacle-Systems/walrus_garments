@@ -84,43 +84,43 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                     <table className={transactionTableClassName}>
                         <thead className={`${transactionTableHeadClassName} shadow-sm`} >
 
-                            <tr>
+                            <tr className='bg-gray-300'>
                                 <th
-                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     S.No
                                 </th>
 
                                 {stockControlData?.data?.[0]?.itemWise && (
                                     <th
-                                        className="w-60 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                        className="w-60 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                     >
                                         Item
                                     </th>
                                 )}
                                 {stockControlData?.data?.[0]?.sizeWise && (
                                     <th
-                                        className="w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                        className="w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                     >
                                         Size
                                     </th>
                                 )}
                                 {stockControlData?.data?.[0]?.sizeColorWise && (
                                     <th
-                                        className="w-36 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                        className="w-36 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                     >
                                         Color
                                     </th>
                                 )}
                                 <th
 
-                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     UOM
                                 </th>
                                 <th
 
-                                    className="w-20 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Barcode
                                 </th>
@@ -129,7 +129,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                         <>
                                             <th
                                                 key={i}
-                                                className="w-28 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                                className="w-28 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                             >
                                                 {capitalizeFirstLetter(element?.[i])}
                                             </th>
@@ -139,37 +139,37 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 ))}
                                 <th
 
-                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Inward Qty
                                 </th>
                                 <th
 
-                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Already Return Qty
                                 </th>
                                 <th
 
-                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Stock Qty
                                 </th>
                                 <th
 
-                                    className="w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Balance Qty
                                 </th>
                                 <th
 
-                                    className="w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Price
                                 </th>
                                 <th
 
-                                    className="w-16 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
 
                                 >
                                     Return Qty <span className="text-red-500">*</span>

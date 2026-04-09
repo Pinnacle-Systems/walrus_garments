@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { read, utils } from "xlsx";
 import { FiDownload, FiFileText, FiPlus, FiRotateCcw, FiSave, FiUploadCloud, FiX } from "react-icons/fi";
 import { FaQuestionCircle } from "react-icons/fa";
@@ -20,6 +20,7 @@ import {
 } from "../../../Utils/helper";
 import Modal from "../../../UiComponents/Modal";
 import TransactionLineItemsSection, {
+  standardTransactionPlaceholderRowCount,
   transactionTableActionButtonClassName,
   transactionTableActionCellClassName,
   transactionTableClassName,
@@ -30,7 +31,10 @@ import TransactionLineItemsSection, {
   transactionTableNumberInputClassName,
   transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
-import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
+import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
+import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
+import { DropdownInput } from "../../../Inputs";
+import OpeningStockInput from "../ReusableComponents/OpeningStockInput";
 import {
   createOpeningStockRowDefaults,
   getOpeningStockFieldDefinitions,
@@ -58,41 +62,7 @@ const normalizeManualFieldValue = (field, value) => {
 
   return value?.toString().toUpperCase() ?? "";
 };
-const openingStockHeaderSelectStyles = {
-  control: (base) => ({
-    ...base,
-    minHeight: "30px",
-    height: "30px",
-    fontSize: "12px",
-    borderRadius: "0.5rem",
-  }),
-  valueContainer: (base) => ({
-    ...base,
-    padding: "0 8px",
-    fontSize: "12px",
-  }),
-  input: (base) => ({
-    ...base,
-    margin: 0,
-    padding: 0,
-    fontSize: "12px",
-  }),
-  singleValue: (base) => ({
-    ...base,
-    fontSize: "12px",
-  }),
-  placeholder: (base) => ({
-    ...base,
-    fontSize: "12px",
-  }),
-  option: (base) => ({
-    ...base,
-    fontSize: "12px",
-  }),
-  indicatorsContainer: (base) => ({ ...base, height: "30px" }),
-  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-  menu: (base) => ({ ...base, zIndex: 9999 }),
-};
+
 
 const createRowId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -201,6 +171,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
 
   const [selectedBranchId, setSelectedBranchId] = React.useState("");
   const [selectedLocationId, setSelectedLocationId] = React.useState("");
+  const [headerOpen, setHeaderOpen] = React.useState(true);
   const [missingMasterReview, setMissingMasterReview] = React.useState({
     isOpen: false,
     items: [],
@@ -289,6 +260,14 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
   const uomOptions = React.useMemo(
     () => (uomList?.data || []).map((uom) => ({ value: uom.id, label: uom.name })),
     [uomList]
+  );
+  const sizeOptions = React.useMemo(
+    () => (sizeList?.data || []).map((size) => ({ value: size.name, label: size.name })),
+    [sizeList]
+  );
+  const colorOptions = React.useMemo(
+    () => (colorList?.data || []).map((color) => ({ value: color.name, label: color.name })),
+    [colorList]
   );
   const existingColorCodeMap = React.useMemo(
     () =>
@@ -431,16 +410,24 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     );
   }, [itemByName, openingStockFields, updateRows]);
 
-  const updateRowItemSelection = React.useCallback((rowId, itemId) => {
+  const updateRowItemSelection = React.useCallback((rowId, itemIdOrName) => {
     updateRows((previousRows) =>
       previousRows.map((row) => {
         if (row._rowId !== rowId) return row;
-        if (!itemId) {
+        if (!itemIdOrName) {
           return clearResolvedLegacyItemFromRow(row);
         }
 
-        const resolvedItem = legacyItems.find((item) => String(item.id) === String(itemId));
-        return applyResolvedLegacyItemToRow(row, resolvedItem);
+        const resolvedItem = legacyItems.find((item) => String(item.id) === String(itemIdOrName));
+        if (resolvedItem) {
+          return applyResolvedLegacyItemToRow(row, resolvedItem);
+        }
+
+        return {
+          ...row,
+          itemId: "",
+          item_name: itemIdOrName,
+        };
       })
     );
   }, [legacyItems, updateRows]);
@@ -451,6 +438,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
 
   const clearWorkspace = React.useCallback(() => {
     setFile(null);
+    setSelectedLocationId('')
     closeMissingMasterReview();
     setStockItems([]);
     const input = document.getElementById("openingStockFileInput");
@@ -639,11 +627,11 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
         conflicts.push(`Row ${index + 1} sales price ${rowSalesPrice} differs from Item Master sales price ${itemSalesPrice}. Update Item Master before loading stock.`);
       }
 
-      const rowOfferPrice = normalizeComparablePrice(getRowOfferPrice(row));
-      const itemOfferPrice = normalizeComparablePrice(getExistingLegacyOfferPrice(existingItem));
-      if (rowOfferPrice && itemOfferPrice && rowOfferPrice !== itemOfferPrice) {
-        conflicts.push(`Row ${index + 1} offer price ${rowOfferPrice} differs from Item Master offer price ${itemOfferPrice}. Update Item Master before loading stock.`);
-      }
+      // const rowOfferPrice = normalizeComparablePrice(getRowOfferPrice(row));
+      // const itemOfferPrice = normalizeComparablePrice(getExistingLegacyOfferPrice(existingItem));
+      // if (rowOfferPrice && itemOfferPrice && rowOfferPrice !== itemOfferPrice) {
+      //   conflicts.push(`Row ${index + 1} offer price ${rowOfferPrice} differs from Item Master offer price ${itemOfferPrice}. Update Item Master before loading stock.`);
+      // }
     });
 
     return conflicts;
@@ -704,24 +692,39 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     reviewedColors = [],
   }) => {
     if (!selectedBranchId) {
-      toast.warning("Please select a branch.");
+      // toast.warning("Please select a branch.");
+      Swal.fire({
+        text: "Please select a branch",
+        icon: "warning",
+      });
       return;
     }
 
     if (!selectedLocationId) {
-      toast.warning("Please select a location.");
+      // toast.warning("Please select a location.");
+      Swal.fire({
+        text: "Please select a location",
+        icon: "warning",
+
+      });
       return;
     }
 
     const missingRequiredRowMessage = getMissingRequiredRowMessage();
     if (missingRequiredRowMessage) {
-      toast.warning(missingRequiredRowMessage);
+      Swal.fire({
+        text: missingRequiredRowMessage,
+        icon: "warning",
+      });
       return;
     }
 
     const existingLegacyConflicts = getExistingLegacyConflicts();
     if (existingLegacyConflicts.length > 0) {
-      toast.error(existingLegacyConflicts[0]);
+      Swal.fire({
+        text: existingLegacyConflicts[0],
+        icon: "error",
+      });
       return;
     }
 
@@ -893,25 +896,27 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
 
   const saveData = React.useCallback(async () => {
     if (stockItems.length === 0) {
-      toast.warning("Please add at least one row before saving.");
+      // toast.warning("Please add at least one row before saving.");
+      Swal.fire("Please add at least one row before saving.");
       return;
     }
 
     try {
       buildLegacySeedMap(stockItems);
     } catch (error) {
-      toast.error(error.message);
+      // toast.error(error.message);
+      Swal.fire((error.data?.message || error.message));
       return;
     }
 
     const reviewState = buildMissingReviewState();
-    if (reviewState.items.length || reviewState.sizes.length || reviewState.colors.length) {
-      setMissingMasterReview({
-        isOpen: true,
-        ...reviewState,
-      });
-      return;
-    }
+    // if (reviewState.items.length || reviewState.sizes.length || reviewState.colors.length) {
+    //   setMissingMasterReview({
+    //     isOpen: true,
+    //     ...reviewState,
+    //   });
+    //   return;
+    // }
 
     await processStockSave({
       missingItems: reviewState.items,
@@ -922,7 +927,8 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
 
   const loadFile = React.useCallback((selectedFile = file) => {
     if (!selectedFile) {
-      toast.warning("Please select a file first.");
+      // toast.warning("Please select a file first.");
+      Swal.fire("Please select a file first.");
       return;
     }
 
@@ -965,7 +971,9 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
           return nextRow;
         });
 
-      updateRows((previousRows) => [...previousRows, ...transformedRows]);
+      // updateRows((previousRows) => [...previousRows, ...transformedRows]);
+      updateRows((previousRows) => [...transformedRows]);
+
     };
 
     reader.readAsArrayBuffer(selectedFile);
@@ -999,368 +1007,600 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
   const reviewErrors = getColorReviewErrors();
   const hasColorReviewErrors = Object.keys(reviewErrors).length > 0;
 
-  return (
-    <div className="flex h-full min-h-0 w-full flex-col">
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-5">
-        <div className="mt-3 flex shrink-0 flex-col gap-4">
-          <div className="flex w-full items-end justify-between gap-2">
-            <div className="flex min-w-0 items-end gap-2">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-gray-600">Select Branch</label>
-                <div className="w-52">
-                  <Select
-                    options={branchOptions}
-                    value={branchOptions.find((option) => option.value === selectedBranchId)}
-                    onChange={(option) => {
-                      setSelectedBranchId(option?.value || "");
-                      setSelectedLocationId("");
-                    }}
-                    placeholder="Branch..."
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                    styles={openingStockHeaderSelectStyles}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-gray-600">Select Location</label>
-                <div className="w-52">
-                  <Select
-                    options={locationOptions}
-                    value={locationOptions.find((option) => option.value === selectedLocationId)}
-                    onChange={(option) => setSelectedLocationId(option?.value || "")}
-                    placeholder="Location..."
-                    isClearable
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                    styles={openingStockHeaderSelectStyles}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-gray-600">Load File</label>
-                <div className="flex h-8 w-[240px] items-center gap-2 rounded-lg bg-white">
-                  <input
-                    id="openingStockFileInput"
-                    type="file"
-                    accept=".csv,.xlsx,.xls"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                  <label
-                    htmlFor="openingStockFileInput"
-                    className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-emerald-500 bg-white px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500 hover:text-white"
-                  >
-                    <FiUploadCloud className="h-3 w-3" />
-                    Load File
-                  </label>
-                  <div className="flex min-w-0 flex-1 items-center overflow-hidden">
-                    {file ? (
-                      <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-slate-600">
-                        <FiFileText className="h-3 w-3 shrink-0 text-slate-400" />
-                        <span className="block truncate font-medium text-slate-700">{file.name}</span>
-                      </div>
-                    ) : (
-                      <span className="block truncate text-[11px] text-slate-400">CSV or Excel file</span>
-                    )}
-                  </div>
-                  {file ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFile(null);
-                        const input = document.getElementById("openingStockFileInput");
-                        if (input) input.value = "";
-                      }}
-                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                      aria-label="Clear selected file"
-                    >
-                      <FiX className="h-3 w-3" />
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={downloadTemplate}
-                  className="inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-indigo-500 bg-white px-3 text-sm font-semibold text-indigo-600 transition-colors hover:bg-indigo-500 hover:text-white"
-                >
-                  <FiDownload className="h-3.5 w-3.5" />
-                  Template
-                </button>
-                <div className="group relative z-30">
-                  <button
-                    type="button"
-                    className="text-slate-400 transition-colors hover:text-slate-600"
-                    aria-label="Opening stock import template help"
-                  >
-                    <FaQuestionCircle className="cursor-help text-sm" />
-                  </button>
-                  <div className="pointer-events-none absolute right-0 top-full z-[80] mt-2 w-56 rounded-md bg-slate-800 px-3 py-2 text-[11px] leading-4 text-white shadow-lg opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                    Download the template that matches your current stock-control fields, fill it in Excel, then load it into this table.
-                  </div>
-                </div>
-              </div>
-            </div>
+  const headerContent = (
+    <div className="grid grid-cols-1 gap-3 overflow-visible md:grid-cols-3 ">
+      <TransactionHeaderSection title="Location Details" bodyClassName="grid-cols-2 gap-1.5 py-1.5">
+        <DropdownInput
+          name="Branch"
+          options={
+            branchList
+              ? branchList?.data?.map((item) => ({
+                show: item.branchName,
+                value: item.id,
+              }))
+              : []
+          }
+          value={selectedBranchId}
+          setValue={(value) => {
+            setSelectedBranchId(value);
+            setSelectedLocationId("");
+          }}
+          required
+        />
+        <DropdownInput
+          name="Location"
+          options={
+            locationList
+              ? locationList?.data?.map((item) => ({
+                show: item.storeName,
+                value: item.id,
+              }))
+              : []
+          }
+          value={selectedLocationId}
+          setValue={setSelectedLocationId}
+          required
+        />
+      </TransactionHeaderSection>
 
-            <div className="flex shrink-0 flex-row items-center gap-1.5">
+      <TransactionHeaderSection title="Import Options" bodyClassName="grid-cols-1 gap-1.5">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold text-gray-600">Load File (CSV or Excel)</label>
+          <div className="flex h-8 items-center gap-2 rounded-lg bg-white border border-gray-300 px-2 py-1">
+            <input
+              id="openingStockFileInput"
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <label
+              htmlFor="openingStockFileInput"
+              className="inline-flex h-6 shrink-0 cursor-pointer items-center gap-1.5 rounded-md bg-emerald-50 px-2 text-[11px] font-semibold text-emerald-700 transition hover:bg-emerald-100"
+            >
+              <FiUploadCloud className="h-3 w-3" />
+              Browse
+            </label>
+            <div className="flex min-w-0 flex-1 items-center overflow-hidden">
+              {file ? (
+                <span className="block truncate text-[11px] font-medium text-slate-700">
+                  {file.name}
+                </span>
+              ) : (
+                <span className="block truncate text-[11px] text-slate-400">
+                  No file chosen
+                </span>
+              )}
+            </div>
+            {file && (
               <button
-                onClick={addManualRow}
-                className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-emerald-500 bg-white px-3 text-sm font-semibold text-emerald-700 shadow-sm transition-all hover:bg-emerald-500 hover:text-white"
+                type="button"
+                onClick={() => {
+                  setFile(null);
+                  const input = document.getElementById("openingStockFileInput");
+                  if (input) input.value = "";
+                }}
+                className="text-slate-400 hover:text-slate-600"
               >
-                <FiPlus className="mr-2 h-4 w-4" />
-                Add Row
+                <FiX className="h-3 w-3" />
               </button>
-              <button
-                onClick={saveData}
-                className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-indigo-500 bg-white px-3 text-sm font-semibold text-indigo-600 shadow-sm transition-all hover:bg-indigo-500 hover:text-white"
-              >
-                <FiSave className="mr-2 h-4 w-4" />
-                Save Stock
-              </button>
-              <button
-                onClick={clearWorkspace}
-                className="inline-flex h-8 items-center whitespace-nowrap rounded-md border border-red-500 bg-white px-3 text-sm font-semibold text-red-600 shadow-sm transition-all hover:bg-red-500 hover:text-white"
-              >
-                <FiRotateCcw className="mr-2 h-4 w-4" />
-                Reset
-              </button>
+            )}
+          </div>
+        </div>
+      </TransactionHeaderSection>
+
+      <TransactionHeaderSection title="Help & Templates" bodyClassName="grid-cols-1 gap-1.5">
+        <div className="flex items-center gap-2 pt-4">
+          <button
+            type="button"
+            onClick={downloadTemplate}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-indigo-500 bg-white px-3 text-sm font-semibold text-indigo-600 transition hover:bg-indigo-50"
+          >
+            <FiDownload className="h-3.5 w-3.5" />
+            Download Template
+          </button>
+
+          <div className="group relative">
+            <FaQuestionCircle className="cursor-help text-slate-400 hover:text-slate-600" />
+            <div className="pointer-events-none absolute bottom-full right-0 z-[80] mb-2 w-56 rounded-md bg-slate-800 px-3 py-2 text-[11px] leading-4 text-white shadow-lg opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+              Download the template that matches your current stock-control fields, fill it in Excel, then load it into this table.
             </div>
           </div>
         </div>
+      </TransactionHeaderSection>
+    </div>
+  );
 
-        <TransactionLineItemsSection panelClassName="min-h-0 w-full flex-1" contentClassName="min-h-0">
-          {stockItems.length === 0 ? (
-            <div className="flex h-full min-h-[240px] items-center justify-center px-6 text-center">
-              <div className="max-w-md">
-                <p className="text-sm font-semibold text-slate-700">No rows yet.</p>
-                <p className="mt-1 text-sm text-slate-500">Load a file or add a row to start building your opening stock batch.</p>
-              </div>
-            </div>
-          ) : (
-            <div className="h-full min-h-0 overflow-auto">
-              <table className={transactionTableClassName}>
-                <thead className={transactionTableHeadClassName}>
-                  <tr>
-                    <th className={`${transactionTableHeaderCellClassName} w-12`}>S.No</th>
-                    {openingStockFields.map((field) => (
-                      <th key={field.key} className={`${transactionTableHeaderCellClassName} ${field.widthClass || ""}`}>
-                        {field.label}
-                      </th>
-                    ))}
-                    <th className={`${transactionTableHeaderCellClassName} w-16`}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stockItems.map((row, rowIndex) => {
-                    return (
-                      <tr key={row._rowId || rowIndex} className="border border-blue-gray-200">
-                        <td className={transactionTableIndexCellClassName}>{rowIndex + 1}</td>
-                        {openingStockFields.map((field) => {
-                          const attentionState = getFieldAttentionState(row, field);
-                          const cellClassName = attentionState?.tone === "missing"
-                            ? `${transactionTableFocusCellClassName} bg-red-50`
-                            : attentionState?.tone === "conflict"
-                              ? `${transactionTableFocusCellClassName} bg-orange-50`
-                              : attentionState?.tone === "pending"
-                                ? `${transactionTableFocusCellClassName} bg-amber-50`
-                                : transactionTableFocusCellClassName;
-                          const inputClassName = field.type === "number"
-                            ? transactionTableNumberInputClassName
-                            : transactionTableSelectInputClassName;
-                          const emphasizedInputClassName = attentionState
-                            ? `${inputClassName} ${attentionState.tone === "missing"
-                              ? "text-red-700 placeholder:text-red-300"
-                              : attentionState.tone === "conflict"
-                                ? "text-orange-800 placeholder:text-orange-300"
-                                : "text-amber-800 placeholder:text-amber-300"
-                            }`
-                            : inputClassName;
-
-                          if (field.key === "uom") {
-                            const resolvedUomId = getResolvedUom(row)?.id || "";
-                            return (
-                              <td key={field.key} className={cellClassName}>
-                                <Select
-                                  options={uomOptions}
-                                  value={uomOptions.find((option) => String(option.value) === String(resolvedUomId)) || null}
-                                  onChange={(option) => {
-                                    updateRows((previousRows) =>
-                                      previousRows.map((entry) =>
-                                        entry._rowId === row._rowId
-                                          ? {
-                                            ...entry,
-                                            uomId: option?.value || "",
-                                            uom: option?.label || "",
-                                          }
-                                          : entry
-                                      )
-                                    );
-                                  }}
-                                  placeholder="UOM..."
-                                  title={attentionState?.message || ""}
-                                  styles={{
-                                    control: (base) => ({
-                                      ...base,
-                                      minHeight: "30px",
-                                      height: "30px",
-                                      fontSize: "12px",
-                                      backgroundColor: "transparent",
-                                      borderColor: "transparent",
-                                      boxShadow: "none",
-                                    }),
-                                    indicatorsContainer: (base) => ({ ...base, height: "30px" }),
-                                  }}
-                                />
-                              </td>
-                            );
-                          }
-
-                          if (field.key === "item_name" && row?._entryMode === "manual") {
-                            return (
-                              <td key={field.key} className={cellClassName}>
-                                <SearchableTableCellSelect
-                                  value={row.itemId ? String(row.itemId) : ""}
-                                  options={itemLookupOptions}
-                                  disabled={false}
-                                  onChange={(nextValue) => updateRowItemSelection(row._rowId, nextValue)}
-                                  placeholder=""
-                                />
-                              </td>
-                            );
-                          }
-
-                          const inputType = field.type === "number" ? "number" : "text";
-
-                          return (
-                            <td key={field.key} className={cellClassName}>
-                              <input
-                                type={inputType}
-                                value={normalizeNumericValue(row[field.key])}
-                                onChange={(event) => updateRowField(row._rowId, field.key, event.target.value)}
-                                className={emphasizedInputClassName}
-                                title={attentionState?.message || ""}
-                              />
-                            </td>
-                          );
-                        })}
-                        <td className={transactionTableActionCellClassName}>
-                          <button
-                            onClick={() => updateRows((previousRows) => previousRows.filter((entry) => entry._rowId !== row._rowId))}
-                            className="mx-auto inline-flex h-7 w-7 items-center justify-center rounded bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700"
-                            title="Delete Row"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </TransactionLineItemsSection>
+  const footerContent = (
+    <div className="flex flex-col justify-between gap-2 md:flex-row">
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={saveData}
+          className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+        >
+          <FiSave className="mr-2 h-4 w-4" />
+          Save Stock
+        </button>
+        <button
+          onClick={addManualRow}
+          className="flex items-center rounded-md bg-emerald-500 px-4 py-1 text-sm text-white hover:bg-emerald-600"
+        >
+          <FiPlus className="mr-2 h-4 w-4" />
+          Add Row
+        </button>
       </div>
+      {/* <div className="flex flex-wrap gap-2">
+        <button
+          onClick={clearWorkspace}
+          className="flex items-center rounded-md bg-red-500 px-4 py-1 text-sm text-white hover:bg-red-600"
+        >
+          <FiRotateCcw className="mr-2 h-4 w-4" />
+          Reset
+        </button>
+      </div> */}
+    </div>
+  );
 
-      <Modal isOpen={missingMasterReview.isOpen} onClose={closeMissingMasterReview} widthClass="w-[80vw]">
-        <div className="flex max-h-[80vh] flex-col bg-white">
-          <div className="mb-4 border-b pb-3">
-            <h2 className="text-lg font-semibold text-slate-800">Review Missing Masters</h2>
-            <p className="mt-1 text-sm text-slate-500">Complete any required color codes, then confirm the batch creation.</p>
-          </div>
+  const [contextMenu, setContextMenu] = useState(false);
 
-          <div className="flex-1 space-y-4 overflow-y-auto pr-1">
-            {missingMasterReview.items.length > 0 ? (
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700">Missing Items</h3>
-                <div className="mt-2 overflow-hidden rounded-md border border-slate-200">
-                  <table className="w-full table-fixed border-collapse">
-                    <thead className="bg-slate-100">
-                      <tr>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600 w-96">Item Name</th>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600 w-32">Item Code</th>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600 w-32">Sales Price</th>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600 w-32">Offer Price</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {missingMasterReview.items.map((item) => (
-                        <tr key={item.name}>
-                          <td className="border border-slate-200 px-2 py-2 text-sm font-medium uppercase text-slate-700">{item.name}</td>
-                          <td className="border border-slate-200 px-2 py-2 text-sm uppercase text-slate-700">{item.itemCode}</td>
-                          <td className="border border-slate-200 px-2 py-2 text-sm text-slate-700">{item.salesPrice || "0"}</td>
-                          <td className="border border-slate-200 px-2 py-2 text-sm text-slate-700">{item.offerPrice || "0"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+  const handleRightClick = (event, rowIndex, type) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX,
+      mouseY: event.clientY,
+      rowId: rowIndex,
+      type,
+    });
+  };
+
+  const handleCloseContextMenu = () => setContextMenu(null);
+
+  const handleDeleteRow = (id) => {
+    setStockItems((yarnBlend) =>
+      yarnBlend.filter((row, index) => index !== parseInt(id))
+    );
+  };
+
+
+  const handleDeleteAllRows = () => {
+    setStockItems([]);
+  };
+
+  // useEffect(() => {
+  //   const targetRows = standardTransactionPlaceholderRowCount;
+  //   if (stockItems?.length >= targetRows) return;
+
+  //   setStockItems((prev) => {
+  //     const newArray = Array.from({ length: targetRows - prev.length }, () => ({
+  //       itemId: "",
+
+  //     }));
+  //     return [...prev, ...newArray];
+  //   });
+  // }, [setStockItems, stockItems]);
+
+
+
+  return (
+    <>
+      <TransactionEntryShell
+        title="Opening Stock"
+        isNew={true}
+        clearWorkspace={clearWorkspace}
+        headerOpen={headerOpen}
+        setHeaderOpen={setHeaderOpen}
+        headerContent={headerContent}
+        footer={footerContent}
+      >
+        <div className="flex h-full min-h-0 w-full flex-col">
+          <TransactionLineItemsSection
+            panelClassName="min-h-0 w-full flex-1"
+            contentClassName="min-h-0"
+          >
+            {stockItems.length === 0 ? (
+              <div className="flex h-full min-h-[240px] items-center justify-center px-6 text-center">
+                <div className="max-w-md">
+                  <p className="text-sm font-semibold text-slate-700">No rows yet.</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Load a file or add a row to start building your opening stock batch.
+                  </p>
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="h-full min-h-0 overflow-auto">
+                <table className={transactionTableClassName}>
+                  <thead className={transactionTableHeadClassName}>
+                    <tr>
+                      <th className={`${transactionTableHeaderCellClassName} w-12`}>S.No</th>
+                      {openingStockFields.map((field) => (
+                        <th
+                          key={field.key}
+                          className={`${transactionTableHeaderCellClassName} ${field.widthClass || ""
+                            }`}
+                        >
+                          {field.label}
+                        </th>
+                      ))}
+                      <th className={`${transactionTableHeaderCellClassName} w-8`}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stockItems.map((row, rowIndex) => {
+                      return (
+                        <tr
+                          key={row._rowId || rowIndex}
+                          // className="border border-blue-gray-200"
+                          className={`border border-blue-gray-200  `}
+                          onContextMenu={(e) => {
+                            handleRightClick(e, rowIndex, "shiftTimeHrs");
 
-            {missingMasterReview.sizes.length > 0 ? (
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700">Missing Sizes</h3>
-                <p className="mt-1 text-sm text-slate-600">{missingMasterReview.sizes.join(", ")}</p>
+                          }}
+
+                        >
+                          <td className={transactionTableIndexCellClassName}>
+                            {rowIndex + 1}
+                          </td>
+                          {openingStockFields.map((field) => {
+                            const attentionState = getFieldAttentionState(row, field);
+                            const cellClassName =
+                              attentionState?.tone === "missing"
+                                ? `${transactionTableFocusCellClassName} bg-red-50`
+                                : attentionState?.tone === "conflict"
+                                  ? `${transactionTableFocusCellClassName} bg-orange-50`
+                                  : attentionState?.tone === "pending"
+                                    ? `${transactionTableFocusCellClassName} bg-amber-50`
+                                    : transactionTableFocusCellClassName;
+                            const inputClassName =
+                              field.type === "number"
+                                ? transactionTableNumberInputClassName
+                                : transactionTableSelectInputClassName;
+                            const emphasizedInputClassName = attentionState
+                              ? `${inputClassName} ${attentionState.tone === "missing"
+                                ? "text-red-700 placeholder:text-red-300"
+                                : attentionState.tone === "conflict"
+                                  ? "text-orange-800 placeholder:text-orange-300"
+                                  : "text-amber-800 placeholder:text-amber-300"
+                              }`
+                              : inputClassName;
+
+                            if (field.key === "uom") {
+                              const resolvedUomId = getResolvedUom(row)?.id || "";
+                              return (
+                                <td key={field.key} className={cellClassName}>
+                                  <Select
+                                    options={uomOptions}
+                                    value={
+                                      uomOptions.find(
+                                        (option) =>
+                                          String(option.value) === String(resolvedUomId)
+                                      ) || null
+                                    }
+                                    onChange={(option) => {
+                                      updateRows((previousRows) =>
+                                        previousRows.map((entry) =>
+                                          entry._rowId === row._rowId
+                                            ? {
+                                              ...entry,
+                                              uomId: option?.value || "",
+                                              uom: option?.label || "",
+                                            }
+                                            : entry
+                                        )
+                                      );
+                                    }}
+                                    placeholder="UOM..."
+                                    title={attentionState?.message || ""}
+                                    styles={{
+                                      control: (base) => ({
+                                        ...base,
+                                        minHeight: "30px",
+                                        height: "30px",
+                                        fontSize: "12px",
+                                        backgroundColor: "transparent",
+                                        borderColor: "transparent",
+                                        boxShadow: "none",
+                                      }),
+                                      indicatorsContainer: (base) => ({
+                                        ...base,
+                                        height: "30px",
+                                      }),
+                                    }}
+                                  />
+                                </td>
+                              );
+                            }
+
+                            if (
+                              field.key === "item_name" &&
+                              row?._entryMode === "manual"
+                            ) {
+                              return (
+                                <td key={field.key} className={cellClassName}>
+                                  <OpeningStockInput
+                                    value={row.itemId ? String(row.itemId) : row.item_name}
+                                    options={itemLookupOptions}
+                                    disabled={false}
+                                    onChange={(nextValue) =>
+                                      updateRowItemSelection(row._rowId, nextValue)
+                                    }
+                                    placeholder=""
+                                  />
+                                </td>
+                              );
+                            }
+
+                            if (field.key === "size") {
+                              return (
+                                <td key={field.key} className={cellClassName}>
+                                  <OpeningStockInput
+                                    value={row.size}
+                                    options={sizeOptions}
+                                    onChange={(val) => updateRowField(row._rowId, "size", val)}
+                                  />
+                                </td>
+                              );
+                            }
+
+                            if (field.key === "color") {
+                              return (
+                                <td key={field.key} className={cellClassName}>
+                                  <OpeningStockInput
+                                    value={row.color}
+                                    options={colorOptions}
+                                    onChange={(val) => updateRowField(row._rowId, "color", val)}
+                                  />
+                                </td>
+                              );
+                            }
+
+                            const inputType = field.type === "number" ? "number" : "text";
+
+                            return (
+                              <td key={field.key} className={cellClassName}>
+                                <input
+                                  type={inputType}
+                                  value={normalizeNumericValue(row[field.key])}
+                                  onChange={(event) =>
+                                    updateRowField(
+                                      row._rowId,
+                                      field.key,
+                                      event.target.value
+                                    )
+                                  }
+                                  className={emphasizedInputClassName}
+                                  title={attentionState?.message || ""}
+                                />
+                              </td>
+                            );
+                          })}
+                          <td className={transactionTableActionCellClassName}>
+                            {/* <button
+                              onClick={() =>
+                                updateRows((previousRows) =>
+                                  previousRows.filter(
+                                    (entry) => entry._rowId !== row._rowId
+                                  )
+                                )
+                              }
+                              className="mx-auto inline-flex h-7 w-7 items-center justify-center rounded bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700"
+                              title="Delete Row"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button> */}
+                            <button
+                              onClick={addManualRow}
+                              className="mx-auto inline-flex h-7 w-7 items-center justify-center rounded bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700"
+                            // disabled={readOnly}
+                            // className="h-full w-full rounded-none bg-blue-50 py-0"
+                            >
+                              +
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            ) : null}
 
-            {missingMasterReview.colors.length > 0 ? (
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700">Missing Colors</h3>
-                <div className="mt-2 overflow-hidden rounded-md border border-slate-200">
-                  <table className="w-full table-fixed border-collapse">
-                    <thead className="bg-slate-100">
+            )}
+            {contextMenu && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: `${contextMenu.mouseY - 220}px`,
+                  left: `${contextMenu.mouseX - 40}px`,
+
+                  // background: "gray",
+                  boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  zIndex: 1000,
+                }}
+                className="bg-gray-100"
+                onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+              >
+                <div className="flex flex-col gap-1">
+                  <button
+                    className=" text-black text-[12px] text-left rounded px-1"
+                    onClick={() => {
+                      handleDeleteRow(contextMenu.rowId);
+                      handleCloseContextMenu();
+                    }}
+                  >
+                    Delete{" "}
+                  </button>
+                  <button
+                    className=" text-black text-[12px] text-left rounded px-1"
+                    onClick={() => {
+                      handleDeleteAllRows();
+                      handleCloseContextMenu();
+                    }}
+                  >
+                    Delete All
+                  </button>
+                </div>
+              </div>
+            )}
+          </TransactionLineItemsSection>
+        </div>
+      </TransactionEntryShell>
+
+      <Modal
+        isOpen={missingMasterReview.isOpen}
+        onClose={closeMissingMasterReview}
+        widthClass="w-[90vw]"
+      >
+        <div className="flex max-h-[90vh] flex-col bg-white">
+          <div className="flex items-center justify-between border-b px-4 py-3">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">Review Missing Masters</h2>
+              <p className="text-xs font-medium text-slate-500">
+                Complete any required color codes, then confirm the batch creation.
+              </p>
+            </div>
+            <button
+              onClick={closeMissingMasterReview}
+              className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            >
+              <FiX className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="flex-1 space-y-6 overflow-y-auto p-4">
+            {missingMasterReview.items.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <h3 className="text-sm font-bold text-slate-700">Missing Items</h3>
+                <TransactionLineItemsSection containerClassName="border rounded-lg overflow-hidden">
+                  <table className={transactionTableClassName}>
+                    <thead className={transactionTableHeadClassName}>
                       <tr>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Color Name</th>
-                        <th className="border border-slate-200 px-2 py-2 text-left text-xs font-semibold text-slate-600">Color Code</th>
+                        <th className={`${transactionTableHeaderCellClassName} w-12`}>S.No</th>
+                        <th className={`${transactionTableHeaderCellClassName} w-96`}>Item Name</th>
+                        <th className={`${transactionTableHeaderCellClassName} w-32`}>Item Code</th>
+                        <th className={`${transactionTableHeaderCellClassName} w-32`}>Sales Price</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {missingMasterReview.colors.map((color) => (
-                        <tr key={color.name}>
-                          <td className="border border-slate-200 px-2 py-2 text-sm font-medium uppercase text-slate-700">{color.name}</td>
-                          <td className="border border-slate-200 px-2 py-2 align-top">
-                            <input
-                              type="text"
-                              value={color.code}
-                              onChange={(event) => {
-                                const nextCode = normalizeCodeValue(event.target.value);
-                                setMissingMasterReview((previousReview) => ({
-                                  ...previousReview,
-                                  colors: previousReview.colors.map((entry) =>
-                                    entry.name === color.name ? { ...entry, code: nextCode } : entry
-                                  ),
-                                }));
-                              }}
-                              placeholder="Enter color code"
-                              className={`w-full rounded border px-2 py-1.5 text-sm uppercase outline-none ${reviewErrors[color.name]
-                                ? "border-red-400 bg-red-50 text-red-700"
-                                : "border-slate-300"
-                                }`}
-                            />
-                            {reviewErrors[color.name] ? (
-                              <p className="mt-1 text-xs text-red-600">{reviewErrors[color.name]}</p>
-                            ) : null}
+                      {missingMasterReview.items.map((item, idx) => (
+                        <tr key={item.name} className="border border-blue-gray-200">
+                          <td className={transactionTableIndexCellClassName}>{idx + 1}</td>
+                          <td className={`${transactionTableFocusCellClassName} text-[11px] font-medium uppercase text-slate-700`}>
+                            {item.name}
+                          </td>
+                          <td className={`${transactionTableFocusCellClassName} text-[11px] uppercase text-slate-700 font-mono`}>
+                            {item.itemCode}
+                          </td>
+                          <td className={`${transactionTableFocusCellClassName} text-[11px] text-slate-700 font-semibold`}>
+                            {item.salesPrice || "0"}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </TransactionLineItemsSection>
               </div>
-            ) : null}
+            )}
+
+            {missingMasterReview.sizes.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <h3 className="text-sm font-bold text-slate-700">Missing Sizes</h3>
+                <TransactionLineItemsSection containerClassName="border rounded-lg overflow-hidden max-w-sm">
+                  <table className={transactionTableClassName}>
+                    <thead className={transactionTableHeadClassName}>
+                      <tr>
+                        <th className={`${transactionTableHeaderCellClassName} w-12`}>S.No</th>
+                        <th className={`${transactionTableHeaderCellClassName}`}>Size</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {missingMasterReview.sizes.map((size, idx) => (
+                        <tr key={size} className="border border-blue-gray-200">
+                          <td className={transactionTableIndexCellClassName}>{idx + 1}</td>
+                          <td className={`${transactionTableFocusCellClassName} text-[11px] font-medium uppercase text-slate-700`}>
+                            {size}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </TransactionLineItemsSection>
+              </div>
+            )}
+
+            {missingMasterReview.colors.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <h3 className="text-sm font-bold text-slate-700">Missing Colors</h3>
+                <TransactionLineItemsSection containerClassName="border rounded-lg overflow-hidden">
+                  <table className={transactionTableClassName}>
+                    <thead className={transactionTableHeadClassName}>
+                      <tr>
+                        <th className={`${transactionTableHeaderCellClassName} w-12`}>S.No</th>
+                        <th className={`${transactionTableHeaderCellClassName}`}>Color Name</th>
+                        <th className={`${transactionTableHeaderCellClassName} w-48`}>Color Code</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {missingMasterReview.colors.map((color, idx) => (
+                        <tr key={color.name} className="border border-blue-gray-200">
+                          <td className={transactionTableIndexCellClassName}>{idx + 1}</td>
+                          <td className={`${transactionTableFocusCellClassName} text-[11px] font-medium uppercase text-slate-700`}>
+                            {color.name}
+                          </td>
+                          <td className={transactionTableFocusCellClassName}>
+                            <div className="flex flex-col gap-1">
+                              <input
+                                type="text"
+                                value={color.code}
+                                onChange={(event) => {
+                                  const nextCode = normalizeCodeValue(event.target.value);
+                                  setMissingMasterReview((previousReview) => ({
+                                    ...previousReview,
+                                    colors: previousReview.colors.map((entry) =>
+                                      entry.name === color.name
+                                        ? { ...entry, code: nextCode }
+                                        : entry
+                                    ),
+                                  }));
+                                }}
+                                placeholder="Enter color code"
+                                className={`${transactionTableSelectInputClassName} uppercase ${reviewErrors[color.name] ? "text-red-700 placeholder:text-red-300 bg-red-50" : ""
+                                  }`}
+                              />
+                              {reviewErrors[color.name] && (
+                                <p className="px-2 pb-1 text-[10px] font-semibold text-red-600">
+                                  {reviewErrors[color.name]}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </TransactionLineItemsSection>
+              </div>
+            )}
           </div>
 
-          <div className="mt-5 flex justify-end gap-2 border-t pt-4">
+          <div className="flex items-center justify-end gap-3 border-t bg-slate-50 px-4 py-3">
             <button
               type="button"
               onClick={closeMissingMasterReview}
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
             >
               Cancel
             </button>
@@ -1383,14 +1623,15 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                   reviewedColors: reviewData.colors,
                 });
               }}
-              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
+              <FiPlus className="h-4 w-4" />
               Create & Continue
             </button>
           </div>
         </div>
       </Modal>
-    </div>
+    </>
   );
 };
 

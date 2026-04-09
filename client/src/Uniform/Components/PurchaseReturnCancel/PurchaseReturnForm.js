@@ -552,22 +552,15 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                 openStateClassName="max-h-[420px] opacity-100 overflow-visible"
                 footer={footerContent}
                 headerContent={(
-                    <div className="grid grid-cols-1 gap-2 md:grid-cols-[1.2fr_1.2fr_0.75fr_1fr_1.1fr]">
+                    <div className="grid grid-cols-1 gap-2 md:grid-cols-7">
 
 
-                        <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2 md:grid-cols-[minmax(0,2fr)_minmax(0,2.4fr)]">
-                            <ReusableInput label="Purchase Return No" value={docId} required={true} readOnly
+                        <TransactionHeaderSection title="Basic Details" className="col-span-3" bodyClassName="grid-cols-2 md:grid-cols-4 gap-2">
+                            <ReusableInput label="Return No" value={docId} required={true} readOnly
                             />
-                            <DateInputNew name="Purchase Return Date" value={date} type={"date"} required={true} readOnly={readOnly}
+                            <DateInputNew name="Return Date" value={date} type={"date"} required={true} readOnly={readOnly}
                                 disabled={true}
                             />
-                        </TransactionHeaderSection>
-                        <TransactionHeaderSection title="Location Details" className="col-span-1" bodyClassName="grid-cols-2 gap-2">
-                            {/* <DropdownInput name="Return Type"
-                                    beforeChange={() => { setDirectInwardReturnItems([]) }}
-                                    options={directOrPoreturn}
-                                    value={poInwardOrDirectInward} setValue={setPoInwardOrDirectInward} required={true} readOnly={readOnly} />
-                                */}
                             <DropdownInput name="Branch"
                                 options={branchList ? (dropDownListObject(id ? branchList.data : branchList.data.filter(item => item.active), "branchName", "id")) : []}
                                 value={locationId}
@@ -578,10 +571,14 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                             <DropdownInput name="Location"
                                 options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item.storeName.includes("WAREHOUSE")), "storeName", "id")}
                                 value={storeId} setValue={setStoreId} required={true} readOnly={id || readOnly} />
-
                         </TransactionHeaderSection>
+                        {/* <TransactionHeaderSection title="Location Details" className="col-span-1" bodyClassName="grid-cols-2 gap-2">
+                     
 
-                        <TransactionHeaderSection title="Supplier Details" className="col-span-3" bodyClassName="grid-cols-5 gap-2 pb-2">
+
+                        </TransactionHeaderSection> */}
+
+                        <TransactionHeaderSection title="Supplier Details" className="col-span-4" bodyClassName="grid-cols-5 gap-2 pb-2">
 
                             <div className="col-span-3">
 

@@ -203,12 +203,12 @@ const PurchaseCancelFormReport = ({
   return (
     <div
       //   id="registrationFormReport"
-      className="flex flex-col w-full h-[78vh] overflow-auto"
+      className="flex flex-col w-full h-[83vh] overflow-auto"
     >
 
       <>
         <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
-          <div className="h-[68vh]">
+          <div className="h-[77vh]">
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
@@ -217,7 +217,7 @@ const PurchaseCancelFormReport = ({
                   </th>
 
                   <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-40">
-                    <div>Purchase Return No</div>
+                    <div>Return No</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -229,7 +229,7 @@ const PurchaseCancelFormReport = ({
                                         /> */}
                   </th>
                   <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-40">
-                    <div>Purchase Return Date</div>
+                    <div>Return Date</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -241,7 +241,7 @@ const PurchaseCancelFormReport = ({
                                         /> */}
                   </th>
 
-                  <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                  <th className="w-1/2  px-3   font-bold text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
                     {/* <input
                                             type="text"
@@ -253,13 +253,13 @@ const PurchaseCancelFormReport = ({
                                             }}
                                         /> */}
                   </th>
-                  <th className="w-20  px-3   font-bold text-[13px] text-gray-900  text-center "
+                  {/* <th className="w-20  px-3   font-bold text-[13px] text-gray-900  text-center "
                     rowSpan={2}
 
                   >
                     <div>Status</div>
 
-                  </th>
+                  </th> */}
                   <th className="w-14   px-3  font-bold text-[13px]  text-gray-900  text-center "
                     rowSpan={2}
 
@@ -353,9 +353,8 @@ const PurchaseCancelFormReport = ({
                           : ""
                           }${dataObj?.supplier?.City?.name ? ` / ${dataObj?.supplier?.City?.name}` : ""}`}
                       </td>
-                      <td className="py-1 text-left">
-                        {/* {getDateFromDateTimeToDisplay(dataObj.createdAt)} */}
-                      </td>
+                      {/* <td className="py-1 text-left">
+                      </td> */}
                       {rowActions && (
                         <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
                           <div className="flex">
@@ -409,7 +408,7 @@ const PurchaseCancelFormReport = ({
             </table>
 
           </div>
-          <div className="h-[10vh]">
+          <div className="h-[5vh]">
             <Pagination />
           </div>
 

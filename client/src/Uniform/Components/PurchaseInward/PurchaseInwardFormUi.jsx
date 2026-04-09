@@ -466,26 +466,96 @@ const PurchaseInwardForm = ({
         summaryItems={summaryItems}
         openStateClassName="max-h-[320px] headerContent opacity-100 overflow-visible"
         headerContent={
-          <div className="grid grid-cols-1  gap-3 overflow-visible md:grid-cols-3">
+          <div className="grid grid-cols-1  gap-3 overflow-visible md:grid-cols-2">
             <TransactionHeaderSection
               title="Basic Details"
-              bodyClassName="grid-cols-2"
+              bodyClassName="grid-cols-12 gap-1.5 overflow-visible"
             >
-              <ReusableInput
-                label="Purchase Inward No"
-                readOnly
-                value={docId}
-              />
-              <ReusableInput
-                label="Purchase Inward Date"
-                value={date}
-                type="date"
-                required
-                readOnly
-                disabled
-              />
-            </TransactionHeaderSection>
+              <div className="col-span-2">
 
+                <ReusableInput
+                  label="Inward No"
+                  readOnly
+                  value={docId}
+                />
+              </div>
+              <div className="col-span-2">
+
+                <ReusableInput
+                  label="Inward Date"
+                  value={date}
+                  type="date"
+                  required
+                  readOnly
+                  disabled
+                />
+              </div>
+
+              <div className="col-span-2">
+                <DropdownInput
+                  name="Inward Type"
+                  beforeChange={() => setDirectInwardReturnItems([])}
+                  options={directOrPo}
+                  value={poInwardOrDirectInward}
+                  setValue={setPoInwardOrDirectInward}
+                  required
+                  disabled={childRecord > 0}
+                  readOnly={readOnly}
+                  ref={inwardTyperef}
+                />
+              </div>
+              <div className="col-span-3">
+
+                <DropdownInput
+                  name="Branch"
+                  options={
+                    branchList
+                      ? dropDownListObject(
+                        id
+                          ? branchList?.data
+                          : branchList?.data?.filter((item) => item.active),
+                        "branchName",
+                        "id",
+                      )
+                      : []
+                  }
+                  value={branchId}
+                  setValue={(value) => {
+                    setLocationId(value);
+                    setStoreId("");
+                  }}
+                  disabled={childRecord > 0}
+
+                  required
+                  ref={branchRef}
+                  readOnly={readOnly}
+
+                />
+              </div>
+              <div className="col-span-3">
+              <DropdownInput
+                name="Location"
+                options={dropDownListObject(
+                  id
+                    ? storeOptions
+                    : storeOptions?.filter(
+                      (item) => item.storeName.includes("WAREHOUSE") && item.active,
+                    ),
+                  "storeName",
+                  "id",
+                )}
+                value={storeId}
+                setValue={setStoreId}
+                required
+                ref={locationRef}
+                readOnly={readOnly}
+                disabled={childRecord > 0}
+
+
+              />
+              </div>
+            </TransactionHeaderSection>
+            {/* 
             <TransactionHeaderSection
               title="Inward Details"
               bodyClassName="grid-cols-2 gap-1.5"
@@ -546,14 +616,14 @@ const PurchaseInwardForm = ({
 
 
               />
-            </TransactionHeaderSection>
+            </TransactionHeaderSection> */}
 
             <TransactionHeaderSection
               title="Supplier Details"
               className="overflow-visible"
-              bodyClassName="grid-cols-2 gap-1.5 overflow-visible"
+              bodyClassName="grid-cols-12 gap-1.5 overflow-visible"
             >
-              <div className="col-span-2 overflow-visible">
+              <div className="col-span-8 overflow-visible">
                 <ReusableSearchableInputNewCustomerwithBranches
                   label="Supplier Name"
                   component="PartyMaster"
@@ -567,24 +637,29 @@ const PurchaseInwardForm = ({
                   ref={partyRef}
                 />
               </div>
-              <TextInput
-                name="Dc No."
-                value={dcNo}
-                setValue={setDcNo}
-                readOnly={readOnly}
-                disabled={childRecord > 0}
+              <div className="col-span-2">
+                <TextInput
+                  name="Dc No."
+                  value={dcNo}
+                  setValue={setDcNo}
+                  readOnly={readOnly}
+                  disabled={childRecord > 0}
 
-                required
-              />
-              <DateInput
-                name="Dc Date"
-                value={dcDate}
-                setValue={setDcDate}
-                required
-                readOnly={readOnly}
-                disabled={childRecord > 0}
+                  required
+                />
+              </div>
+              <div className="col-span-2">
+                <DateInput
+                  name="Dc Date"
+                  value={dcDate}
+                  setValue={setDcDate}
+                  required
+                  readOnly={readOnly}
+                  disabled={childRecord > 0}
 
-              />
+                />
+              </div>
+
             </TransactionHeaderSection>
           </div>
         }

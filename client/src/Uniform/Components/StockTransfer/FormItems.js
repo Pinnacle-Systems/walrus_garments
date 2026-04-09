@@ -97,7 +97,15 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 
 
 
+    const formatThreeDecimals = (value) => {
+        const parsed = parseFloat(value);
+        return Number.isFinite(parsed) ? parsed.toFixed(3) : "0.000";
+    };
 
+    const formatTwoDecimals = (value) => {
+        const parsed = parseFloat(value);
+        return Number.isFinite(parsed) ? parsed.toFixed(2) : "0.00";
+    };
 
 
 
@@ -153,7 +161,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
             </Modal>
 
             <TransactionLineItemsSection
-                title="Transfer Items"
+                // title="Transfer Items"
                 panelClassName="h-full"
                 titleClassName="font-bold"
                 contentClassName="h-[380px]"
@@ -161,20 +169,20 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                 <table className={transactionTableClassName}>
                     <thead className={transactionTableHeadClassName}>
                         <tr>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
-                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">Item</th>
-                            <th className="w-16 px-4 py-1.5 border border-gray-300 text-center  text-xs">Size</th>
-                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs">Color</th>
-                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs">BarCode</th>
+                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11 bg-gray-300">S No</th>
+                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs bg-gray-300">Item</th>
+                            <th className="w-16 px-4 py-1.5 border border-gray-300 text-center  text-xs bg-gray-300">Size</th>
+                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs bg-gray-300">Color</th>
+                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs bg-gray-300">BarCode</th>
                             {stockDrivenFields.map((field) => (
-                                <th key={field.key} className="w-32 px-4 py-1.5 border border-gray-300 text-center text-xs">{field.label}</th>
+                                <th key={field.key} className="w-32 px-4 py-1.5 border border-gray-300 text-center text-xs bg-gray-300">{field.label}</th>
                             ))}
-                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Stock Qty (Pcs)</th>
+                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs bg-gray-300">Stock Qty (Pcs)</th>
                             {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
 
-                                <th className="w-20 px-4 py-1.5 border border-gray-300 text-center text-xs">Discount Price</th>
+                                <th className="w-20 px-4 py-1.5 border border-gray-300 text-center text-xs bg-gray-300">Discount Price</th>
                             )}
-                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs">Transfer Qty (Pcs)<span className="text-red-500">*</span></th>
+                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs bg-gray-300">Transfer Qty (Pcs)<span className="text-red-500">*</span></th>
 
                         </tr>
                     </thead>
@@ -189,6 +197,22 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                             stockDrivenFields={stockDrivenFields}
                         />)}
                     </tbody>
+                    <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300  font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
+                        <tr className="bg-gray-300">
+                            <td
+                                colSpan={5}
+                                className="bg-gray-300 px-1 py-1 text-right text-[12px]"
+                            >
+                                Total:
+                            </td>
+                            <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
+                            </td>
+                            <td className="bg-gray-300 px-1 py-1 text-right text-[11px] px-2">
+                                {(stockItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.transferQty || 0), 0).toFixed(2)}
+                            </td>
+
+                        </tr>
+                    </tfoot>
                 </table>
 
                 {contextMenuFromOrder && (

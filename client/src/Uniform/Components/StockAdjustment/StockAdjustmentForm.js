@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
-import { getCommonParams, getConfiguredStockDrivenFields, getStockMaintenanceConfig, isGridDatasValid } from "../../../Utils/helper";
+import { getCommonParams, getConfiguredStockDrivenFields, getStockMaintenanceConfig, isGridDatasValid, ModeChip } from "../../../Utils/helper";
 import { toast } from "react-toastify";
 import { FiSave, FiEdit2 } from "react-icons/fi";
 import { DropdownInput } from "../../../Inputs";
@@ -35,6 +35,7 @@ import TransactionLineItemsSection, {
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 import { ItemMaster } from "../../../Shocks";
 import { ColorMaster, SizeMaster, UomMaster } from "../../../Basic/components";
+import { IoArrowBackCircleSharp } from "react-icons/io5";
 
 const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, branchList, locationData, yarnList, hasPermission }) => {
@@ -115,7 +116,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
 
   useEffect(() => {
-    if (id) return;
+    // if (id) return;
     if (rows?.length >= 20) return;
     setRows((prev) => {
       let newArray = Array.from({ length: 20 - prev.length }, (_, i) => {
@@ -296,33 +297,37 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
   return (
 
     <div className="flex flex-col h-full bg-[#f1f1f0] overflow-hidden">
-      <div className="flex-none w-full bg-white mx-auto rounded-md shadow-sm px-4 py-2 border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-800">Stock Adjustment</h1>
-          <button
-            onClick={onClose}
-            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
-            title="Open Report"
-          >
-            <FaFileAlt className="w-5 h-5" />
-          </button>
+      <div className="flex-none w-full bg-white mx-auto rounded-md shadow-sm px-2  border-b border-gray-200 mb-1">
+        <div className="flex justify-between items-center py-1">
+          <h1 className="text-md font-bold text-gray-800">Stock Adjustment</h1>
+          <div className="flex flex-row gap-2">
+            <ModeChip id={id} readOnly={readOnly} />
+            <button
+              onClick={onClose}
+              className=" text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+              title="Open Report"
+            >
+              <IoArrowBackCircleSharp className="w-7 h-7" />
+            </button>
+          </div>
+
         </div>
       </div>
 
-      <div className="flex-grow flex flex-col min-h-0 p-3 space-y-3 overflow-hidden">
+      <div className="flex-grow flex flex-col min-h-0  space-y-3 overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-none">
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-            <h2 className="font-medium text-slate-700 mb-2 border-b border-slate-100 pb-1">
+            <h2 className="font-bold text-slate-700 mb-1  b-1">
               Basic Details
             </h2>
             <div className="grid grid-cols-2 gap-2">
-              <ReusableInput label="Stock Adjustment No" readOnly value={docId} />
-              <ReusableInput label="Stock Adjustment Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+              <ReusableInput label="Adjustment No" readOnly value={docId} />
+              <ReusableInput label="Adjustment Date" value={date} type={"date"} required={true} readOnly={true} disabled />
             </div>
           </div>
 
           <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-2">
-            <h2 className="font-medium text-slate-700 mb-2 border-b border-slate-100 pb-1">
+            <h2 className="font-bold text-slate-700 mb-1   pb-1">
               Location Details
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -364,20 +369,20 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
             <table className={transactionTableClassName}>
               <thead className={`${transactionTableHeadClassName} shadow-sm`}>
                 <tr className="py-2">
-                  <th className={`w-12 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>S.No</th>
-                  <th className={`w-64 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>Item Name <span className="text-red-500">*</span></th>
-                  {stockMaintenance.trackSize && <th className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>Size <span className="text-red-500">*</span></th>}
-                  {stockMaintenance.trackColor && <th className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>Color <span className="text-red-500">*</span></th>}
+                  <th className={`w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>S.No</th>
+                  <th className={`w-64 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>Item Name <span className="text-red-500">*</span></th>
+                  {stockMaintenance.trackSize && <th className={`w-32 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>Size <span className="text-red-500">*</span></th>}
+                  {stockMaintenance.trackColor && <th className={`w-32 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>Color <span className="text-red-500">*</span></th>}
                   {stockDrivenFields.map((field) => (
-                    <th key={field.key} className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>{field.label} <span className="text-red-500">*</span></th>
+                    <th key={field.key} className={`w-32 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>{field.label} <span className="text-red-500">*</span></th>
                   ))}
-                  <th className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>UOM <span className="text-red-500">*</span></th>
-                  <th className={`w-40 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>Barcode <span className="text-red-500">*</span></th>
+                  <th className={`w-32 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>UOM <span className="text-red-500">*</span></th>
+                  <th className={`w-40 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>Barcode <span className="text-red-500">*</span></th>
                   {/* <th className={`w-24 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>Price <span className="text-red-500">*</span></th> */}
-                  <th className={`w-24 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>Adjust Type <span className="text-red-500">*</span></th>
-                  <th className={`w-24 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>Qty <span className="text-red-500">*</span></th>
+                  <th className={`w-24 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>Adjust Type <span className="text-red-500">*</span></th>
+                  <th className={`w-24 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>Qty <span className="text-red-500">*</span></th>
                   {/* <th className={`w-32 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>Gross</th> */}
-                  <th className={`w-8 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>Action</th>
+                  <th className={`w-8 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>Action</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
@@ -430,7 +435,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                         />
                       </td>
                       {stockMaintenance.trackSize && (
-                        <td className="border border-gray-300 bg-white p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                        <td className="border border-gray-300  p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                           <SearchableTableCellSelect
                             value={row.sizeId}
                             options={filteredSizeOptions}
@@ -446,7 +451,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                         </td>
                       )}
                       {stockMaintenance.trackColor && (
-                        <td className="border border-gray-300 bg-white p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                        <td className="border border-gray-300  p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                           <SearchableTableCellSelect
                             value={row.colorId}
                             options={filteredColorOptions}
@@ -563,7 +568,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
                     {/* {rows?.reduce((acc, curr) => acc + (parseFloat(curr?.qty || 0) * parseFloat(curr?.price || 0)), 0).toFixed(2)} */}
                   </td>
-                  <td className="px-1 py-1 bg-gray-100"></td>
+                  <td className="px-1 py-1 bg-gray-300"></td>
                 </tr>
               </tfoot>
             </table>
@@ -613,13 +618,15 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => hasPermission(() => saveData("new"), "save")}
-
+              disabled={readOnly}
               className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
               <FiSave className="w-4 h-4 mr-2" />
               Save & New
             </button>
             <button
               onClick={() => hasPermission(() => saveData("close"), "save")}
+              disabled={readOnly}
+
               className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
               <HiOutlineRefresh className="w-4 h-4 mr-2" />
               Save & Close
