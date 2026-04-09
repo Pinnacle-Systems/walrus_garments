@@ -219,9 +219,9 @@ export default function RoleMaster() {
                                     </thead>
                                     <tbody className={` ${readOnly ? 'border-2 pointer-events-none' : 'border-2'}`} >
                                         {pages.map((dataObj, index) =>
-                                            <tr key={index} className='border-2 table-row'>
-                                                <td key={index} className='table-data text-start'>{dataObj.name}</td>
-                                                <td className='table-data' onClick={() => {
+                                            <tr key={index} className='border-2 tx-table-row'>
+                                                <td key={index} className='tx-table-cell text-start'>{dataObj.name}</td>
+                                                <td className='tx-table-cell' onClick={() => {
                                                     setPages(prev => prev.map((page) => {
                                                         if (page.id === dataObj.id) {
                                                             const out = !(dataObj.read && dataObj.create && dataObj.edit && dataObj.delete);
@@ -236,7 +236,7 @@ export default function RoleMaster() {
                                                 }}>
                                                     {(dataObj.read && dataObj.create && dataObj.edit && dataObj.delete) ? TICK_ICON : ""}
                                                 </td>
-                                                <td className='table-data' onClick={() => {
+                                                <td className='tx-table-cell' onClick={() => {
                                                     setPages(prev => prev.map((page) => {
                                                         if (page.id === dataObj.id) {
                                                             page.read = !dataObj?.read
@@ -247,7 +247,7 @@ export default function RoleMaster() {
                                                 }}>
                                                     {dataObj?.read ? TICK_ICON : ""}
                                                 </td>
-                                                <td className='table-data' onClick={() => {
+                                                <td className='tx-table-cell' onClick={() => {
                                                     setPages(prev => prev.map((page) => {
                                                         if (page.id === dataObj.id) {
                                                             page.create = !dataObj?.create
@@ -258,7 +258,7 @@ export default function RoleMaster() {
                                                 }}>
                                                     {dataObj?.create ? TICK_ICON : ""}
                                                 </td>
-                                                <td className='table-data' onClick={() => {
+                                                <td className='tx-table-cell' onClick={() => {
                                                     setPages(prev => prev.map((page) => {
                                                         if (page.id === dataObj.id) {
                                                             page.edit = !dataObj?.edit
@@ -269,7 +269,7 @@ export default function RoleMaster() {
                                                 }}>
                                                     {dataObj?.edit ? TICK_ICON : ""}
                                                 </td>
-                                                <td className='table-data' onClick={() => {
+                                                <td className='tx-table-cell' onClick={() => {
                                                     setPages(prev => prev.map((page) => {
                                                         if (page.id === dataObj.id) {
                                                             page.delete = !dataObj?.delete

@@ -231,12 +231,12 @@ const AccessoryCancelItems = ({ inwardItems, setInwardItems, readOnly, setInward
                                 uomList={uomList}
                                 colorList={colorList} item={item} purchaseInwardId={id} deleteRow={deleteRow} readOnly={readOnly} key={item.poItemsId} qty={item.qty} poItemId={item.poItemsId} index={index} handleInputChange={handleInputChange} handleRightClick={handleRightClick} poInwardOrDirectInward={poInwardOrDirectInward} />)}
                             {Array.from({ length: 1 - inwardItems.length }).map(i =>
-                                <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                                <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
                                     {Array.from({ length: 16 }).map(i =>
-                                        <td className="table-data   "></td>
+                                        <td className="tx-table-cell   "></td>
                                     )}
                                     {!readOnly &&
-                                        <td className="table-data w-10"></td>
+                                        <td className="tx-table-cell w-10"></td>
                                     }
                                 </tr>)
                             }

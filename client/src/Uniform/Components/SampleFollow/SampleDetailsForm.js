@@ -69,7 +69,7 @@ const SampleDetailsForm = ({ setCurrentImage, setIsStyleImageOpen, item, index, 
                     <select
                         readOnly={readOnly}
                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "itemTypeId") } }}
-                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                         value={item.itemTypeId}
                         onChange={(e) => handleInputChange(e.target.value, index, "itemTypeId")}
                     >
@@ -86,7 +86,7 @@ const SampleDetailsForm = ({ setCurrentImage, setIsStyleImageOpen, item, index, 
                     <select
                         readOnly={readOnly}
                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "itemId") } }}
-                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                         value={item.itemId || ""}
                         onChange={(e) => handleInputChange(e.target.value, index, "itemId")}
                     >
@@ -103,7 +103,7 @@ const SampleDetailsForm = ({ setCurrentImage, setIsStyleImageOpen, item, index, 
                     <select
                         readOnly={readOnly}
                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "fabricId") } }}
-                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                         value={item.fabricId || ""}
                         onChange={(e) => handleInputChange(e.target.value, index, "fabricId")}
                     >
@@ -121,7 +121,7 @@ const SampleDetailsForm = ({ setCurrentImage, setIsStyleImageOpen, item, index, 
                     <select
                         readOnly={readOnly}
                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                         value={item.sizeId}
                         onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                     >
@@ -139,7 +139,7 @@ const SampleDetailsForm = ({ setCurrentImage, setIsStyleImageOpen, item, index, 
                     <select
                         readOnly={readOnly}
                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                        className='text-left w-full rounded py-1 table-data-input border border-gray-400'
+                        className='text-left w-full rounded py-1 tx-table-input border border-gray-400'
                         value={item.colorId}
                         onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                     >

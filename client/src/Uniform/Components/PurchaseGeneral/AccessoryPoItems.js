@@ -145,23 +145,23 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                 <table className=" border border-gray-500 text-xs table-auto w-full">
                     <thead className='bg-blue-200 top-0 border border-gray-500'>
                         <tr>
-                            <th className="table-data  w-2 text-center">S.no</th>
+                            <th className="tx-table-cell  w-2 text-center">S.no</th>
 
 
-                            <th className="table-data  w-36">Accessory Group</th>
-                            <th className="table-data  w-36">Accessory Item</th>
-                            <th className="table-data ">Accessory Name<span className="text-red-500">*</span></th>
-                            <th className="table-data ">Colors<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-20">Size<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-20">UOM<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Quantity<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Price<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">Gross</th>
-                            <th className="table-data  w-16">Tax</th>
-                            <th className="table-data  w-16">Dis.Type</th>
-                            <th className="table-data  w-16">Dis.Value</th>
+                            <th className="tx-table-cell  w-36">Accessory Group</th>
+                            <th className="tx-table-cell  w-36">Accessory Item</th>
+                            <th className="tx-table-cell ">Accessory Name<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell ">Colors<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-20">Size<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-20">UOM<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">Quantity<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">Price<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">Gross</th>
+                            <th className="tx-table-cell  w-16">Tax</th>
+                            <th className="tx-table-cell  w-16">Dis.Type</th>
+                            <th className="tx-table-cell  w-16">Dis.Value</th>
 
-                            <th className="table-data  w-16">Amount</th>
+                            <th className="tx-table-cell  w-16">Amount</th>
                             {readOnly ?
                                 "" :
                                 <th className='w-20  bg-green-600 text-white'>
@@ -175,14 +175,14 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                     </thead>
                     <tbody className='overflow-y-auto  h-full w-full'>{console.log(poItems, "poItems")}
                         {poItems.map((row, index) => (
-                            <tr key={index} className="w-full table-row">
-                                <td className="table-data  w-2 text-left px-1">
+                            <tr key={index} className="w-full tx-table-row">
+                                <td className="tx-table-cell  w-2 text-left px-1">
                                     {index + 1}
                                 </td>
                                 <td className=' border border-gray-500'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryGroupId") } }}
-                                        disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryGroupId}
+                                        disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryGroupId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "accessoryGroupId")}
                                         onBlur={(e) => {
 
@@ -203,7 +203,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                 <td className=' border border-gray-500'>{console.log(accessoryItemList, "accessoryItemList")}
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryItemId") } }}
-                                        disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryItemId}
+                                        disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryItemId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "accessoryItemId")}
                                         onBlur={(e) => {
 
@@ -224,7 +224,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                 <td className=' border border-gray-500'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryId") } }}
-                                        disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
+                                        disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "accessoryId")}
                                         onBlur={(e) => {
 
@@ -243,29 +243,29 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                {/* <td className='table-data'>
+                                {/* <td className='tx-table-cell'>
                                     <input
                                         type="text-left px-1"
                                         onFocus={(e) => e.target.select()}
-                                        className="text-center rounded w-36 py-1 table-data-input"
+                                        className="text-center rounded w-36 py-1 tx-table-input"
                                         value={findAccessoryItemName(row.accessoryId)}
                                         disabled={true}
 
                                     />
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input
                                         type="text"
                                         onFocus={(e) => e.target.select()}
-                                        className="text-center rounded w-36 py-1 table-data-input"
+                                        className="text-center rounded w-36 py-1 tx-table-input"
                                         value={findAccessoryGroupName(row.accessoryId)}
                                         disabled={true}
                                     />
                                 </td> */}
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                        disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                                        disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.colorId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                         onBlur={(e) => {
 
@@ -283,10 +283,10 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                        disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
+                                        disabled={readOnly} className='text-left w-20 rounded py-1 tx-table-input' value={row.sizeId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                                         onBlur={(e) => {
 
@@ -304,10 +304,10 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                        disabled={readOnly} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
+                                        disabled={readOnly} className='text-left w-20 rounded py-1 tx-table-input' value={row.uomId}
                                         onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                         onBlur={(e) => {
 
@@ -325,7 +325,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input
                                         onKeyDown={e => {
                                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -334,7 +334,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         min={"0"}
                                         type="number"
                                         onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                        className="text-right rounded py-1 px-1 w-16 tx-table-input"
                                         value={(!row.qty) ? 0 : row.qty}
                                         disabled={readOnly}
                                         onChange={(e) =>
@@ -349,7 +349,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                     />
 
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input
                                         onKeyDown={e => {
                                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -358,7 +358,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         min={"0"}
                                         type="number"
                                         onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                        className="text-right rounded py-1 px-1 w-16 tx-table-input"
                                         value={(!row.price) ? 0 : row.price}
                                         disabled={readOnly}
                                         onChange={(e) =>
@@ -370,9 +370,9 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         }
                                     />
                                 </td>
-                                <td className='table-data '>
+                                <td className='tx-table-cell '>
                                     <input
-                                        className="text-right  rounded py-1 px-1 w-16 table-data-input"
+                                        className="text-right  rounded py-1 px-1 w-16 tx-table-input"
                                         value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
                                         disabled={true}
                                         onFocus={(e) => e.target.select()}
@@ -380,7 +380,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                 </td>
 
 
-                                <td className='table-data '>
+                                <td className='tx-table-cell '>
                                     <input
                                         type="number"
                                         onKeyDown={e => {
@@ -389,7 +389,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         }}
                                         min={"0"}
                                         onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                                        className="text-right rounded py-1 px-1 w-full tx-table-input"
                                         value={(!row.tax) ? 0 : row.tax}
                                         disabled={readOnly || Boolean(row?.alreadyInwardedData?._sum?.tax)}
                                         onChange={(e) =>
@@ -404,13 +404,13 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         }
                                     />
                                 </td>
-                                <td className='table-data '>
+                                <td className='tx-table-cell '>
                                     <select
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "discountType") } }}
 
 
                                         disabled={readOnly || Boolean(row?.alreadyInwardedData?._sum?.qty)}
-                                        className='text-left w-full rounded py-1 table-data-input'
+                                        className='text-left w-full rounded py-1 tx-table-input'
                                         value={row.discountType}
                                         onChange={(e) => handleInputChange(e.target.value, index, "discountType")}
                                         onBlur={(e) => {
@@ -429,7 +429,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         )}
                                     </select>
                                 </td>
-                                <td className='table-data '>
+                                <td className='tx-table-cell '>
                                     <input
                                         type="number"
                                         onKeyDown={e => {
@@ -438,7 +438,7 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                         }}
                                         min={"0"}
                                         onFocus={(e) => e.target.select()}
-                                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                                        className="text-right rounded py-1 px-1 w-full tx-table-input"
                                         value={(!row.discountAmount) ? 0 : row.discountAmount}
                                         disabled={readOnly || Boolean(row?.alreadyInwardedData?._sum?.qty)}
                                         onChange={(e) =>
@@ -455,12 +455,12 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                                 </td>
 
 
-                                {/* <td className='table-data text-right px-1 '>
+                                {/* <td className='tx-table-cell text-right px-1 '>
                                                                                {priceWithTax(row.price, row.taxPercent).toFixed(2)}
                                                                            </td> */}
-                                <td className='table-data '>
+                                <td className='tx-table-cell '>
                                     <input
-                                        className="text-right  rounded py-1 px-1 w-16 table-data-input"
+                                        className="text-right  rounded py-1 px-1 w-16 tx-table-input"
                                         // value={(!row.qty || !row.price) ? 0 : (parseFloat(row.qty) * parseFloat(row.price))}
                                         value={findAmount(row.qty, row.price, row.tax, row.discountType, row.discountAmount)}
                                         disabled={true}
@@ -486,17 +486,17 @@ const AccessoryPoItems = ({ id, poItems, setPoItems, readOnly, params, isSupplie
                             </tr>
                         ))}
                         <tr className='bg-blue-200 w-full border border-gray-400 h-7 font-bold'>
-                            <td className="table-data text-center w-10 font-bold" colSpan={7}>Total</td>
-                            <td className="table-data text-right px-1 w-10">{getTotals("qty").toFixed(3)}</td>
-                            <td className="table-data  w-10"></td>
+                            <td className="tx-table-cell text-center w-10 font-bold" colSpan={7}>Total</td>
+                            <td className="tx-table-cell text-right px-1 w-10">{getTotals("qty").toFixed(3)}</td>
+                            <td className="tx-table-cell  w-10"></td>
 
-                            <td className="table-data text-right px-1  w-10">{getGross("qty", "price").toFixed(2)} </td>
-                            <td className="table-data   w-10"></td>
-                            <td className="table-data   w-10"></td>
-                            <td className="table-data   w-10"></td>
-                            <td className="table-data text-right px-1  w-10">{getTotalAmount("qty", "price", "tax", "discountType", "discountAmount").toFixed(2)} </td>
+                            <td className="tx-table-cell text-right px-1  w-10">{getGross("qty", "price").toFixed(2)} </td>
+                            <td className="tx-table-cell   w-10"></td>
+                            <td className="tx-table-cell   w-10"></td>
+                            <td className="tx-table-cell   w-10"></td>
+                            <td className="tx-table-cell text-right px-1  w-10">{getTotalAmount("qty", "price", "tax", "discountType", "discountAmount").toFixed(2)} </td>
                             {!readOnly &&
-                                <td className="table-data w-10"></td>
+                                <td className="tx-table-cell w-10"></td>
                             }
                         </tr>
                     </tbody>

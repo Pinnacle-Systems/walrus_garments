@@ -34,9 +34,9 @@ const PartySupplyDetails = ({ partyDetails, partySuppliesItem, setPartySuppliesI
             <tbody>
                 {partyDetails.map((party, index) =>
                     <tr key={party.id}>
-                        <td className='border border-gray-500 table-data text-sm'> {party.name} </td>
-                        <td className='border border-gray-500 table-data text-sm'> {party.aliasName} </td>
-                        <td className='border border-gray-500 table-data text-sm' onClick={()=>{handleOnClick(party.id)}}> {findPartySuppliesCurrentItem(party.id) ? TICK_ICON : "" } </td>
+                        <td className='border border-gray-500 tx-table-cell text-sm'> {party.name} </td>
+                        <td className='border border-gray-500 tx-table-cell text-sm'> {party.aliasName} </td>
+                        <td className='border border-gray-500 tx-table-cell text-sm' onClick={()=>{handleOnClick(party.id)}}> {findPartySuppliesCurrentItem(party.id) ? TICK_ICON : "" } </td>
                     </tr>
                 )}
             </tbody>

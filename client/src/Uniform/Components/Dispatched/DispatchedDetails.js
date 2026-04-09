@@ -30,22 +30,22 @@ const DispatchedDetails = ({ itemList, colorList, sizeList, id, readOnly, dispat
                             border-gray-600  max-h-[280px] overflow-auto'>
             <legend className='sub-heading'>Dispatched Details</legend>
             <div className={`relative w-full overflow-y-auto p-1`}>
-                <table className="table-data border border-gray-500 text-xs table-auto w-full">
+                <table className="tx-table-cell border border-gray-500 text-xs table-auto w-full">
                     <thead className='bg-gray-300 border border-gray-500 top-0'>
                         <tr className='border border-gray-500'>
-                            <th className="table-data w-2 text-center">S.no</th>
-                            <th className="table-data w-48">Item</th>
+                            <th className="tx-table-cell w-2 text-center">S.no</th>
+                            <th className="tx-table-cell w-48">Item</th>
 
 
-                            <th className="table-data w-48">Colors</th>
-                            <th className="table-data w-32">Size</th>
+                            <th className="tx-table-cell w-48">Colors</th>
+                            <th className="tx-table-cell w-32">Size</th>
 
-                            {/* <th className="table-data w-20">Stock Qty</th> */}
-                            <th className="table-data w-20">Del. Qty</th>
+                            {/* <th className="tx-table-cell w-20">Stock Qty</th> */}
+                            <th className="tx-table-cell w-20">Del. Qty</th>
 
                             {
                                 !readOnly &&
-                                <th className="table-data w-20"></th>
+                                <th className="tx-table-cell w-20"></th>
                             }
 
 
@@ -65,29 +65,29 @@ const DispatchedDetails = ({ itemList, colorList, sizeList, id, readOnly, dispat
                             } */}
                         </tr>
                     </thead>
-                    <tbody className='overflow-y-auto table-data h-full w-full'>{console.log(dispatchedDetails, "dispatchedDetails")}
+                    <tbody className='overflow-y-auto tx-table-cell h-full w-full'>{console.log(dispatchedDetails, "dispatchedDetails")}
                         {(dispatchedDetails || [])?.map((row, index) => (
-                            <tr key={index} className="w-full table-row">
-                                <td className='table-data'>{index + 1}</td>
-                                <td className='table-data '>
+                            <tr key={index} className="w-full tx-table-row">
+                                <td className='tx-table-cell'>{index + 1}</td>
+                                <td className='tx-table-cell '>
 
                                     {findFromList(row?.itemId, itemList?.data, "name")}
                                 </td>
 
-                                <td className='table-data '>
+                                <td className='tx-table-cell '>
 
                                     {findFromList(row?.colorId, colorList?.data, "name")}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
 
                                     {findFromList(row?.sizeId, sizeList?.data, "name")}
                                 </td>
 
-                                {/* <td className='table-data text-right'>
+                                {/* <td className='tx-table-cell text-right'>
 
                                     {row?.qty}
                                 </td> */}
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input type="number"
                                         onFocus={(e) => e.target.select()}
                                         onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.00", index, "delQty") } }}
@@ -100,7 +100,7 @@ const DispatchedDetails = ({ itemList, colorList, sizeList, id, readOnly, dispat
                                             }
                                             handleInputChange(e.target.value, index, "delQty")
                                         }}
-                                        className="text-right rounded py-1 w-full px-1 table-data-input"
+                                        className="text-right rounded py-1 w-full px-1 tx-table-input"
                                         inputMode='decimal'
                                         onBlur={(e) =>
                                             handleInputChange(parseFloat(e.target.value).toFixed(2), index, "delQty")
@@ -112,7 +112,7 @@ const DispatchedDetails = ({ itemList, colorList, sizeList, id, readOnly, dispat
                                     ?
                                     ""
                                     :
-                                    <td className='table-data w-20'>
+                                    <td className='tx-table-cell w-20'>
                                         <div tabIndex={-1} onClick={() => handleDeleteRow(index)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer'>
                                             {DELETE}
                                         </div>

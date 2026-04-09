@@ -85,7 +85,7 @@ export default function Form({ innerRef, poItems, supplierDetails, singleData, p
               <tr className=''>
                 <td >Doc Id: {poNumber}</td>
                 <td> Doc Date : {poDate}</td>
-                <td className='table-data px-14 py-1 w-1/6'>
+                <td className='tx-table-cell px-14 py-1 w-1/6'>
                   <QRCode value={poNumber} size={80} />
                 </td>
               </tr>

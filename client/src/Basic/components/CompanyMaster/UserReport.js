@@ -39,10 +39,10 @@ export default function UserReport({companyId, onNew}) {
                 </thead>
                 <tbody className='border-2'>
                     {allData.data.map((dataObj, index) =>
-                        <tr key={index} className='border-2 table-row hover:bg-inherit'>
-                           <td className='table-data'>{dataObj.username}</td>
-                            <td className='table-data'>{dataObj.role.name}</td>
-                            <td className='table-data'>{dataObj.active ? ACTIVE : INACTIVE}</td>
+                        <tr key={index} className='border-2 tx-table-row hover:bg-inherit'>
+                           <td className='tx-table-cell'>{dataObj.username}</td>
+                            <td className='tx-table-cell'>{dataObj.role.name}</td>
+                            <td className='tx-table-cell'>{dataObj.active ? ACTIVE : INACTIVE}</td>
                         </tr>
                     )}
                 </tbody>

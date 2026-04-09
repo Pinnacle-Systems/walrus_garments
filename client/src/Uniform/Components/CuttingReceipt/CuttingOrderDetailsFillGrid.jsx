@@ -126,72 +126,72 @@ const CuttingOrderDetailsFillGrid = ({ id, cuttingReceiptInwardDetailsFillData, 
                   checked={getSelectAll()}
                 />
               </th>
-              <th className="table-data w-10 text-center">S.no</th>
-              <th className="table-data w-48">Item</th>
-              <th className="table-data w-48">Color</th>
-              <th className="table-data w-48">Panel</th>
-              <th className="table-data w-48">PanelColor</th>
-              <th className="table-data w-32">Size</th>
-              {/* <th className="table-data w-20">Uom</th> */}
-              <th className="table-data w-20">Order Qty</th>
-              {/* <th className="table-data w-20">Cutting Price</th> */}
-              <th className="table-data  w-16">A. Inward Qty<span className="text-red-500">*</span></th>
-              <th className="table-data  w-16">Bal. Qty<span className="text-red-500">*</span></th>
+              <th className="tx-table-cell w-10 text-center">S.no</th>
+              <th className="tx-table-cell w-48">Item</th>
+              <th className="tx-table-cell w-48">Color</th>
+              <th className="tx-table-cell w-48">Panel</th>
+              <th className="tx-table-cell w-48">PanelColor</th>
+              <th className="tx-table-cell w-32">Size</th>
+              {/* <th className="tx-table-cell w-20">Uom</th> */}
+              <th className="tx-table-cell w-20">Order Qty</th>
+              {/* <th className="tx-table-cell w-20">Cutting Price</th> */}
+              <th className="tx-table-cell  w-16">A. Inward Qty<span className="text-red-500">*</span></th>
+              <th className="tx-table-cell  w-16">Bal. Qty<span className="text-red-500">*</span></th>
             </tr>
           </thead>
           <tbody className='overflow-y-auto  h-full w-full'>
             {cuttingReceiptInwardDetailsFillData?.map((row, index) => (
-              <tr key={index} className="w-full table-row" onClick={() => { handleChangeInwardProgramDetails(row?.id, row, row?.panelId) }} >
-                <td className="table-data flex justify-center ">
+              <tr key={index} className="w-full tx-table-row" onClick={() => { handleChangeInwardProgramDetails(row?.id, row, row?.panelId) }} >
+                <td className="tx-table-cell flex justify-center ">
                   <input type='checkbox' checked={isItemSelected(row?.id, row?.panelId)} />
                 </td>
-                <td className="table-data  ">
+                <td className="tx-table-cell  ">
                   {index + 1}
                 </td>
-                <td className='table-data'>
+                <td className='tx-table-cell'>
                   {findFromList(row?.itemId, itemList?.data, "name")}
                 </td>
-                <td className='table-data'>
+                <td className='tx-table-cell'>
                   {findFromList(row?.colorId, colorList?.data, "name")}
                 </td>
-                <td className='table-data'>
+                <td className='tx-table-cell'>
                   {findFromList(row?.panelId, panelList?.data, "name")}
                 </td>
-                <td className='table-data'>
+                <td className='tx-table-cell'>
                   {findFromList(row?.panelColorId, colorList?.data, "name")}
                 </td>
-                <td className='table-data'>
+                <td className='tx-table-cell'>
                   {findFromList(row?.sizeId, sizeList?.data, "name")}
                 </td>
-                {/* <td className='table-data'>
+                {/* <td className='tx-table-cell'>
                   {findFromList(row?.uomId, uomList?.data, "name")}
                 </td> */}
 
-                <td className='table-data text-right'>
+                <td className='tx-table-cell text-right'>
                   {row.orderQty}
                 </td>
 
-                <td className='text-right table-data'>
+                <td className='text-right tx-table-cell'>
                   {row?.alreadyReceivedQty || 0}
                 </td>
-                <td className='text-right table-data'>
+                <td className='text-right tx-table-cell'>
                   {substract(row.orderQty, row?.alreadyReceivedQty ? row?.alreadyReceivedQty : 0).toFixed(3)}
                 </td>
               </tr>
             ))}
             {Array.from({ length: 5 - cuttingReceiptInwardDetailsFillData.length }).map(i =>
-              <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                <td className='table-data'>
+              <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
+                <td className='tx-table-cell'>
                 </td>
-                <td className="table-data   "></td>
-                {/* <td className="table-data   "></td> */}
-                <td className="table-data   "></td>
-                <td className="table-data   "></td>
-                <td className="table-data   "></td>
-                <td className="table-data   "></td>
+                <td className="tx-table-cell   "></td>
+                {/* <td className="tx-table-cell   "></td> */}
+                <td className="tx-table-cell   "></td>
+                <td className="tx-table-cell   "></td>
+                <td className="tx-table-cell   "></td>
+                <td className="tx-table-cell   "></td>
 
-                <td className="table-data  "></td>
-                <td className="table-data   "></td>
+                <td className="tx-table-cell  "></td>
+                <td className="tx-table-cell   "></td>
               </tr>)
             }
           </tbody>

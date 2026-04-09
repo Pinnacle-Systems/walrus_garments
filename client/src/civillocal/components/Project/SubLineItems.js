@@ -64,14 +64,14 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
         <>
             {(id ? item?.subLineItems : item?.subLineItems || [])?.map((val, index) =>
                 <tr className='w-full border-b-2 border-gray-400'>
-                    <td className="table-data w-9 text-left px-1 py-1 text-xs">
+                    <td className="tx-table-cell w-9 text-left px-1 py-1 text-xs">
                         {index + 1}
                     </td>
-                    <td className='table-data text-xs'>
+                    <td className='tx-table-cell text-xs'>
                         <input
                             type="text"
                             readOnly={subLineEditableIndex !== index}
-                            className="text-left rounded py-2 px-1 w-full  overflow-auto table-data-input border border-gray-400"
+                            className="text-left rounded py-2 px-1 w-full  overflow-auto tx-table-input border border-gray-400"
                             value={val.name}
 
                             onChange={(e) =>
@@ -83,7 +83,7 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
                             }
                         />
                     </td>
-                    <td className="table-data w-9 text-left px-1 py-1 text-xs">
+                    <td className="tx-table-cell w-9 text-left px-1 py-1 text-xs">
                         <textarea
                             readOnly={subLineEditableIndex !== index}
                             className=" w-full overflow-auto focus:outline-none border border-gray-500 rounded py-1 text-xs"
@@ -93,7 +93,7 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
                         </textarea>
 
                     </td>
-                    <td className="table-data w-9 text-left px-1 py-1 text-xs">
+                    <td className="tx-table-cell w-9 text-left px-1 py-1 text-xs">
 
                         <select
                             disabled={subLineEditableIndex !== index}
@@ -114,11 +114,11 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
                         </select>
 
                     </td>
-                    <td className="table-data w-9 text-left px-1 py-1 text-xs">
+                    <td className="tx-table-cell w-9 text-left px-1 py-1 text-xs">
                         <input
                             type="text"
                             readOnly={subLineEditableIndex !== index}
-                            className="text-left rounded py-1 px-1 w-full  overflow-auto table-data-input border border-gray-400"
+                            className="text-left rounded py-1 px-1 w-full  overflow-auto tx-table-input border border-gray-400"
                             value={val.responsiblePerson}
 
                             onChange={(e) =>
@@ -132,11 +132,11 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
                     </td>
 
 
-                    <td className='table-data text-xs'>
+                    <td className='tx-table-cell text-xs'>
                         <input
                             type="date"
                             readOnly={subLineEditableIndex !== index}
-                            className="text-right rounded py-1 px-1 w-full table-data-input"
+                            className="text-right rounded py-1 px-1 w-full tx-table-input"
                             value={val?.planStartDate ? moment(val?.planStartDate).format("YYYY-MM-DD") : 0}
 
                             onChange={(e) =>
@@ -144,11 +144,11 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
                             }
                         />
                     </td>
-                    <td className='table-data text-xs'>
+                    <td className='tx-table-cell text-xs'>
                         <input
                             readOnly={subLineEditableIndex !== index}
                             type="number"
-                            className="text-right rounded py-1 px-1 w-full table-data-input"
+                            className="text-right rounded py-1 px-1 w-full tx-table-input"
                             value={val?.leadDays || ""}
 
                             onChange={(e) =>
@@ -156,11 +156,11 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
                             }
                         />
                     </td>
-                    <td className='table-data text-xs'>
+                    <td className='tx-table-cell text-xs'>
                         <input
                             type="date"
                             readOnly={subLineEditableIndex !== index}
-                            className="text-right rounded py-1 px-1 w-full table-data-input"
+                            className="text-right rounded py-1 px-1 w-full tx-table-input"
                             value={val?.planEndDate ? moment(val?.planEndDate).format("YYYY-MM-DD") : 0}
 
 
@@ -170,7 +170,7 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
                         />
                     </td>
 
-                    <td className='table-data w-12 text-center text-xs'>
+                    <td className='tx-table-cell w-12 text-center text-xs'>
                         <input type='checkbox' checked={isCompletedOrNot(index)} readOnly={readOnly}
                             onChange={(e) => {
 
@@ -185,7 +185,7 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
                     </td>
 
                     {(!readOnly) &&
-                        <td className=" text-xs text-center table-data">
+                        <td className=" text-xs text-center tx-table-cell">
                             <button
                                 type='button'
                                 onClick={() => {
@@ -196,7 +196,7 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
                         </td>
                     }
                     {(!readOnly) &&
-                        <td className=" text-xs text-center table-data">
+                        <td className=" text-xs text-center tx-table-cell">
                             <button
                                 type='button'
                                 onClick={() => isEditable(index)}
@@ -206,7 +206,7 @@ const SubLineItems = ({ readOnly, currentIndex, lineItems, setLineItems, id, lin
                     }
 
                     {(!readOnly) &&
-                        <td className=" text-xs text-center table-data">
+                        <td className=" text-xs text-center tx-table-cell">
                             <button
 
                                 type='button'

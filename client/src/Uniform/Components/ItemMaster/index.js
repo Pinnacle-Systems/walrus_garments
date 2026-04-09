@@ -414,20 +414,20 @@ export default function Form() {
                         <thead className='bg-blue-200 top-0 border-b border-gray-500'>
 
                           <tr className=''>
-                            <th className="table-data  py-2 w-12">S.No</th>
-                            <th className="table-data  py-2 ">Panel</th>
-                            <th className="table-data  w-20 p-0.5">  <button onClick={addNewPanel}>{PLUS}</button></th>
+                            <th className="tx-table-cell  py-2 w-12">S.No</th>
+                            <th className="tx-table-cell  py-2 ">Panel</th>
+                            <th className="tx-table-cell  w-20 p-0.5">  <button onClick={addNewPanel}>{PLUS}</button></th>
 
                           </tr>
                         </thead>
                         <tbody className='overflow-y-auto h-full w-full'>
 
                           {(panelId ? panelId : []).map((item, index) =>
-                            <tr className="w-full table-row">
-                              <td className='table-data'>
+                            <tr className="w-full tx-table-row">
+                              <td className='tx-table-cell'>
                                 {index + 1}
                               </td>
-                              <td className='table-data'>
+                              <td className='tx-table-cell'>
                                 <select
                                   disabled={readOnly}
                                   className={"w-full p-1 border border-gray-400 rounded"}

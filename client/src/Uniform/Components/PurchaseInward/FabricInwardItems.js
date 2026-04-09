@@ -135,54 +135,54 @@ const FabricInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, 
     return (
         <>
             <div className={`relative w-full overflow-y-auto py-1 h-[90%]`}>
-                <table className="table-data text-xs table-auto border border-gray-500  w-full">
+                <table className="tx-table-cell text-xs table-auto border border-gray-500  w-full">
                     <thead className='bg-gray-300 border border-gray-500 top-0'>
                         <tr className='h-8'>
-                            <th className='text-center w-8 table-data '>
+                            <th className='text-center w-8 tx-table-cell '>
                                 S.no
                             </th>
-                            <th className='text-center w-20 table-data'>
+                            <th className='text-center w-20 tx-table-cell'>
                                 Po.no
                             </th>
-                            <th className='w-32 table-data'>
+                            <th className='w-32 tx-table-cell'>
                                 Fabric Name
                             </th>
-                            <th className='w-16 table-data'>
+                            <th className='w-16 tx-table-cell'>
                                 Color
                             </th>
-                            <th className='w-16 table-data'>
+                            <th className='w-16 tx-table-cell'>
                                 Design
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 Gauge
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 LL
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 Gsm
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 K-Dia
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 F-Dia
                             </th>
-                            <th className='w-12 table-data'>
+                            <th className='w-12 tx-table-cell'>
                                 Uom
                             </th>
-                            <th className="table-data w-10">Po. Qty</th>
-                            <th className="table-data  w-10"> Can. Qty</th>
-                            <th className="table-data  w-10"> A. In Qty</th>
-                            <th className="table-data  w-10"> A. Return Qty</th>
-                            <th className="table-data  w-10">Bal. Qty</th>
-                            <th className="table-data  w-10">Lot Det.<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-10">No. Rolls</th>
-                            <th className="table-data  w-10">In. Qty</th>
-                            <th className="table-data  w-10">Po Price</th>
-                            <th className="table-data  w-10">Gross</th>
+                            <th className="tx-table-cell w-10">Po. Qty</th>
+                            <th className="tx-table-cell  w-10"> Can. Qty</th>
+                            <th className="tx-table-cell  w-10"> A. In Qty</th>
+                            <th className="tx-table-cell  w-10"> A. Return Qty</th>
+                            <th className="tx-table-cell  w-10">Bal. Qty</th>
+                            <th className="tx-table-cell  w-10">Lot Det.<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-10">No. Rolls</th>
+                            <th className="tx-table-cell  w-10">In. Qty</th>
+                            <th className="tx-table-cell  w-10">Po Price</th>
+                            <th className="tx-table-cell  w-10">Gross</th>
                             {!readOnly &&
-                                <th className='table-data table-data w-12'>Delete</th>
+                                <th className='tx-table-cell tx-table-cell w-12'>Delete</th>
                             }
                         </tr>
                     </thead>
@@ -196,12 +196,12 @@ const FabricInwardItems = ({ inwardItems, setInwardItems, readOnly, removeItem, 
                             item={item} index={index} handleInputChange={handleInputChange}
                             purchaseInwardId={purchaseInwardId} readOnly={readOnly} />)}
                         {Array.from({ length: Math.max(0, standardTransactionPlaceholderRowCount - inwardItems?.length) }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                            <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
                                 {Array.from({ length: 21 }).map(i =>
-                                    <td className="table-data   "></td>
+                                    <td className="tx-table-cell   "></td>
                                 )}
                                 {!readOnly &&
-                                    <td className="table-data w-10"></td>
+                                    <td className="tx-table-cell w-10"></td>
                                 }
                             </tr>)
                         }

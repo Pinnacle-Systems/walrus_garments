@@ -83,11 +83,11 @@ const Report = ({
                     {data?.map((dataObj, index) => (
                       <tr
                         key={index}
-                        className="border-2 table-row"
+                        className="border-2 tx-table-row"
                         onClick={() => onClick(dataObj.id)}
                       >
                         {tableDataNames.map((data, index) => (
-                          <td key={index} className="table-data" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
+                          <td key={index} className="tx-table-cell" style={{ backgroundColor: data === "dataObj.color" ? eval("dataObj.pantone") : undefined }}>
                             {eval(data)}
                           </td>
                         ))}

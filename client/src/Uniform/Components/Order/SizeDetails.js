@@ -150,7 +150,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
                         // }}
                         min="0"
                         onFocus={e => e.target.select()}
-                        className="text-right rounded w-full py-1 text-xs table-data-input"
+                        className="text-right rounded w-full py-1 text-xs tx-table-input"
                         value={parseFloat(yarn.weight).toFixed}
                         disabled={readOnly}
                         onChange={e => handleInputChange(e.target.value, index, "weight")}
@@ -169,7 +169,7 @@ const SizeDetailsSubGrid = ({ readOnly, item, sizeList, id, setOrderDetails, gri
                         type="number"
                         placeholder='0.000'
                         onFocus={(e) => e.target.select()}
-                        className="text-right rounded py-1 px-1 w-full table-data-input"
+                        className="text-right rounded py-1 px-1 w-full tx-table-input"
                         value={((!yarn.weight) ? 0.000 : yarn.weight)}
                         disabled={readOnly}
                         onChange={(e) =>

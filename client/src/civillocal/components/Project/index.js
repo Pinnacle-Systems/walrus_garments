@@ -408,7 +408,7 @@ export default function Form({ navigateProjectId }) {
                       <select
                         disabled={id ? true : false}
 
-                        className='text-left w-[70%] rounded py-1 table-data-input border border-gray-400'
+                        className='text-left w-[70%] rounded py-1 tx-table-input border border-gray-400'
                         value={projectName}
                         onChange={(e) => setProjectName(e.target.value)}
                       >

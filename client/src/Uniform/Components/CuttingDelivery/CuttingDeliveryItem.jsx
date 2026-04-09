@@ -67,54 +67,54 @@ const CuttingDeliveryItem = ({ item, index, id, handleInputChange, removeItem, r
         </tr>
     }
     return (
-        <tr key={index} className='py-2 table-row'>
-            <td className='  table-data   shadow-xl'>
+        <tr key={index} className='py-2 tx-table-row'>
+            <td className='  tx-table-cell   shadow-xl'>
                 {index + 1}
             </td>
 
-            <td className='  table-data   shadow-xl'>
+            <td className='  tx-table-cell   shadow-xl'>
                 {findFromList(item.fabricId, fabricList.data, "name")}
             </td>
-            <td className='  table-data   shadow-xl'>
+            <td className='  tx-table-cell   shadow-xl'>
                 {findFromList(item.colorId, colorList.data, "name")}
             </td>
-            <td className='   table-data  shadow-xl'>
+            <td className='   tx-table-cell  shadow-xl'>
                 {findFromList(item.designId, designList.data, "name")}
             </td>
-            <td className='  table-data   shadow-xl'>
+            <td className='  tx-table-cell   shadow-xl'>
                 {findFromList(item.gsmId, gsmList.data, "name")}
             </td>
-            <td className='   table-data  shadow-xl'>
+            <td className='   tx-table-cell  shadow-xl'>
                 {findFromList(item.gaugeId, gaugeList.data, "name")}
             </td>
-            <td className='  table-data   shadow-xl'>
+            <td className='  tx-table-cell   shadow-xl'>
                 {findFromList(item.loopLengthId, loopList.data, "name")}
             </td>
 
-            <td className='   table-data  shadow-xl'>
+            <td className='   tx-table-cell  shadow-xl'>
                 {findFromList(item.kDiaId, diaList.data, "name")}
             </td>
-            <td className='  table-data   shadow-xl'>
+            <td className='  tx-table-cell   shadow-xl'>
                 {findFromList(item.fDiaId, diaList.data, "name")}
             </td>
-            <td className='  table-data   shadow-xl'>
+            <td className='  tx-table-cell   shadow-xl'>
                 {findFromList(item.uomId, uomList.data, "name")}
             </td>
-            <td className='  table-data   shadow-xl'>
+            <td className='  tx-table-cell   shadow-xl'>
                 {item.lotNo}
             </td>
-            <td className=' table-data  text-right'>
+            <td className=' tx-table-cell  text-right'>
                 {item?.stockRolls}
             </td>
-            <td className=' table-data  text-right'>
+            <td className=' tx-table-cell  text-right'>
                 {item?.stockQty}
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "delRolls") } }}
                     onFocus={(e) => e.target.select()}
-                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    className="text-right rounded py-1 px-1 w-full tx-table-input"
                     value={(!item.delRolls) ? 0 : item.delRolls}
                     readOnly={readOnly}
                     onChange={(e) => {
@@ -130,12 +130,12 @@ const CuttingDeliveryItem = ({ item, index, id, handleInputChange, removeItem, r
                     }
                 />
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "delQty") } }}
                     onFocus={(e) => e.target.select()}
-                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    className="text-right rounded py-1 px-1 w-full tx-table-input"
                     value={(!item.delQty) ? 0 : item.delQty}
                     readOnly={readOnly}
                     onChange={(e) => {
@@ -152,7 +152,7 @@ const CuttingDeliveryItem = ({ item, index, id, handleInputChange, removeItem, r
                 />
             </td>
             {!readOnly &&
-                <td className='table-data w-12'>
+                <td className='tx-table-cell w-12'>
                     <div tabIndex={-1} onClick={() => removeItem(item)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
                         {DELETE}
                     </div>

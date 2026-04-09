@@ -230,7 +230,7 @@ const SizeArrayComponent = ({ findReadOnly, markRead, value, valueIndex, index, 
                                         <input
                                             type="number"
                                             onFocus={(e) => e.target.select()}
-                                            className="text-right rounded py-1 px-1 w-[55px] h-full  table-data-input"
+                                            className="text-right rounded py-1 px-1 w-[55px] h-full  tx-table-input"
 
                                             value={(!value.totalInwardQty) ? 0 : value.totalInwardQty}
 
@@ -287,7 +287,7 @@ const SizeArrayComponent = ({ findReadOnly, markRead, value, valueIndex, index, 
                                         <input
                                             type="number"
                                             onFocus={(e) => e.target.select()}
-                                            className="text-right rounded py-1 px-1 w-16 h-full table-data-input"
+                                            className="text-right rounded py-1 px-1 w-16 h-full tx-table-input"
 
                                             value={(!value.maleInwardQty) ? 0 : value.maleInwardQty}
 
@@ -338,7 +338,7 @@ const SizeArrayComponent = ({ findReadOnly, markRead, value, valueIndex, index, 
                                         <input
                                             type="number"
                                             onFocus={(e) => e.target.select()}
-                                            className="text-right rounded py-1 px-1 w-16 h-full table-data-input"
+                                            className="text-right rounded py-1 px-1 w-16 h-full tx-table-input"
 
                                             value={(!value.femaleInwardQty) ? 0 : value.femaleInwardQty}
 
@@ -392,7 +392,7 @@ const SizeArrayComponent = ({ findReadOnly, markRead, value, valueIndex, index, 
                                 <input
                                     type="number"
                                     onFocus={(e) => e.target.select()}
-                                    className="text-right rounded py-1 px-1  table-data-input"
+                                    className="text-right rounded py-1 px-1  tx-table-input"
 
                                     value={(!value.maleInwardQty) ? 0 : value.maleInwardQty}
 
@@ -411,7 +411,7 @@ const SizeArrayComponent = ({ findReadOnly, markRead, value, valueIndex, index, 
                                 <input
                                     type="number"
                                     onFocus={(e) => e.target.select()}
-                                    className="text-right rounded py-1 px-1  table-data-input"
+                                    className="text-right rounded py-1 px-1  tx-table-input"
 
                                     value={(!value.femaleInwardQty) ? 0 : value.femaleInwardQty}
 

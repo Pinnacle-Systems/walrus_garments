@@ -70,15 +70,15 @@ const LocationReport = ({ searchValue, setSearchValue, onNew, onClick }) => {
                                 {allData.data.map((location, index) => (
                                     <tr
                                         key={index}
-                                        className="border-2 table-row"
+                                        className="border-2 tx-table-row"
                                         onClick={() => onClick(location.id)}>
-                                        <td className='table-data' >
+                                        <td className='tx-table-cell' >
                                             {findFromList(location.locationId, branchList.data, "branchName")}
                                         </td>
-                                        <td className='table-data'>
+                                        <td className='tx-table-cell'>
                                             {location.storeName}
                                         </td >
-                                        <td className='table-data'>
+                                        <td className='tx-table-cell'>
                                             {(location.active) ? ACTIVE : INACTIVE}
                                         </td>
                                     </tr>

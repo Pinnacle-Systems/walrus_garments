@@ -58,7 +58,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
 
 
     return (
-        <tr key={item.poItemsId} className='table-row'
+        <tr key={item.poItemsId} className='tx-table-row'
             onContextMenu={(e) => {
                 if (!readOnly) {
                     handleRightClick(e, index, "shiftTimeHrs");
@@ -87,7 +87,7 @@ const AccessoryPoItem = ({ uomList, sizeList, accessoryList, colorList, item, in
                     }}
                     min={"0"}
                     type="number"
-                    className="text-right rounded   w-full py-1 table-data-input"
+                    className="text-right rounded   w-full py-1 tx-table-input"
                     autoFocus={index === 0}
                     value={item?.qty}
                     disabled={readOnly || !item?.accessoryId}

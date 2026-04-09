@@ -253,12 +253,12 @@ const YarnCancelItems = ({ id, inwardItems, setInwardItems, readOnly, removeItem
 
                                 index={index} handleInputChange={handleInputChange} handleRightClick={handleRightClick} />)}
                             {Array.from({ length: 1 - inwardItems?.length }).map(i =>
-                                <tr className='w-full font-bold h-8 border border-gray-400 table-row' key={i}>
+                                <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row' key={i}>
                                     {Array.from({ length: 8 }).map(i =>
-                                        <td className="table-data   "></td>
+                                        <td className="tx-table-cell   "></td>
                                     )}
                                     {!readOnly &&
-                                        <td className="table-data w-10"></td>
+                                        <td className="tx-table-cell w-10"></td>
                                     }
                                 </tr>)
                             }

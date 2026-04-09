@@ -59,18 +59,18 @@ const PoBillItems = ({ purchaseOrderDetails, purchaseOrderId, id, readOnly, setP
                 <table className=" border border-gray-500 text-xs table-auto  w-full">
                     <thead className='bg-blue-200 top-0 border-b border-gray-500'>
                         <tr className=''>
-                            <th className="table-data  w-2 text-center p-0.5">S.no</th>
-                            <th className="table-data ">Product Brand</th>
-                            <th className="table-data ">Product Category</th>
+                            <th className="tx-table-cell  w-2 text-center p-0.5">S.no</th>
+                            <th className="tx-table-cell ">Product Brand</th>
+                            <th className="tx-table-cell ">Product Category</th>
 
 
-                            <th className="table-data ">Product Name</th>
-                            <th className="table-data ">UOM Type</th>
-                            <th className="table-data  w-20">sales.Qty</th>
+                            <th className="tx-table-cell ">Product Name</th>
+                            <th className="tx-table-cell ">UOM Type</th>
+                            <th className="tx-table-cell  w-20">sales.Qty</th>
 
-                            <th className="table-data  w-20">Bal.Qty</th>
+                            <th className="tx-table-cell  w-20">Bal.Qty</th>
 
-                            <th className="table-data  w-16 p-0.5">Ret.Qty</th>
+                            <th className="tx-table-cell  w-16 p-0.5">Ret.Qty</th>
 
 
                         </tr>
@@ -80,36 +80,36 @@ const PoBillItems = ({ purchaseOrderDetails, purchaseOrderId, id, readOnly, setP
 
                         {(poReturnItems ? poReturnItems : []).map((item, index) =>
 
-                            <tr key={index} className="w-full table-row">{console.log(poReturnItems, 'po retunitems')}
-                                <td className="table-data w-2 text-left px-1 py-1">
+                            <tr key={index} className="w-full tx-table-row">{console.log(poReturnItems, 'po retunitems')}
+                                <td className="tx-table-cell w-2 text-left px-1 py-1">
                                     {index + 1}
                                 </td>
 
 
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     {item.Product?.ProductBrand?.name}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     {item.Product?.ProductCategory?.name}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     {item.Product.name}
                                 </td>
                                 <td>{getProductUomPriceDetails(item.productId).map((uom) => uom.Uom.name)}</td>
 
-                                <td className='table-data text-right pr-1'>
+                                <td className='tx-table-cell text-right pr-1'>
                                     {item?.salesQty}
 
                                 </td>
 
-                                <td className='table-data text-right pr-1'>
+                                <td className='tx-table-cell text-right pr-1'>
                                     {parseInt(item?.salesQty) - (item?.alreadyReturnQty
                                     ) || item?.salesQty}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     <input
                                         type="number"
-                                        className="text-right rounded py-1 px-1 w-16 table-data-input"
+                                        className="text-right rounded py-1 px-1 w-16 tx-table-input"
                                         value={(!item.qty) ? 0 : item.qty}
 
                                         disabled={readOnly}
@@ -133,19 +133,19 @@ const PoBillItems = ({ purchaseOrderDetails, purchaseOrderId, id, readOnly, setP
                         )}
 
                         {Array.from({ length: 10 - poReturnItems.length }).map(i =>
-                            <tr className='w-full font-bold h-6 border-gray-400 border table-row'>
-                                <td className='table-data'>
+                            <tr className='w-full font-bold h-6 border-gray-400 border tx-table-row'>
+                                <td className='tx-table-cell'>
                                 </td>
 
 
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                <td className="table-data"></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell"></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
 
 
 

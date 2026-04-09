@@ -172,7 +172,7 @@ const CuttingOrderFormReport = ({
                         {allData?.data?.map((dataObj, index) => (
                             <tr
                                 key={index}
-                                className="border-2 table-row "
+                                className="border-2 tx-table-row "
                                 onClick={() => { setCuttingOrderId(dataObj.id); setFillGrid(false); }}
                             >
                                 <td className="py-1"> {dataObj.docId}</td>

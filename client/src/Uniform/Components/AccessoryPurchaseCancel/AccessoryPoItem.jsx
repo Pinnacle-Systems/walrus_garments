@@ -70,7 +70,7 @@ console.log({item},"itemitem")
                     }}
                     min={"0"}
                     type="number"
-                    className="text-right rounded   w-full py-1 table-data-input"
+                    className="text-right rounded   w-full py-1 tx-table-input"
                     value={item?.qty}
                     disabled={readOnly}
                     onFocus={(e) => e.target.select()}

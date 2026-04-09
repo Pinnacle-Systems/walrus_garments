@@ -231,7 +231,7 @@ const YarnPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, ha
                                                     {poItems.data.map((dataObj, index) => (
                                                         <tr
                                                             key={dataObj.id}
-                                                            className="border-2 table-row "
+                                                            className="border-2 tx-table-row "
                                                             onClick={() => handleChange(dataObj.id)}
                                                         >
                                                             <td className='py-1'>

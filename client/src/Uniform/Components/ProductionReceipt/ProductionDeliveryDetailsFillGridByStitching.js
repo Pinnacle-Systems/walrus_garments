@@ -109,69 +109,69 @@ const ProductionDeliveryDetailsFillGridByStitching = ({ orderDetails, id, produc
                                     checked={getSelectAll()}
                                 />
                             </th>
-                            <th className="table-data w-10 text-center">S.no</th>
-                            <th className="table-data w-48">Item</th>
+                            <th className="tx-table-cell w-10 text-center">S.no</th>
+                            <th className="tx-table-cell w-48">Item</th>
 
-                            <th className="table-data w-48">Colors</th>
-                            <th className="table-data w-32">Size</th>
-                            <th className="table-data w-20">Cut.Qty</th>
+                            <th className="tx-table-cell w-48">Colors</th>
+                            <th className="tx-table-cell w-32">Size</th>
+                            <th className="tx-table-cell w-20">Cut.Qty</th>
 
-                            <th className="table-data  w-16">A. Inward Qty<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">ReadyToInward<span className="text-red-500">*</span></th>
-                            <th className="table-data  w-16">BalanceQty<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">A. Inward Qty<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">ReadyToInward<span className="text-red-500">*</span></th>
+                            <th className="tx-table-cell  w-16">BalanceQty<span className="text-red-500">*</span></th>
                         </tr>
                     </thead>
                     <tbody className='overflow-y-auto  h-full w-full'>{console.log(productionDeliveryDetailsFillData, "productionDeliveryDetailsFillData")}
 
                         {productionDeliveryDetailsFillData?.map((row, index) => (
-                            <tr key={index} className="w-full table-row" onClick={() => { handleChangeInwardProgramDetails(row, row.processCost) }} >
-                                <td className="table-data flex justify-center ">
+                            <tr key={index} className="w-full tx-table-row" onClick={() => { handleChangeInwardProgramDetails(row, row.processCost) }} >
+                                <td className="tx-table-cell flex justify-center ">
                                     <input type='checkbox' checked={isItemSelected(row)} />
                                 </td>
-                                <td className="table-data  ">
+                                <td className="tx-table-cell  ">
                                     {index + 1}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     {row?.itemName}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     {findFromList(row?.colorId, colorList?.data, "name")}
                                 </td>
-                                <td className='table-data'>
+                                <td className='tx-table-cell'>
                                     {row?.sizeName}
                                 </td>
 
-                                <td className='table-data text-right'>
+                                <td className='tx-table-cell text-right'>
                                     {parseFloat(row?.cuttingQty).toFixed(3) || 0}
                                 </td>
-                                <td className='text-right table-data'>
+                                <td className='text-right tx-table-cell'>
                                     {row?.alreadyReceivedQty || 0}
                                 </td>
-                                <td className='text-right table-data'>
+                                <td className='text-right tx-table-cell'>
                                     {row?.readyQty || 0}
 
                                 </td>
-                                <td className='text-right table-data'>
+                                <td className='text-right tx-table-cell'>
 
                                     {substract(row.cuttingQty, row?.alreadyReceivedQty ? row?.alreadyReceivedQty : 0).toFixed(3) || 0}
                                 </td>
                             </tr>
                         ))}
                         {Array.from({ length: 5 - productionDeliveryDetailsFillData?.length }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
-                                <td className='table-data'>
+                            <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
+                                <td className='tx-table-cell'>
                                 </td>
                                 {!isPacking &&
-                                    <td className="table-data   "></td>
+                                    <td className="tx-table-cell   "></td>
                                 }
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
-                                {/* <td className="table-data   "></td>
-                                <td className="table-data   "></td> */}
-                                <td className="table-data  "></td>
-                                <td className="table-data   "></td>
-                                <td className="table-data   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
+                                {/* <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td> */}
+                                <td className="tx-table-cell  "></td>
+                                <td className="tx-table-cell   "></td>
+                                <td className="tx-table-cell   "></td>
                             </tr>)
                         }
                     </tbody>

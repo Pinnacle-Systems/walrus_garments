@@ -11,20 +11,20 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
     return (
         <table className='table-fixed w-[500px]'>
             <thead className='border text-sm'>
-                <th className='table-data text-center'>Lot No</th>
-                <th className='table-data  text-center'>No. Of Bags</th>
-                <th className='table-data  text-center'>Wg/Per</th>
-                <th className='table-data text-center'>Qty</th>
+                <th className='tx-table-cell text-center'>Lot No</th>
+                <th className='tx-table-cell  text-center'>No. Of Bags</th>
+                <th className='tx-table-cell  text-center'>Wg/Per</th>
+                <th className='tx-table-cell text-center'>Qty</th>
                 {!readOnly &&
-                    <th className='table-data text-center'>
+                    <th className='tx-table-cell text-center'>
                         <button className='text-green-500' onClick={() => { addNewLotNo(index, inwardLotDetails[0] ? inwardLotDetails[0].weightPerBag : "0.000") }} >{PLUS}</button>
                     </th>
                 }
             </thead>
             <tbody>
                 {inwardLotDetails?.map((item, lotIndex) =>
-                    <tr className='table-row' key={lotIndex}>
-                        <td className='text-center table-data'>
+                    <tr className='tx-table-row' key={lotIndex}>
+                        <td className='text-center tx-table-cell'>
                             <input
                                 autoFocus={index === 0}
                                 onKeyDown={e => {
@@ -32,7 +32,7 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                                     if (e.key === "Delete") { handleInputChangeLotNo("", index, lotIndex, "lotNo", balanceQty); }
                                 }}
                                 type="text"
-                                className="text-right rounded py-1   w-full table-data-input"
+                                className="text-right rounded py-1   w-full tx-table-input"
                                 value={item.lotNo}
                                 disabled={readOnly}
                                 onChange={(event) => {
@@ -40,7 +40,7 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                                 }}
                             />
                         </td>
-                        <td className='text-center table-data'>
+                        <td className='text-center tx-table-cell'>
                             <input
                                 onKeyDown={e => {
                                     if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -48,7 +48,7 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                                 }}
                                 min={"0"}
                                 type="number"
-                                className="text-right rounded py-1   w-full table-data-input"
+                                className="text-right rounded py-1   w-full tx-table-input"
                                 value={item.noOfBags}
                                 disabled={readOnly}
                                 onChange={(event) => {
@@ -73,7 +73,7 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                                 }}
                             />
                         </td>
-                        <td className='text-center table-data'>
+                        <td className='text-center tx-table-cell'>
                             <input
                                 onKeyDown={e => {
                                     if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -81,7 +81,7 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                                 }}
                                 min={"0"}
                                 type="number"
-                                className="text-right rounded py-1   w-full table-data-input"
+                                className="text-right rounded py-1   w-full tx-table-input"
                                 value={item.weightPerBag}
                                 disabled={readOnly}
                                 onChange={(event) => {
@@ -100,7 +100,7 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                                 }}
                             />
                         </td>
-                        <td className='text-center table-data'>
+                        <td className='text-center tx-table-cell'>
                             <input
                                 onKeyDown={e => {
                                     if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -108,7 +108,7 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                                 }}
                                 min={"0"}
                                 type="number"
-                                className="text-right rounded py-1  w-full table-data-input"
+                                className="text-right rounded py-1  w-full tx-table-input"
                                 value={item.qty}
                                 disabled={readOnly}
                                 onChange={(event) => {
@@ -128,13 +128,13 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                             />
                         </td>
                         {!readOnly &&
-                            <th className='table-data text-center'>
+                            <th className='tx-table-cell text-center'>
                                 <Delete onClick={() => { removeLotNo(index, lotIndex) }} />
                             </th>
                         }
                     </tr>
                 )}
-                <tr className='table-row'>
+                <tr className='tx-table-row'>
                     <td>Total</td>
                     <td className='text-right'>{sumArray(inwardLotDetails, "noOfBags")}</td>
                     <td></td>
@@ -145,7 +145,7 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                 </tr>
                 {isDirect
                     ?
-                    <tr className='table-row'>
+                    <tr className='tx-table-row'>
                         <td colSpan={3} ></td>
                         {!readOnly &&
                             <>
@@ -154,7 +154,7 @@ export function YarnLotGrid({ isDirect, inwardLotDetails, handleInputChangeLotNo
                         }
                     </tr>
                     :
-                    <tr className='table-row'>
+                    <tr className='tx-table-row'>
                         <td>Balance</td>
                         <td className='text-right'>{balanceBags}</td>
                         <td></td>
@@ -179,19 +179,19 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
     return (
         <table className='table-fixed w-[500px]'>
             <thead className='border text-sm'>
-                <th className='table-data text-center'>Lot No</th>
-                <th className='table-data  text-center'>No. Of Bags</th>
-                <th className='table-data text-center'>Qty</th>
+                <th className='tx-table-cell text-center'>Lot No</th>
+                <th className='tx-table-cell  text-center'>No. Of Bags</th>
+                <th className='tx-table-cell text-center'>Qty</th>
                 {!readOnly &&
-                    <th className='table-data text-center'>
+                    <th className='tx-table-cell text-center'>
                         <button className='text-green-500' onClick={() => { addNewLotNo(index) }} >{PLUS}</button>
                     </th>
                 }
             </thead>
             <tbody>
                 {(inwardLotDetails  ||  [])?.map((item, lotIndex) =>
-                    <tr className='table-row' key={lotIndex}>
-                        <td className='text-center table-data'>
+                    <tr className='tx-table-row' key={lotIndex}>
+                        <td className='text-center tx-table-cell'>
                             <input
                                 autoFocus={index === 0}
                                 onKeyDown={e => {
@@ -199,7 +199,7 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                                     if (e.key === "Delete") { handleInputChangeLotNo("", index, lotIndex, "lotNo", balanceQty); }
                                 }}
                                 type="text"
-                                className="text-right rounded py-1   w-full table-data-input"
+                                className="text-right rounded py-1   w-full tx-table-input"
                                 value={item?.lotNo}
                                 disabled={readOnly}
                                 onChange={(event) => {
@@ -207,7 +207,7 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                                 }}
                             />
                         </td>
-                        <td className='text-center table-data'>
+                        <td className='text-center tx-table-cell'>
                             <input
                                 onKeyDown={e => {
                                     if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -215,7 +215,7 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                                 }}
                                 min={"0"}
                                 type="number"
-                                className="text-right rounded py-1   w-full table-data-input"
+                                className="text-right rounded py-1   w-full tx-table-input"
                                 value={item.noOfBags}
                                 disabled={readOnly}
                                 onChange={(event) => {
@@ -227,7 +227,7 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                                 }}
                             />
                         </td>
-                        <td className='text-center table-data'>
+                        <td className='text-center tx-table-cell'>
                             <input
                                 onKeyDown={e => {
                                     if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
@@ -235,7 +235,7 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                                 }}
                                 min={"0"}
                                 type="number"
-                                className="text-right rounded py-1  w-full table-data-input"
+                                className="text-right rounded py-1  w-full tx-table-input"
                                 value={item.qty}
                                 disabled={readOnly}
                                 onChange={(event) => {
@@ -255,13 +255,13 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                             />
                         </td>
                         {!readOnly &&
-                            <th className='table-data text-center'>
+                            <th className='tx-table-cell text-center'>
                                 <Delete onClick={() => { removeLotNo(index, lotIndex) }} />
                             </th>
                         }
                     </tr>
                 )}
-                <tr className='table-row'>
+                <tr className='tx-table-row'>
                     <td>Total</td>
                     <td className='text-right'>{sumArray(inwardLotDetails, "noOfBags")}</td>
                     <td className='text-right'>{(sumArray(inwardLotDetails, "qty")).toFixed(3)}</td>
@@ -271,7 +271,7 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                 </tr>
                 {isDirect
                     ?
-                    <tr className='table-row'>
+                    <tr className='tx-table-row'>
                         <td colSpan={3} ></td>
                         {!readOnly &&
                             <>
@@ -280,7 +280,7 @@ export function FabricLotGrid({ inwardLotDetails, handleInputChangeLotNo, index,
                         }
                     </tr>
                     :
-                    <tr className='table-row'>
+                    <tr className='tx-table-row'>
                         <td>Balance</td>
                         <td></td>
                         <td className='text-right'>{balanceQty}</td>

@@ -59,70 +59,70 @@ const FabricPurchaseOrder = ({ purchaseData, poItems = [] }) => {
       <table className=" text-xs border  border-gray-500 table-auto w-full">
         <thead className=' border border-gray-500 top-0  bg-green-200'>
           <tr className=''>
-            <th className="table-data text-center w-16">S.no</th>
+            <th className="tx-table-cell text-center w-16">S.no</th>
 
-            <th className="table-data w-56">Description</th>
-            <th className="table-data ">Color</th>
-            <th className="table-data  ">UOM</th>
-            <th className='w-16 table-data'>
+            <th className="tx-table-cell w-56">Description</th>
+            <th className="tx-table-cell ">Color</th>
+            <th className="tx-table-cell  ">UOM</th>
+            <th className='w-16 tx-table-cell'>
               Design
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               Gauge
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               LL
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               Gsm
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               K-Dia
             </th>
-            <th className='w-12 table-data'>
+            <th className='w-12 tx-table-cell'>
               F-Dia
             </th>
-            <th className="table-data  "> Qty</th>
+            <th className="tx-table-cell  "> Qty</th>
           </tr>
         </thead>
         <tbody>
           {poItem.map((value, index) => (
             <tr className='border  border-gray-500 w-full' key={index}>
-              <td className='table-data text-center px-1  '>{index + 1} </td>
+              <td className='tx-table-cell text-center px-1  '>{index + 1} </td>
 
-              <td className='table-data  px-1 w-56'>
+              <td className='tx-table-cell  px-1 w-56'>
                 {findFromList(value.fabricId, fabricList.data, "aliasName")}
               </td>
-              <td className='table-data  px-1'>
+              <td className='tx-table-cell  px-1'>
                 {findFromList(value.colorId, colorList.data, "name")}
               </td>
 
-              <td className='table-data text-left px-1  w-20'>
+              <td className='tx-table-cell text-left px-1  w-20'>
                 {findFromList(value.uomId, uomList.data, "name")}
               </td>
-              <td className='text-left px-1  table-data '>
+              <td className='text-left px-1  tx-table-cell '>
                 {findFromList(value.designId, designList.data, "name")}
               </td>
-              <td className='text-right px-1  table-data '>
+              <td className='text-right px-1  tx-table-cell '>
                 {findFromList(value.gaugeId, gaugeList.data, "name")}
               </td>
-              <td className='text-right px-1  table-data '>
+              <td className='text-right px-1  tx-table-cell '>
                 {findFromList(value.loopLengthId, loopList.data, "name")}
               </td>
-              <td className='text-right px-1  table-data '>
+              <td className='text-right px-1  tx-table-cell '>
                 {findFromList(value.gsmId, gsmList.data, "name")}
               </td>
-              <td className='text-right px-1  table-data '>
+              <td className='text-right px-1  tx-table-cell '>
                 {findFromList(value.kDiaId, diaList.data, "name")}
               </td>
-              <td className='text-right px-1  table-data '>
+              <td className='text-right px-1  tx-table-cell '>
                 {findFromList(value.fDiaId, diaList.data, "name")}
               </td>
-              <td className='table-data text-right px-1  w-24'>{parseFloat(value.delQty).toFixed(3)}</td>
+              <td className='tx-table-cell text-right px-1  w-24'>{parseFloat(value.delQty).toFixed(3)}</td>
             </tr>
           ))}
           <tr className='border  border-gray-500'>
-            <th className='table-data text-center px-1  font-bold text-xs' colSpan={10}>TOTAL</th>
+            <th className='tx-table-cell text-center px-1  font-bold text-xs' colSpan={10}>TOTAL</th>
             <td className='px-1 h-8  text-right'>{parseFloat(getTotals("delQty")).toFixed(3)}</td>
           </tr>
         </tbody>

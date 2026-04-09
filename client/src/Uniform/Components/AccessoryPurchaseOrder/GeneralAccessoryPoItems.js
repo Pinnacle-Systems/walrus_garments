@@ -414,7 +414,7 @@ const GeneralAccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryGroupId") } }}
-                    disabled={readOnly} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryGroupId}
+                    disabled={readOnly} className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryGroupId}
                     onChange={(e) => handleInputChange(e.target.value, index, "accessoryGroupId")}
                     onBlur={(e) => {
 
@@ -435,7 +435,7 @@ const GeneralAccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryCategoryId") } }}
-                    disabled={readOnly || !row.accessoryGroupId} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryCategoryId}
+                    disabled={readOnly || !row.accessoryGroupId} className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryCategoryId}
                     onChange={(e) => handleInputChange(e.target.value, index, "accessoryCategoryId")}
                     onBlur={(e) => {
 
@@ -456,7 +456,7 @@ const GeneralAccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "accessoryId") } }}
-                    disabled={readOnly || !row.accessoryCategoryId} className='text-left w-full rounded py-1 table-data-input' value={row.accessoryId}
+                    disabled={readOnly || !row.accessoryCategoryId} className='text-left w-full rounded py-1 tx-table-input' value={row.accessoryId}
                     onChange={(e) => handleInputChange(e.target.value, index, "accessoryId")}
                     onBlur={(e) => {
 
@@ -478,7 +478,7 @@ const GeneralAccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                    disabled={readOnly || !row.accessoryId} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                    disabled={readOnly || !row.accessoryId} className='text-left w-full rounded py-1 tx-table-input' value={row.colorId}
                     onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                     onBlur={(e) => {
 
@@ -499,7 +499,7 @@ const GeneralAccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                   disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
+                   disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 tx-table-input' value={row.sizeId}
                     onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                     onBlur={(e) => {
 
@@ -520,7 +520,7 @@ const GeneralAccessoryPoItems = ({
                 <td className='py-0.5 border border-gray-300 text-[11px]'>
                   <select
                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                    disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
+                    disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 tx-table-input' value={row.uomId}
                     onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                     onBlur={(e) => {
 
@@ -547,7 +547,7 @@ const GeneralAccessoryPoItems = ({
                     min={"0"}
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    className="text-right rounded py-1 px-1 w-full tx-table-input"
                     value={(!row.qty) ? 0 : row.qty}
                     disabled={readOnly || !row.accessoryId}
                     onChange={(e) =>
@@ -571,7 +571,7 @@ const GeneralAccessoryPoItems = ({
                     min={"0"}
                     type="number"
                     onFocus={(e) => e.target.select()}
-                    className="text-right rounded py-1 px-1 w-full table-data-input"
+                    className="text-right rounded py-1 px-1 w-full tx-table-input"
                     value={(!row.price) ? 0 : row.price}
                    disabled={readOnly || !row.accessoryId}
                     onChange={(e) =>

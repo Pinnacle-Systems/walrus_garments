@@ -96,18 +96,18 @@ export default function Form({ poType, innerRef, poItems, supplierDetails, singl
               <tr className='border border-gray-500 '><th className='p-2 bg-green-200 text-xs' colSpan={2}>Tax Details</th></tr>
               <TaxDetails items={poItems} taxTemplateId={taxTemplateId} discountType={discountType} discountValue={discountValue} />
               <tr className='border border-gray-500 text-xs '>
-                <td className='table-data p-1'>
+                <td className='tx-table-cell p-1'>
                   ROUNDOFF
                 </td>
-                <td className='table-data text-right p-1'>
+                <td className='tx-table-cell text-right p-1'>
                   {parseFloat(taxDetails?.roundOffAmount).toFixed(2)}
                 </td>
               </tr>
               <tr className='border border-gray-500 text-xs'>
-                <td className='table-data p-1 bg-green-200 text-xs'>
+                <td className='tx-table-cell p-1 bg-green-200 text-xs'>
                   NET AMOUNT
                 </td>
-                <td className='table-data p-1 text-xs'>
+                <td className='tx-table-cell p-1 text-xs'>
                   {parseFloat(taxDetails?.netAmount).toFixed(2)}
                 </td>
               </tr>

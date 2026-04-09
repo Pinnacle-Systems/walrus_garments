@@ -218,7 +218,7 @@ const FabricPoItemSelection = ({ poType, supplierId, isItemAdded, handleChange, 
                                 {poItems?.data?.filter(val => val.balanceQty !== 0)?.map((dataObj, index) => (
                                     <tr
                                         key={dataObj.id}
-                                        className="border-2 table-row "
+                                        className="border-2 tx-table-row "
                                         onClick={() => handleChange(dataObj.id)}
                                     >
                                         <td className='py-1'>

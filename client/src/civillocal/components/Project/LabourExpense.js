@@ -117,7 +117,7 @@ const LabourExpense = ({ setFoodCost, foodCost, transportCost, setTransportCost,
                                     <select
 
                                         disabled={readOnly}
-                                        className='text-left w-full  rounded py-1 table-data-input border border-gray-400'
+                                        className='text-left w-full  rounded py-1 tx-table-input border border-gray-400'
                                         value={item.paymentMethod}
                                         onChange={(e) => handleInputChange(e.target.value, index, "paymentMethod")}
                                     >

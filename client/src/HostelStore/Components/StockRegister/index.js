@@ -166,19 +166,19 @@ const SalesRegister = () => {
                                         className="  top-0 stick-bg w-10">
                                         S. no.
                                     </th>
-                                    <th className="  top-0 stick-bg table-data">
+                                    <th className="  top-0 stick-bg tx-table-cell">
                                         Product name
                                     </th>
-                                    <th className="  top-0 stick-bg table-data">
+                                    <th className="  top-0 stick-bg tx-table-cell">
                                         UOM Type
                                     </th>
-                                    <th className="  top-0 stick-bg table-data">
+                                    <th className="  top-0 stick-bg tx-table-cell">
                                         Sales Price
                                     </th>
-                                    <th className="  top-0 stick-bg table-data">
+                                    <th className="  top-0 stick-bg tx-table-cell">
                                         Stock Qty
                                     </th>
-                                    <th className="  top-0 stick-bg table-data">
+                                    <th className="  top-0 stick-bg tx-table-cell">
                                         Stock Value
                                     </th>
                                 </tr>
@@ -196,7 +196,7 @@ const SalesRegister = () => {
                                     {purData.map((dataObj, index) => (
                                         <Fragment key={index}>
                                             <tr
-                                                className={` table-row py-1 border-2 border-gray-400 ${(currentOpenNumber === index) ? "border-2 border-black" : ""}`}
+                                                className={` tx-table-row py-1 border-2 border-gray-400 ${(currentOpenNumber === index) ? "border-2 border-black" : ""}`}
                                                 onClick={() => {
                                                     if (index === currentOpenNumber) {
                                                         setCurrentOpenNumber("")
@@ -221,7 +221,7 @@ const SalesRegister = () => {
 
                                         </Fragment>
                                     ))}
-                                    <tr className='py-2 w-full table-row bg-blue-400'>
+                                    <tr className='py-2 w-full tx-table-row bg-blue-400'>
                                         <td colSpan={5} className='text-center border-2 border-gray-500 font-bold text-sm bg-blue-400'>Total</td>
                                         <td className='text-right px-1 border-2 border-gray-700 font-bold text-sm bg-blue-400'>{parseFloat(totalAmount).toFixed(2)}</td>
                                     </tr>

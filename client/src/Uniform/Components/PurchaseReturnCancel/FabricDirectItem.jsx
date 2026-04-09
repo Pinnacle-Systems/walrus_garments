@@ -52,33 +52,33 @@ const FabricDirectItem = ({ fabricList, uomList,
                     handleInputChangeLotNo={handleInputChangeLotNo}
                     index={index} returnLotDetails={item?.returnLotDetails ? item?.returnLotDetails : []} balanceQty={item?.balanceQty} />
             </Modal>
-            <tr key={item.poItemId} className='table-row'>
-                <td className='text-left px-1  table-data'>{index + 1}</td>
-                <td className='text-left px-1 table-data'>{item?.poNo}</td>
-                <td className='text-left px-1 table-data'>{findFromList(item.fabricId, fabricList?.data, "name")} </td>
-                <td className='text-left px-1 table-data'>{findFromList(item.colorId, colorList?.data, "name")} </td>
-                <td className='text-left px-1 table-data'>{findFromList(item.designId, designList?.data, "name")} </td>
-                <td className='text-left px-1 table-data'>{findFromList(item.gaugeId, gaugeList?.data, "name")} </td>
-                <td className='text-left px-1 table-data'>{findFromList(item.loopLengthId, loopLengthList?.data, "name")} </td>
-                <td className='text-left px-1 table-data'>{findFromList(item.gsmId, gsmList?.data, "name")} </td>
-                <td className='text-left px-1 table-data'>{findFromList(item.kDiaId, diaList?.data?.filter(val => val.kDia), "name")} </td>
-                <td className='text-left px-1 table-data'>{findFromList(item.fDiaId, diaList?.data?.filter(val => val.fDia), "name")} </td>
-                <td className='text-left px-1 table-data'>{findFromList(item.uomId, uomList?.data, "name")} </td>
-                <td className='text-right px-1  table-data'>{item?.stockQty || 0}</td>
-                <td className='text-right px-1  table-data'>{item?.alreadyInwardedRolls || 0}</td>
-                <td className='text-right px-1  table-data'>{item?.alreadyInwardedQty || 0}</td>
-                <td className='text-right px-1  table-data'>{item?.alreadyReturnedRolls || 0}</td>
-                <td className='text-right px-1  table-data'>{item?.alreadyReturnedQty || 0}</td>
-                <td className='text-right px-1  table-data'>{item?.allowedReturnQty || 0}</td>
-                <td className='text-center table-data'>
+            <tr key={item.poItemId} className='tx-table-row'>
+                <td className='text-left px-1  tx-table-cell'>{index + 1}</td>
+                <td className='text-left px-1 tx-table-cell'>{item?.poNo}</td>
+                <td className='text-left px-1 tx-table-cell'>{findFromList(item.fabricId, fabricList?.data, "name")} </td>
+                <td className='text-left px-1 tx-table-cell'>{findFromList(item.colorId, colorList?.data, "name")} </td>
+                <td className='text-left px-1 tx-table-cell'>{findFromList(item.designId, designList?.data, "name")} </td>
+                <td className='text-left px-1 tx-table-cell'>{findFromList(item.gaugeId, gaugeList?.data, "name")} </td>
+                <td className='text-left px-1 tx-table-cell'>{findFromList(item.loopLengthId, loopLengthList?.data, "name")} </td>
+                <td className='text-left px-1 tx-table-cell'>{findFromList(item.gsmId, gsmList?.data, "name")} </td>
+                <td className='text-left px-1 tx-table-cell'>{findFromList(item.kDiaId, diaList?.data?.filter(val => val.kDia), "name")} </td>
+                <td className='text-left px-1 tx-table-cell'>{findFromList(item.fDiaId, diaList?.data?.filter(val => val.fDia), "name")} </td>
+                <td className='text-left px-1 tx-table-cell'>{findFromList(item.uomId, uomList?.data, "name")} </td>
+                <td className='text-right px-1  tx-table-cell'>{item?.stockQty || 0}</td>
+                <td className='text-right px-1  tx-table-cell'>{item?.alreadyInwardedRolls || 0}</td>
+                <td className='text-right px-1  tx-table-cell'>{item?.alreadyInwardedQty || 0}</td>
+                <td className='text-right px-1  tx-table-cell'>{item?.alreadyReturnedRolls || 0}</td>
+                <td className='text-right px-1  tx-table-cell'>{item?.alreadyReturnedQty || 0}</td>
+                <td className='text-right px-1  tx-table-cell'>{item?.allowedReturnQty || 0}</td>
+                <td className='text-center tx-table-cell'>
                     <button onClick={() => setLotGrid(true)} className='w-full'>
                         {VIEW}
                     </button>
                 </td>
-                <td className='text-right px-1  table-data'>
+                <td className='text-right px-1  tx-table-cell'>
                     <input
                         type="number"
-                        className="text-right rounded py-1  px-1 w-full table-data-input"
+                        className="text-right rounded py-1  px-1 w-full tx-table-input"
                         // value={sumArray(item?.lotDetails ? item?.lotDetails : [], "noOfRolls")}
                         value={item?.noOfRolls ? item?.noOfRolls : 0}
                         disabled={true}
@@ -104,10 +104,10 @@ const FabricDirectItem = ({ fabricList, uomList,
                         }}
                     />
                 </td>
-                <td className='text-left px-1  table-data'>
+                <td className='text-left px-1  tx-table-cell'>
                     <input
                         type="number"
-                        className="text-right rounded py-1  px-1 w-full table-data-input"
+                        className="text-right rounded py-1  px-1 w-full tx-table-input"
                         // value={sumArray(item?.lotDetails ? item?.lotDetails : [], "qty")}
                         value={item?.qty ? item?.qty : 0}
                         disabled={true}
@@ -132,10 +132,10 @@ const FabricDirectItem = ({ fabricList, uomList,
                         }}
                     />
                 </td>
-                <td className='text-right px-1  table-data'>{parseFloat(item?.price).toFixed(2)}</td>
-                <td className='text-right   table-data'>{(parseFloat(item?.price) * parseFloat(sumArray(item?.returnLotDetails ? item?.returnLotDetails : [], "qty"))).toFixed(2)}</td>
+                <td className='text-right px-1  tx-table-cell'>{parseFloat(item?.price).toFixed(2)}</td>
+                <td className='text-right   tx-table-cell'>{(parseFloat(item?.price) * parseFloat(sumArray(item?.returnLotDetails ? item?.returnLotDetails : [], "qty"))).toFixed(2)}</td>
                 {!readOnly &&
-                    <td className='table-data w-12'>
+                    <td className='tx-table-cell w-12'>
                         <div tabIndex={-1} onClick={() => removeItem(item?.poItemsId)} className='flex justify-center px-2 py-1.5 items-center cursor-pointer bg-gray-300'>
                             {DELETE}
                         </div>

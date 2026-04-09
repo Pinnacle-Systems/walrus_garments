@@ -121,31 +121,31 @@ const ProjectItems = ({ setLineItems, lineItems, quotesItems, setQuotesItems, cl
                                 disabled={readOnly}
                             />
                         </th>
-                        <th className="table-data  w-12 text-center p-0.5">S.no</th>
-                        <th className="table-data">Product Name<span className="text-red-500 p-5">*</span></th>
-                        <th className="table-data">Description</th>
-                        <th className="table-data">Hsn</th>
+                        <th className="tx-table-cell  w-12 text-center p-0.5">S.no</th>
+                        <th className="tx-table-cell">Product Name<span className="text-red-500 p-5">*</span></th>
+                        <th className="tx-table-cell">Description</th>
+                        <th className="tx-table-cell">Hsn</th>
 
-                        <th className="table-data w-16">Uom</th>
-                        <th className="table-data  w-16">Qty</th>
-                        <th className="table-data  w-20">Price</th>
+                        <th className="tx-table-cell w-16">Uom</th>
+                        <th className="tx-table-cell  w-16">Qty</th>
+                        <th className="tx-table-cell  w-20">Price</th>
 
-                        <th className="table-data  w-16 p-0.5">Taxable.Amount</th>
+                        <th className="tx-table-cell  w-16 p-0.5">Taxable.Amount</th>
 
                         {
                             singlePartyList?.data?.isIgst ?
 
-                                <th className="table-data  w-20">IGST</th>
+                                <th className="tx-table-cell  w-20">IGST</th>
                                 :
                                 <>
-                                    <th className="table-data  w-20">CGST</th>
-                                    <th className="table-data  w-20">SGST</th>
+                                    <th className="tx-table-cell  w-20">CGST</th>
+                                    <th className="tx-table-cell  w-20">SGST</th>
                                 </>
                         }
-                        <th className="table-data  w-20">Discount</th>
+                        <th className="tx-table-cell  w-20">Discount</th>
 
 
-                        <th className="table-data  w-20">Amount</th>
+                        <th className="tx-table-cell  w-20">Amount</th>
 
 
                     </tr>
@@ -153,7 +153,7 @@ const ProjectItems = ({ setLineItems, lineItems, quotesItems, setQuotesItems, cl
                 <tbody className='overflow-y-auto h-full w-full'>
                     {(quotesItems || []).map((item, index) =>
 
-                        <tr key={index} className={`w-full table-row`}>
+                        <tr key={index} className={`w-full tx-table-row`}>
                             <td className='border border-black w-12 text-center'>
                                 <input type='checkbox' checked={isQuotesAdd(item.id)}
                                     onChange={() => {
@@ -167,30 +167,30 @@ const ProjectItems = ({ setLineItems, lineItems, quotesItems, setQuotesItems, cl
                                         }
                                     }} />
                             </td>
-                            <td className="table-data w-7 text-left px-1 py-1">
+                            <td className="tx-table-cell w-7 text-left px-1 py-1">
                                 {index + 1}
                             </td>
-                            <td className='table-data w-32'>
+                            <td className='tx-table-cell w-32'>
                                 {item?.Product?.name}
 
 
                             </td>
-                            <td className="table-data w-48 overflow-auto text-left px-1 py-1">{item?.Product?.description}
+                            <td className="tx-table-cell w-48 overflow-auto text-left px-1 py-1">{item?.Product?.description}
 
                             </td>
 
-                            <td className='table-data w-16 text-right px-1'>
+                            <td className='tx-table-cell w-16 text-right px-1'>
 
                                 {item?.Product?.hsnCode}
 
 
                             </td>
-                            <td className='table-data w-16'>
+                            <td className='tx-table-cell w-16'>
                                 {item?.Uom?.name}
 
                             </td>
 
-                            <td className='table-data text-right px-1'>{item?.qty}
+                            <td className='tx-table-cell text-right px-1'>{item?.qty}
 
                             </td>
 
@@ -198,11 +198,11 @@ const ProjectItems = ({ setLineItems, lineItems, quotesItems, setQuotesItems, cl
 
 
 
-                            <td className='table-data text-right px-1'>
+                            <td className='tx-table-cell text-right px-1'>
                                 {parseFloat(item?.price).toFixed(2) || 0}
                             </td>
 
-                            <td className='table-data text-right px-1'>{(!item.qty || !item.price) ? 0 : (parseFloat(parseFloat(item.qty) * parseFloat(item.price)).toFixed(2) || 0)}
+                            <td className='tx-table-cell text-right px-1'>{(!item.qty || !item.price) ? 0 : (parseFloat(parseFloat(item.qty) * parseFloat(item.price)).toFixed(2) || 0)}
 
                             </td>
 
@@ -212,17 +212,17 @@ const ProjectItems = ({ setLineItems, lineItems, quotesItems, setQuotesItems, cl
                                 singlePartyList?.data?.isIgst ?
 
 
-                                    <td className='table-data text-right px-1'>
+                                    <td className='tx-table-cell text-right px-1'>
                                         {(!item.qty || !item.price) ? 0 : (parseFloat((parseFloat(item.qty) * parseFloat(item.price)) * (calculateGst(index) / 100)).toFixed(2) || 0)}
                                     </td>
 
                                     :
                                     <>
-                                        <td className='table-data text-right px-1'>
+                                        <td className='tx-table-cell text-right px-1'>
                                             {(!item.qty || !item.price) ? 0 : (parseFloat((parseFloat(item.qty) * parseFloat(item.price)) * ((calculateGst(index) / 2) / 100)).toFixed(2) || 0)}
                                         </td>
 
-                                        <td className='table-data text-right px-1'>
+                                        <td className='tx-table-cell text-right px-1'>
                                             {(!item.qty || !item.price) ? 0 : (parseFloat((parseFloat(item.qty) * parseFloat(item.price)) * ((calculateGst(index) / 2) / 100)).toFixed(2) || 0)}
                                         </td>
 
@@ -233,11 +233,11 @@ const ProjectItems = ({ setLineItems, lineItems, quotesItems, setQuotesItems, cl
 
 
 
-                            <td className='table-data text-right px-1'>{item?.discount}
+                            <td className='tx-table-cell text-right px-1'>{item?.discount}
 
                             </td>
 
-                            <td className='table-data text-right px-1'>{(!item.qty || !item.price) ? 0 : parseFloat(substract(parseFloat(item.qty) * parseFloat(item.price), parseFloat(item?.discount || 0)) + ((parseFloat(item.qty) * parseFloat(item.price)) * (calculateGst(index) / 100))).toFixed(2) || 0}
+                            <td className='tx-table-cell text-right px-1'>{(!item.qty || !item.price) ? 0 : parseFloat(substract(parseFloat(item.qty) * parseFloat(item.price), parseFloat(item?.discount || 0)) + ((parseFloat(item.qty) * parseFloat(item.price)) * (calculateGst(index) / 100))).toFixed(2) || 0}
 
                             </td>
 

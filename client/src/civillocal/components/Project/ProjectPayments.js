@@ -326,7 +326,7 @@ const ProjectPayments = ({ partyId, projectId, address, onClick, setIsOpenPaymen
                                         <select
 
                                             disabled={readOnly}
-                                            className='text-left w-40 ml-0.5 rounded py-1 table-data-input border border-gray-400'
+                                            className='text-left w-40 ml-0.5 rounded py-1 tx-table-input border border-gray-400'
                                             value={paymentMethod}
                                             onChange={(e) => setPaymentMethod(e.target.value)}
                                         >

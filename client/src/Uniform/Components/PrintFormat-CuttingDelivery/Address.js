@@ -18,7 +18,7 @@ const Address = ({ deliveryTo, supplierDetails }) => {
           <thead className='text-left p-1 ml-1'>
             <tr className='h-8 '>
               <th className=' font-bold w-1/2 text-sm'>VENDOR DETAILS : </th>
-              <th className='table-data font-bold text-sm '>DELIVERY TO :</th>
+              <th className='tx-table-cell font-bold text-sm '>DELIVERY TO :</th>
             </tr>
           </thead>
           <tbody>
@@ -31,7 +31,7 @@ const Address = ({ deliveryTo, supplierDetails }) => {
                 <div className='font-bold'>GST NO :{supplierDetails.gstNo}</div>
                 <div className='font-bold'> EMAIL :{supplierDetails.email}</div>
               </td >
-              <td className='table-data '>
+              <td className='tx-table-cell '>
                 <h2 className='font-bold text-sm text-green-700'>{deliveryTo.name}</h2>
                 <div>{deliveryTo.address}</div>
                 <div>CONTACT :{deliveryTo.contactMobile}</div>

@@ -68,7 +68,7 @@ export default function PrintFormatProductionDelivery({ innerRef, id }) {
                 <td >Doc. Id: {singleData?.data?.docId}</td>
                 <td> Del. Date : {getDateFromDateTimeToDisplay(singleData?.data?.createdAt)}</td>
                 <td> Due. Date : {getDateFromDateTimeToDisplay(singleData?.data?.dueDate)}</td>
-                <td className='table-data px-14 py-1 w-1/6'>
+                <td className='tx-table-cell px-14 py-1 w-1/6'>
                   <QRCode value={singleData?.data?.docId} size={80} />
                 </td>
               </tr>

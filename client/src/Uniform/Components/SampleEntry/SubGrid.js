@@ -143,7 +143,7 @@ const SubGrid = ({ orderDetails, itemTypeId, selectedMaleColors, setSelectedMale
                 <td className=" text-xs text-center border border-gray-500 break-words whitespace-normal max-w-xs">
 
                     <MultiSelect
-                        className={`text-left w-full rounded  table-data-input`}
+                        className={`text-left w-full rounded  tx-table-input`}
                         options={multiSelectOption((classList?.data || []), 'name', 'id')}
                         value={(value?.classIds || [])?.map((val) => ({ value: val?.classId, label: findFromList(val.classId, (classList?.data || []), "name") }))}
                         onChange={(value) => { handleInputChangeOrderDetails(value.map(i => ({ classId: i.value })), index, valueIndex, "classIds") }}

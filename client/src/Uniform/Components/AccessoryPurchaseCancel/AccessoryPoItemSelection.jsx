@@ -353,7 +353,7 @@
 //                                     {tempInwardItems?.map((dataObj, index) => (
 //                                         <tr
 //                                             key={dataObj.id}
-//                                             className="border-2 table-row "
+//                                             className="border-2 tx-table-row "
 //                                             onClick={() => handleChange(dataObj?.id, dataObj)}
 //                                         >
 //                                             <td className='py-1'>
@@ -655,7 +655,7 @@ const AccessoryPoItemSelection = ({
                                                 {poItems?.data?.map((dataObj, index) => (
                                                     <tr
                                                         key={dataObj.id}
-                                                        className="border-2 table-row "
+                                                        className="border-2 tx-table-row "
                                                         onClick={() => handleChange(dataObj?.id, dataObj)}
                                                     >
                                                         <td className='py-1'>

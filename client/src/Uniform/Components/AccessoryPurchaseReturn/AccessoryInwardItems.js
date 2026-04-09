@@ -166,12 +166,12 @@ const AccessoryInwardItems = ({ directInwardReturnItems, setDirectInwardReturnIt
                             handleRightClick={handleRightClick} poInwardOrDirectInward={poInwardOrDirectInward} setDirectInwardReturnItems={setDirectInwardReturnItems}
                         />)}
                         {Array.from({ length: 1 - directInwardReturnItems?.length }).map(i =>
-                            <tr className='w-full font-bold h-8 border border-gray-400 table-row'>
+                            <tr className='w-full font-bold h-8 border border-gray-400 tx-table-row'>
                                 {Array.from({ length: 11 }).map(i =>
-                                    <td className="table-data w-14  "></td>
+                                    <td className="tx-table-cell w-14  "></td>
                                 )}
                                 {!readOnly &&
-                                    <td className="table-data w-14"></td>
+                                    <td className="tx-table-cell w-14"></td>
                                 }
                             </tr>)
                         }

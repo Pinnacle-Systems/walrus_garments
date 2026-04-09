@@ -190,33 +190,33 @@ const ProcessDeliveryRegister = () => {
                     S. no.
                   </th>
                   <th
-                    className="  top-0 stick-bg table-data "
+                    className="  top-0 stick-bg tx-table-cell "
                   >
                     <label>Doc. Id</label>
                   </th>
                   <th
-                    className="  top-0 stick-bg table-data"
+                    className="  top-0 stick-bg tx-table-cell"
                   >
                     <label>Doc. Date</label>
                   </th>
                   <th
 
-                    className=" table-data top-0 stick-bg "
+                    className=" tx-table-cell top-0 stick-bg "
                   >
                     <label>Supplier</label>
                   </th>
                   <th
-                    className="  top-0 stick-bg table-data "
+                    className="  top-0 stick-bg tx-table-cell "
                   >
                     <label>Process</label>
                   </th>
-                  <th className="  top-0 stick-bg table-data">
+                  <th className="  top-0 stick-bg tx-table-cell">
                     <label>Due Date</label>
                   </th>
-                  <th className="  top-0 stick-bg table-data">
+                  <th className="  top-0 stick-bg tx-table-cell">
                     Qty
                   </th>
-                  <th className=" top-0 stick-bg table-data w-10">
+                  <th className=" top-0 stick-bg tx-table-cell w-10">
                   </th>
                 </tr>
               </thead>
@@ -233,7 +233,7 @@ const ProcessDeliveryRegister = () => {
                   {paginatedData.data.map((dataObj, index) => (
                     <Fragment key={index}>
                       <tr
-                        className={` table-row ${(currentSelectedProcessDetail === dataObj.id) ? "border-2 border-black" : ""}`}
+                        className={` tx-table-row ${(currentSelectedProcessDetail === dataObj.id) ? "border-2 border-black" : ""}`}
                         onClick={() => {
                           if (currentSelectedProcessDetail === dataObj.id) {
                             setCurrentSelectedProcessDetail("")

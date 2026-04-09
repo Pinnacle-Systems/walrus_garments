@@ -145,11 +145,11 @@ const ProductionDetailsFillGrid = ({ isStitching, processIdTo, productionDeliver
                     </thead>
                     <tbody>
                         {(data?.data || []).map((item, index) =>
-                            <tr key={index} className='table-row' onClick={() => {
+                            <tr key={index} className='tx-table-row' onClick={() => {
                                 handleCheckBoxChange(!isItemChecked(item), item)
                             }}>
-                                <td className='table-data'>
-                                    <input type="checkbox" className='w-full table-data-input'
+                                <td className='tx-table-cell'>
+                                    <input type="checkbox" className='w-full tx-table-input'
                                         checked={isItemChecked(item)} />
                                 </td>
                                 <td>{index + 1}</td>

@@ -6,13 +6,13 @@ const Address = ({ deliveryTo, supplierDetails, deliveryType }) => {
       <table className="text-xs  w-full p-2 table-auto border border-gray-500">
         <thead className='text-left p-1 ml-1'>
           <tr className=''>
-            <th className=' font-bold w-1/2 table-data text-sm'>VENDOR DETAILS : </th>
-            <th className=' font-bold text-sm table-data '>DELIVERY TO :</th>
+            <th className=' font-bold w-1/2 tx-table-cell text-sm'>VENDOR DETAILS : </th>
+            <th className=' font-bold text-sm tx-table-cell '>DELIVERY TO :</th>
           </tr>
         </thead>
         <tbody>
           <tr className=' text-xs'>
-            <td className='p-1 table-data'>
+            <td className='p-1 tx-table-cell'>
               <h2 className='font-bold text-sm text-green-700'>{supplierDetails.name}</h2>
               <div> {supplierDetails.address} </div>
               <div className=''>Mobile NO :{supplierDetails.contactMobile}</div>

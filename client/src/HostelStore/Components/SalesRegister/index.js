@@ -117,20 +117,20 @@ const SalesRegister = () => {
                                         className="  top-0 stick-bg w-10">
                                         S. no.
                                     </th>
-                                    <th className="  top-0 stick-bg table-data">
+                                    <th className="  top-0 stick-bg tx-table-cell">
                                         Bill No
                                     </th>
                                     <th
-                                        className="  top-0 stick-bg table-data "
+                                        className="  top-0 stick-bg tx-table-cell "
                                     >
                                         <label>Bill Date</label>
 
                                     </th>
-                                    <th className="  top-0 stick-bg table-data">
+                                    <th className="  top-0 stick-bg tx-table-cell">
                                         <label>Discount  / sales</label>
 
                                     </th>
-                                    <th className="  top-0 stick-bg table-data">
+                                    <th className="  top-0 stick-bg tx-table-cell">
                                         <label>Sale Amount</label>
 
                                     </th>
@@ -149,7 +149,7 @@ const SalesRegister = () => {
                                     {purData.map((dataObj, index) => (
                                         <Fragment key={index}>
                                             <tr
-                                                className={` table-row ${(currentOpenNumber === index) ? "border-2 border-black" : ""}`}
+                                                className={` tx-table-row ${(currentOpenNumber === index) ? "border-2 border-black" : ""}`}
                                                 onClick={() => {
                                                     if (index === currentOpenNumber) {
                                                         setCurrentOpenNumber("")
@@ -181,13 +181,13 @@ const SalesRegister = () => {
                                                                 S. no.
                                                             </th>
                                                             <th
-                                                                className="  top-0 stick-bg table-data "
+                                                                className="  top-0 stick-bg tx-table-cell "
                                                             >
                                                                 Pro category
 
                                                             </th>
                                                             <th
-                                                                className="  top-0 stick-bg table-data "
+                                                                className="  top-0 stick-bg tx-table-cell "
                                                             >
                                                                 Pro Brand
 
@@ -201,20 +201,20 @@ const SalesRegister = () => {
                                                                 UOM type
                                                             </th>
 
-                                                            <th className="  top-0 stick-bg table-data">
+                                                            <th className="  top-0 stick-bg tx-table-cell">
                                                                 <label>Qty</label>
                                                             </th>
 
                                                             <th
-                                                                className="  top-0 stick-bg table-data "
+                                                                className="  top-0 stick-bg tx-table-cell "
                                                             >
                                                                 <label>Sales  Price</label>
 
                                                             </th>
-                                                            <th className="  top-0 stick-bg table-data">
+                                                            <th className="  top-0 stick-bg tx-table-cell">
                                                                 <label>Total Amt</label>
                                                             </th>
-                                                            <th className="  top-0 stick-bg table-data">
+                                                            <th className="  top-0 stick-bg tx-table-cell">
                                                                 Return Qty
                                                             </th>
                                                         </tr>
@@ -239,7 +239,7 @@ const SalesRegister = () => {
                                             }
                                         </Fragment>
                                     ))}
-                                    <tr className='py-2 w-full table-row bg-blue-400'>
+                                    <tr className='py-2 w-full tx-table-row bg-blue-400'>
                                         <td colSpan={4} className='text-center border-2 border-gray-500 font-bold text-sm bg-blue-400'>Total</td>
                                         <td className='text-right px-1 border-2 border-gray-700 font-bold text-sm bg-blue-400'>{parseFloat(totalAmount).toFixed(2)}</td>
                                     </tr>

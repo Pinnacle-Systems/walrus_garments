@@ -360,7 +360,7 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
                                                         <td className='py-0.5 border border-gray-300 text-[11px]'>
                                                             <select
                                                                 onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                                                disabled={readOnly || !row.accessoryId} className='text-left w-full rounded py-1 table-data-input' value={row.colorId}
+                                                                disabled={readOnly || !row.accessoryId} className='text-left w-full rounded py-1 tx-table-input' value={row.colorId}
                                                                 onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
                                                                 onBlur={(e) => {
 
@@ -381,7 +381,7 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
                                                         <td className='py-0.5 border border-gray-300 text-[11px]'>
                                                             <select
                                                                 onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                                                disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 table-data-input' value={row.sizeId}
+                                                                disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 tx-table-input' value={row.sizeId}
                                                                 onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
                                                                 onBlur={(e) => {
 
@@ -402,7 +402,7 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
                                                         <td className='py-0.5 border border-gray-300 text-[11px]'>
                                                             <select
                                                                 onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                                                disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 table-data-input' value={row.uomId}
+                                                                disabled={readOnly || !row.accessoryId} className='text-left w-20 rounded py-1 tx-table-input' value={row.uomId}
                                                                 onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
                                                                 onBlur={(e) => {
 
@@ -430,7 +430,7 @@ export default function AccessoryItems({ item, selectedAccessoryIndex, id, setOr
                                                                 min={"0"}
                                                                 type="number"
                                                                 onFocus={(e) => e.target.select()}
-                                                                className="text-right rounded py-1 px-1 w-full table-data-input"
+                                                                className="text-right rounded py-1 px-1 w-full tx-table-input"
                                                                 value={(!row.qty) ? 0 : row.qty}
                                                                 disabled={readOnly || !row.accessoryId}
                                                                 onChange={(e) =>

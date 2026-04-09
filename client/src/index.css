@@ -77,6 +77,15 @@ label {
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
   }
+
+  table th,
+  table td,
+  table input,
+  table select,
+  table button,
+  table textarea {
+    line-height: 14px;
+  }
 }
 
 
@@ -150,15 +159,15 @@ label {
     @apply text-black text-sm bg-gray-100 border-2;
   }
 
-  .table-row {
+  .tx-table-row {
     @apply odd:bg-white even:bg-gray-100 text-black text-xs;
   }
 
-  .table-data-input {
+  .tx-table-input {
     @apply bg-transparent focus:bg-yellow-100;
   }
 
-  .table-data {
+  .tx-table-cell {
     @apply border-x border-y border-gray-400 cursor-pointer;
   }
 

@@ -64,7 +64,7 @@ const AccessoryDirectItem = ({ uomList, sizeList, accessoryList,
                                     type="number"
                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("0.000", index, "returnQty") } }}
                                     onFocus={(e) => e.target.select()}
-                                    className="text-right rounded py-1 w-full px-1 table-data-input"
+                                    className="text-right rounded py-1 w-full px-1 tx-table-input"
                                     value={(!item.returnQty) ? 0 : item.returnQty}
                                     disabled={readOnly}
                                     onChange={(event) => {

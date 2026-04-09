@@ -33,11 +33,11 @@ const HolidayReport = ({ onClick }) => {
                 </thead>
                 <tbody>
                     {holidays.map(holiday =>
-                        <tr key={holiday.id} className="table-row" onClick={() => onClick(holiday.date)}>
-                            <td className="table-data">
+                        <tr key={holiday.id} className="tx-table-row" onClick={() => onClick(holiday.date)}>
+                            <td className="tx-table-cell">
                                 {moment.utc(holiday.date).format("DD-MM-YYYY")}
                             </td>
-                            <td className="table-data">
+                            <td className="tx-table-cell">
                                 {holiday.description}
                             </td>
                         </tr>

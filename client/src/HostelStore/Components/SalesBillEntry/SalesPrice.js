@@ -41,11 +41,11 @@ const SalesPrice = ({ productId, uomId, id, date, poBillItems, setPoBillItems, i
 
     return (
         <>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {isShow &&
                     <div>
                         <select
-                            className='text-left w-full rounded  table-data-input'
+                            className='text-left w-full rounded  tx-table-input'
                             value={poBillItems[index].salePrice}
                             onChange={(e) => handleInputChange(e.target.value, index, "salePrice")}
                             onBlur={(e) => handleInputChange(e.target.value, index, "salePrice")}
@@ -59,17 +59,17 @@ const SalesPrice = ({ productId, uomId, id, date, poBillItems, setPoBillItems, i
                     </div>
                 }
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 {(isShow && poBillItems[index]?.salePrice) &&
                     <>
                         {stockQty}
                     </>
                 }
             </td >
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
-                    className="text-right rounded py-1 px-1 w-16 table-data-input"
+                    className="text-right rounded py-1 px-1 w-16 tx-table-input"
 
                     value={qty == 0 ? '' : qty}
                     disabled={readOnly}
@@ -84,10 +84,10 @@ const SalesPrice = ({ productId, uomId, id, date, poBillItems, setPoBillItems, i
                     }
                 />
             </td>
-            <td className='table-data'>
+            <td className='tx-table-cell'>
                 <input
                     type="number"
-                    className="text-right rounded py-1 px-1 w-16 table-data-input"
+                    className="text-right rounded py-1 px-1 w-16 tx-table-input"
                     value={(!qty || !salePrice) ? 0 : (parseFloat(qty) * parseFloat(poBillItems[index].salePrice)).toFixed(2)}
                     disabled={readOnly}
                 />
