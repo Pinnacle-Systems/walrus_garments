@@ -180,11 +180,11 @@ const YarnPoItems = ({
             const newArray = Array.from({ length: targetRows - prev.length }, () => ({
                 itemId: "",
                 barcode: "",
-                qty: "0.00",
+                qty: "",
                 tax: "0",
                 colorId: "",
                 uomId: "",
-                price: "0.00",
+                price: "",
                 discountValue: "0.00",
                 noOfBags: "0",
                 discountType: "",
@@ -420,7 +420,7 @@ const YarnPoItems = ({
                                         }
                                     }}
                                 >
-                                    <td className="w-12 border border-gray-300 text-[11px] text-center p-0">{index + 1}</td>
+                                    <td className="w-12 border border-gray-300 text-[11px] text-center py-0.5">{index + 1}</td>
 
                                     {stockControldata?.itemWise && (
                                         <td className="border border-gray-300 p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
@@ -438,7 +438,7 @@ const YarnPoItems = ({
                                         </td>
                                     )}
                                     {showSize && (
-                                        <td className="border border-gray-300  p-0 py-1.5 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                                        <td className="border border-gray-300  p-0  text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                                             <SearchableTableCellSelect
                                                 value={row.sizeId}
                                                 options={getSizeOptions(row)}
@@ -560,7 +560,7 @@ const YarnPoItems = ({
 
                                             }}
                                             onBlur={(e) => {
-                                                handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
+                                                handleInputChange(parseFloat(e.target.value).toFixed(2), index, "qty");
                                             }
                                             }
                                         />
@@ -574,7 +574,7 @@ const YarnPoItems = ({
                                             }}
                                             min={"0"}
                                             type="number"
-                                            className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
+                                            className="h-full w-full rounded-none border-0 bg-transparent  text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
                                             onFocus={(e) => e.target.select()}
                                             value={(row?.price)}
                                             disabled={readOnly || !row.qty || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
@@ -593,7 +593,7 @@ const YarnPoItems = ({
 
 
 
-                                    <td className='border border-gray-300 text-[11px] text-right px-2'>
+                                    <td className='border border-gray-300 text-[11px] text-right p-0 px-2'>
                                         {formatTwoDecimals(row?.price && row?.qty ? parseFloat(row?.price) * parseFloat(row?.qty) : 0)}</td>
 
 
@@ -612,7 +612,7 @@ const YarnPoItems = ({
                                                 }
                                             }}
                                             disabled={readOnly}
-                                            className="h-full w-full rounded-none bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700 py-0"
+                                            className="h-full w-full rounded-none bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700 p-0"
                                         >
                                             +
                                         </button>

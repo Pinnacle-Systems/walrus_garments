@@ -407,12 +407,7 @@ async function update(id, body) {
       id: parseInt(id),
     },
     include: {
-      StockAdjustmentItems: {
-        select: {
-          id: true,
-          barcode: true,
-        },
-      },
+      StockAdjustmentItems: true,
     },
   });
   if (!dataFound) return NoRecordFound("stockAdjustment");
@@ -425,6 +420,25 @@ async function update(id, body) {
 
 
     if (removeItemsIds.length > 0) {
+      // Check stock before deleting existing items (reverting adjustments)
+      const stockDetails = await tx.stock.findMany({
+        where: {
+          inOrOut: "stockAdjustment",
+          transactionId: { in: removeItemsIds },
+        },
+      });
+
+      for (const stockItem of stockDetails) {
+        // If it was a PLUS adjustment (stockItem.qty > 0), 
+        // deleting it effectively removes stock from the system.
+        if (stockItem.qty > 0) {
+          const currentQty = await getExistingStockQty(tx, stockItem, dataFound.branchId, dataFound.storeId);
+          if (currentQty < stockItem.qty) {
+            throw new Error("Insufficient stock quantity, you cannot delete.");
+          }
+        }
+      }
+
       await tx.stockAdjustmentItems.deleteMany({
         where: { id: { in: removeItemsIds } },
       });

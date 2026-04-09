@@ -122,7 +122,7 @@ const SearchableTableCellSelect = ({
         value={displayValue}
         placeholder={placeholder}
         disabled={disabled}
-        className={`h-full w-full border-0 bg-transparent py-0 pl-1 pr-5 text-[11px] shadow-none outline-none focus:bg-transparent focus:outline-none ${align === "right" ? "text-right" : "text-left"
+        className={`h-full w-full border-0 bg-transparent py-0   text-[11px] shadow-none outline-none focus:bg-transparent focus:outline-none ${align === "right" ? "text-right" : "text-left"
           }`}
         onFocus={(event) => {
           if (disabled) return;
@@ -271,7 +271,7 @@ const SearchableTableCellSelect = ({
                 ref={handlers?.secondInputRef}
                 key={option.value}
                 type="button"
-                className={`block w-full border-b border-slate-100 px-2 py-1 text-left text-[11px] ${index === highlightedIndex ? "bg-blue-100" : "hover:bg-slate-100"
+                className={`block w-full border-b border-slate-100 px-2 py-0.5 text-left text-[11px] ${index === highlightedIndex ? "bg-blue-100" : "hover:bg-slate-100"
                   }`}
                 onMouseDown={(event) => {
                   event.preventDefault();
@@ -283,7 +283,7 @@ const SearchableTableCellSelect = ({
               </button>
             ))
           ) : (
-            <div className="px-2 py-1 text-[11px] text-slate-500">No matches</div>
+            <div className="px-2 py-0 text-[11px] text-slate-500">No matches</div>
           )}
         </div>
       )}

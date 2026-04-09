@@ -96,12 +96,6 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
     const { data: poList, isLoading: poListLoading, isFetching: poListFetching } = useGetPoQuery({ params: { branchId } });
 
 
-
-
-
-
-
-    // if (!yarnList || !colorList || !uomList || !poList) return <Loader />
     return (
         <>
 
@@ -203,7 +197,7 @@ const YarnInwardItems = ({ directInwardReturnItems, setDirectInwardReturnItems, 
                         </thead>
 
 
-                        <tbody className='overflow-y-auto  h-full w-full'>{console.log(directInwardReturnItems, "directInwardReturnItems")}
+                        <tbody className='overflow-y-auto  h-full w-full'>
                             {(directInwardReturnItems || [])?.map((item, index) => <YarnPoItem yarnList={yarnList} uomList={uomList}
                                 colorList={colorList} deleteRow={deleteRow}
                                 poList={poList}
