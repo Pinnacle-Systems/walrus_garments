@@ -79,6 +79,7 @@ const PurchaseInwardForm = ({
   colorList,
   uomList,
   invalidateTagsDispatch,
+  stockReportControlData
 }) => {
   const [headerOpen, setHeaderOpen] = useState(true);
   const [vehicleNo, setVehicleNo] = useState("");
@@ -533,26 +534,26 @@ const PurchaseInwardForm = ({
                 />
               </div>
               <div className="col-span-3">
-              <DropdownInput
-                name="Location"
-                options={dropDownListObject(
-                  id
-                    ? storeOptions
-                    : storeOptions?.filter(
-                      (item) => item.storeName.includes("WAREHOUSE") && item.active,
-                    ),
-                  "storeName",
-                  "id",
-                )}
-                value={storeId}
-                setValue={setStoreId}
-                required
-                ref={locationRef}
-                readOnly={readOnly}
-                disabled={childRecord > 0}
+                <DropdownInput
+                  name="Location"
+                  options={dropDownListObject(
+                    id
+                      ? storeOptions
+                      : storeOptions?.filter(
+                        (item) => item.storeName.includes("WAREHOUSE") && item.active,
+                      ),
+                    "storeName",
+                    "id",
+                  )}
+                  value={storeId}
+                  setValue={setStoreId}
+                  required
+                  ref={locationRef}
+                  readOnly={readOnly}
+                  disabled={childRecord > 0}
 
 
-              />
+                />
               </div>
             </TransactionHeaderSection>
             {/* 
@@ -690,6 +691,7 @@ const PurchaseInwardForm = ({
                 saveNewButtonRef={saveNewButtonRef}
                 handlers={handlers}
                 readOnly={readOnly}
+                stockReportControlData={stockReportControlData}
               />
             )}
             {(poInwardOrDirectInward === "PurchaseInward" ||

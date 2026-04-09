@@ -353,9 +353,8 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
     ];
 
     const footerContent = (
-        <div className="flex flex-col gap-4">
-            {/* Input Fields Section */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 border-b border-slate-100 ">
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-5  border-b border-slate-100 gap-2">
                 <div className="col-span-2">
                     <TextAreaNew
                         name="Remarks"
@@ -364,17 +363,18 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                         placeholder="Enter remarks..."
                         readOnly={readOnly}
                         ref={saveCloseButtonRef}
+                        rows={1}
                         tabIndex={0}
                     />
                 </div>
 
-                {/* <TextInput
+                <TextInput
                     name="Delivery Person"
                     value={specialInstructions}
                     setValue={setSpecialInstructions}
                     placeholder="Enter delivery person name..."
                     readOnly={readOnly}
-                /> */}
+                />
                 <TextInputNew1
                     name="Delivery Vehicle No"
                     value={vehicleNo}
@@ -383,65 +383,71 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     readOnly={readOnly}
                 />
             </div>
-            {/* Action Bar Section */}
-            <div className="flex flex-col justify-between gap-2 md:flex-row">
+            <div className="flex flex-col gap-1 ">
 
-                <div className="flex flex-wrap gap-2">
 
-                    <button
-                        onClick={() => hasPermission(() => saveData("close"), "create")}
-                        ref={saveCloseButtonRef}
-                        tabIndex={0}
-                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
-                        disabled={readOnly}
-                        className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
-                    >
-                        <HiOutlineRefresh className="mr-2 h-4 w-4" />
-                        Save & Close
-                    </button>
-                    <button
-                        onClick={() => hasPermission(() => saveData("new"), "create")}
-                        ref={saveNewButtonRef}
-                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
-                        disabled={readOnly}
 
-                        className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
-                    >
-                        <FiSave className="mr-2 h-4 w-4" />
-                        Save & New
-                    </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    <button
-                        className="flex items-center rounded-md bg-yellow-600 px-4 py-1 text-sm text-white hover:bg-yellow-700"
-                        onClick={() => hasPermission(() => setReadOnly(false), "edit")}
-                    >
-                        <FiEdit2 className="mr-2 h-4 w-4" />
-                        Edit
-                    </button>
-                    <button
-                        className="flex items-center rounded-md bg-blue-600 px-4 py-1 text-sm text-white hover:bg-blue-700"
-                        disabled={readOnly}
+                <div className="flex flex-col justify-between gap-2 md:flex-row">
 
-                        onClick={() => {
-                            if (
-                                directInwardReturnItems?.filter((i) => i.itemId)?.length === 0
-                            ) {
-                                Swal.fire({
-                                    icon: "warning",
-                                    title: "Please Fill At Least One Inward Item",
-                                });
-                                return;
-                            }
-                            setPrintModalOpen(true);
-                        }}
-                    >
-                        <FiPrinter className="mr-2 h-4 w-4" />
-                        Print
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+
+                        <button
+                            onClick={() => hasPermission(() => saveData("close"), "create")}
+                            ref={saveCloseButtonRef}
+                            tabIndex={0}
+                            onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
+                            disabled={readOnly}
+                            className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+                        >
+                            <HiOutlineRefresh className="mr-2 h-4 w-4" />
+                            Save & Close
+                        </button>
+                        <button
+                            onClick={() => hasPermission(() => saveData("new"), "create")}
+                            ref={saveNewButtonRef}
+                            onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
+                            disabled={readOnly}
+
+                            className="flex items-center rounded-md bg-indigo-500 px-4 py-1 text-sm text-white hover:bg-indigo-600"
+                        >
+                            <FiSave className="mr-2 h-4 w-4" />
+                            Save & New
+                        </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            className="flex items-center rounded-md bg-yellow-600 px-4 py-1 text-sm text-white hover:bg-yellow-700"
+                            onClick={() => hasPermission(() => setReadOnly(false), "edit")}
+                        >
+                            <FiEdit2 className="mr-2 h-4 w-4" />
+                            Edit
+                        </button>
+                        <button
+                            className="flex items-center rounded-md bg-blue-600 px-4 py-1 text-sm text-white hover:bg-blue-700"
+                            disabled={readOnly}
+
+                            onClick={() => {
+                                if (
+                                    directInwardReturnItems?.filter((i) => i.itemId)?.length === 0
+                                ) {
+                                    Swal.fire({
+                                        icon: "warning",
+                                        title: "Please Fill At Least One Inward Item",
+                                    });
+                                    return;
+                                }
+                                setPrintModalOpen(true);
+                            }}
+                        >
+                            <FiPrinter className="mr-2 h-4 w-4" />
+                            Print
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+
+        </>
+
     );
 
 

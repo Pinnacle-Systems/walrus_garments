@@ -271,8 +271,7 @@ const SaleOrderItems = ({
                                     return (
                                         <tr
                                             key={index}
-                                            className={transactionTableRowClassName}
-                                            onContextMenu={(e) => {
+                                            className={`${transactionTableRowClassName}  ${index % 2 === 0 ? "bg-white" : "bg-gray-100"} `} onContextMenu={(e) => {
                                                 if (!readOnly) handleRightClick(e, index, "shiftTimeHrs");
                                             }}
                                         >
@@ -297,41 +296,41 @@ const SaleOrderItems = ({
 
                                             {/* Size */}
                                             {showSize && (
-                                            <td className={compactFocusCellClassName}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "sizeId"); }}
-                                                    tabIndex="0"
-                                                    className={compactSelectClassName}
-                                                    value={row.sizeId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "sizeId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "sizeId")}
-                                                    disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
-                                                >
-                                                    <option></option>
-                                                    {getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                    ))}
-                                                </select>
-                                            </td>
+                                                <td className={compactFocusCellClassName}>
+                                                    <select
+                                                        onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "sizeId"); }}
+                                                        tabIndex="0"
+                                                        className={compactSelectClassName}
+                                                        value={row.sizeId}
+                                                        onChange={e => handleInputChange(e.target.value, index, "sizeId")}
+                                                        onBlur={e => handleInputChange(e.target.value, index, "sizeId")}
+                                                        disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
+                                                    >
+                                                        <option></option>
+                                                        {getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map(blend => (
+                                                            <option value={blend.id} key={blend.id}>{blend?.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </td>
                                             )}
 
                                             {/* Color */}
                                             {showColor && (
-                                            <td className={compactFocusCellClassName}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "colorId"); }}
-                                                    className={compactSelectClassName}
-                                                    value={row.colorId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "colorId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "colorId")}
-                                                    disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
-                                                >
-                                                    <option hidden></option>
-                                                    {getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                    ))}
-                                                </select>
-                                            </td>
+                                                <td className={compactFocusCellClassName}>
+                                                    <select
+                                                        onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "colorId"); }}
+                                                        className={compactSelectClassName}
+                                                        value={row.colorId}
+                                                        onChange={e => handleInputChange(e.target.value, index, "colorId")}
+                                                        onBlur={e => handleInputChange(e.target.value, index, "colorId")}
+                                                        disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
+                                                    >
+                                                        <option hidden></option>
+                                                        {getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map(blend => (
+                                                            <option value={blend.id} key={blend.id}>{blend?.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </td>
                                             )}
 
                                             {/* HSN */}
@@ -472,10 +471,21 @@ const SaleOrderItems = ({
 
                                             {/* Add Row on Enter */}
                                             <td className="w-16 px-1 py-1 text-center">
-                                                <input readOnly
-                                                    className="w-full bg-transparent focus:outline-none focus:border-transparent text-right pr-2"
-                                                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addNewRow(); } }}
-                                                />
+                                                <button
+                                                    onClick={() => addNewRow(index)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.preventDefault();
+                                                            if (index === saleOrderItems.length - 1) {
+                                                                addNewRow(index);
+                                                            }
+
+                                                        }
+                                                    }}
+                                                    className="h-full w-full rounded-none bg-blue-50 py-0"
+                                                >
+                                                    +
+                                                </button>
                                             </td>
                                         </tr>
                                     );
@@ -483,30 +493,30 @@ const SaleOrderItems = ({
                             </tbody>
                         </table>
 
-                    {contextMenu && (
-                        <div
-                            style={{
-                                position: "absolute",
-                                top: `${contextMenu.mouseY - 50}px`,
-                                left: `${contextMenu.mouseX - 30}px`,
-                                boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                                padding: "8px", borderRadius: "4px", zIndex: 1000,
-                            }}
-                            className="bg-gray-100"
-                            onMouseLeave={handleCloseContextMenu}
-                        >
-                            <div className="flex flex-col gap-1">
-                                <button className="text-black text-[12px] text-left rounded px-1"
-                                    onClick={() => { handleDeleteRow(contextMenu.rowId); handleCloseContextMenu(); }}>
-                                    Delete
-                                </button>
-                                <button className="text-black text-[12px] text-left rounded px-1"
-                                    onClick={() => { handleDeleteAllRows(); handleCloseContextMenu(); }}>
-                                    Delete All
-                                </button>
+                        {contextMenu && (
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    top: `${contextMenu.mouseY - 50}px`,
+                                    left: `${contextMenu.mouseX - 30}px`,
+                                    boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                                    padding: "8px", borderRadius: "4px", zIndex: 1000,
+                                }}
+                                className="bg-gray-100"
+                                onMouseLeave={handleCloseContextMenu}
+                            >
+                                <div className="flex flex-col gap-1">
+                                    <button className="text-black text-[12px] text-left rounded px-1"
+                                        onClick={() => { handleDeleteRow(contextMenu.rowId); handleCloseContextMenu(); }}>
+                                        Delete
+                                    </button>
+                                    <button className="text-black text-[12px] text-left rounded px-1"
+                                        onClick={() => { handleDeleteAllRows(); handleCloseContextMenu(); }}>
+                                        Delete All
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                     </div>
                 </TransactionLineItemsSection>
             </fieldset>

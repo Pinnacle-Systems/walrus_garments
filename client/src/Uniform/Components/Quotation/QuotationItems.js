@@ -420,18 +420,18 @@ const QuotationItems = ({
                                         Item
                                     </th>
                                     {showSize && (
-                                    <th
-                                        className={`${compactHeaderCellClassName} w-16`}
-                                    >
-                                        Size
-                                    </th>
+                                        <th
+                                            className={`${compactHeaderCellClassName} w-16`}
+                                        >
+                                            Size
+                                        </th>
                                     )}
                                     {showColor && (
-                                    <th
-                                        className={`${compactHeaderCellClassName} w-32`}
-                                    >
-                                        Color
-                                    </th>
+                                        <th
+                                            className={`${compactHeaderCellClassName} w-32`}
+                                        >
+                                            Color
+                                        </th>
                                     )}
                                     <th
 
@@ -541,7 +541,7 @@ const QuotationItems = ({
 
 
 
-                                        <tr className={transactionTableRowClassName}
+                                        <tr className={`${transactionTableRowClassName}  ${index % 2 === 0 ? "bg-white" : "bg-gray-100"} `}
                                             onContextMenu={(e) => {
                                                 if (!readOnly) {
                                                     handleRightClick(e, index, "shiftTimeHrs");
@@ -566,8 +566,8 @@ const QuotationItems = ({
                                             </td>
 
                                             {showSize && (
-                                            <td className={compactFocusCellClassName}>
-                                                {/* <select
+                                                <td className={compactFocusCellClassName}>
+                                                    {/* <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
                                                     tabIndex={"0"} className={compactSelectClassName}
                                                     value={row.sizeId}
@@ -585,30 +585,30 @@ const QuotationItems = ({
                                                             {blend?.name}
                                                         </option>)}
                                                 </select> */}
-                                                <SearchableTableCellSelect
-                                                    value={row.sizeId}
-                                                    options={
-                                                        id ?
-                                                            sizeList?.data?.map((item) => ({
-                                                                value: item.id,
-                                                                label: item?.name || "",
-                                                            })) :
-                                                            getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map((item) => ({
-                                                                value: item.id,
-                                                                label: item?.name || "",
-                                                            }))}
+                                                    <SearchableTableCellSelect
+                                                        value={row.sizeId}
+                                                        options={
+                                                            id ?
+                                                                sizeList?.data?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                })) :
+                                                                getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                }))}
 
-                                                    disabled={readOnly || !isSizeReady(row)}
-                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
-                                                    addNewModalWidth="w-[90%] h-[95%]"
+                                                        disabled={readOnly || !isSizeReady(row)}
+                                                        onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
+                                                        addNewModalWidth="w-[90%] h-[95%]"
 
-                                                />
-                                            </td>
+                                                    />
+                                                </td>
                                             )}
 
                                             {showColor && (
-                                            <td className={compactFocusCellClassName}>
-                                                {/* <select
+                                                <td className={compactFocusCellClassName}>
+                                                    {/* <select
                                                     onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
                                                     className={compactSelectClassName} value={row.colorId}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
@@ -628,25 +628,25 @@ const QuotationItems = ({
                                                     )}
                                                 </select> */}
 
-                                                <SearchableTableCellSelect
-                                                    value={row.colorId}
-                                                    options={
-                                                        id ?
-                                                            colorList?.data?.map((item) => ({
-                                                                value: item.id,
-                                                                label: item?.name || "",
-                                                            })) :
-                                                            getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((item) => ({
-                                                                value: item.id,
-                                                                label: item?.name || "",
-                                                            }))}
+                                                    <SearchableTableCellSelect
+                                                        value={row.colorId}
+                                                        options={
+                                                            id ?
+                                                                colorList?.data?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                })) :
+                                                                getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                }))}
 
-                                                    disabled={readOnly || !isColorReady(row)}
-                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
-                                                    addNewModalWidth="w-[90%] h-[95%]"
+                                                        disabled={readOnly || !isColorReady(row)}
+                                                        onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
+                                                        addNewModalWidth="w-[90%] h-[95%]"
 
-                                                />
-                                            </td>
+                                                    />
+                                                </td>
                                             )}
 
 

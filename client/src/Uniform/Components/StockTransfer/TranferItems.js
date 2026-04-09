@@ -81,7 +81,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                 {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
                     <td className="w-48 border border-gray-300 text-[11px]  px-2">
                         <input
-                            className=" rounded px-1 ml-2 w-full py-0.5 text-xs focus:outline-none text-right"
+                            className=" h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
                             type="number"
                             step="0.01"
                             min="0"

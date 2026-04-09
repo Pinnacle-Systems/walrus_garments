@@ -7,8 +7,7 @@ import Swal from "sweetalert2";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import { useDeleteStockTransferMutation } from "../../../redux/uniformService/StockTransferService";
 import moment from "moment";
-
-
+import { usePermissionForUsers } from "../../../Basic/components/HasPermission";
 
 const StockTransfer = () => {
 
@@ -18,6 +17,7 @@ const StockTransfer = () => {
     const [readOnly, setReadOnly] = useState(true);
     const [date, setDate] = useState(moment(new Date()).format("YYYY-MM-DD"));
 
+    const { hasPermission } = usePermissionForUsers()
 
     const [transferType, setTransferType] = useState("General")
 
@@ -115,17 +115,20 @@ const StockTransfer = () => {
     return (
         <>
             {form ? (
-                <StockTransferForm
-                    id={id} setId={setId} setForm={setForm}
-                    orderData={orderData} orderId={orderId} setOrderId={setOrderId} orderItems={orderItems} setOrderItems={setOrderItems} params={params}
-                    toCustomerId={toCustomerId} setToCustomerId={setToCustomerId} setRequirementId={setRequirementId} requirementId={requirementId}
-                    showAddressPopup={showAddressPopup} setShowAddressPopup={setShowAddressPopup} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
-                    docId={docId} setDocId={setDocId} stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
-                    readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew}
-                    date={date} setDate={setDate} toOrderId={toOrderId} setToOrderId={setToOrderId}
-                    setFromOrderId={setFromOrderId} fromOrderId={fromOrderId} setTransferType={setTransferType} transferType={transferType}
-                    onClose={() => { setForm(false) }} fromCustomerId={fromCustomerId} setFromCustomerId={setFromCustomerId} branchId={branchId}
-                />
+                <div className="h-[calc(100vh-5rem)] min-h-0 overflow-hidden">
+                    <StockTransferForm
+                        id={id} setId={setId} setForm={setForm}
+                        orderData={orderData} orderId={orderId} setOrderId={setOrderId} orderItems={orderItems} setOrderItems={setOrderItems} params={params}
+                        toCustomerId={toCustomerId} setToCustomerId={setToCustomerId} setRequirementId={setRequirementId} requirementId={requirementId}
+                        showAddressPopup={showAddressPopup} setShowAddressPopup={setShowAddressPopup} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
+                        docId={docId} setDocId={setDocId} stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems}
+                        readOnly={readOnly} setReadOnly={setReadOnly} OnNew={OnNew}
+                        date={date} setDate={setDate} toOrderId={toOrderId} setToOrderId={setToOrderId}
+                        setFromOrderId={setFromOrderId} fromOrderId={fromOrderId} setTransferType={setTransferType} transferType={transferType}
+                        onClose={() => { setForm(false) }} fromCustomerId={fromCustomerId} setFromCustomerId={setFromCustomerId} branchId={branchId}
+                        hasPermission={hasPermission}
+                    />
+                </div>
             ) : (
                 <div className="flex h-[calc(100vh-5rem)] min-h-0 flex-col bg-[#F1F1F0]">
                     <div className="mb-2 flex shrink-0 flex-col items-start justify-between gap-x-4 rounded-tl-lg rounded-tr-lg border border-gray-200 bg-white px-1 py-0.5 shadow-sm sm:flex-row sm:items-center">

@@ -33,10 +33,9 @@ const StockTransferForm = ({
     fromCustomerId, setFromCustomerId, onClose, setTransferType, transferType, toCustomerId, setToCustomerId, params, requirementId, setRequirementId,
     orderData, orderId, orderItems, setOrderItems, fromOrderId, setFromOrderId, setStockItems, stockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
     date, OnNew,
-    yarnTotals, setYarnTotals, toOrderId, branchId
+    yarnTotals, setYarnTotals, toOrderId, branchId, hasPermission, setReadOnly
 
 }) => {
-
 
 
     const [searchItem, setSearchItem] = useState("")
@@ -70,12 +69,6 @@ const StockTransferForm = ({
     const [addData] = useAddStockTransferMutation();
     const [updateData] = useUpdateStockTransferMutation();
     const stockDrivenFields = getConfiguredStockDrivenFields(stockReportControlData?.data?.[0]);
-
-
-
-
-
-
 
     const { data: singleData, isLoading: isSingleDataLoading, isFetching: isSingleDataFetching, refetch } = useGetStockTransferByIdQuery(id, { skip: !id });
 
@@ -272,6 +265,7 @@ const StockTransferForm = ({
 
                 if (nextProcess == "new") {
                     syncFormWithDb(undefined);
+                    OnNew()
                 }
                 else {
                     onClose()
@@ -372,32 +366,33 @@ const StockTransferForm = ({
                     itemList={itemList}
                 />
             </Modal>
-            <div className="w-full h-full bg-[#f1f1f0] mx-auto rounded-md shadow-md  py-1 ">
-                <div className="flex justify-between items-center mb-1 bg-white py-1 px-2">
-                    <h1 className="text-lg font-bold text-gray-800">Stock Transfer</h1>
-                    <div className="gap-4 flex flex-row ">
-                        <ModeChip id={id} readOnly={readOnly} />
-                        <button
-                            onClick={() => {
-                                OnNew()
-                                setId(" ")
-                                onClose()
-                            }}
-                            className="text-indigo-600 hover:text-indigo-700"
-                            title="Open Report"
-                        >
-                            <IoArrowBackCircleSharp className="w-7 h-7" />
-                        </button>
-                    </div>
+            <div className="flex flex-col h-full bg-[#f1f1f0] overflow-hidden">
+                <div className="flex-none w-full bg-white mx-auto rounded-md shadow-sm px-2  border-b border-gray-200 mb-1">
+                    <div className="flex justify-between items-center py-1">
+                        <h1 className="text-md font-bold text-gray-800">Stock Transfer</h1>
+                        <div className="flex flex-row gap-2">
+                            <ModeChip id={id} readOnly={readOnly} />
+                            <button
+                                onClick={() => {
+                                    OnNew()
+                                    setId(" ")
+                                    onClose()
+                                }}
+                                className=" text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+                                title="Open Report"
+                            >
+                                <IoArrowBackCircleSharp className="w-7 h-7" />
+                            </button>
+                        </div>
 
+                    </div>
                 </div>
 
-                <div className="space-y-3 h-full ">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-
+                <div className="flex-grow flex flex-col min-h-0  space-y-3 overflow-hidden">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-2 flex-none">
 
                         <div className="border border-slate-200 p-2 bg-white rounded-md shadow-sm col-span-1">
-                            <h2 className="text-sm font-bold text-gray-800 mb-1">
+                            <h2 className="font-bold text-slate-700 mb-1  b-1">
                                 Basic Details
                             </h2>
                             <div className="grid grid-cols-2 gap-1">
@@ -407,7 +402,7 @@ const StockTransferForm = ({
                             </div>
                         </div>
                         <div className="col-span-4 border border-slate-200 p-2 bg-white rounded-md shadow-sm">
-                            <h2 className="text-sm font-bold text-gray-800 mb-1">Transfer Order Details</h2>
+                            <h2 className="font-bold text-slate-700 mb-1  b-1">Transfer Order Details</h2>
 
                             <div className="grid grid-cols-1">
                                 <div className="grid grid-cols-10 gap-x-3 gap-y-1">
@@ -451,30 +446,6 @@ const StockTransferForm = ({
                                     </div>
 
 
-                                    {/* <div className="ml-3 col-span-3 flex items-center justify-between">
-
-                                        <div className="text-center">
-                                            <p className="text-xs text-gray-400 uppercase">From</p>
-                                            <p className="font-semibold text-slate-700">
-                                                {findFromList(fromLocationId, locationData?.data, "storeName")}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex flex-col items-center px-4">
-                                            <span className="text-gray-400 text-xl">➜</span>
-                                            <span className="text-xs text-gray-400">Transfer</span>
-                                        </div>
-
-                                        <div className="text-center">
-                                            <p className="text-xs text-gray-400 uppercase">To</p>
-                                            <p className="font-semibold text-slate-700">
-                                                {findFromList(toLocationId, locationData?.data, "storeName")}
-                                            </p>
-                                        </div>
-
-
-
-                                    </div> */}
                                     <div className="col-span-3">
                                         <p className="block  font-bold text-slate-700 mb-1 text-xs">Barcode</p>
 
@@ -488,14 +459,7 @@ const StockTransferForm = ({
                                             className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                         />
                                     </div>
-                                    {/* <div className="col-span-1">
-                                        <button
-                                            className="ml-4 px-4 py-2 mt-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
-                                            onClick={() => setOrderToGeneral(true)}
-                                        >
-                                            Fill Stock
-                                        </button>
-                                    </div> */}
+
 
 
 
@@ -512,7 +476,7 @@ const StockTransferForm = ({
 
 
                     </div>
-                    <div className="h-[430px] mt-0">
+                    <div className="flex-grow flex flex-col min-h-0">
                         <FormItems id={id} orderItems={orderItems} setOrderItems={setOrderItems} setRequirementId={setRequirementId} requirementId={requirementId} yarnTotals={yarnTotals} setYarnTotals={setYarnTotals}
                             colorList={colorList?.data} tempOrderItems={tempOrderItems} setTempOrderItems={setTempOrderItems}
                             stockItems={stockItems} setStockItems={setStockItems} tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} singleData={singleData}
@@ -525,20 +489,20 @@ const StockTransferForm = ({
                             stockDrivenFields={stockDrivenFields}
                         />
                     </div>
-                    <div className=" flex flex-col md:flex-row gap-2 justify-between mt-5">
+                    <div className="flex flex-col md:flex-row gap-2 justify-between flex-none bg-white p-2 rounded-md border border-slate-200 shadow-sm">
                         <div className="flex gap-2 flex-wrap">
                             <button
-                                onClick={() => saveData("new")}
+                                onClick={() => hasPermission(() => saveData("new"), "save")}
                                 disabled={readOnly}
-                                className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                                className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
                                 <FiSave className="w-4 h-4 mr-2" />
                                 Save & New
                             </button>
                             <button
-                                onClick={() => saveData("close")}
+                                onClick={() => hasPermission(() => saveData("close"), "save")}
                                 disabled={readOnly}
 
-                                className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+                                className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
                                 <HiOutlineRefresh className="w-4 h-4 mr-2" />
                                 Save & Close
 
@@ -548,12 +512,13 @@ const StockTransferForm = ({
 
                         <div className="flex gap-2 flex-wrap">
 
-                            <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+                            <button className="bg-yellow-600 text-white px-4 py-1.5 rounded-md hover:bg-yellow-700 flex items-center text-sm shadow-sm transition-all active:scale-95"
+                                onClick={() => hasPermission(() => setReadOnly(false), "edit")}
                             >
                                 <FiEdit2 className="w-4 h-4 mr-2" />
                                 Edit
                             </button>
-                            <button className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+                            <button className="bg-slate-600 text-white px-4 py-1.5 rounded-md hover:bg-slate-700 flex items-center text-sm shadow-sm transition-all active:scale-95"
                                 onClick={() => setBarcodePrintOpen(true)}
                                 disabled={findFromList(toLocationId, locationData?.data, "storeName") != "DISCOUNT SECTION"}
                             >
@@ -578,7 +543,3 @@ const StockTransferForm = ({
 }
 
 export default StockTransferForm;
-
-
-
-

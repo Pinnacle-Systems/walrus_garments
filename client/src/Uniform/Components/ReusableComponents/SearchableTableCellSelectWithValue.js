@@ -4,7 +4,7 @@ import Modal from "../../../UiComponents/Modal";
 
 const normalize = (value) => String(value ?? "").toLowerCase().trim();
 
-const OpeningStockInput = ({
+const SearchableTableCellSelectWithValue = ({
     value,
     options = [],
     onChange,
@@ -310,4 +310,4 @@ const OpeningStockInput = ({
     );
 };
 
-export default OpeningStockInput;
+export default SearchableTableCellSelectWithValue;

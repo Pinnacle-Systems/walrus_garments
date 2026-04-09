@@ -156,8 +156,8 @@ const YarnPoItem = ({ yarnList, uomList,
                     }
                 }}
             >
-                <td className='w-12 border border-gray-300 text-[11px]  text-center p-0.5'>{index + 1}</td>
-                <td className='py-0.5 border border-gray-300 text-[11px]'>{item?.poNo}</td>
+                <td className='w-12 border border-gray-300 text-[11px]  text-center py-0.5'>{index + 1}</td>
+                <td className='py-0.5 border border-gray-300 text-[11px] '>{item?.poNo}</td>
                 {allData?.data?.[0]?.itemWise && (
                     <td className='py-0.5 border border-gray-300 text-[11px]'>{findFromList(item.yarnId, yarnList?.data, "name")} </td>
                 )}

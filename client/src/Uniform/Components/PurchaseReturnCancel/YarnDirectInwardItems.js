@@ -107,7 +107,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 )}
                                 {stockControlData?.data?.[0]?.sizeColorWise && (
                                     <th
-                                        className="w-36 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
+                                        className="w-28 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                     >
                                         Color
                                     </th>
@@ -147,7 +147,7 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
 
                                     className="w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                 >
-                                    Already Return Qty
+                                    Returned Qty
                                 </th>
                                 <th
 
@@ -163,13 +163,13 @@ const YarnDirectInwardItems = ({ deleteRow, handleInputChange, directInwardRetur
                                 </th>
                                 <th
 
-                                    className="w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
                                 >
                                     Price
                                 </th>
                                 <th
 
-                                    className="w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
+                                    className="w-12 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]"
 
                                 >
                                     Return Qty <span className="text-red-500">*</span>

@@ -43,7 +43,8 @@ const YarnPoItems = ({
     itemPriceList,
     movedToNextSaveNewRef,
     saveNewButtonRef,
-    handlers
+    handlers,
+    stockReportControlData
 }) => {
     const formatThreeDecimals = (value) => {
         const parsed = parseFloat(value);
@@ -56,10 +57,10 @@ const YarnPoItems = ({
     };
 
 
-    const { data: allData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
+    // const { data: allData, isLoading, isFetching } = useGetStockReportControlQuery({ params });
     const { data: itemControlData } = useGetItemControlPanelMasterQuery({ params });
     const barcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
-    const stockMaintenance = getStockMaintenanceConfig(allData?.data?.[0]);
+    const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
     const showSize = stockMaintenance.trackSize;
     const showColor = stockMaintenance.trackColor;
     const isUomReady = (row) => {
@@ -69,7 +70,7 @@ const YarnPoItems = ({
     };
 
 
-    const stockControldata = allData?.data?.[0]
+    const stockControldata = stockReportControlData?.data?.[0]
 
     console.log(stockControldata, "stockControldata")
 
@@ -349,7 +350,7 @@ const YarnPoItems = ({
                                 >
                                     Barcode  <span className="text-red-500">*</span>
                                 </th>
-                                {allData?.data?.map(element => (
+                                {stockReportControlData?.data?.map(element => (
                                     // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
                                     Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
                                         <>
@@ -484,7 +485,7 @@ const YarnPoItems = ({
                                         </div>
                                     </td>
 
-                                    {allData?.data?.map(element => (
+                                    {stockReportControlData?.data?.map(element => (
                                         // console.log(Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key]), "element")
                                         Object.keys(element)?.filter(key => key.toLowerCase().includes("field") && !!element[key])?.map(i => (
                                             <>
@@ -626,7 +627,7 @@ const YarnPoItems = ({
                         <tfoot className="sticky bottom-0 z-20 border-t border-gray-300 font-bold">
                             <tr>
                                 <td
-                                    colSpan={(stockControldata?.itemWise ? 1 : 0) + (stockControldata?.sizeWise ? 1 : 0) + (stockControldata?.sizeColorWise ? 1 : 0) + 3 + (id ? 2 : 0) + (allData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
+                                    colSpan={(stockControldata?.itemWise ? 1 : 0) + (stockControldata?.sizeWise ? 1 : 0) + (stockControldata?.sizeColorWise ? 1 : 0) + 3 + (id ? 2 : 0) + (stockReportControlData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))}
                                     className="bg-gray-300 px-1 py-1 text-right text-[12px]"
                                 >
                                     Total:

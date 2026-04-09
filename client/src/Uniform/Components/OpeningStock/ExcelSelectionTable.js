@@ -34,13 +34,15 @@ import TransactionLineItemsSection, {
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import { DropdownInput } from "../../../Inputs";
-import OpeningStockInput from "../ReusableComponents/OpeningStockInput";
+import OpeningStockInput from "../ReusableComponents/SearchableTableCellSelectWithValue";
 import {
   createOpeningStockRowDefaults,
   getOpeningStockFieldDefinitions,
   getOpeningStockHeaderMap,
   getOpeningStockTemplateRow,
 } from "./openingStockSchema";
+import SearchableTableCellSelectWithValue from "../ReusableComponents/SearchableTableCellSelectWithValue";
+import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 
 const OPENING_STOCK_CREATION_SOURCE = "OPENING_STOCK";
 
@@ -1230,7 +1232,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                         <tr
                           key={row._rowId || rowIndex}
                           // className="border border-blue-gray-200"
-                          className={`border border-blue-gray-200  `}
+                          className={`border border-blue-gray-200 ${rowIndex % 2 === 0 ? "bg-white" : "bg-gray-100"} `}
                           onContextMenu={(e) => {
                             handleRightClick(e, rowIndex, "shiftTimeHrs");
 
@@ -1265,9 +1267,10 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
 
                             if (field.key === "uom") {
                               const resolvedUomId = getResolvedUom(row)?.id || "";
+                              console.log(resolvedUomId, "resolvedUomId")
                               return (
                                 <td key={field.key} className={cellClassName}>
-                                  <Select
+                                  {/* <Select
                                     options={uomOptions}
                                     value={
                                       uomOptions.find(
@@ -1305,6 +1308,25 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                                         height: "30px",
                                       }),
                                     }}
+                                  /> */}
+                                  <SearchableTableCellSelect
+                                    value={resolvedUomId}
+                                    options={uomOptions}
+                                    onChange={(val) => {
+                                      const selectedUom = uomOptions.find((o) => String(o.value) === String(val));
+                                      updateRows((previousRows) =>
+                                        previousRows.map((entry) =>
+                                          entry._rowId === row._rowId
+                                            ? {
+                                              ...entry,
+                                              uomId: val || "",
+                                              uom: selectedUom?.label || "",
+                                            }
+                                            : entry
+                                        )
+                                      );
+                                    }}
+                                    placeholder=""
                                   />
                                 </td>
                               );
@@ -1316,7 +1338,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                             ) {
                               return (
                                 <td key={field.key} className={cellClassName}>
-                                  <OpeningStockInput
+                                  <SearchableTableCellSelectWithValue
                                     value={row.itemId ? String(row.itemId) : row.item_name}
                                     options={itemLookupOptions}
                                     disabled={false}
@@ -1332,7 +1354,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                             if (field.key === "size") {
                               return (
                                 <td key={field.key} className={cellClassName}>
-                                  <OpeningStockInput
+                                  <SearchableTableCellSelectWithValue
                                     value={row.size}
                                     options={sizeOptions}
                                     onChange={(val) => updateRowField(row._rowId, "size", val)}
@@ -1344,7 +1366,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                             if (field.key === "color") {
                               return (
                                 <td key={field.key} className={cellClassName}>
-                                  <OpeningStockInput
+                                  <SearchableTableCellSelectWithValue
                                     value={row.color}
                                     options={colorOptions}
                                     onChange={(val) => updateRowField(row._rowId, "color", val)}
@@ -1402,7 +1424,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                             </button> */}
                             <button
                               onClick={addManualRow}
-                              className="mx-auto inline-flex h-7 w-7 items-center justify-center rounded bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700"
+                              className="mx-auto inline-flex h-6 w-10 items-center justify-center rounded bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700"
                             // disabled={readOnly}
                             // className="h-full w-full rounded-none bg-blue-50 py-0"
                             >
@@ -1414,47 +1436,48 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                     })}
                   </tbody>
                 </table>
+                {contextMenu && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: `${contextMenu.mouseY - 240}px`,
+                      left: `${contextMenu.mouseX - 40}px`,
+
+                      // background: "gray",
+                      boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                      padding: "8px",
+                      borderRadius: "4px",
+                      zIndex: 1000,
+                    }}
+                    className="bg-gray-100"
+                    onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+                  >
+                    <div className="flex flex-col gap-1">
+                      <button
+                        className=" text-black text-[12px] text-left rounded px-1"
+                        onClick={() => {
+                          handleDeleteRow(contextMenu.rowId);
+                          handleCloseContextMenu();
+                        }}
+                      >
+                        Delete{" "}
+                      </button>
+                      <button
+                        className=" text-black text-[12px] text-left rounded px-1"
+                        onClick={() => {
+                          handleDeleteAllRows();
+                          handleCloseContextMenu();
+                        }}
+                      >
+                        Delete All
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
             )}
-            {contextMenu && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: `${contextMenu.mouseY - 220}px`,
-                  left: `${contextMenu.mouseX - 40}px`,
 
-                  // background: "gray",
-                  boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                  padding: "8px",
-                  borderRadius: "4px",
-                  zIndex: 1000,
-                }}
-                className="bg-gray-100"
-                onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
-              >
-                <div className="flex flex-col gap-1">
-                  <button
-                    className=" text-black text-[12px] text-left rounded px-1"
-                    onClick={() => {
-                      handleDeleteRow(contextMenu.rowId);
-                      handleCloseContextMenu();
-                    }}
-                  >
-                    Delete{" "}
-                  </button>
-                  <button
-                    className=" text-black text-[12px] text-left rounded px-1"
-                    onClick={() => {
-                      handleDeleteAllRows();
-                      handleCloseContextMenu();
-                    }}
-                  >
-                    Delete All
-                  </button>
-                </div>
-              </div>
-            )}
           </TransactionLineItemsSection>
         </div>
       </TransactionEntryShell>

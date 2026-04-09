@@ -30,9 +30,9 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
     console.log(stockItems, "stockItems")
 
     useEffect(() => {
-        if (stockItems?.length >= 15) return;
+        if (stockItems?.length >= 20) return;
         setStockItems((prev) => {
-            let newArray = Array.from({ length: 15 - prev.length }, (i) => {
+            let newArray = Array.from({ length: 20 - prev.length }, (i) => {
                 return {
                     itemId: "",
                     sizeId: "",
@@ -57,6 +57,9 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
         if (readOnly) return toast.info("Turn on Edit Mode...!!!")
         setStockItems(prev => prev.filter((_, i) => i !== index))
     }
+    const handleDeleteAllRows = () => {
+        setStockItems([]);
+    };
 
     const [contextMenuFromOrder, setContextMenuFromOrder] = useState(null);
 
@@ -162,65 +165,66 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 
             <TransactionLineItemsSection
                 // title="Transfer Items"
-                panelClassName="h-full"
+                panelClassName="flex-grow min-h-0"
                 titleClassName="font-bold"
-                contentClassName="h-[380px]"
+                contentClassName="!py-0 flex flex-col"
             >
-                <table className={transactionTableClassName}>
-                    <thead className={transactionTableHeadClassName}>
-                        <tr>
-                            <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11 bg-gray-300">S No</th>
-                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs bg-gray-300">Item</th>
-                            <th className="w-16 px-4 py-1.5 border border-gray-300 text-center  text-xs bg-gray-300">Size</th>
-                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center text-xs bg-gray-300">Color</th>
-                            <th className="w-48 px-4 py-1.5 border border-gray-300 text-center  text-xs bg-gray-300">BarCode</th>
-                            {stockDrivenFields.map((field) => (
-                                <th key={field.key} className="w-32 px-4 py-1.5 border border-gray-300 text-center text-xs bg-gray-300">{field.label}</th>
-                            ))}
-                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs bg-gray-300">Stock Qty (Pcs)</th>
-                            {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
+                <div className="flex-grow overflow-auto min-h-0">
+                    <table className={`${transactionTableClassName} min-w-[1000px]`}>
+                        <thead className={`${transactionTableHeadClassName} shadow-sm`}>
+                            <tr className="py-2">
+                                <th className="bg-gray-300 px-1 py-1 text-center font-medium text-[12px] w-12">S.No</th>
+                                <th className="w-48 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Item</th>
+                                <th className="w-16 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Size</th>
+                                <th className="w-48 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Color</th>
+                                <th className="w-48 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">BarCode</th>
+                                {stockDrivenFields.map((field) => (
+                                    <th key={field.key} className="w-32 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">{field.label}</th>
+                                ))}
+                                <th className="w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Stock Qty (Pcs)</th>
+                                {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
 
-                                <th className="w-20 px-4 py-1.5 border border-gray-300 text-center text-xs bg-gray-300">Discount Price</th>
-                            )}
-                            <th className="w-20 px-4 py-1.5 border border-gray-300  text-xs bg-gray-300">Transfer Qty (Pcs)<span className="text-red-500">*</span></th>
+                                    <th className="w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Discount Price</th>
+                                )}
+                                <th className="w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Transfer Qty (Pcs)<span className="text-red-500">*</span></th>
 
-                        </tr>
-                    </thead>
+                            </tr>
+                        </thead>
 
 
-                    <tbody>
-                        {stockItems?.map((item, index) => <TransferItems
-                            item={item} index={index} handleRightClickFromOrder={handleRightClickFromOrder}
-                            readOnly={readOnly} handleInputChangeFromOrder={handleInputChangeFromOrder}
-                            itemList={itemList} sizeList={sizeList} colorList={colorList} fromLocationId={fromLocationId}
-                            stockItems={stockItems} toLocationId={toLocationId} locationData={locationData}
-                            stockDrivenFields={stockDrivenFields}
-                        />)}
-                    </tbody>
-                    <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300  font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
-                        <tr className="bg-gray-300">
-                            <td
-                                colSpan={5}
-                                className="bg-gray-300 px-1 py-1 text-right text-[12px]"
-                            >
-                                Total:
-                            </td>
-                            <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
-                            </td>
-                            <td className="bg-gray-300 px-1 py-1 text-right text-[11px] px-2">
-                                {(stockItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.transferQty || 0), 0).toFixed(2)}
-                            </td>
+                        <tbody className="bg-white">
+                            {stockItems?.map((item, index) => <TransferItems
+                                key={item.id || index}
+                                item={item} index={index} handleRightClickFromOrder={handleRightClickFromOrder}
+                                readOnly={readOnly} handleInputChangeFromOrder={handleInputChangeFromOrder}
+                                itemList={itemList} sizeList={sizeList} colorList={colorList} fromLocationId={fromLocationId}
+                                stockItems={stockItems} toLocationId={toLocationId} locationData={locationData}
+                                stockDrivenFields={stockDrivenFields}
+                            />)}
+                        </tbody>
+                        <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300 font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
+                            <tr>
+                                <td
+                                    colSpan={5 + stockDrivenFields.length + 1 + (findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" ? 1 : 0)}
+                                    className="bg-gray-300 px-1 py-1 text-right text-[12px]"
+                                >
+                                    Total:
+                                </td>
+                                <td className="bg-gray-300 px-1 py-1 text-right text-[11px] px-2">
+                                    {(stockItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.transferQty || 0), 0).toFixed(2)}
+                                </td>
 
-                        </tr>
-                    </tfoot>
-                </table>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
 
                 {contextMenuFromOrder && (
                     <div
                         style={{
                             position: "absolute",
-                            top: `${contextMenuFromOrder.mouseY - 50}px`,
-                            left: `${contextMenuFromOrder.mouseX + 20}px`,
+                            top: `${contextMenuFromOrder.mouseY - 250}px`,
+                            left: `${contextMenuFromOrder.mouseX - 10}px`,
                             boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
                             padding: "8px",
                             borderRadius: "4px",
@@ -238,6 +242,15 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                 }}
                             >
                                 Delete
+                            </button>
+                            <button
+                                className=" text-black text-[12px] text-left rounded px-1"
+                                onClick={() => {
+                                    handleDeleteAllRows();
+                                    handleCloseContextMenu();
+                                }}
+                            >
+                                Delete All
                             </button>
                         </div>
                     </div>

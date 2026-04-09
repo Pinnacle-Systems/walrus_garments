@@ -392,37 +392,37 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   const chargeRows = [
     ...(packingChargeEnabled
       ? [{
-          key: "packingCharge",
-          label: "Packing Charge",
-          summaryColumn: "right",
-          renderValue: () => (
-            <input
-              type="number"
-              value={packingCharge}
-              onChange={(event) => setPackingCharge(event.target.value)}
-              onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
-              readOnly={readOnly}
-              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
-            />
-          ),
-        }]
+        key: "packingCharge",
+        label: "Packing Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={packingCharge}
+            onChange={(event) => setPackingCharge(event.target.value)}
+            onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
       : []),
     ...(shippingChargeEnabled
       ? [{
-          key: "shippingCharge",
-          label: "Shipping Charge",
-          summaryColumn: "right",
-          renderValue: () => (
-            <input
-              type="number"
-              value={shippingCharge}
-              onChange={(event) => setShippingCharge(event.target.value)}
-              onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
-              readOnly={readOnly}
-              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
-            />
-          ),
-        }]
+        key: "shippingCharge",
+        label: "Shipping Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={shippingCharge}
+            onChange={(event) => setShippingCharge(event.target.value)}
+            onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
       : []),
   ];
   function isSupplierOutside() {
@@ -650,14 +650,14 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
         openStateClassName="max-h-[420px] opacity-100 overflow-visible"
         footer={footerContent}
         headerContent={(
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
 
-          <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2">
+            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2">
               <ReusableInput label="Sales Return No" readOnly value={docId} />
               <ReusableInput label="Sales Return Date" value={date} type={"date"} required={true} readOnly={true} disabled />
-          </TransactionHeaderSection>
+            </TransactionHeaderSection>
 
-          <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
+            <TransactionHeaderSection title="Customer Details" className="col-span-3 overflow-visible" bodyClassName="grid-cols-8 gap-1 overflow-visible">
 
               <div className="col-span-3 overflow-visible">
 
@@ -687,6 +687,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
                 <TextAreaNew
                   name="Address"
                   placeholder="Address"
+                  rows={1}
                   value={
                     supplierDetails?.data?.address ||
                     findFromList(customerId, supplierList?.data, "address")
@@ -694,12 +695,12 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
                   disabled
                 />
               </div>
-            <div className="col-span-4">
-            <DropdownInput name="Sales Order No"
-              options={dropDownListObject(id ? salesDeliveryData?.data : salesDeliveryData?.data?.filter(i => i.customerId == customerId), "docId", "id")}
-              value={salesDeliveryId} setValue={setSalesDeliveryId} required={true} readOnly={id || readOnly} />
-            </div>
-          </TransactionHeaderSection>
+              <div className="col-span-1">
+                <DropdownInput name="Sales Order No"
+                  options={dropDownListObject(id ? salesDeliveryData?.data : salesDeliveryData?.data?.filter(i => i.customerId == customerId), "docId", "id")}
+                  value={salesDeliveryId} setValue={setSalesDeliveryId} required={true} readOnly={id || readOnly} />
+              </div>
+            </TransactionHeaderSection>
 
 
 
