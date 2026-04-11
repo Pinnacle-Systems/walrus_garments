@@ -970,6 +970,11 @@ export async function getMinStockAlertReport(req) {
 }
 
 
+export async function stockMovement() {
+
+}
+
+
 export {
     get,
     getOne,

@@ -131,7 +131,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
           noOfBags: "0",
           discountType: "",
           weightPerBag: "0.00",
-          id: Date.now() + i + Math.random(),
+          // id: Date.now() + i + Math.random(),
           poItemsId: ""
         };
       });
@@ -140,42 +140,43 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
   }, [rows, setRows, id]);
 
 
-  const updateRow = (id, field, value, extraData = {}) => {
-    setRows((prev) =>
-      prev.map((row) => {
-        if (row.id !== id) return row;
+  const updateRow = (index, field, value, extraData = {}) => {
+    setRows((prev) => {
+      const updatedRows = [...prev];
+      if (!updatedRows[index]) return prev;
 
-        const updatedRow = { ...row, [field]: value, ...extraData };
+      updatedRows[index] = { ...updatedRows[index], [field]: value, ...extraData };
 
-        // Auto-price lookup (only if item, size, or color changed)
-        if (["itemId", "sizeId", "colorId"].includes(field)) {
-          const selectedItem = itemList?.data?.find((i) => i.id === updatedRow.itemId);
-          if (selectedItem) {
-            const itemBarcodeGenerationMethod = getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod);
-            updatedRow.price = getItemPriceForBarcodeGenerationMode(
-              selectedItem,
-              itemBarcodeGenerationMethod,
-              updatedRow.sizeId,
-              updatedRow.colorId
-            );
+      // Auto-price lookup (only if item, size, or color changed)
+      if (["itemId", "sizeId", "colorId"].includes(field)) {
+        const itemBarcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
+        const selectedItem = itemList?.data?.find((i) => i.id === updatedRows[index].itemId);
 
-            // Barcode logic: Legacy uses first available Price List barcode, modern uses matched barcode
-            if (selectedItem.isLegacy) {
-              updatedRow.barcode = selectedItem.ItemPriceList?.[0]?.barcode || selectedItem.barcode || "";
-            } else {
-              const priceEntry = selectedItem.ItemPriceList?.find(
-                p => String(p.sizeId) === String(updatedRow.sizeId) && String(p.colorId) === String(updatedRow.colorId)
-              );
-              updatedRow.barcode = priceEntry?.barcode || "";
-            }
+        if (selectedItem) {
+          const method = getItemBarcodeGenerationMethod(selectedItem, itemBarcodeGenerationMethod);
+          updatedRows[index].price = getItemPriceForBarcodeGenerationMode(
+            selectedItem,
+            method,
+            updatedRows[index].sizeId,
+            updatedRows[index].colorId
+          );
+
+          // Barcode logic
+          if (selectedItem.isLegacy) {
+            updatedRows[index].barcode = selectedItem.ItemPriceList?.[0]?.barcode || selectedItem.barcode || "";
           } else {
-            updatedRow.barcode = "";
+            const priceEntry = selectedItem.ItemPriceList?.find(
+              p => String(p.sizeId) === String(updatedRows[index].sizeId) && String(p.colorId) === String(updatedRows[index].colorId)
+            );
+            updatedRows[index].barcode = priceEntry?.barcode || "";
           }
+        } else {
+          updatedRows[index].barcode = "";
         }
+      }
 
-        return updatedRow;
-      })
-    );
+      return updatedRows;
+    });
   };
 
   // --- Options Mapping ---
@@ -240,19 +241,22 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
     try {
       const returnData = await callback(payload).unwrap();
       if (returnData.statusCode === 1) {
-        toast.error(returnData.message);
+        Swal.fire({ icon: "error", title: returnData?.message, });
       } else {
-        Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, showConfirmButton: false });
+        Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, });
         if (returnData.statusCode === 0) {
           if (nextProcess === "new") {
-            // syncFormWithDb(undefined)
-            // onNew();
+            syncFormWithDb(undefined)
+            onNew();
           } else {
+            syncFormWithDb(undefined)
+
             onClose()
           }
 
         } else {
-          toast.error(returnData?.message);
+          // toast.error(returnData?.message);
+          Swal.fire({ icon: "error", title: returnData?.message, });
         }
       }
     } catch (error) {
@@ -264,8 +268,8 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
   const saveData = (nextProcess) => {
     const mandatoryFields = ["itemId", "adjType", "qty",];
-    if (stockMaintenance.trackSize) mandatoryFields.push("sizeId");
-    if (stockMaintenance.trackColor) mandatoryFields.push("colorId");
+    // if (stockMaintenance.trackSize) mandatoryFields.push("sizeId");
+    // if (stockMaintenance.trackColor) mandatoryFields.push("colorId");
     mandatoryFields.push(...stockDrivenFields.map((field) => field.key));
 
     if (!validateData(data)) {
@@ -388,13 +392,19 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
               <tbody className="bg-white">
                 {rows.map((row, idx) => {
                   const selectedItemData = itemList?.data?.find(i => i.id === row.itemId);
-                  const isLegacy = selectedItemData?.isLegacy || false;
+                  const isLegacy = row.itemId ? selectedItemData?.isLegacy : true;
+                  const priceList = selectedItemData?.ItemPriceList || [];
 
-                  const validSizeIds = selectedItemData?.ItemPriceList?.map(p => p.sizeId) || [];
-                  const validColorIds = selectedItemData?.ItemPriceList?.map(p => p.colorId) || [];
+                  const filteredSizeOptions = isLegacy ? sizeOptions : sizeOptions.filter(o =>
+                    priceList.some(p => String(p.sizeId) === String(o.value))
+                  );
 
-                  const filteredSizeOptions = (!isLegacy && validSizeIds.length > 0) ? sizeOptions.filter(o => validSizeIds.includes(o.value)) : sizeOptions;
-                  const filteredColorOptions = (!isLegacy && validColorIds.length > 0) ? colorOptions.filter(o => validColorIds.includes(o.value)) : colorOptions;
+                  const filteredColorOptions = isLegacy ? colorOptions : colorOptions.filter(o =>
+                    priceList.some(p =>
+                      String(p.colorId) === String(o.value) &&
+                      (row.sizeId ? String(p.sizeId) === String(row.sizeId) : true)
+                    )
+                  );
 
                   const isUomReady = (row) => {
                     if (stockMaintenance.trackColor) return Boolean(row.colorId);
@@ -403,10 +413,9 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                   };
 
                   return (
-                    <tr key={row.id} className={`border border-blue-gray-200 cursor-pointer ${idx % 2 === 0 ? "bg-white" : "bg-gray-100"}`}
+                    <tr key={row.id || idx} className={`border border-blue-gray-200 cursor-pointer ${idx % 2 === 0 ? "bg-white" : "bg-gray-100"}`}
                       onContextMenu={(e) => {
-                        if (!readOnly) {
-
+                        if (!readOnly || !row.id) {
                           handleRightClick(e, idx, "shiftTimeHrs");
                         }
                       }}>
@@ -418,7 +427,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                           disabled={readOnly}
                           onChange={v => {
                             const selectedItem = itemList?.data?.find(i => i.id === (v || ""));
-                            updateRow(row.id, "itemId", v || "", {
+                            updateRow(idx, "itemId", v || "", {
                               item_name: selectedItem?.name || "",
                               sizeId: "",
                               size: "",
@@ -439,10 +448,10 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                           <SearchableTableCellSelect
                             value={row.sizeId}
                             options={filteredSizeOptions}
-                            disabled={readOnly || !row.itemId}
+                            // disabled={readOnly || !row.itemId}
                             onChange={v => {
                               const selected = sizeOptions.find(o => o.value === v);
-                              updateRow(row.id, "sizeId", v || "", { size: selected?.label || "" });
+                              updateRow(idx, "sizeId", v || "", { size: selected?.label || "" });
                             }}
                           // addNewModalWidth="w-[40%] h-[45%]"
                           // childComponent={SizeMaster}
@@ -455,10 +464,10 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                           <SearchableTableCellSelect
                             value={row.colorId}
                             options={filteredColorOptions}
-                            disabled={readOnly || !(stockMaintenance.trackSize ? row.sizeId : row.itemId)}
+                            // disabled={readOnly || !(stockMaintenance.trackSize ? row.sizeId : row.itemId)}
                             onChange={v => {
                               const selected = colorOptions.find(o => o.value === v);
-                              updateRow(row.id, "colorId", v || "", { color: selected?.label || "" });
+                              updateRow(idx, "colorId", v || "", { color: selected?.label || "" });
                             }}
                           // addNewModalWidth="w-[40%] h-[45%]"
                           // childComponent={ColorMaster}
@@ -473,7 +482,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                             className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none uppercase"
                             value={row?.[field.key] || ""}
                             onFocus={(e) => e.target.select()}
-                            onChange={(e) => updateRow(row.id, field.key, e.target.value)}
+                            onChange={(e) => updateRow(idx, field.key, e.target.value)}
                           />
                         </td>
                       ))}
@@ -482,10 +491,10 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                         <SearchableTableCellSelect
                           value={row.uomId}
                           options={uomOptions}
-                          disabled={readOnly || !isUomReady(row)}
+                          // disabled={readOnly || !isUomReady(row)}
                           onChange={v => {
                             const selected = uomOptions.find(o => o.value === v);
-                            updateRow(row.id, "uomId", v || "", { uom: selected?.label || "" });
+                            updateRow(idx, "uomId", v || "", { uom: selected?.label || "" });
                           }}
                           addNewModalWidth="w-[40%] h-[45%]"
                           childComponent={UomMaster}
@@ -512,7 +521,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                           disabled={readOnly || (row.salesQty ?? 0) > 0}
                           className={`h-full w-full rounded-none border-0 bg-transparent px-1 py-0 shadow-none outline-none focus:bg-transparent focus:outline-none ${row.adjType === "PLUS" ? "text-green-600" : ""} ${row.adjType === "MINUS" ? "text-red-600" : ""}`}
                           value={row.adjType}
-                          onChange={(e) => updateRow(row.id, "adjType", e.target.value)}
+                          onChange={(e) => updateRow(idx, "adjType", e.target.value)}
                         >
                           <option></option>
                           {adjTypeData?.map((blend) => (
@@ -527,7 +536,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                           onFocus={(e) => e.target.select()}
                           value={row.qty}
                           disabled={readOnly || !row.itemId}
-                          onChange={e => updateRow(row.id, "qty", parseInt(e.target.value) || 0)}
+                          onChange={e => updateRow(idx, "qty", parseInt(e.target.value) || 0)}
                         />
                       </td>
                       {/* <td className="border border-gray-300 text-[11px] text-right px-2">
@@ -577,7 +586,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
             <div
               style={{
                 position: "absolute",
-                top: `${contextMenu.mouseY - 50}px`,
+                top: `${contextMenu.mouseY - 235}px`,
                 left: `${contextMenu.mouseX - 30}px`,
 
                 // background: "gray",
@@ -601,6 +610,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                 </button>
                 <button
                   className=" text-black text-[12px] text-left rounded px-1"
+                  disabled={rows?.filter(i => i.id).length > 0}
                   onClick={() => {
                     handleDeleteAllRows();
                     handleCloseContextMenu();
@@ -617,13 +627,6 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
         <div className="flex flex-col md:flex-row gap-2 justify-between flex-none bg-white p-2 rounded-md border border-slate-200 shadow-sm">
           <div className="flex gap-2 flex-wrap">
             <button
-              onClick={() => hasPermission(() => saveData("new"), "save")}
-              disabled={readOnly}
-              className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
-              <FiSave className="w-4 h-4 mr-2" />
-              Save & New
-            </button>
-            <button
               onClick={() => hasPermission(() => saveData("close"), "save")}
               disabled={readOnly}
 
@@ -631,6 +634,14 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
               <HiOutlineRefresh className="w-4 h-4 mr-2" />
               Save & Close
             </button>
+            <button
+              onClick={() => hasPermission(() => saveData("new"), "save")}
+              disabled={readOnly}
+              className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
+              <FiSave className="w-4 h-4 mr-2" />
+              Save & New
+            </button>
+
           </div>
           <div className="flex gap-2 flex-wrap">
             <button className="bg-yellow-600 text-white px-4 py-1.5 rounded-md hover:bg-yellow-700 flex items-center text-sm shadow-sm transition-all active:scale-95"

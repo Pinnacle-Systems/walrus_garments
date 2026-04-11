@@ -264,6 +264,16 @@ async function getOne(id) {
 
 
 async function getExistingStockQty(tx, stockDetail, branchId, storeId) {
+
+  console.log(stockDetail, "stockDetail")
+  console.log(branchId, "branchId")
+  console.log(storeId, "storeId")
+
+
+  const sql = `select * from stock where branchId = ${branchId} and storeId = ${storeId} and itemId = ${stockDetail?.itemId} and sizeId = ${stockDetail?.sizeId} and colorId = ${stockDetail?.colorId} and uomId = ${stockDetail?.uomId}`
+
+
+  console.log(sql, "sql")
   const aggregate = await tx.stock.aggregate({
     where: {
       branchId: parseInt(branchId),
@@ -272,12 +282,17 @@ async function getExistingStockQty(tx, stockDetail, branchId, storeId) {
       sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
       colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
       uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-      ...buildStockRuntimeFieldWhere(stockDetail),
+      // ...buildStockRuntimeFieldWhere(stockDetail),
     },
     _sum: {
       qty: true,
     },
   });
+
+
+  console.log(aggregate, "aggregate",)
+
+
 
   return aggregate?._sum?.qty || 0;
 }
@@ -289,8 +304,10 @@ async function validateStockAdjustmentItems(tx, stockAdjustmentItems, branchId, 
     const existingQty = await getExistingStockQty(tx, stockDetail, branchId, storeId);
     if (existingQty <= 0) {
       throw new Error("Negative adjustment is allowed only for stock combinations that already exist.");
+      // return { statusCode: 1, message: "Negative adjustment is allowed only for stock combinations that already exist." };
     }
   }
+  return null;
 }
 
 function getAdjustmentQty(stockDetail) {
@@ -391,161 +408,6 @@ async function create(body) {
 }
 
 
-
-async function update(id, body) {
-  const {
-    branchId,
-    stockAdjustmentItems,
-    userId,
-    storeId,
-    docDate,
-    locationId,
-  } = await body;
-  let data;
-  const dataFound = await prisma.stockAdjustment.findUnique({
-    where: {
-      id: parseInt(id),
-    },
-    include: {
-      StockAdjustmentItems: true,
-    },
-  });
-  if (!dataFound) return NoRecordFound("stockAdjustment");
-
-  let removedItems = findRemovedItems(dataFound, stockAdjustmentItems);
-
-  let removeItemsIds = removedItems.map((item) => parseInt(item.id));
-
-  await prisma.$transaction(async (tx) => {
-
-
-    if (removeItemsIds.length > 0) {
-      // Check stock before deleting existing items (reverting adjustments)
-      const stockDetails = await tx.stock.findMany({
-        where: {
-          inOrOut: "stockAdjustment",
-          transactionId: { in: removeItemsIds },
-        },
-      });
-
-      for (const stockItem of stockDetails) {
-        // If it was a PLUS adjustment (stockItem.qty > 0), 
-        // deleting it effectively removes stock from the system.
-        if (stockItem.qty > 0) {
-          const currentQty = await getExistingStockQty(tx, stockItem, dataFound.branchId, dataFound.storeId);
-          if (currentQty < stockItem.qty) {
-            throw new Error("Insufficient stock quantity, you cannot delete.");
-          }
-        }
-      }
-
-      await tx.stockAdjustmentItems.deleteMany({
-        where: { id: { in: removeItemsIds } },
-      });
-      await tx.stock.deleteMany({
-        where: {
-          inOrOut: "stockAdjustment",
-          transactionId: { in: removeItemsIds },
-        },
-      });
-    }
-    await validateStockAdjustmentItems(tx, stockAdjustmentItems, branchId, storeId);
-    data = await tx.stockAdjustment.update({
-      where: {
-        id: parseInt(id),
-      },
-      data: {
-        storeId: parseInt(storeId),
-        branchId: parseInt(branchId),
-      },
-    });
-    await updateOpeningStockItems(
-      tx,
-      stockAdjustmentItems,
-      data,
-      userId,
-      branchId,
-      storeId,
-      dataFound.docId
-    );
-  });
-  return { statusCode: 0, data };
-}
-
-async function updateOpeningStockItems(
-  tx,
-  stockAdjustmentItems,
-  stockAdjustment,
-  userId,
-  branchId,
-  storeId,
-  docId
-) {
-  const promises = stockAdjustmentItems.map(async (stockDetail) => {
-    const qty = getAdjustmentQty(stockDetail);
-    const itemPayload = {
-      barcode: stockDetail?.barcode ? stockDetail?.barcode : undefined,
-      itemId: stockDetail?.itemId ? parseInt(stockDetail.itemId) : null,
-      sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
-      colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
-      uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
-      hsnId: stockDetail?.hsnId ? parseInt(stockDetail.hsnId) : null,
-      qty: stockDetail?.qty ? String(stockDetail.qty) : null,
-      price: stockDetail?.price ? String(stockDetail.price) : null,
-      adjType: stockDetail?.adjType ? stockDetail?.adjType : undefined,
-    };
-
-    const baseData = {
-      inOrOut: "stockAdjustment",
-      transactionId: stockDetail?.id ? parseInt(stockDetail.id) : undefined,
-      branchId: parseInt(branchId),
-      storeId: parseInt(storeId),
-      barcode: itemPayload.barcode,
-      itemId: itemPayload.itemId,
-      sizeId: itemPayload.sizeId,
-      colorId: itemPayload.colorId,
-      uomId: itemPayload.uomId,
-      qty,
-      price: stockDetail?.price ? parseFloat(stockDetail.price) : undefined,
-      ...pickStockRuntimeFieldValues(stockDetail),
-    };
-
-    if (stockDetail?.id) {
-      await tx.stockAdjustmentItems.update({
-        where: {
-          id: parseInt(stockDetail.id),
-        },
-        data: itemPayload,
-      });
-
-      await tx.stock.updateMany({
-        where: {
-          inOrOut: "stockAdjustment",
-          transactionId: parseInt(stockDetail.id),
-        },
-        data: baseData,
-      });
-
-      return;
-    }
-
-    const createdItem = await tx.stockAdjustmentItems.create({
-      data: {
-        stockAdjustmentId: parseInt(stockAdjustment.id),
-        ...itemPayload,
-      },
-    });
-
-    await tx.stock.create({
-      data: {
-        ...baseData,
-        transactionId: parseInt(createdItem.id),
-      },
-    });
-  });
-  return Promise.all(promises);
-}
-
 function findRemovedItems(dataFound, stockAdjustmentItems) {
   let removedItems = dataFound.StockAdjustmentItems.filter((oldItem) => {
     let result = stockAdjustmentItems.find(
@@ -556,6 +418,138 @@ function findRemovedItems(dataFound, stockAdjustmentItems) {
   });
   return removedItems;
 }
+
+
+async function update(id, body) {
+  const {
+    branchId,
+    stockAdjustmentItems,
+    userId,
+    storeId,
+  } = await body;
+
+  const dataFound = await prisma.stockAdjustment.findUnique({
+    where: { id: parseInt(id) },
+    include: { StockAdjustmentItems: true },
+  });
+  if (!dataFound) return NoRecordFound("stockAdjustment");
+
+  // Identify items that were removed from the grid
+  const removedItems = dataFound.StockAdjustmentItems.filter((oldItem) =>
+    !stockAdjustmentItems.some((newItem) => newItem.id && parseInt(newItem.id) === parseInt(oldItem.id))
+  );
+  const removeItemsIds = removedItems.map((item) => parseInt(item.id));
+
+  let piData;
+
+  await prisma.$transaction(async (tx) => {
+    // 1. Handle Deletions
+    if (removeItemsIds.length > 0) {
+      const stockDetails = await tx.stock.findMany({
+        where: {
+          inOrOut: "stockAdjustment",
+          transactionId: { in: removeItemsIds },
+        },
+      });
+
+      for (const stockItem of stockDetails) {
+        if (stockItem.qty > 0) {
+          const currentQty = await getExistingStockQty(tx, stockItem, dataFound.branchId, dataFound.storeId);
+          if (currentQty < stockItem.qty) {
+            throw new Error(`Insufficient stock for item ${stockItem.itemId}. Cannot revert adjustment.`);
+          }
+        }
+      }
+
+      await tx.stock.deleteMany({
+        where: {
+          inOrOut: "stockAdjustment",
+          transactionId: { in: removeItemsIds },
+        },
+      });
+      await tx.stockAdjustmentItems.deleteMany({
+        where: { id: { in: removeItemsIds } },
+      });
+    }
+
+    // 2. Validate new/updated items for negative adjustments
+    await validateStockAdjustmentItems(tx, stockAdjustmentItems, branchId, storeId);
+
+    // 3. Update main record
+    piData = await tx.stockAdjustment.update({
+      where: { id: parseInt(id) },
+      data: {
+        storeId: storeId ? parseInt(storeId) : undefined,
+      },
+    });
+
+    // 4. Update or Create Items
+    for (const item of (stockAdjustmentItems || []).filter(i => i.itemId)) {
+      const qty = getAdjustmentQty(item);
+      const itemData = {
+        barcode: item?.barcode || undefined,
+        itemId: item?.itemId ? parseInt(item.itemId) : null,
+        sizeId: item?.sizeId ? parseInt(item.sizeId) : null,
+        colorId: item?.colorId ? parseInt(item.colorId) : null,
+        uomId: item?.uomId ? parseInt(item.uomId) : null,
+        hsnId: item?.hsnId ? parseInt(item.hsnId) : null,
+        qty: item?.qty ? String(item.qty) : null,
+        price: item?.price ? String(item.price) : null,
+        adjType: item?.adjType || undefined,
+      };
+
+      const stockData = {
+        branchId: parseInt(branchId),
+        storeId: parseInt(storeId),
+        barcode: itemData.barcode,
+        itemId: itemData.itemId,
+        sizeId: itemData.sizeId,
+        colorId: itemData.colorId,
+        uomId: itemData.uomId,
+        qty,
+        price: item?.price ? parseFloat(item.price) : undefined,
+        ...pickStockRuntimeFieldValues(item),
+      };
+
+      if (item.id) {
+        // Update both item and stock record
+        await tx.stockAdjustmentItems.update({
+          where: { id: parseInt(item.id) },
+          data: itemData,
+        });
+
+        await tx.stock.updateMany({
+          where: {
+            inOrOut: "stockAdjustment",
+            transactionId: parseInt(item.id),
+          },
+          data: stockData,
+        });
+      } else {
+        // Create new item and stock record
+        const createdItem = await tx.stockAdjustmentItems.create({
+          data: {
+            stockAdjustmentId: piData.id,
+            ...itemData,
+          },
+        });
+
+        await tx.stock.create({
+          data: {
+            ...stockData,
+            inOrOut: "stockAdjustment",
+            transactionId: createdItem.id,
+          },
+        });
+      }
+    }
+  });
+
+  return { statusCode: 0, data: piData };
+}
+
+
+
 
 async function deleteItemsFromStock(tx, removeItemsStockIds) {
   return await tx.stock.deleteMany({

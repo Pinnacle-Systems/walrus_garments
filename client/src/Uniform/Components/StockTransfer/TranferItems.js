@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function TransferItems({ item, index, handleRightClickFromOrder, readOnly, handleInputChangeFromOrder,
-    itemList, sizeList, colorList, fromLocationId, stockItems, locationData, toLocationId, id, stockDrivenFields = []
+    itemList, sizeList, colorList, fromLocationId, id, locationData, toLocationId, stockDrivenFields = []
 }) {
 
 
@@ -120,7 +120,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                         step="0.01"
                         min="0"
                         value={parseFloat(item?.transferQty || "")}
-
+                        disabled={id}
 
 
 

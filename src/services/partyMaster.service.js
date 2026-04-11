@@ -2,9 +2,11 @@ import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 import { exclude, getRemovedItems } from '../utils/helper.js';
 import { parse } from 'path';
+import { getPartyPurchaseOverAllReport } from './partyLedger.js';
 
 async function get(req) {
-    const { companyId, active, isAddressCombined, isInwardRetuenParties, supplierId, id } = req.query
+    const { companyId, active, isAddressCombined, isInwardRetuenParties, supplierId, id,
+        isPartyPurchaseOverAllReport, searchValue } = req.query
 
 
     let data
@@ -69,9 +71,6 @@ async function get(req) {
 
     }
 
-
-    console.log(typeof (Boolean(isInwardRetuenParties)), "isInwardRetuenParties")
-
     if (isInwardRetuenParties === true || isInwardRetuenParties === "true") {
         data = data.filter(party => {
 
@@ -96,6 +95,16 @@ async function get(req) {
             return Inward > 0 && Inward != Return;
         });
     }
+
+
+
+    if (isPartyPurchaseOverAllReport) {
+        const data = await getPartyPurchaseOverAllReport(searchValue)
+        return { statusCode: 0, data };
+    }
+
+    isPartyPurchaseOverAllReport
+
 
     data = data.map((item) => {
         const types = [];

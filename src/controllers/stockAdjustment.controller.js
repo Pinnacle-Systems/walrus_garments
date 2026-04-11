@@ -1,3 +1,4 @@
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/index.js";
 import { prisma } from "../lib/prisma.js";
 
 import {
@@ -41,7 +42,7 @@ async function create(req, res, next) {
       `Error`,
       error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message
     );
-    if (error instanceof prisma.PrismaClientKnownRequestError) {
+    if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({
@@ -70,7 +71,7 @@ async function update(req, res, next) {
       `Error`,
       error?.message?.match(/message: "(.*?)"/)?.[1] || error?.message
     );
-    if (error instanceof prisma.PrismaClientKnownRequestError) {
+    if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         res.statusCode = 200;
         res.json({

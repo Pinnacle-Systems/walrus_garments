@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch, create, createOpeningStock, update, remove, getPcsStock, getStockReport, getMinStockAlertReport, getUnifiedStock, getUnifiedStockReport, getUnifiedStockWithLegacyByBarcode } from '../controllers/stock.controller.js';
+import { get, getOne, getSearch, create, createOpeningStock, update, remove, getPcsStock, getStockReport, getMinStockAlertReport, getUnifiedStock, getUnifiedStockReport, getUnifiedStockWithLegacyByBarcode, getStockMovement } from '../controllers/stock.controller.js';
 
 
 router.post('/', create);
@@ -17,6 +17,9 @@ router.get('/unified', getUnifiedStock)
 router.get('/unified-report', getUnifiedStockReport)
 
 router.get('/unified-barcode', getUnifiedStockWithLegacyByBarcode)
+
+router.get('/stock-movement', getStockMovement)
+
 
 router.get('/', get);
 

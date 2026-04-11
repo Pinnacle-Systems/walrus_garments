@@ -359,8 +359,7 @@ export const MultiSelectDropdownNew = ({
           placeholder=""
           maxMenuHeight={200}
           styles={customStyles}
-
-
+          menuPortalTarget={document.body}
         />
       </div>
     </div>
@@ -3699,3 +3698,5 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     );
   }
 );
+
+

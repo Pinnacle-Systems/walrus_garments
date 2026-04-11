@@ -28,8 +28,10 @@ import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardN
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
 
+import VarientsSelection from "./VarientsSelection";
+
 const StockTransferForm = ({
-    docId, id, readOnly, setId, setForm,
+    docId, setDocId, id, readOnly, setId, setForm,
     fromCustomerId, setFromCustomerId, onClose, setTransferType, transferType, toCustomerId, setToCustomerId, params, requirementId, setRequirementId,
     orderData, orderId, orderItems, setOrderItems, fromOrderId, setFromOrderId, setStockItems, stockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
     date, OnNew,
@@ -88,58 +90,66 @@ const StockTransferForm = ({
 
     const [triggerBarcodeSearch, { isLoading: isBarcodeLoading, isFetching: isBarcodeFetching }] = useLazyGetUnifiedStockByBarcodeQuery({ skip: !barcode });
 
-    const upsertScannedStockItem = (newItem) => {
-        const existsIndex = stockItems.findIndex(i =>
-            i.itemId === newItem.itemId &&
-            i.sizeId === newItem.sizeId &&
-            i.colorId === newItem.colorId &&
-            stockDrivenFields.every((field) => String(i?.[field.key] || "") === String(newItem?.[field.key] || ""))
-        );
-        if (existsIndex !== -1) {
-            const updatedItems = [...stockItems];
-            updatedItems[existsIndex] = {
-                ...updatedItems[existsIndex],
-                ...newItem,
-                transferQty: (updatedItems[existsIndex].transferQty || 0) + 1,
-            };
-            setStockItems(updatedItems);
-            return;
-        }
+    const [barcodeMatches, setBarcodeMatches] = useState([]);
+    const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
 
-        const firstEmptyIndex = stockItems.findIndex(i => !i.itemId);
-        if (firstEmptyIndex !== -1) {
-            const updatedItems = [...stockItems];
-            updatedItems[firstEmptyIndex] = newItem;
-            setStockItems(updatedItems);
-            return;
-        }
+    const addScannedItems = (newItems) => {
+        setStockItems(prev => {
+            let updated = [...prev];
+            let errors = [];
 
-        setStockItems([...stockItems, newItem]);
-    };
+            newItems.forEach(item => {
+                const availableStock = parseFloat(item.stockQty || item.qty || 0);
+                const newItem = {
+                    ...item,
+                    transferQty: item.transferQty || 1,
+                    stockQty: availableStock
+                };
 
-    const resolveBarcodeMatch = async (matches = []) => {
-        const options = Object.fromEntries(
-            matches.map((match, index) => [
-                String(index),
-                `${match.item_name || "Item"} / ${match.size || "-"} / ${match.color || "-"} / Qty ${match.stockQty || 0}`,
-            ])
-        );
+                const existsIndex = updated.findIndex(i =>
+                    i.itemId === newItem.itemId &&
+                    i.sizeId === newItem.sizeId &&
+                    i.colorId === newItem.colorId &&
+                    stockDrivenFields.every((field) => String(i?.[field.key] || "") === String(newItem?.[field.key] || ""))
+                );
 
-        const result = await Swal.fire({
-            title: "Select Stock Row",
-            text: "This barcode matches multiple stock combinations.",
-            input: "select",
-            inputOptions: options,
-            inputPlaceholder: "Choose stock row",
-            showCancelButton: true,
-            inputValidator: (value) => (!value && value !== "0" ? "Please choose a stock row" : undefined),
+                if (existsIndex !== -1) {
+                    const currentQty = parseFloat(updated[existsIndex].transferQty) || 0;
+                    if (currentQty + 1 > availableStock) {
+                        errors.push(item.item_name || "Item");
+                        return;
+                    }
+                    updated[existsIndex] = {
+                        ...updated[existsIndex],
+                        ...newItem,
+                        transferQty: currentQty + 1,
+                    };
+                } else {
+                    if (1 > availableStock) {
+                        errors.push(item.item_name || "Item");
+                        return;
+                    }
+                    const firstEmptyIndex = updated.findIndex(i => !i.itemId);
+                    if (firstEmptyIndex !== -1) {
+                        updated[firstEmptyIndex] = newItem;
+                    } else {
+                        updated.push(newItem);
+                    }
+                }
+            });
+
+            if (errors.length > 0) {
+                setTimeout(() => {
+                    Swal.fire({
+                        title: "Insufficient Stock",
+                        text: `Could not transfer more than available stock for: ${[...new Set(errors)].join(", ")}`,
+                        icon: "error"
+                    });
+                }, 0);
+            }
+
+            return updated;
         });
-
-        if (!result.isConfirmed) {
-            return null;
-        }
-
-        return matches[Number(result.value)] || null;
     };
 
     const handleBarcodeSearch = async (e) => {
@@ -152,13 +162,15 @@ const StockTransferForm = ({
 
             try {
                 const res = await triggerBarcodeSearch({ params: { barcode, storeId: fromLocationId, branchId } }).unwrap();
-                const resolvedData = res?.needsResolution
-                    ? await resolveBarcodeMatch(res.matches || [])
-                    : res.data;
 
-                if (res.statusCode === 0 && resolvedData) {
-                    const newItem = { ...resolvedData };
-                    upsertScannedStockItem(newItem);
+                if (res?.needsResolution) {
+                    setBarcodeMatches(res.matches || []);
+                    setBarcodeModalOpen(true);
+                    return;
+                }
+
+                if (res.statusCode === 0 && res.data) {
+                    addScannedItems([{ ...res.data }]);
                     setBarcode(""); // Clear barcode after successful scan
                 } else {
                     Swal.fire({ title: res.message || "Stock not found", icon: "error" });
@@ -167,6 +179,12 @@ const StockTransferForm = ({
                 console.error("Barcode search error:", err);
             }
         }
+    };
+
+    const onBarcodeResolutionConfirm = (selectedItems) => {
+        addScannedItems(selectedItems);
+        setBarcodeModalOpen(false);
+        setBarcode(""); // Clear barcode after resolution
     };
 
 
@@ -191,17 +209,18 @@ const StockTransferForm = ({
 
 
         if (id) {
-
+            setDocId(data?.docId ? data?.docId : "")
             setFromLocationId(data?.fromLocationId ? data?.fromLocationId : "")
             setToLocationId(data?.toLocationId ? data?.toLocationId : "")
             setStockItems(data?.FromLocationTransferItems ? data?.FromLocationTransferItems : [])
             setDeliveryChallanNo(data?.deliveryChallanNo ? data?.deliveryChallanNo : "")
 
         } else {
+            setDocId(data?.docId ? data?.docId : "")
 
             setFromLocationId(data?.fromLocationId ? data?.fromLocationId : "")
             setToLocationId(data?.toLocationId ? data?.toLocationId : "")
-            setStockItems(data?.ToLocationTransferTtems ? data?.ToLocationTransferTtems : [])
+            setStockItems(data?.FromLocationTransferItems ? data?.FromLocationTransferItems : [])
             setDeliveryChallanNo(data?.deliveryChallanNo ? data?.deliveryChallanNo : "")
 
         }
@@ -259,7 +278,7 @@ const StockTransferForm = ({
                 Swal.fire({
                     title: text + "  " + "Successfully",
                     icon: "success",
-
+                    showConfirmButton: true,
                 });
 
 
@@ -269,6 +288,7 @@ const StockTransferForm = ({
                 }
                 else {
                     onClose()
+                    syncFormWithDb(undefined);
                 }
 
 
@@ -366,6 +386,18 @@ const StockTransferForm = ({
                     itemList={itemList}
                 />
             </Modal>
+            <Modal
+                isOpen={barcodeModalOpen}
+                onClose={() => setBarcodeModalOpen(false)}
+                widthClass={" h-[90%] w-[90%]"}
+            >
+                <VarientsSelection
+                    matches={barcodeMatches}
+                    onConfirm={onBarcodeResolutionConfirm}
+                    onClose={() => setBarcodeModalOpen(false)}
+                    stockDrivenFields={stockDrivenFields}
+                />
+            </Modal>
             <div className="flex flex-col h-full bg-[#f1f1f0] overflow-hidden">
                 <div className="flex-none w-full bg-white mx-auto rounded-md shadow-sm px-2  border-b border-gray-200 mb-1">
                     <div className="flex justify-between items-center py-1">
@@ -453,6 +485,7 @@ const StockTransferForm = ({
                                             name="Barcode"
                                             value={barcode}
                                             onChange={(e) => setBarcode(e.target.value)}
+                                            disabled={id}
                                             onKeyDown={handleBarcodeSearch}
                                             // onBlur={handleBarcodeSearch}
                                             placeholder="Scan the Barcode ..."
@@ -492,21 +525,22 @@ const StockTransferForm = ({
                     <div className="flex flex-col md:flex-row gap-2 justify-between flex-none bg-white p-2 rounded-md border border-slate-200 shadow-sm">
                         <div className="flex gap-2 flex-wrap">
                             <button
-                                onClick={() => hasPermission(() => saveData("new"), "save")}
-                                disabled={readOnly}
-                                className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
-                                <FiSave className="w-4 h-4 mr-2" />
-                                Save & New
-                            </button>
-                            <button
                                 onClick={() => hasPermission(() => saveData("close"), "save")}
-                                disabled={readOnly}
+                                disabled={readOnly || id}
 
                                 className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
                                 <HiOutlineRefresh className="w-4 h-4 mr-2" />
                                 Save & Close
 
                             </button>
+                            <button
+                                onClick={() => hasPermission(() => saveData("new"), "save")}
+                                disabled={readOnly || id}
+                                className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
+                                <FiSave className="w-4 h-4 mr-2" />
+                                Save & New
+                            </button>
+
 
                         </div>
 

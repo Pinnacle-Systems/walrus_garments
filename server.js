@@ -68,6 +68,8 @@ import {
   payments,
   pointOfSales,
   subCategory,
+  offersPromotions,
+  collections,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -239,6 +241,8 @@ app.use("/priceTemplate", priceTemplate);
 app.use('/payment', payments)
 app.use("/pointOfSales", pointOfSales)
 app.use("/subCategory", subCategory)
+app.use("/offersPromotions", offersPromotions)
+app.use("/collections", collections)
 
 
 

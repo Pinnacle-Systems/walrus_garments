@@ -312,7 +312,8 @@ const YarnInwardItemSelection = ({ poType, supplierId, isItemAdded, handleChange
                 disabledClassName={"p-1 bg-gray-200"}
                 previousLinkClassName={"border p-1 text-center"}
                 nextLinkClassName={"border p-1"}
-                activeClassName={"bg-blue-900 text-white px-2"} />
+                activeClassName={"bg-blue-900 text-white px-2"}
+            />
         </div>
     )
 

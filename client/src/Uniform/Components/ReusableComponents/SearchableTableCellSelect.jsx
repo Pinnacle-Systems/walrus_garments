@@ -96,10 +96,20 @@ const SearchableTableCellSelect = ({
   useEffect(() => {
     if (search.trim() !== "" && filteredOptions.length > 0) {
       setHighlightedIndex(0);
+    } else if (isOpen && (value !== undefined && value !== null && value !== "") && !isSearching) {
+      const index = options.findIndex((option) => String(option.value) === String(value));
+      if (index !== -1) {
+        setHighlightedIndex(index);
+        // Delay scroll to ensure DOM is fully rendered
+        const timeoutId = setTimeout(() => scrollIntoView(index), 50);
+        return () => clearTimeout(timeoutId);
+      } else {
+        setHighlightedIndex(-2);
+      }
     } else {
       setHighlightedIndex(-2);
     }
-  }, [search, filteredOptions]);
+  }, [search, filteredOptions, value, options, isOpen, isSearching]);
 
   const scrollIntoView = (index) => {
     if (!listRef.current) return;
@@ -129,7 +139,6 @@ const SearchableTableCellSelect = ({
           setIsOpen(true);
           setIsSearching(false);
           setSearch("");
-          setHighlightedIndex(-2);
           requestAnimationFrame(() => event.target.select());
         }}
         onChange={(event) => {
@@ -271,8 +280,13 @@ const SearchableTableCellSelect = ({
                 ref={handlers?.secondInputRef}
                 key={option.value}
                 type="button"
-                className={`block w-full border-b border-slate-100 px-2 py-0.5 text-left text-[11px] ${index === highlightedIndex ? "bg-blue-100" : "hover:bg-slate-100"
-                  }`}
+                className={`block w-full border-b border-slate-100 px-2 py-1 text-left text-[11px] transition-colors ${
+                  index === highlightedIndex
+                    ? "bg-blue-600 text-white"
+                    : String(option.value) === String(value)
+                    ? "bg-blue-50 font-medium text-blue-600"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
                 onMouseDown={(event) => {
                   event.preventDefault();
                   commitSelection(option.value);

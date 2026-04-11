@@ -22,3 +22,5 @@ export { default as SectionMaster } from "./SectionMaster";
 export { default as ItemCategroyMaster } from "./ItemCategroyMaster";
 export { default as PriceTemplateMaster } from "./PriceTemplateMaster";
 export { default as SubCategoryMaster } from "./SubCategoryMaster";
+export { default as OffersPromtions } from "./OffersPromotions";
+export { default as CollectionsMaster } from "./CollectionsMaster";

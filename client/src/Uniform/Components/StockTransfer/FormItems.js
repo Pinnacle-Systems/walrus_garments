@@ -6,12 +6,11 @@ import StockTransferDetails from "./TranferItems";
 import { useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
 import { useGetStockQuery } from "../../../redux/services/StockService";
 import { findFromList } from "../../../Utils/helper";
-import ToOrderDetails from "./TranferItems";
-import FromOrderDetails from "./FromOrderDetails";
 import Swal from "sweetalert2";
 import OrderToGeneral from "./OrderToGeneral";
 import TransferItems from "./TranferItems";
 import TransactionLineItemsSection, {
+    standardTransactionPlaceholderRowCount,
     transactionTableClassName,
     transactionTableHeadClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
@@ -30,9 +29,14 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
     console.log(stockItems, "stockItems")
 
     useEffect(() => {
-        if (stockItems?.length >= 20) return;
+        console.log(stockItems?.length, "length for stockItems", stockItems?.length >= standardTransactionPlaceholderRowCount)
+
+        if (stockItems?.length >= standardTransactionPlaceholderRowCount) return;
+
+        console.log("setting stock Items")
+
         setStockItems((prev) => {
-            let newArray = Array.from({ length: 20 - prev.length }, (i) => {
+            let newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, (i) => {
                 return {
                     itemId: "",
                     sizeId: "",
@@ -43,13 +47,10 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
             });
             return [...prev, ...newArray];
         });
-    }, [setStockItems, stockItems]);
+    }, [setStockItems, stockItems, id]);
 
 
-
-    const [tableDataView, setTableDataView] = useState(false)
-    const [tableStockDataView, setTableStockDataView] = useState(false)
-
+    console.log(stockItems, "length for stockItems", stockItems?.length >= standardTransactionPlaceholderRowCount)
 
 
 
@@ -124,22 +125,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
     return (
         <>
 
-            <Modal
-                isOpen={tableStockDataView}
-                onClose={() => setTableStockDataView(false)}
-                widthClass="  h-[70%] w-[70%]"
-            >
-                <FromOrderDetails
-                    tempOrderItems={tempOrderItems}
-                    setOrderItems={setOrderItems} orderItems={orderItems}
-                    setTempOrderItems={setTempOrderItems}
-                    tempStockItems={tempStockItems} setTempStockItems={setTempStockItems} stockItems={stockItems} setStockItems={setStockItems}
-                    onClose={() => setTableStockDataView(false)}
-                    colorList={colorList} yarnList={yarnList}
-                    fromOrderId={fromOrderId}
 
-                />
-            </Modal>
             <Modal
                 isOpen={orderToGeneral}
                 widthClass="  h-[94%] w-[90%]"
@@ -199,7 +185,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                 readOnly={readOnly} handleInputChangeFromOrder={handleInputChangeFromOrder}
                                 itemList={itemList} sizeList={sizeList} colorList={colorList} fromLocationId={fromLocationId}
                                 stockItems={stockItems} toLocationId={toLocationId} locationData={locationData}
-                                stockDrivenFields={stockDrivenFields}
+                                stockDrivenFields={stockDrivenFields} id={id}
                             />)}
                         </tbody>
                         <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300 font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">

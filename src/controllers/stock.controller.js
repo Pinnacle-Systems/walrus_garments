@@ -9,7 +9,8 @@ import {
     createOpeningStock as _createOpeningStock,
     getUnifiedStock as _getUnifiedStock,
     getUnifiedStockReport as _getUnifiedStockReport,
-    getUnifiedStockWithLegacyByBarcode as _getUnifiedStockWithLegacyByBarcode
+    getUnifiedStockWithLegacyByBarcode as _getUnifiedStockWithLegacyByBarcode,
+    stockMovement as _stockMovement
 } from '../services/stock.service.js';
 
 async function get(req, res, next) {
@@ -217,6 +218,18 @@ export async function getUnifiedStockWithLegacyByBarcode(req, res, next) {
         console.error(`Error `, err.message);
     }
 }
+
+
+export async function getStockMovement(req, res, next) {
+    try {
+        res.json(await _stockMovement(req));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error `, err.message);
+    }
+}
+
+
 
 
 export {
