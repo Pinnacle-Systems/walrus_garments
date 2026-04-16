@@ -81,11 +81,11 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, saveType, d
         });
 
         const branchObj = await getTableRecordWithId(branchId ? branchId : 1, "branch")
-        let newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/STFR/1`
+        let newDocId = `${branchObj.branchCode}/${shortCode}/STR/1`
         // console.log(lastObject, "lastObject")
 
         if (lastObject) {
-            newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/STFR/${parseInt(lastObject?.docId?.split("/").at(-1)) + 1}`
+            newDocId = `${branchObj.branchCode}/${shortCode}/STR/${parseInt(lastObject?.docId?.split("/").at(-1)) + 1}`
         }
         return newDocId
     }
@@ -556,7 +556,7 @@ async function create(req) {
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime) : "";
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime, draftSave);
 
 

@@ -231,7 +231,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
 
   const data = {
-    branchId, storeId, stockAdjustmentItems: rows?.filter((i) => i.itemId), id
+    branchId, storeId, stockAdjustmentItems: rows?.filter((i) => i.itemId), id, finYearId
   };
 
   const validateData = (d) =>

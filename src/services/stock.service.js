@@ -913,7 +913,7 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
         where: {
             barcode: normalizedBarcode,
             branchId: normalizedBranchId,
-            // storeId: normalizedStoreId,
+            storeId: normalizedStoreId,
         },
         include: {
             Item: {
@@ -926,7 +926,7 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
         }
     });
 
-    console.log(stockRecords, "stockRecords")
+    console.log("stockRecords", stockRecords?.length)
 
     if (!stockRecords.length) {
         return { statusCode: 1, message: "No stock found for this barcode" };

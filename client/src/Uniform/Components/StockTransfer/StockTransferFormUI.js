@@ -35,7 +35,7 @@ const StockTransferForm = ({
     fromCustomerId, setFromCustomerId, onClose, setTransferType, transferType, toCustomerId, setToCustomerId, params, requirementId, setRequirementId,
     orderData, orderId, orderItems, setOrderItems, fromOrderId, setFromOrderId, setStockItems, stockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
     date, OnNew,
-    yarnTotals, setYarnTotals, toOrderId, branchId, hasPermission, setReadOnly
+    yarnTotals, setYarnTotals, toOrderId, hasPermission, setReadOnly
 
 }) => {
 
@@ -58,6 +58,9 @@ const StockTransferForm = ({
     const { data: sizeList } = useGetSizeMasterQuery({ params });
     const { data: locationData } = useGetLocationMasterQuery({ params: { ...params } });
     const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
+
+    const { branchId, userId, companyId, finYearId } = getCommonParams();
+
 
     const [invalidateTagsDispatch] = useInvalidateTags();
     const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
@@ -195,7 +198,8 @@ const StockTransferForm = ({
         toLocationId,
         fromLocationId,
         branchId,
-        deliveryChallanNo
+        deliveryChallanNo,
+        finYearId
 
     }
 

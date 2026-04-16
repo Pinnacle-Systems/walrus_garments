@@ -121,11 +121,9 @@ async function getNextDocId(
     });
 
     const branchObj = await getTableRecordWithId(branchId, "branch");
-    let newDocId = `${branchObj.branchCode}${getYearShortCode(
-      new Date()
-    )}/SA/1`;
+    let newDocId = `${branchObj.branchCode}/${shortCode}/SA/1`;
     if (lastObject) {
-      newDocId = `${branchObj.branchCode}${getYearShortCode(new Date())}/SA/${parseInt(lastObject.docId.split("/").at(-1)) + 1
+      newDocId = `${branchObj.branchCode}/${shortCode}/SA/${parseInt(lastObject.docId.split("/").at(-1)) + 1
         }`;
     }
     return newDocId;
@@ -145,9 +143,8 @@ async function get(req) {
   } = req.query;
 
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-  const shortCode = finYearDate
-    ? getYearShortCodeForFinYear(finYearDate?.startTime, finYearDate?.endTime)
-    : "";
+  const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
+
   let newDocId = await getNextDocId(
     branchId,
     shortCode,
@@ -389,6 +386,8 @@ async function create(body) {
   } = await body;
   let finYearDate = await getFinYearStartTimeEndTime(finYearId);
   const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
+
+  console.log(shortCode, "shortCode")
   let newDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, draftSave);
 
   let data;

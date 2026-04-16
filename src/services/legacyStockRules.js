@@ -157,9 +157,10 @@ export function buildBarcodeSnapshotMatches(records = []) {
         snapshot.stockQty += record.qty || 0;
     });
 
+    console.log(Array.from(snapshotMap.values()), "snapshotMap")
     // return Array.from(snapshotMap.values());
     return Array.from(snapshotMap.values()).filter(
-        (item) => item.stockQty !== 0
+        (item) => item.stockQty > 0
     );
 }
 

@@ -84,8 +84,8 @@ const StockReport = () => {
 
             <div className=''>
                 <div className='w-full h-full  p-2'>
-                    <div className='flex items-center justify-between page-heading p-2 font-bold'>
-                        <h1 className=''>Stock Report as On Date</h1>
+                    <div className='flex items-center justify-between bg-white py-1 mb-2 font-bold'>
+                        <h1 className=''>Stock Report</h1>
                         {/* <div className='flex gap-5'>
                             <ParameterButton onClick={() => setParameter(true)} />
                             <button onClick={refetch}>
@@ -93,7 +93,7 @@ const StockReport = () => {
                             </button>
                         </div> */}
                     </div>
-                    <div className='flex justify-center  flex-col text-center bg-gray-200 rounded-b-md mb-7 sticky top-0 '>
+                    <div className='flex justify-center   flex-col text-center bg-gray-200 rounded-b-md mb-3 sticky top-0 '>
                         <div className='grid grid-cols-6 gap-4 p-2'>
 
                             <div className=' items-center justify-center md:my-1 px-1 data flex flex-col'>
@@ -129,50 +129,54 @@ const StockReport = () => {
                                 value={storeId} setValue={setStoreId} required={false} clear={true} />
 
 
-                            {/* <DateInput name={"Date"} value={localEndDate} setValue={setLocalEndDate} /> */}
-                        </div>
-                        <div className='py-1.5 mt-2'>
-                            <button
-                                className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'
-                                onClick={() => {
+                            <DateInput name={"Date"} value={localEndDate} setValue={setLocalEndDate} />
+                            <div className='flex py-0.5 h-8 mt-4'>
+                                <button
+                                    className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'
+                                    onClick={() => {
 
-                                    // if (!(storeId)) {
-                                    //     Swal.fire({
-                                    //         icon: "warning",
-                                    //         title: "Choose Location... ",
-                                    //     });
-                                    //     return
-                                    // }
-                                    fetchData(
-                                        {
-                                            params:
-
+                                        // if (!(storeId)) {
+                                        //     Swal.fire({
+                                        //         icon: "warning",
+                                        //         title: "Choose Location... ",
+                                        //     });
+                                        //     return
+                                        // }
+                                        fetchData(
                                             {
-                                                branchId,
-                                                stockReport: true,
-                                                storeId,
-                                                toDate: localEndDate,
-                                                itemId,
-                                                sizeId,
-                                                colorId
+                                                params:
+
+                                                {
+                                                    branchId,
+                                                    stockReport: true,
+                                                    storeId,
+                                                    toDate: localEndDate,
+                                                    itemId,
+                                                    sizeId,
+                                                    colorId
 
 
-                                            }
-                                        },
-                                    )
+                                                }
+                                            },
+                                        )
 
 
-                                }
+                                    }
 
-                                }
-                            >
-                                View Report
-                            </button>
+                                    }
+                                >
+                                    View Report
+                                </button>
+                            </div>
+
                         </div>
+                        {/* <div className='py-1.5 mt-2'>
+
+                        </div> */}
                     </div>
 
 
-                    <div className="overflow-auto max-h-[calc(100vh-300px)] border border-gray-300 rounded-md">
+                    <div className="overflow-auto  max-h-[calc(100vh-300px)] border border-gray-300 rounded-md">
                         {
                             stockList.length == 0 ?
                                 <div className="flex justify-center items-center text-blue-900  text-3xl sm:mt-52">
@@ -236,6 +240,12 @@ const StockReport = () => {
                                         })()}
 
                                     </tbody>
+                                    <tfoot className="bg-gray-200 font-bold sticky bottom-0 z-10">
+                                        <tr>
+                                            <td colSpan={5} className="border border-gray-300 px-2 py-1 text-right text-xs font-bold">Total</td>
+                                            <td className="border border-gray-300 px-2 py-1 text-right text-xs font-bold">{stockList.reduce((sum, item) => sum + (parseFloat(item.total_qty) || 0), 0).toFixed(3)}</td>
+                                        </tr>
+                                    </tfoot>
 
                                 </table>
                         }

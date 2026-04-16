@@ -546,7 +546,7 @@ const PointOfSale = () => {
                 const response = await getStockByBarcode({
                     params: {
                         barcode,
-                        storeId: retailStoreId,
+                        // storeId: retailStoreId,
                         branchId
                     }
                 }).unwrap();
@@ -554,6 +554,8 @@ const PointOfSale = () => {
                 const resolvedData = response?.needsResolution
                     ? await resolveBarcodeMatch(response.matches || [])
                     : response?.data;
+
+                if (response?.needsResolution && !resolvedData) return;
 
                 if (response.statusCode === 0 && resolvedData) {
                     if (Array.isArray(resolvedData)) {
@@ -601,6 +603,8 @@ const PointOfSale = () => {
                 const resolvedLocalData = localResponse?.needsResolution
                     ? await resolveBarcodeMatch(localResponse.matches || [])
                     : localResponse?.data;
+
+                if (localResponse?.needsResolution && !resolvedLocalData) return;
 
                 if (localResponse.statusCode === 0 && resolvedLocalData) {
                     if (Array.isArray(resolvedLocalData)) {
@@ -789,9 +793,11 @@ const PointOfSale = () => {
 
     const totalBeforeOffer = cart.reduce((sum, item) => sum + (parseFloat(item.salesPrice || item.price) || 0) * (parseFloat(item.qty) || 0), 0);
     const totalBeforeDiscount = Math.max(0, totalBeforeOffer - totalOfferDiscount);
-    const total = Math.max(0, totalBeforeDiscount - discount);
+    const totalWithoutRounding = Math.max(0, totalBeforeDiscount - discount);
+    const total = Math.round(totalWithoutRounding);
+    const roundOff = parseFloat((total - totalWithoutRounding).toFixed(2));
 
-    const tax = Math.round(cart.reduce((sum, item) => {
+    const tax = cart.reduce((sum, item) => {
         const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
         const itemTotal = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
         const itemDiscount = totalBeforeDiscount > 0 ? (itemTotal / totalBeforeDiscount) * discount : 0;
@@ -799,9 +805,9 @@ const PointOfSale = () => {
         // Inclusive Tax Formula: Tax = Amount - (Amount / (1 + TaxRate/100))
         const itemTax = netItemTotal - (netItemTotal / (1 + (itemTaxPercent / 100)));
         return sum + itemTax;
-    }, 0));
+    }, 0);
 
-    const subtotal = total - tax; // subtotal is the taxable amount (Exclusive)
+    const subtotal = totalWithoutRounding - tax; // subtotal is the taxable amount (Exclusive)
 
     const handleCheckout = async () => {
         // 1. Initial Guards
@@ -823,9 +829,10 @@ const PointOfSale = () => {
             title: 'Confirm Sale',
             html: `
             <div class="text-left space-y-2 p-4 bg-slate-50 rounded-xl">
-                <div class="flex justify-between"><span>Subtotal:</span> <b>₹${subtotal.toLocaleString()}</b></div>
+                <div class="flex justify-between"><span>Subtotal:</span> <b>₹${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></div>
                 <div class="flex justify-between"><span>Discount:</span> <b class="text-red-500">-₹${discount.toLocaleString()}</b></div>
-                <div class="flex justify-between"><span>Tax (18%):</span> <b>₹${tax.toLocaleString()}</b></div>
+                <div class="flex justify-between"><span>Tax:</span> <b>₹${tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></div>
+                <div class="flex justify-between"><span>Round Off:</span> <b>₹${roundOff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></div>
                 <div class="flex justify-between text-lg border-t pt-2 mt-2 font-bold">
                     <span>Total:</span> <b class="text-indigo-600">₹${total.toLocaleString()}</b>
                 </div>
@@ -898,7 +905,8 @@ const PointOfSale = () => {
                 balanceReturn,
                 posItems: cart,
                 promotionalDiscount: totalOfferDiscount,
-                manualDiscount: discount
+                manualDiscount: discount,
+                roundOff: roundOff,
             };
 
             const apiResponse = await addPointOfSales(invoicePayload).unwrap();
@@ -919,7 +927,7 @@ const PointOfSale = () => {
                 customerData: selectedCustomer || { name: guestName, contact: guestMobile },
                 items: cart,
                 payments: { cash: paidCash, upi: paidUPI, card: paidCard },
-                summary: { subtotal, tax, discount, total, received: receivedAmount, balance: balanceReturn },
+                summary: { subtotal, tax, discount, total, received: receivedAmount, balance: balanceReturn, roundOff },
                 branchData: locations.find(l => l.id === retailStoreId)
             });
 
@@ -1373,7 +1381,7 @@ const PointOfSale = () => {
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                                             <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
-                                            <span>₹{subtotal.toLocaleString()}</span>
+                                            <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         {totalOfferDiscount > 0 && (
                                             <div className="space-y-1">
@@ -1414,11 +1422,15 @@ const PointOfSale = () => {
                                         )}
                                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                                             <span className="text-[11px] uppercase tracking-wider text-slate-400">CGST</span>
-                                            <span>₹{(tax / 2).toLocaleString()}</span>
+                                            <span>₹{(tax / 2).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                                             <span className="text-[11px] uppercase tracking-wider text-slate-400">SGST</span>
-                                            <span>₹{(tax / 2).toLocaleString()}</span>
+                                            <span>₹{(tax / 2).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Round Off</span>
+                                            <span>₹{roundOff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="flex justify-between items-center font-black text-lg text-indigo-700 pt-2.5 border-t border-slate-200 mt-2">
                                             <span className="text-[12px] uppercase tracking-widest text-indigo-400">Net Amount</span>
