@@ -126,7 +126,7 @@ const StockReport = () => {
                             /> */}
                             <DropdownInput name="Location"
                                 options={dropDownListObject(locationData?.data, "storeName", "id")}
-                                value={storeId} setValue={setStoreId} required={true} clear={true} />
+                                value={storeId} setValue={setStoreId} required={false} clear={true} />
 
 
                             {/* <DateInput name={"Date"} value={localEndDate} setValue={setLocalEndDate} /> */}
@@ -136,13 +136,13 @@ const StockReport = () => {
                                 className='bg-red-400 hover:bg-red-600 hover:text-white p-1 text-sm rounded font-semibold transition'
                                 onClick={() => {
 
-                                    if (!(storeId)) {
-                                        Swal.fire({
-                                            icon: "warning",
-                                            title: "Choose Location... ",
-                                        });
-                                        return
-                                    }
+                                    // if (!(storeId)) {
+                                    //     Swal.fire({
+                                    //         icon: "warning",
+                                    //         title: "Choose Location... ",
+                                    //     });
+                                    //     return
+                                    // }
                                     fetchData(
                                         {
                                             params:
@@ -204,31 +204,36 @@ const StockReport = () => {
                                     </thead>
                                     <tbody>
 
-                                        {stockList?.map((yarn, index) => (
-                                            <tr key={index} className="hover:bg-blue-50 transition-colors duration-150">
+                                        {(() => {
+                                            const groupedStock = stockList.reduce((acc, item) => {
+                                                const sId = item.storeId || 'Default';
+                                                if (!acc[sId]) acc[sId] = [];
+                                                acc[sId].push(item);
+                                                return acc;
+                                            }, {});
 
-                                                <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
-                                                <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Item}</td>
-                                                <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Size}</td>
-                                                <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Color}</td>
-                                                <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Barcode}</td>
-
-                                                <td className="border border-gray-300 px-2 py-1 text-right text-[11px] ">{parseFloat(yarn?.total_qty).toFixed(3)}</td>
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                            </tr>
-                                        ))}
+                                            return Object.entries(groupedStock).map(([sId, items], groupIndex) => (
+                                                <React.Fragment key={sId}>
+                                                    {!storeId && (
+                                                        <tr className="bg-blue-50">
+                                                            <td colSpan={6} className="border border-gray-300 px-4 py-1.5 text-left font-bold text-blue-900 text-xs">
+                                                                Location: {locationData?.data?.find(loc => String(loc.id) === String(sId))?.storeName || 'Unknown Location'}
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                    {items.map((yarn, index) => (
+                                                        <tr key={`${sId}-${index}`} className="hover:bg-blue-50 transition-colors duration-150">
+                                                            <td className="border border-gray-300 px-2 py-1 text-center text-[11px] w-10">{index + 1}</td>
+                                                            <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Item}</td>
+                                                            <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Size}</td>
+                                                            <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Color}</td>
+                                                            <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Barcode}</td>
+                                                            <td className="border border-gray-300 px-2 py-1 text-right text-[11px] ">{parseFloat(yarn?.total_qty).toFixed(3)}</td>
+                                                        </tr>
+                                                    ))}
+                                                </React.Fragment>
+                                            ));
+                                        })()}
 
                                     </tbody>
 

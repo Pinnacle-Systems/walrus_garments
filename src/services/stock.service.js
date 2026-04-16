@@ -741,77 +741,145 @@ export async function _getOneAccessory(id, req) {
 
 
 
-export async function getStockReport(req) {
-    const { itemId, sizeId, colorId, storeId, toDate, barcode } = req.query
+// export async function getStockReport(req) {
 
+//     const { itemId, sizeId, colorId, storeId, toDate, } = req.query
+
+
+//     const DateFormatted = moment(toDate).format("YYYY-MM-DD");
+//     let data;
+
+//     let sql;
+
+//     let conditions = [];
+
+
+//     if (itemId) {
+//         conditions.push(`ST.itemId = '${itemId}'`);
+//     }
+
+//     if (sizeId) {
+//         conditions.push(`ST.sizeId = '${sizeId}'`);
+//     }
+
+//     if (colorId) {
+//         conditions.push(`ST.colorId = '${colorId}'`);
+//     }
+
+//     if (storeId) {
+//         conditions.push(`ST.storeId = '${storeId}'`);
+//     }
+
+//     if (DateFormatted) {
+//         conditions.push(`DATE(ST.createdAt) <= '${DateFormatted}'`);
+//     }
+
+//     let whereClause = conditions.length > 0
+//         ? "WHERE " + conditions.join(" AND ")
+//         : "";
+
+//     sql =
+//         `
+//   SELECT
+//       I.name AS Item,
+//       S.name AS  Size,
+// 	  C.name AS  Color,
+//       ST.barcode As Barcode,
+//       SUM(ST.qty) AS total_qty
+//   FROM stock ST
+//   LEFT JOIN Item I ON I.id = ST.itemId
+//   LEFT JOIN Size S ON S.id = ST.sizeId
+//   LEFT JOIN Color C on C.id =  ST.colorId
+//  ${whereClause}
+
+//   GROUP BY
+//        I.name,
+//        S.name,
+//        C.name,
+//        ST.barcode
+// HAVING 
+//     SUM(ST.qty) > 0
+//   ORDER BY
+//        I.name,
+//        S.name,
+//        C.name,
+//        ST.barcode
+// `
+
+
+//     console.log(sql, "sql for stock report")
+
+//     data = await prisma.$queryRawUnsafe(sql);
+
+
+
+
+//     return { statusCode: 0, data };
+// }
+
+
+
+export async function getStockReport(req) {
+
+    const { itemId, sizeId, colorId, storeId, toDate } = req.query;
 
     const DateFormatted = moment(toDate).format("YYYY-MM-DD");
-    let data;
-
-    let sql;
 
     let conditions = [];
 
-
-    if (itemId) {
-        conditions.push(`ST.itemId = '${itemId}'`);
-    }
-
-    if (sizeId) {
-        conditions.push(`ST.sizeId = '${sizeId}'`);
-    }
-
-    if (colorId) {
-        conditions.push(`ST.colorId = '${colorId}'`);
-    }
-
-    if (storeId) {
-        conditions.push(`ST.storeId = '${storeId}'`);
-    }
-
-    if (DateFormatted) {
-        conditions.push(`DATE(ST.createdAt) <= '${DateFormatted}'`);
-    }
+    if (itemId) conditions.push(`ST.itemId = '${itemId}'`);
+    if (sizeId) conditions.push(`ST.sizeId = '${sizeId}'`);
+    if (colorId) conditions.push(`ST.colorId = '${colorId}'`);
+    if (storeId) conditions.push(`ST.storeId = '${storeId}'`);
+    if (DateFormatted) conditions.push(`DATE(ST.createdAt) <= '${DateFormatted}'`);
 
     let whereClause = conditions.length > 0
         ? "WHERE " + conditions.join(" AND ")
         : "";
 
-    sql =
-        `
-  SELECT
-      I.name AS Item,
-      S.name AS  Size,
-	  C.name AS  Color,
-      ST.barcode As Barcode,
-      SUM(ST.qty) AS total_qty
-  FROM stock ST
-  LEFT JOIN Item I ON I.id = ST.itemId
-  LEFT JOIN Size S ON S.id = ST.sizeId
-  LEFT JOIN Color C on C.id =  ST.colorId
- ${whereClause}
+    // 🔥 Dynamic SELECT & GROUP BY
+    let selectStore = "";
+    let groupByStore = "";
 
-  GROUP BY
-       I.name,
-       S.name,
-       C.name,
-       ST.barcode
-HAVING 
-    SUM(ST.qty) > 0
-  ORDER BY
-       I.name,
-       S.name,
-       C.name,
-       ST.barcode
-`
+    if (!storeId) {
+        // 👉 No storeId → show store-wise
+        selectStore = `, ST.storeId AS storeId`;
+        groupByStore = `, ST.storeId`;
+    }
 
+    const sql = `
+    SELECT
+        I.name AS Item,
+        S.name AS Size,
+        C.name AS Color,
+        ST.barcode AS Barcode
+        ${selectStore},
+        SUM(ST.qty) AS total_qty
+    FROM stock ST
+    LEFT JOIN Item I ON I.id = ST.itemId
+    LEFT JOIN Size S ON S.id = ST.sizeId
+    LEFT JOIN Color C ON C.id = ST.colorId
+    ${whereClause}
 
-    console.log(sql, "sql for stock report")
+    GROUP BY
+        I.name,
+        S.name,
+        C.name,
+        ST.barcode
+        ${groupByStore}
 
-    data = await prisma.$queryRawUnsafe(sql);
+    HAVING SUM(ST.qty) > 0
 
+    ORDER BY
+        I.name,
+        S.name,
+        C.name,
+        ST.barcode
+    `;
 
+    console.log(sql, "sql for stock report");
 
+    const data = await prisma.$queryRawUnsafe(sql);
 
     return { statusCode: 0, data };
 }
@@ -819,12 +887,16 @@ HAVING
 export async function getUnifiedStockReport(req) {
     const { storeId } = req.query;
 
-    if (!storeId) {
-        return { statusCode: 1, message: "storeId is required" };
-    }
+    // if (!storeId) {
+    //     return { statusCode: 1, message: "storeId is required" };
+    // }
 
     return await getStockReport(req);
 }
+
+
+
+
 
 export async function getUnifiedStockWithLegacyByBarcode(req) {
     const { barcode, branchId, storeId } = req.query;
@@ -841,7 +913,7 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
         where: {
             barcode: normalizedBarcode,
             branchId: normalizedBranchId,
-            storeId: normalizedStoreId,
+            // storeId: normalizedStoreId,
         },
         include: {
             Item: {
@@ -849,9 +921,12 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
             },
             Size: true,
             Color: true,
-            Uom: true
+            Uom: true,
+            Store: true
         }
     });
+
+    console.log(stockRecords, "stockRecords")
 
     if (!stockRecords.length) {
         return { statusCode: 1, message: "No stock found for this barcode" };

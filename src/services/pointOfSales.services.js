@@ -110,7 +110,7 @@ async function getSearch(req) {
 
 async function create(body) {
     try {
-        const { customerId, posItems, finYearId, branchId, saleOrderId } = await body;
+        const { customerId, posItems, finYearId, branchId } = await body;
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
         const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -144,6 +144,8 @@ async function create(body) {
                                 uomId: item.uomId ? parseInt(item.uomId) : null,
                                 qty: String(item.qty),
                                 price: String(item.price),
+                                salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+
                             }))
                         }
                     }
@@ -311,6 +313,8 @@ async function update(id, body) {
                         hsnId: item.hsnId ? parseInt(item.hsnId) : null,
                         qty: item.qty ? item.qty.toString() : "0",
                         price: item.price ? item.price.toString() : "0",
+                        salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+
                     }
                 });
             } else {
@@ -324,6 +328,8 @@ async function update(id, body) {
                         hsnId: item.hsnId ? parseInt(item.hsnId) : null,
                         qty: item.qty ? item.qty.toString() : "0",
                         price: item.price ? item.price.toString() : "0",
+                        salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+
                     }
                 });
             }

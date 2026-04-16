@@ -18,11 +18,15 @@ import {
     Clock,
     Calendar,
     Filter,
-    Loader2
+    Loader2,
+    Eye,
+    Gift,
+    Zap,
+    FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { useGetItemMasterQuery } from '../../../redux/uniformService/ItemMasterService';
+import { useGetItemMasterQuery, useGetItemPriceListQuery } from '../../../redux/uniformService/ItemMasterService';
 import { useGetPartyQuery, useAddPartyMutation } from '../../../redux/services/PartyMasterService';
 import { useAddSalesInvoiceMutation } from '../../../redux/uniformService/salesInvoiceServices';
 import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
@@ -30,8 +34,12 @@ import { useLazyGetUnifiedStockByBarcodeQuery } from '../../../redux/services/St
 import { getCommonParams } from '../../../Utils/helper';
 import Swal from 'sweetalert2';
 import { useGetPointOfSalesQuery, useAddPointOfSalesMutation } from '../../../redux/uniformService/PointOfSalesService';
+import { useGetoffersPromotionsQuery } from '../../../redux/uniformService/Offer&PromotionsService';
+import { useGetEmployeeQuery } from '../../../redux/services/EmployeeMasterService';
 import PosReports from './PosReports';
 import { useEffect, useRef, useState } from 'react';
+import Modal from '../../../UiComponents/Modal';
+import VarientsSelection from '../StockTransfer/VarientsSelection';
 
 // Child components can be defined in separate files later or kept here for now for speed
 // I'll define them in-line for now since I'm building the "Page" as requested.
@@ -69,7 +77,7 @@ const normalizeLocalItemForPos = (item, branchId, storeId) => {
 };
 
 const buildResolutionLabel = (match) =>
-    `${match.item_name || match?.Item?.name || "Item"} / ${match.size || match?.Size?.name || "-"} / ${match.color || match?.Color?.name || "-"} / Qty ${match.stockQty || 0}`;
+    `${match.item_name || match?.Item?.name || "Item"} / ${match.size || match?.Size?.name || "-"} / ${match.color || match?.Color?.name || "-"} / Loc: ${match.location || "-"} / Qty ${match.stockQty || 0}`;
 
 const PointOfSale = () => {
     const dispatch = useDispatch();
@@ -95,7 +103,36 @@ const PointOfSale = () => {
     const [activeRowIndex, setActiveRowIndex] = useState(0);
     const [printData, setPrintData] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [docId, setDocId] = useState("")
+    const [docId, setDocId] = useState("");
+    const [barcodeResolution, setBarcodeResolution] = useState({ open: false, matches: [], resolve: null });
+    const [showSalesPersonModal, setShowSalesPersonModal] = useState(false);
+    const [salesPersonBarcode, setSalesPersonBarcode] = useState('');
+    const salesPersonScannerRef = useRef(null);
+
+    const { data: employeeData } = useGetEmployeeQuery({
+        params: { branchId, userId, companyId, finYearId }
+    });
+    const employees = employeeData?.data || [];
+
+    const handlePayNow = () => {
+        if (cart.length === 0 || isProcessing) return;
+
+        const currentPhone = selectedCustomer ? selectedCustomer.contact : guestMobile;
+        const phoneRegex = /^[0-9]{10}$/;
+        const cleanPhone = currentPhone?.toString().replace(/\D/g, '') || '';
+
+        if (!phoneRegex.test(cleanPhone)) {
+            Swal.fire({ title: "Error", text: "A valid 10-digit mobile number is required!", icon: "error" });
+            return;
+        }
+
+        if (isGuestCustomer && !guestName.trim()) {
+            Swal.fire({ title: "Error", text: "Customer name is required!", icon: "error" });
+            return;
+        }
+
+        setShowPaymentModal(true);
+    };
 
     // Key Map — POS Keyboard Shortcuts
     useEffect(() => {
@@ -113,9 +150,7 @@ const PointOfSale = () => {
             // F8 — Open payment modal
             if (e.key === 'F8') {
                 e.preventDefault();
-                if (cart.length > 0 && !isProcessing) {
-                    setShowPaymentModal(true);
-                }
+                handlePayNow();
                 return;
             }
 
@@ -157,7 +192,7 @@ const PointOfSale = () => {
                             setCart([]);
                             setDiscount(0);
                             setActiveRowIndex(0);
-                            toast.info('Cart cleared', { autoClose: 1000, position: 'bottom-right' });
+                            Swal.fire({ title: "Info", text: "Cart cleared", icon: "info", timer: 1500, showConfirmButton: false });
                         }
                     });
                 }
@@ -196,11 +231,251 @@ const PointOfSale = () => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [cart, activeRowIndex, isProcessing]);
+    }, [cart, activeRowIndex, isProcessing, guestName, guestMobile, isGuestCustomer, selectedCustomer]);
+
+    const [appliedOffers, setAppliedOffers] = useState([]);
+    const [potentialOffers, setPotentialOffers] = useState([]);
+    const [showItemOfferModal, setShowItemOfferModal] = useState(false);
+    const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
+    const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
+    const { data: offersData } = useGetoffersPromotionsQuery({
+        params: { branchId, userId, finYearId, active: true }
+    });
+
+    const activeOffers = offersData?.data || [];
+
+
+
+
+    useEffect(() => {
+        if (!activeOffers.length || !cart.length) {
+            setPotentialOffers([]);
+            setAppliedOffers([]);
+            setCart(prev => prev.map(item => ({ ...item, priceType: 'SalesPrice', price: item.salesPrice || item.price })));
+            return;
+        }
+
+        const potentialOffersTemp = [];
+        const itemPromos = {}; // Map of cart item key -> best offer
+        let discountValue = 0;
+
+        activeOffers.forEach(off => {
+            const inScopeItems = cart.filter(item => {
+                const cartKey = `${item.id}-${item.sizeId}-${item.colorId}`;
+                if (off.scopeMode === 'Global') return true;
+                if (off.scopeMode === 'Item') return off.OfferScope?.some(s => s.refId === (item.itemId || item.id));
+                // Add more scope checks if needed
+                return false;
+            });
+
+            if (!inScopeItems.length) return;
+
+            const scopeQty = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
+            const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.salesPrice || i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
+
+            const rules = off.OfferRule?.[0]?.conditions?.rules || [];
+            const logic = off.OfferRule?.[0]?.logic || 'AND';
+
+            const results = rules.map(rule => {
+                const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
+                if (rule.operator === '>=') return target >= parseFloat(rule.value);
+                if (rule.operator === '<=') return target <= parseFloat(rule.value);
+                if (rule.operator === '==') return target === parseFloat(rule.value);
+                return true;
+            });
+
+            const isValid = logic === 'AND' ? results.every(r => r) : results.some(r => r);
+            if (!isValid && rules.length > 0) return;
+
+            console.log(off, 'off')
+            if (off.discountType === 'Percentage') {
+                discountValue = (scopeValue * (off.discountValue || 0)) / 100;
+
+                if (off.maxDiscountValue && discountValue > off.maxDiscountValue) discountValue = off.maxDiscountValue;
+
+            } else if (off.discountType === 'Fixed') {
+                discountValue = off.discountValue || 0;
+            } else if (['Volume', 'Override'].includes(off.discountType)) {
+                const tiers = off.OfferTier || [];
+                const sortedTiers = [...tiers].sort((a, b) => b.minQty - a.minQty);
+                const tier = sortedTiers.find(t => scopeQty >= t.minQty);
+
+                if (tier) {
+                    if (tier.type === 'Percentage') {
+                        discountValue = (scopeValue * tier.value) / 100;
+                    } else if (off.discountType === 'Override') {
+                        // Discount is (Current Sales Value - New Override Value)
+                        const overrideTotal = tier.value * scopeQty;
+                        discountValue = Math.max(0, scopeValue - overrideTotal);
+                    } else {
+                        discountValue = tier.value;
+                    }
+                }
+            }
+
+            if (discountValue > 0) {
+                potentialOffersTemp.push({ ...off, calculatedDiscount: discountValue, inScopeItems });
+            }
+        });
+
+        console.log(discountValue, 'discountValue')
+
+        console.log(potentialOffersTemp, 'potentialOffers')
+
+        // Store potential offers but don't apply them yet
+        setPotentialOffers(potentialOffersTemp);
+    }, [cart, activeOffers]);
+
+    // Apply offers only when explicitly selected through modal
+    useEffect(() => {
+        if (!cart.length) {
+            setAppliedOffers([]);
+            return;
+        }
+
+        const newAppliedOffersMap = new Map();
+
+        const newCart = cart.map(item => {
+            const cartKey = `${item.id}-${item.sizeId}-${item.colorId}`;
+            const rowOfferId = selectedOffersByRow[cartKey];
+
+            if (!rowOfferId) {
+                return {
+                    ...item,
+                    priceType: 'SalesPrice',
+                    price: item.salesPrice !== undefined ? item.salesPrice : item.price,
+                    appliedOfferName: null
+                };
+            }
+
+            const selectedOffer = potentialOffers.find(o => o.id === rowOfferId) || activeOffers.find(o => o.id === rowOfferId);
+
+            if (!selectedOffer) {
+                return {
+                    ...item,
+                    priceType: 'SalesPrice',
+                    price: item.salesPrice !== undefined ? item.salesPrice : item.price,
+                    appliedOfferName: null
+                };
+            }
+
+            newAppliedOffersMap.set(selectedOffer.id, selectedOffer);
+
+            let currentItemPrice = item.salesPrice !== undefined ? parseFloat(item.salesPrice) : parseFloat(item.price);
+
+            if (selectedOffer.discountType === 'Percentage') {
+                const discountPercent = parseFloat(selectedOffer.discountValue || 0);
+                currentItemPrice = currentItemPrice * (1 - discountPercent / 100);
+            } else if (selectedOffer.discountType === 'Fixed') {
+                const discountPerUnit = parseFloat(item.qty) > 0 ? (selectedOffer.discountValue || 0) / parseFloat(item.qty) : 0;
+                currentItemPrice = Math.max(0, currentItemPrice - discountPerUnit);
+            } else if (selectedOffer.discountType === 'Override') {
+                const tiers = selectedOffer.OfferTier || [];
+                const itemQty = parseFloat(item.qty) || 0;
+                const tier = [...tiers].sort((a, b) => b.minQty - a.minQty).find(t => itemQty >= t.minQty);
+                if (tier) {
+                    if (tier.type === 'Fixed') {
+                        currentItemPrice = tier.value;
+                    } else if (tier.type === 'Percentage') {
+                        currentItemPrice = currentItemPrice * (1 - parseFloat(tier.value || 0) / 100);
+                    }
+                }
+            } else if (selectedOffer.discountType === 'Volume') {
+                const tiers = selectedOffer.OfferTier || [];
+                const itemQty = parseFloat(item.qty) || 0;
+                const tier = [...tiers].sort((a, b) => b.minQty - a.minQty).find(t => itemQty >= t.minQty);
+                if (tier) {
+                    if (tier.type === 'Percentage') {
+                        currentItemPrice = currentItemPrice * (1 - parseFloat(tier.value || 0) / 100);
+                    } else {
+                        currentItemPrice = Math.max(0, currentItemPrice - parseFloat(tier.value || 0));
+                    }
+                }
+            }
+
+            return {
+                ...item,
+                priceType: 'offerPrice',
+                price: Math.max(0, currentItemPrice),
+                appliedOfferName: selectedOffer.name
+            };
+        });
+
+        if (JSON.stringify(newCart) !== JSON.stringify(cart)) {
+            setCart(newCart);
+        }
+
+        setAppliedOffers(Array.from(newAppliedOffersMap.values()));
+    }, [selectedOffersByRow, potentialOffers, activeOffers]);
+
+    const totalOfferDiscount = cart.reduce((sum, item) => {
+        if (item.priceType === 'offerPrice') {
+            const diff = (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0);
+            return sum + Math.max(0, diff);
+        }
+        return sum;
+    }, 0);
+
+    const handleShowItemOffers = (item) => {
+        setSelectedItemForOffers(item);
+        setShowItemOfferModal(true);
+    };
+
+    console.log(selectedItemForOffers, "selectedItemForOffers")
+    console.log(cart, "cart")
+    console.log(activeOffers, "activeOffers")
+    console.log(appliedOffers, "appliedOffers")
+
+    const getItemApplicableOffers = (item) => {
+
+        console.log(item, 'checking offers for item')
+
+        if (!item || !activeOffers.length) return [];
+
+        return activeOffers.filter(off => {
+            // Check Scope
+            let isInScope = false;
+            if (off.scopeMode === 'Global') isInScope = true;
+            else if (off.scopeMode === 'Item') isInScope = off.OfferScope?.some(s => s.refId === item.itemId);
+            else if (off.scopeMode === 'Collection') isInScope = off.OfferScope?.some(s => s.refId === (item.itemId));
+            console.log('isInScope', isInScope);
+
+            if (!isInScope) return false;
+
+            // Check if Conditions are currently met to show as "Available"
+            const inScopeItems = cart.filter(cit => {
+                if (off.scopeMode === 'Global') return true;
+                if (off.scopeMode === 'Item') return off.OfferScope?.some(s => s.refId === cit.itemId);
+                if (off.scopeMode === 'Collection') return off.OfferScope?.some(s => s.refId === (cit.itemId));
+
+
+                return false;
+            });
+
+            console.log('inScopeItems', inScopeItems);
+
+
+            const scopeQty = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
+            const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
+
+            const rules = off.OfferRule?.[0]?.conditions?.rules || [];
+            const results = rules.map(rule => {
+                const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
+                if (rule.operator === '>=') return target >= parseFloat(rule.value);
+                if (rule.operator === '<=') return target <= parseFloat(rule.value);
+                if (rule.operator === '==') return target === parseFloat(rule.value);
+                return true;
+            });
+            return off.OfferRule?.[0]?.logic === 'OR' ? results.some(r => r) : results.every(r => r);
+        });
+    };
 
     // Queries
     const { data: itemsData, isLoading: itemsLoading } = useGetItemMasterQuery({
         params: { branchId, userId, finYearId, active: true }
+    });
+    const { data: ItemPriceListData } = useGetItemPriceListQuery({
+        params: { branchId, userId, finYearId }
     });
     const { data: customerData } = useGetPartyQuery({
         params: { branchId, userId, finYearId }
@@ -213,6 +488,7 @@ const PointOfSale = () => {
     const { data: posData } = useGetPointOfSalesQuery({
         params: { branchId, companyId, finYearId }
     });
+
 
     const items = itemsData?.data || [];
     const recentSales = posData?.data?.slice(0, 50) || [];
@@ -241,26 +517,23 @@ const PointOfSale = () => {
     });
 
     // Handle Quick Scan
-    const resolveBarcodeMatch = async (matches = []) => {
-        const options = Object.fromEntries(
-            matches.map((match, index) => [String(index), buildResolutionLabel(match)])
-        );
+    const resolveBarcodeMatch = (matches = []) => {
+        const normalizedMatches = matches.map(m => ({
+            ...m,
+            item_name: m.item_name || m?.Item?.name || "Item",
+            size: m.size || m?.Size?.name || "-",
+            color: m.color || m?.Color?.name || "-",
+            location: m.location || "-",
+            stockQty: m.stockQty || 0,
+        }));
 
-        const result = await Swal.fire({
-            title: 'Select Stock Row',
-            text: 'This barcode matches multiple stock combinations.',
-            input: 'select',
-            inputOptions: options,
-            inputPlaceholder: 'Choose stock row',
-            showCancelButton: true,
-            inputValidator: (value) => (!value && value !== '0' ? 'Please choose a stock row' : undefined)
+        return new Promise((resolve) => {
+            setBarcodeResolution({
+                open: true,
+                matches: normalizedMatches,
+                resolve
+            });
         });
-
-        if (!result.isConfirmed) {
-            return null;
-        }
-
-        return matches[Number(result.value)] || null;
     };
 
     const handleScan = async (e) => {
@@ -283,9 +556,11 @@ const PointOfSale = () => {
                     : response?.data;
 
                 if (response.statusCode === 0 && resolvedData) {
-                    const stockData = resolvedData;
-                    // Simply pass stockData; addToCart handles normalization of qty, price, and itemId
-                    addToCart({ ...stockData });
+                    if (Array.isArray(resolvedData)) {
+                        resolvedData.forEach(item => addToCart({ ...item }));
+                    } else {
+                        addToCart({ ...resolvedData });
+                    }
                     setSearchQuery('');
                     return;
                 }
@@ -304,13 +579,13 @@ const PointOfSale = () => {
             });
 
             if (!localItem) {
-                toast.warning("Barcode not found in stock or local database");
+                Swal.fire({ title: "Warning", text: "Barcode not found in stock or local database", icon: "warning" });
                 return;
             }
 
             const normalizedLocalItem = normalizeLocalItemForPos(localItem, branchId, retailStoreId);
             if (!normalizedLocalItem?.barcode) {
-                toast.warning("Selected item is missing a barcode on its default price row");
+                Swal.fire({ title: "Warning", text: "Selected item is missing a barcode on its default price row", icon: "warning" });
                 return;
             }
 
@@ -328,7 +603,11 @@ const PointOfSale = () => {
                     : localResponse?.data;
 
                 if (localResponse.statusCode === 0 && resolvedLocalData) {
-                    addToCart({ ...resolvedLocalData });
+                    if (Array.isArray(resolvedLocalData)) {
+                        resolvedLocalData.forEach(item => addToCart({ ...item }));
+                    } else {
+                        addToCart({ ...resolvedLocalData });
+                    }
                     setSearchQuery('');
                     return;
                 }
@@ -336,20 +615,27 @@ const PointOfSale = () => {
                 console.error("Local item stock lookup failed:", error);
             }
 
-            toast.warning("Item was found in Item Master but is not available in current store stock");
+            Swal.fire({ title: "Warning", text: "Item was found in Item Master but is not available in current store stock", icon: "warning" });
         }
     };
 
     // Price calculation utility
     const calculateEffectivePrice = (item, qty) => {
-        const numericQty = parseFloat(qty || 0);
         const salesPrice = parseFloat(item.salesPrice || item.price || 0);
-        const offerPrice = parseFloat(item.offerPrice || 0);
-
-        if (numericQty >= 6 && offerPrice > 0) {
-            return { price: offerPrice, priceType: 'offerPrice' };
-        }
         return { price: salesPrice, priceType: 'SalesPrice' };
+    };
+
+    const getVariantPrice = (itemId, sizeId, colorId) => {
+        const fullPriceList = ItemPriceListData?.data || [];
+        const itemPrices = fullPriceList.filter(p => p.itemId === itemId);
+
+        // Match specific variant
+        const variantHit = itemPrices.find(p => p.sizeId === sizeId && p.colorId === colorId);
+        if (variantHit && variantHit.salesPrice) return variantHit.salesPrice;
+
+        // Fallback to default (Legacy Stock pattern)
+        const defaultHit = itemPrices.find(p => !p.sizeId && !p.colorId) || itemPrices[0];
+        return defaultHit?.salesPrice || 0;
     };
 
     // Cart actions
@@ -357,7 +643,7 @@ const PointOfSale = () => {
         // Guard: Initial Stock Check
         const stockLimit = parseFloat(product.stockQty) || 0;
         if (stockLimit <= 0) {
-            toast.error("Out of stock!");
+            Swal.fire({ title: "Error", text: "Out of stock!", icon: "error" });
             return;
         }
 
@@ -382,16 +668,22 @@ const PointOfSale = () => {
                         item.sizeId === product.sizeId &&
                         item.colorId === product.colorId) {
                         const newQty = currentQty + 1;
-                        const { price, priceType } = calculateEffectivePrice(item, newQty);
-                        return { ...item, qty: newQty, price, rate: price, priceType };
+                        // Preserve current price; offer engine will re-evaluate based on new qty
+                        return { ...item, qty: newQty };
                     }
                     return item;
                 });
             }
-            // Populate all data from product (stockData) + UI fields
-            const { price, priceType } = calculateEffectivePrice(product, 1);
+
+            // Determine correct Sales Price from Price List based on Variant
+            const itemId = product.itemId || product.id;
+            const lookupPrice = getVariantPrice(itemId, product.sizeId, product.colorId);
+            const masterItem = product?.Item || items.find(i => i.id === itemId);
+            const initialProduct = { ...product, Item: masterItem, salesPrice: lookupPrice, price: lookupPrice };
+
+            const { price, priceType } = calculateEffectivePrice(initialProduct, 1);
             return [...prev, {
-                ...product,
+                ...initialProduct,
                 qty: 1,
                 price: price,
                 rate: price,
@@ -399,12 +691,52 @@ const PointOfSale = () => {
                 taxPercent: product?.Item?.Hsn?.tax || 5
             }];
         });
-        toast.success(`${product.itemName || product.item_name} Added`, {
-            autoClose: 800,
-            hideProgressBar: true,
-            position: 'bottom-right',
-            icon: <CheckCircle2 className="text-green-500" size={18} />
+        Swal.fire({ title: "Success", text: `${product.itemName || product.item_name} Added`, icon: "success", timer: 1500, showConfirmButton: false });
+        setShowSalesPersonModal(true);
+        setTimeout(() => salesPersonScannerRef.current?.focus(), 500);
+    };
+
+    const handleSalesPersonScan = (barcode) => {
+        if (!barcode) return;
+
+        const employee = employees.find(e => e.employeeId === barcode || e.regNo === barcode);
+
+        setCart(prev => {
+            // Assign salesperson to all items that don't have one yet in the current batch
+            return prev.map(item =>
+                !item.salesPersonId
+                    ? {
+                        ...item,
+                        salesPersonId: employee?.id || null,
+                        salesPersonBarcode: barcode,
+                        salesPersonName: employee?.name || "Unknown"
+                    }
+                    : item
+            );
         });
+
+        setShowSalesPersonModal(false);
+        setSalesPersonBarcode('');
+        setTimeout(() => scannerRef.current?.focus(), 100);
+    };
+
+    const handleRowSalesPersonChange = (index, empId) => {
+        if (!empId) {
+            setCart(prev => prev.map((item, i) =>
+                i === index ? { ...item, salesPersonId: null, salesPersonName: null, salesPersonBarcode: null } : item
+            ));
+            return;
+        }
+
+        const employee = employees.find(e => e.id === parseInt(empId));
+        setCart(prev => prev.map((item, i) =>
+            i === index ? {
+                ...item,
+                salesPersonId: employee?.id,
+                salesPersonName: employee?.name,
+                salesPersonBarcode: employee?.employeeId || employee?.regNo
+            } : item
+        ));
     };
 
     // Sync active row to last item when cart grows
@@ -434,12 +766,12 @@ const PointOfSale = () => {
 
                 // Restrict to stock limit
                 if (newQty > stockLimit) {
-                    toast.warning(`Restricted to stock quantity: ${stockLimit}`);
+                    Swal.fire({ title: "Warning", text: `Restricted to stock quantity: ${stockLimit}`, icon: "warning" });
                     newQty = stockLimit;
                 }
 
-                const { price, priceType } = calculateEffectivePrice(item, newQty);
-                return { ...item, qty: newQty, price, rate: price, priceType };
+                // Preserve the current price/priceType so the offer engine can re-evaluate on next render
+                return { ...item, qty: newQty };
             }
             return item;
         }));
@@ -455,7 +787,8 @@ const PointOfSale = () => {
         }));
     };
 
-    const totalBeforeDiscount = cart.reduce((sum, item) => sum + (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0), 0);
+    const totalBeforeOffer = cart.reduce((sum, item) => sum + (parseFloat(item.salesPrice || item.price) || 0) * (parseFloat(item.qty) || 0), 0);
+    const totalBeforeDiscount = Math.max(0, totalBeforeOffer - totalOfferDiscount);
     const total = Math.max(0, totalBeforeDiscount - discount);
 
     const tax = Math.round(cart.reduce((sum, item) => {
@@ -468,34 +801,20 @@ const PointOfSale = () => {
         return sum + itemTax;
     }, 0));
 
-    const subtotal = total - tax; // subtotal is the taxable amount in this context
+    const subtotal = total - tax; // subtotal is the taxable amount (Exclusive)
 
     const handleCheckout = async () => {
         // 1. Initial Guards
-        if (cart.length === 0) { toast.error("Cart is empty"); return; }
+        if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
         if (cart.some(item => (parseFloat(item.qty) || 0) <= 0)) {
-            toast.error("One or more items have zero quantity!");
+            Swal.fire({ title: "Error", text: "One or more items have zero quantity!", icon: "error" });
             return;
         }
 
-        // 2. Customer & Phone Validation
-        if (isGuestCustomer && !guestName.trim()) {
-            toast.error("Customer name is required!");
-            return;
-        }
-
-        const currentPhone = selectedCustomer ? selectedCustomer.contact : guestMobile;
-        const phoneRegex = /^[0-9]{10}$/;
-        const cleanPhone = currentPhone?.toString().replace(/\D/g, '') || '';
-
-        if (!phoneRegex.test(cleanPhone)) {
-            toast.error("A valid 10-digit mobile number is required!");
-            return;
-        }
 
         // 3. Payment Validation
         if (receivedAmount < total) {
-            toast.error(`Incomplete payment! Missing: ₹${(total - receivedAmount).toLocaleString()}`);
+            Swal.fire({ title: "Error", text: `Incomplete payment! Missing: ₹${(total - receivedAmount).toLocaleString()}`, icon: "error" });
             return;
         }
 
@@ -540,7 +859,8 @@ const PointOfSale = () => {
                         active: true,
                         address: 'Walk-in Store',
                         pincode: '000000',
-                        gstNo: 'N/A'
+                        gstNo: 'N/A',
+                        // salesPersonId: selectedSalesPerson?.id || null,
                     };
                     const res = await addParty(guestPayload).unwrap();
                     customerId = res.data.id;
@@ -555,7 +875,6 @@ const PointOfSale = () => {
                 }
             }
 
-            // 6. Save Invoice
             const invoicePayload = {
                 date: new Date().toISOString().split('T')[0],
                 customerId,
@@ -577,7 +896,9 @@ const PointOfSale = () => {
                 paidCard,
                 receivedAmount,
                 balanceReturn,
-                posItems: cart
+                posItems: cart,
+                promotionalDiscount: totalOfferDiscount,
+                manualDiscount: discount
             };
 
             const apiResponse = await addPointOfSales(invoicePayload).unwrap();
@@ -611,7 +932,7 @@ const PointOfSale = () => {
             setPaidCard(0);
 
         } catch (error) {
-            toast.error(error.message || "Failed to save invoice.");
+            Swal.fire({ title: "Error", text: error.message || "Failed to save invoice.", icon: "error" });
             console.error("Checkout Error:", error);
         } finally {
             setIsProcessing(false);
@@ -620,7 +941,7 @@ const PointOfSale = () => {
 
     const handlePrintPreview = () => {
         if (cart.length === 0) {
-            toast.error("Add items first to see preview");
+            Swal.fire({ title: "Error", text: "Add items first to see preview", icon: "error" });
             return;
         }
         setPrintData({
@@ -691,7 +1012,7 @@ const PointOfSale = () => {
                 setSelectedCustomer(hit);
                 setIsGuestCustomer(false);
                 setGuestName(hit.name);
-                toast.info(`Welcome back, ${hit.name}`, { position: 'bottom-right', autoClose: 1500 });
+                Swal.fire({ title: "Info", text: `Welcome back, ${hit.name}`, icon: "info", timer: 1500, showConfirmButton: false });
             } else {
                 setSelectedCustomer(null);
                 setIsGuestCustomer(true);
@@ -715,6 +1036,99 @@ const PointOfSale = () => {
 
     return (
         <>
+            <Modal isOpen={showItemOfferModal} widthClass="w-[450px]" onClose={() => setShowItemOfferModal(false)}>
+                <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
+                    {/* Header */}
+                    <div className="p-3 bg-gradient-to-br from-indigo-900 to-blue-900 text-white flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <div className="p-1 bg-white/20 rounded-lg">
+                                <Gift size={18} className="text-yellow-300" />
+                            </div>
+                            <div>
+                                <h2 className="text-xs font-black uppercase tracking-widest">{selectedItemForOffers?.Item?.name}</h2>
+                                <p className="text-[9px] font-bold text-blue-200 uppercase tracking-tighter">Available Promotions</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setShowItemOfferModal(false)} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                            <X size={16} />
+                        </button>
+                    </div>
+
+                    {/* Offer List */}
+                    <div className="p-3 bg-slate-50 space-y-2 max-h-[400px] overflow-auto">{console.log(getItemApplicableOffers(selectedItemForOffers), "Applicable offers for item")}
+                        {getItemApplicableOffers(selectedItemForOffers).length > 0 ? (
+                            getItemApplicableOffers(selectedItemForOffers).map((off, idx) => {
+                                const activeItemKey = selectedItemForOffers ? `${selectedItemForOffers.id}-${selectedItemForOffers.sizeId}-${selectedItemForOffers.colorId}` : null;
+                                const isOfferSelected = activeItemKey && selectedOffersByRow[activeItemKey] === off.id;
+
+                                return (
+                                    <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm hover:border-indigo-200 transition-all group">
+                                        <div className="flex justify-between items-start mb-1.5">
+                                            <span className="text-[10px] font-black text-slate-800 uppercase group-hover:text-indigo-600 transition-colors">{off.name}</span>
+                                            <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase border border-indigo-100">
+                                                {off.discountType}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 font-medium leading-snug mb-2">
+                                            {off.OfferRule?.[0]?.conditions?.rules?.[0] ?
+                                                `Triggers when ${off.OfferRule[0].conditions.rules[0].field} is ${off.OfferRule[0].conditions.rules[0].operator} ${off.OfferRule[0].conditions.rules[0].value}.` :
+                                                "Applicable on all eligible quantities."
+                                            }
+                                        </p>
+                                        <div className="flex items-center gap-2 text-indigo-600 font-black text-xs bg-indigo-50/50 p-1.5 rounded-lg border border-dashed border-indigo-200">
+                                            <Zap size={12} fill="currentColor" />
+                                            <span className="text-[9px]">
+                                                REWARD: {['Volume', 'Override'].includes(off.discountType) ? "Tiered Benefit" : (off.discountType === 'Percentage' ? `${off.discountValue}% Off` : `₹${off.discountValue} Off`)}
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            onClick={() => {
+                                                setSelectedOffersByRow(prev => ({
+                                                    ...prev,
+                                                    [activeItemKey]: isOfferSelected ? null : off.id
+                                                }));
+                                                setShowItemOfferModal(false);
+                                                Swal.fire({ title: 'Success', icon: 'success', text: isOfferSelected ? "Manual offer removed" : `Offer "${off.name}" Applied!`, timer: 1500, showConfirmButton: false });
+                                            }}
+                                            className={`w-full mt-2 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${isOfferSelected ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'}`}
+                                        >
+                                            {isOfferSelected ? 'Remove Offer' : 'Select This Offer'}
+                                        </button>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="py-10 text-center text-slate-400 space-y-2">
+                                <Package className="mx-auto opacity-20" size={40} />
+                                <p className="text-xs font-bold uppercase tracking-widest">No Offers Found</p>
+                                <p className="text-[10px] font-medium leading-none">There are no active promotions for this item.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-2 bg-white border-t border-slate-100 text-center uppercase tracking-widest font-black text-[8px] text-slate-400">
+                        Offer Engine v1.0 • Real-time Sync
+                    </div>
+                </div>
+            </Modal>
+            <Modal isOpen={barcodeResolution.open} widthClass="w-[90vw] max-w-5xl" onClose={() => {
+                if (barcodeResolution.resolve) barcodeResolution.resolve(null);
+                setBarcodeResolution({ open: false, matches: [], resolve: null });
+            }}>
+                <div className="h-[75vh] bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col pt-3">
+                    <VarientsSelection
+                        matches={barcodeResolution.matches}
+                        title="Select Stock Row"
+                        stockDrivenFields={[{ key: "location", label: "Location" }]}
+                        onConfirm={(selectedItems) => {
+                            if (barcodeResolution.resolve) barcodeResolution.resolve(selectedItems);
+                            setBarcodeResolution({ open: false, matches: [], resolve: null });
+                        }}
+                    />
+                </div>
+            </Modal>
             {showReports ? (
                 <div className="flex flex-col h-[85vh] bg-[#f1f5f9] text-slate-800 overflow-hidden font-sans select-none border border-slate-200">
                     {/* 1. Slim Navigation Bar */}
@@ -788,78 +1202,108 @@ const PointOfSale = () => {
                                 <table className="w-full text-left border-separate border-spacing-0">
                                     <thead className="sticky top-0 z-20 bg-white shadow-sm border-b border-slate-200">
                                         <tr className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                            <th className="px-4 py-4 w-12 text-center border-r border-slate-200 uppercase">#</th>
-                                            <th className="px-4 py-4 min-w-[250px] border-r border-slate-200">Item Detail</th>
-                                            <th className="px-4 py-4 w-24 text-center border-r border-slate-200">Color</th>
-                                            <th className="px-4 py-4 w-24 text-center border-r border-slate-200">Size</th>
-                                            <th className="px-2 py-4 w-20 text-center border-r border-slate-200">Stock Qty</th>
-                                            <th className="px-2 py-4 w-20 text-center border-r border-slate-200">Qty</th>
-                                            <th className="px-4 py-4 w-32 text-right border-r border-slate-200">Rate (₹)</th>
-                                            <th className="px-4 py-4 w-24 text-center border-r border-slate-200">Tax (%)</th>
-                                            <th className="px-4 py-4 w-32 text-right border-r border-slate-200 bg-slate-50/50">Total (₹)</th>
-                                            <th className="px-3 py-4 w-12 text-center bg-slate-50/50"></th>
+                                            <th className="px-1.5 py-1.5 w-8 text-center border-r border-slate-200 uppercase">S No</th>
+                                            <th className="px-2 py-1.5 flex-1 min-w-[100px] border-r border-slate-200">Item </th>
+                                            <th className="px-2 py-1.5 w-24 text-center border-r border-slate-200">Color</th>
+                                            <th className="px-2 py-1.5 w-24 text-center border-r border-slate-200">Size</th>
+                                            <th className="px-2 py-1.5 w-14 text-center border-r border-slate-200">UoM</th>
+                                            <th className="px-2 py-1.5 w-16 text-center border-r border-slate-200">Stock Qty</th>
+                                            <th className="px-2 py-1.5 w-20 text-center border-r border-slate-200">Qty</th>
+                                            <th className="px-3 py-1.5 w-28 text-center border-r border-slate-200">Salesman</th>
+                                            <th className="px-2 py-1.5 w-28 text-right border-r border-slate-200 bg-slate-50/50">Price</th>
+                                            <th className="px-2 py-1.5 w-20 text-center bg-slate-50/50">Total</th>
+                                            <th className="px-1.5 py-1.5 w-8 text-center bg-slate-50/50"></th>
                                         </tr>
+
+
                                     </thead>
                                     <tbody>
                                         {cart.map((item, index) => {
                                             const cartKey = `${item.id}-${item.sizeId}-${item.colorId}`;
-                                            const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
                                             const rowTotal = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
-                                            const taxableValue = rowTotal / (1 + (itemTaxPercent / 100));
-                                            const itemTax = Math.round(rowTotal - taxableValue);
                                             const isActiveRow = index === activeRowIndex;
                                             return (
                                                 <tr
                                                     key={cartKey}
                                                     onClick={() => setActiveRowIndex(index)}
-                                                    className={`group transition-colors border-b border-slate-50 cursor-pointer ${isActiveRow ? 'bg-indigo-50/60 ring-1 ring-inset ring-indigo-200' : 'hover:bg-indigo-50/30'}`}
+                                                    className={`group transition-colors border-b border-slate-50 cursor-pointer ${isActiveRow ? 'bg-indigo-50/60 ring-1 ring-inset ring-indigo-200' : (item.priceType === 'offerPrice' ? 'bg-emerald-50/40' : 'hover:bg-indigo-50/30')}`}
                                                 >
-                                                    <td className="px-4 py-3 text-center text-[10px] font-bold text-slate-400 border-r border-slate-200">{index + 1}</td>
-                                                    <td className="px-4 py-3 border-r border-slate-200">
-                                                        <div className="text-[13px] font-black text-slate-800 uppercase leading-none truncate max-w-[300px]">{item?.Item?.name}</div>
-                                                        <div className="text-[10px] text-slate-400 font-bold mt-1.5 flex items-center gap-2">
-                                                            <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[9px]">{item.barcode}</span>
-                                                            {item.priceType && (
-                                                                <span className={`px-1.5 py-0.5 rounded text-[8px] uppercase tracking-tighter ${item.priceType === 'offerPrice' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-50 text-blue-600'}`}>
-                                                                    {item.priceType}
+                                                    <td className="px-2 py-1 text-center text-[10px] font-bold text-slate-400 border-r border-slate-200">{index + 1}</td>
+                                                    <td className="px-3 py-1 border-r border-slate-200">
+                                                        <div className="text-[12px] font-black text-slate-800 uppercase leading-tight truncate max-w-[280px]">{item?.Item?.name}</div>
+                                                        <div className="flex flex-wrap items-center gap-1 mt-1">
+                                                            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{item.barcode}</span>
+                                                            {parseFloat(item.salesPrice) > parseFloat(item.price) && (
+                                                                <span className="text-[10px] font-bold text-slate-300 line-through">₹{parseFloat(item.salesPrice).toLocaleString()}</span>
+                                                            )}
+                                                            {item.priceType === 'offerPrice' && (
+                                                                <span className="bg-emerald-600 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5 animate-pulse">
+                                                                    <Gift size={10} fill="currentColor" className="text-emerald-200" />
+                                                                    {item.appliedOfferName || "Offer Applied"}
                                                                 </span>
                                                             )}
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-3 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Color?.name || '-'}</td>
-                                                    <td className="px-4 py-3 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Size?.name || '-'}</td>
-                                                    <td className="px-4 py-3 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.stockQty || '-'}</td>
-                                                    <td className="px-2 py-1.5 border-r border-slate-200">
-                                                        <input
-                                                            ref={(el) => { qtyInputRefs.current[cartKey] = el; }}
-                                                            type="number"
-                                                            value={item.qty}
-                                                            onChange={(e) => updateQuantity(item.id, e.target.value, item.sizeId, item.colorId, true)}
-                                                            className="w-full py-1.5 text-center bg-transparent border-transparent hover:border-slate-200 focus:bg-white focus:border-indigo-400 rounded transition-all font-black text-sm outline-none"
-                                                            onFocus={(e) => { e.target.select(); setActiveRowIndex(index); }}
-                                                        />
+                                                    <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Color?.name || '-'}</td>
+                                                    <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Size?.name || '-'}</td>
+                                                    <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Item?.Uom?.name || item?.Uom?.name || item?.uom || '-'}</td>
+                                                    <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.stockQty || '-'}</td>
+                                                    <td className="px-2 py-0.5 border-r border-slate-200">
+                                                        <div className="flex items-center gap-1 justify-center">
+                                                            <button onClick={() => updateQuantity(item.id, -1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">-</button>
+                                                            <input
+                                                                ref={ref => qtyInputRefs.current[cartKey] = ref}
+                                                                type="number"
+                                                                value={item.qty}
+                                                                onChange={(e) => updateQuantity(item.id, e.target.value, item.sizeId, item.colorId, true)}
+                                                                className="w-10 text-center bg-transparent text-[11px] font-black focus:outline-none"
+                                                                onFocus={(e) => { e.target.select(); setActiveRowIndex(index); }}
+                                                            />
+                                                            <button onClick={() => updateQuantity(item.id, 1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">+</button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleShowItemOffers(item); }}
+                                                                title="View Item Offers"
+                                                                className="p-1 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded transition-all flex items-center justify-center border border-indigo-100 hover:border-indigo-600 shrink-0"
+                                                            >
+                                                                <Gift size={13} fill="currentColor" />
+                                                            </button>
+                                                        </div>
                                                     </td>
-                                                    <td className="px-4 py-1.5 border-r border-slate-200">
+                                                    <td className="px-2 py-0.5 border-r border-slate-200 text-center">
+                                                        <select
+                                                            value={item.salesPersonId || ""}
+                                                            onChange={(e) => handleRowSalesPersonChange(index, e.target.value)}
+                                                            className="w-full bg-transparent text-[10px] font-black text-slate-700 outline-none border-none focus:ring-0 cursor-pointer text-center p-0"
+                                                        >
+                                                            <option value="">- SELECT -</option>
+                                                            {employees.map(emp => (
+                                                                <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                                            ))}
+                                                        </select>
+                                                        <div className="text-[8px] font-bold text-slate-400 mt-0.5">
+                                                            {item.salesPersonBarcode || ""}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-2 py-0.5 border-r border-slate-200">
                                                         <input
                                                             type="number"
                                                             value={item.price}
                                                             onChange={(e) => updateRate(item.id, e.target.value, item.sizeId, item.colorId)}
-                                                            className="w-full py-1.5 text-right bg-transparent border-transparent hover:border-slate-200 focus:bg-white focus:border-indigo-400 rounded transition-all font-black text-sm outline-none"
+                                                            className={`w-full py-0.5 text-right bg-transparent border-transparent hover:border-slate-200 focus:bg-white focus:border-indigo-400 rounded transition-all font-black text-sm outline-none ${item.priceType === 'offerPrice' ? 'text-emerald-600' : 'text-slate-800'}`}
                                                             onFocus={(e) => e.target.select()}
                                                         />
                                                     </td>
-                                                    <td className="px-4 py-3 text-center text-[11px] text-slate-400 font-bold border-r border-slate-200">{itemTaxPercent}%</td>
-                                                    <td className="px-4 py-3 text-right border-r border-slate-200 bg-slate-50/50 font-serif">
-                                                        <span className="text-[14px] font-black text-indigo-700">₹{rowTotal.toLocaleString()}</span>
+                                                    <td className="px-2 py-1 text-right border-r border-slate-200 bg-slate-50/50 font-serif">
+                                                        <span className="text-[12px] font-black text-indigo-700">₹{rowTotal.toLocaleString()}</span>
                                                     </td>
-                                                    <td className="px-3 py-3 text-center bg-slate-50/50">
+                                                    <td className="px-2 py-1 text-center bg-slate-50/50">
                                                         <button onClick={(e) => { e.stopPropagation(); removeFromCart(cartKey); }} className="p-1.5 text-slate-300 hover:text-red-500 transition-all rounded-lg hover:bg-red-50"><Trash2 size={14} /></button>
                                                     </td>
                                                 </tr>
                                             );
                                         })}
                                         {[...Array(Math.max(0, 15 - cart.length))].map((_, i) => (
-                                            <tr key={`empty-${i}`} className="h-14 border-b border-slate-50/30">
+                                            <tr key={`empty-${i}`} className="h-8 border-b border-slate-50/30">
                                                 <td className="border-r border-slate-200"></td>
                                                 <td className="border-r border-slate-200"></td>
                                                 <td className="border-r border-slate-200"></td>
@@ -867,6 +1311,8 @@ const PointOfSale = () => {
                                                 <td className="border-r border-slate-200"></td>
                                                 <td className="border-r border-slate-200"></td>
                                                 <td className="border-r border-slate-200"></td>
+                                                <td className="border-r border-slate-200"></td>
+                                                <td className="border-r border-slate-200 border-slate-200"></td>
                                                 <td className="border-r border-slate-200 bg-slate-50/50"></td>
                                                 <td className="bg-slate-50/50"></td>
                                             </tr>
@@ -880,7 +1326,7 @@ const PointOfSale = () => {
                         <aside className="w-[340px] border-l border-slate-200 bg-white flex flex-col shadow-2xl relative z-10 overflow-hidden h-full">
                             <div className="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
                                 {/* Module 1: Direct Customer Entry */}
-                                <div className="space-y-3 shrink-0 relative bg-white border border-slate-100 p-4 rounded-2xl shadow-sm overflow-hidden">
+                                <div className="space-y-2 shrink-0 relative bg-white border border-slate-100 p-3 rounded-2xl shadow-sm overflow-hidden">
                                     <div className="flex justify-between items-center">
                                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                             <User size={12} /> Customer Identification
@@ -890,7 +1336,7 @@ const PointOfSale = () => {
                                         )}
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-2">
                                         <div className="relative group">
                                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center gap-1.5 pointer-events-none group-focus-within:text-indigo-500">
                                                 <span className="text-[10px] font-black uppercase">🇮🇳 +91</span>
@@ -900,7 +1346,7 @@ const PointOfSale = () => {
                                                 placeholder="Mobile (10 Digits)"
                                                 value={guestMobile}
                                                 onChange={(e) => handleCustomerMobileChange(e.target.value)}
-                                                className="w-full pl-16 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] transition-all font-mono"
+                                                className="w-full pl-16 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] transition-all font-mono"
                                             />
                                         </div>
 
@@ -913,24 +1359,41 @@ const PointOfSale = () => {
                                                 placeholder="Customer Name"
                                                 value={guestName}
                                                 onChange={(e) => setGuestName(e.target.value)}
-                                                className="w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] transition-all uppercase placeholder:normal-case"
+                                                className="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] transition-all uppercase placeholder:normal-case"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Module 2: Sale Summary */}
-                                <div className="space-y-3 shrink-0 bg-white border border-slate-100 p-3 rounded-2xl shadow-sm">
+                                <div className="space-y-2 shrink-0 bg-white border border-slate-100 p-3 rounded-2xl shadow-sm">
                                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                         <ShoppingCart size={12} /> Sale Summary
                                     </h3>
-                                    <div className="space-y-2.5">
+                                    <div className="space-y-2">
                                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal</span>
+                                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
                                             <span>₹{subtotal.toLocaleString()}</span>
                                         </div>
+                                        {totalOfferDiscount > 0 && (
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between items-center text-violet-600 text-xs font-bold">
+                                                    <span className="text-[11px] uppercase tracking-wider flex items-center gap-1">
+                                                        <Gift size={11} className="text-violet-500" /> Offer Disc
+                                                    </span>
+                                                    <span>-₹{totalOfferDiscount.toLocaleString()}</span>
+                                                </div>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {appliedOffers.map((off, idx) => (
+                                                        <span key={idx} className="bg-violet-50 text-violet-600 px-1.5 py-0.5 rounded text-[8px] font-black uppercase border border-violet-100/50 flex items-center gap-1">
+                                                            <Zap size={8} fill="currentColor" />{off.name}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between items-center text-emerald-500 text-xs font-bold">
-                                            <span className="text-[11px] uppercase tracking-wider">Discount</span>
+                                            <span className="text-[11px] uppercase tracking-wider">Manual Disc</span>
                                             <div className="flex items-center gap-1">
                                                 <span>-₹</span>
                                                 <input
@@ -943,26 +1406,35 @@ const PointOfSale = () => {
                                                 />
                                             </div>
                                         </div>
+                                        {(totalOfferDiscount > 0 || discount > 0) && (
+                                            <div className="flex justify-between items-center text-xs font-bold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
+                                                <span className="text-[10px] uppercase tracking-wider text-emerald-500">You Save</span>
+                                                <span className="text-emerald-600 font-black">₹{(totalOfferDiscount + discount).toLocaleString()}</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Tax</span>
-                                            <span>₹{tax.toLocaleString()}</span>
+                                            <span className="text-[11px] uppercase tracking-wider text-slate-400">CGST</span>
+                                            <span>₹{(tax / 2).toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                                            <span className="text-[11px] uppercase tracking-wider text-slate-400">SGST</span>
+                                            <span>₹{(tax / 2).toLocaleString()}</span>
                                         </div>
                                         <div className="flex justify-between items-center font-black text-lg text-indigo-700 pt-2.5 border-t border-slate-200 mt-2">
-                                            <span className="text-[12px] uppercase tracking-widest text-indigo-400">Total</span>
+                                            <span className="text-[12px] uppercase tracking-widest text-indigo-400">Net Amount</span>
                                             <span>₹{total.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Module 3 has been moved to Modal */}
                             </div>
 
                             {/* Footer: Action Checkout */}
-                            <div className="p-4 bg-white border-t border-slate-100 space-y-3">
+                            <div className="p-3 bg-white border-t border-slate-100 space-y-2">
                                 <button
                                     disabled={isProcessing || cart.length === 0}
-                                    onClick={() => setShowPaymentModal(true)}
-                                    className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-xl ${cart.length === 0 || isProcessing ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] shadow-indigo-100'}`}
+                                    onClick={() => handlePayNow()}
+                                    className={`w-full py-2 rounded-xl flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-xl ${cart.length === 0 || isProcessing ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] shadow-indigo-100'}`}
                                 >
                                     <CreditCard size={18} />
                                     <span>Pay Now [F8]</span>
@@ -1003,41 +1475,20 @@ const PointOfSale = () => {
                                     }
                                 },
                                 {
-                                    key: 'F4', label: 'Void', action: () => {
-                                        if (cart.length > 0) {
-                                            Swal.fire({
-                                                title: 'Void All Items?',
-                                                text: 'This will clear all items from the cart.',
-                                                icon: 'warning',
-                                                showCancelButton: true,
-                                                confirmButtonColor: '#ef4444',
-                                                cancelButtonColor: '#94a3b8',
-                                                confirmButtonText: 'Void All'
-                                            }).then((result) => {
-                                                if (result.isConfirmed) {
-                                                    setCart([]);
-                                                    setDiscount(0);
-                                                    setActiveRowIndex(0);
-                                                    toast.info('Cart cleared', { autoClose: 1000, position: 'bottom-right' });
-                                                }
-                                            });
-                                        }
-                                    }
+                                    key: 'F4', label: 'Reports', action: () => setShowReports(prev => !prev)
                                 },
                                 { key: 'F6', label: 'UoM', action: null },
                                 {
-                                    key: 'F8', label: 'Pay', action: () => {
-                                        if (cart.length > 0 && !isProcessing) setShowPaymentModal(true);
-                                    }
+                                    key: 'F8', label: 'Pay', action: () => handlePayNow()
                                 },
                                 {
                                     key: 'F10', label: 'Scan', action: () => {
                                         scannerRef.current?.focus();
                                     }
                                 },
-                                {
-                                    key: 'F12', label: 'Menu', action: () => setShowReports(prev => !prev)
-                                },
+                                // {
+                                //     key: 'F12', label: 'Menu', action: () => setShowReports(prev => !prev)
+                                // },
                             ].map((btn) => (
                                 <button
                                     key={btn.key}
@@ -1053,23 +1504,22 @@ const PointOfSale = () => {
                     </footer>
                 </div>
             ) : (
-                <div className="p-2 bg-[#F1F1F0] min-h-screen">
-                    <div className="flex flex-col sm:flex-row justify-between bg-white py-1.5 px-3 items-start sm:items-center mb-4 gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-                        <h1 className="text-2xl font-bold text-gray-800">Point Of Sale</h1>
+                <div className=" bg-[#F1F1F0] min-h-screen">
+                    <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-3 items-start sm:items-center  gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
+                        <h1 className="text-md font-bold text-gray-800">Point Of Sale</h1>
                         <button
-                            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-4 py-1 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm"
+                            className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2  rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm"
                             onClick={() => setShowReports(true)}
                         >
-                            <Plus size={14} /> Create New Sale
+                            <Plus size={14} /> Create New
                         </button>
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden h-[85vh] border-2">
+                    <div className="bg-white rounded-xl shadow-sm overflow-hidden h-[85vh] mt-2 border-2">
                         <PosReports recentSales={recentSales} />
                     </div>
                 </div>
             )}
 
-            {/* Payment Settlement Modal */}
             <AnimatePresence>
                 {showPaymentModal && (
                     <div className="fixed inset-0 z-[110] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1182,7 +1632,7 @@ const PointOfSale = () => {
                                     // The user can use the PDFViewer's built-in print icon or we could try to trigger it
                                     // but browser/PDF cross-origin/iframe security often blocks simple print() on the viewer.
                                     // PDFViewer's toolbar is the reliable way.
-                                    toast.info("Use the Print icon inside the terminal viewer.");
+                                    Swal.fire({ title: "Info", text: "Use the Print icon inside the terminal viewer.", icon: "info", timer: 1500, showConfirmButton: false });
                                 }}
                                 className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 block text-center"
                             >
@@ -1192,6 +1642,106 @@ const PointOfSale = () => {
                     </div>
                 </div>
             )}
+
+            <Modal
+                isOpen={showSalesPersonModal}
+                onClose={() => setShowSalesPersonModal(false)}
+                widthClass="w-[400px] rounded-2xl p-0 overflow-hidden shadow-2xl"
+            >
+                <div className="bg-gradient-to-br from-indigo-600 to-violet-700 p-6 text-white">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-white/20 p-2 rounded-lg">
+                            <ScanBarcode size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black uppercase tracking-tight">Sales Person</h2>
+                            <p className="text-indigo-100 text-xs font-bold mt-0.5">Please scan salesperson barcode</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-8 bg-white">
+                    <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <input
+                            ref={salesPersonScannerRef}
+                            autoFocus
+                            type="text"
+                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-indigo-500 focus:bg-white transition-all text-lg font-black tracking-widest placeholder:text-slate-300 uppercase"
+                            placeholder="SCAN OR TYPE ID..."
+                            value={salesPersonBarcode}
+                            onChange={(e) => setSalesPersonBarcode(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    handleSalesPersonScan(e.target.value);
+                                }
+                            }}
+                        />
+                    </div>
+
+                    {/* Employee Suggestions Selection */}
+                    <AnimatePresence>
+                        {salesPersonBarcode.length >= 1 && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="mt-4 max-h-[240px] overflow-auto border-2 border-slate-50 rounded-2xl divide-y divide-slate-50 shadow-inner bg-slate-50/30"
+                            >
+                                {employees
+                                    .filter(emp =>
+                                        emp.name?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
+                                        emp.employeeId?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
+                                        emp.regNo?.toLowerCase().includes(salesPersonBarcode.toLowerCase())
+                                    )
+                                    .slice(0, 5) // Show top 5 matches
+                                    .map(emp => (
+                                        <button
+                                            key={emp.id}
+                                            onClick={() => handleSalesPersonScan(emp.employeeId || emp.regNo)}
+                                            className="w-full p-4 text-left hover:bg-white transition-all flex items-center justify-between group"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-[10px] uppercase">
+                                                    {emp.name?.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs font-black text-slate-800 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">{emp.name}</div>
+                                                    <div className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">{emp.employeeId || emp.regNo}</div>
+                                                </div>
+                                            </div>
+                                            <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-500 transition-all transform group-hover:translate-x-1" />
+                                        </button>
+                                    ))}
+                                {employees.filter(emp =>
+                                    emp.name?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
+                                    emp.employeeId?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
+                                    emp.regNo?.toLowerCase().includes(salesPersonBarcode.toLowerCase())
+                                ).length === 0 && (
+                                        <div className="p-6 text-center text-slate-400">
+                                            <p className="text-[10px] font-black uppercase tracking-widest">No matching employee found</p>
+                                        </div>
+                                    )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <div className="mt-6 flex flex-col gap-3">
+                        <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg flex items-start gap-3">
+                            <Zap size={16} className="text-amber-500 mt-0.5 shrink-0" />
+                            <p className="text-[10px] font-bold text-amber-700 leading-relaxed uppercase">
+                                scanning the salesperson barcode will link this staff member to the currently scanned item for commission tracking.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setShowSalesPersonModal(false)}
+                            className="w-full py-2.5 text-xs font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest"
+                        >
+                            Skip for now
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </>
     );
 };

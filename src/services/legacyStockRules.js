@@ -141,6 +141,7 @@ export function buildBarcodeSnapshotMatches(records = []) {
                 size: record.Size?.name,
                 color: record.Color?.name,
                 uom: record.Uom?.name,
+                location: record.Store?.storeName,
                 price: record.price,
                 stockQty: 0,
             };

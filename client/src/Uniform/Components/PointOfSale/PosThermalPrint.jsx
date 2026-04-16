@@ -118,14 +118,20 @@ const PosThermalPrint = ({
             <Text style={tw('text-xxs')}>{items.length} (Qty: {totalQty})</Text>
           </View>
           <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Subtotal :</Text>
+            <Text style={tw('text-xxs')}>Subtotal (Excl. Tax) :</Text>
             <Text style={tw('text-xxs')}>{summary.subtotal.toFixed(2)}</Text>
           </View>
           {summary.tax > 0 && (
-            <View style={tw('flex flex-row justify-between')}>
-              <Text style={tw('text-xxs')}>Tax Amount :</Text>
-              <Text style={tw('text-xxs')}>{summary.tax.toFixed(2)}</Text>
-            </View>
+            <>
+              <View style={tw('flex flex-row justify-between')}>
+                <Text style={tw('text-xxs')}>CGST :</Text>
+                <Text style={tw('text-xxs')}>{(summary.tax / 2).toFixed(2)}</Text>
+              </View>
+              <View style={tw('flex flex-row justify-between')}>
+                <Text style={tw('text-xxs')}>SGST :</Text>
+                <Text style={tw('text-xxs')}>{(summary.tax / 2).toFixed(2)}</Text>
+              </View>
+            </>
           )}
           {summary.discount > 0 && (
             <View style={tw('flex flex-row justify-between')}>

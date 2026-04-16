@@ -68,9 +68,9 @@ const PosReports = ({ recentSales }) => {
                             return (
                                 <tr key={sale.id || index} className={`hover:bg-gray-50 transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"}`}>
                                     <td className="py-1.5 text-center">{index + 1}</td>
-                                    <td className="py-1.5 text-center font-semibold">{sale.docId || 'N/A'}</td>
-                                    <td className="py-1.5 text-center">{sale.createdAt ? new Date(sale.createdAt).toLocaleString() : 'N/A'}</td>
-                                    <td className="py-1.5 text-center">{sale.Party?.name || 'Walk-in'}</td>
+                                    <td className="py-1.5 text-left ">{sale?.docId || 'N/A'}</td>
+                                    <td className="py-1.5 text-left">{sale?.createdAt ? new Date(sale.createdAt).toLocaleString() : 'N/A'}</td>
+                                    <td className="py-1.5 text-left uppercase">{sale?.Party?.name || 'Walk-in'}</td>
 
                                     <td className="py-1.5 text-center">
                                         <span className="bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-green-200">

@@ -1231,6 +1231,7 @@ import imageDefault from "../../../assets/default-dp.png";
 import Swal from "sweetalert2";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 import MasterPageLayout from "../MasterPageLayout";
+import BarCodePrintFormat from "./BarcodePrintFormat";
 
 const MODEL = "Employee Master";
 
@@ -1284,6 +1285,7 @@ export default function Form() {
   const [employeeId, setEmployeeId] = useState("");
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState({});
+  const [stickerCount, setStickerCount] = useState(1);
 
   const nameRef = useRef(null);
   const input2Ref = useRef(null);
@@ -1489,7 +1491,28 @@ export default function Form() {
 
   const saveData = (nextProcess) => {
     const upperName = name.toUpperCase();
-    const finalData = { ...data, name: upperName };
+    const finalData = { ...data, name: upperName, };
+
+
+    let foundItem;
+
+    if (id) {
+      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.employeeId === employeeId);
+    } else {
+      foundItem = allData?.data?.some(item => item?.employeeId === employeeId);
+    }
+
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Employee Id already exists.",
+        icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
+      });
+      return false;
+    }
 
     if (!validateData(finalData)) {
       Swal.fire({ title: "Please fill all required fields...!", icon: "error", didClose: () => nameRef.current?.focus() });
@@ -1555,6 +1578,26 @@ export default function Form() {
 
   const handleView = (id) => { setId(id); setForm(true); setReadOnly(true); };
   const handleEdit = (id) => { setId(id); setForm(true); setReadOnly(false); };
+  const printData = async (id) => {
+    const { value: count } = await Swal.fire({
+      title: "How many stickers?",
+      input: "number",
+      inputLabel: "Stickers Count",
+      inputValue: 1,
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value || value < 1) {
+          return "Please enter a valid number!";
+        }
+      },
+    });
+
+    if (count) {
+      setStickerCount(count);
+      setId(id);
+      setBarcodePrintOpen(true);
+    }
+  };
 
   useEffect(() => {
     if (form && nameRef.current) nameRef.current.focus();
@@ -1573,8 +1616,10 @@ export default function Form() {
 
   const columns = [
     { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
-    { header: "Employee Id", accessor: (item) => item?.regNo, className: "font-medium text-gray-900 text-left uppercase w-40" },
+    { header: "Doc Id", accessor: (item) => item?.regNo, className: "font-medium text-gray-900 text-left uppercase w-40" },
     { header: "Employee Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72" },
+    { header: "Employee Id", accessor: (item) => item?.employeeId, className: "font-medium text-gray-900 text-left uppercase w-72" },
+
     { header: "Employee Category", accessor: (item) => item?.EmployeeCategory?.name, className: "font-medium text-gray-900 text-left uppercase w-48" },
     { header: "Gender", accessor: (item) => item?.gender, className: "font-medium text-gray-900 text-left uppercase w-24" },
     { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
@@ -1584,516 +1629,531 @@ export default function Form() {
   const errorClass = (field) => errors[field] ? "border-red-500 bg-red-50" : "";
 
 
+  const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
 
   return (
-    <MasterPageLayout
-      title="Employee Master"
-      onKeyDown={handleKeyDown}
-      headerActions={
-        <>
-          <button
-            onClick={() => { setForm(true); onNew(); setNewForm(true); }}
-            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-          >
-            <Plus size={16} /> Add New Employee
-          </button>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setView("table")}
-              className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "table" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}>
-              <Table size={16} /> Table
-            </button>
-            <button onClick={() => setView("card")}
-              className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "card" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}>
-              <LayoutGrid size={16} /> Cards
-            </button>
-          </div>
-        </>
-      }
-    >
-      {view === "table" ? (
-        <ReusableTable
-          columns={columns}
-          data={allData?.data}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={deleteData}
-          itemsPerPage={10}
+    <>
+      <Modal
+        isOpen={barcodePrintOpen}
+        onClose={() => setBarcodePrintOpen(false)}
+        widthClass="px-2 h-[90%] w-[90%]"
+      >
+        <BarCodePrintFormat
+          data={singleData?.data ? [singleData.data] : []}
+          noOfStickers={stickerCount}
         />
-      ) : (
-        <div className="h-full overflow-auto bg-gray-100 p-3">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {allData?.data?.map((employee, index) => (
-              <div key={index} onClick={() => { setId(employee.id); setForm(true); }}
-                className={`overflow-hidden rounded-lg border transition-all duration-200 hover:shadow-md cursor-pointer ${employee?.active ? "border-green-200" : "border-red-200"}`}>
-                <div className={`p-4 ${employee?.active ? "bg-green-50" : "bg-red-50"}`}>
-                  <div className="flex items-center">
-                    <img src={employee?.imageBase64 || imageDefault} alt="Profile"
-                      className={`h-12 w-12 rounded-full border-2 object-cover ${employee?.active ? "border-green-500" : "border-red-500"}`} />
-                    <div className="ml-3">
-                      <h3 className="font-medium text-gray-900">{employee?.name}</h3>
-                      <p className="text-xs text-gray-500">{employee?.regNo}</p>
+      </Modal>
+      <MasterPageLayout
+        title="Employee Master"
+        onKeyDown={handleKeyDown}
+        headerActions={
+          <>
+            <button
+              onClick={() => { setForm(true); onNew(); setNewForm(true); }}
+              className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+            >
+              <Plus size={16} /> Add New Employee
+            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setView("table")}
+                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "table" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}>
+                <Table size={16} /> Table
+              </button>
+              <button onClick={() => setView("card")}
+                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "card" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}>
+                <LayoutGrid size={16} /> Cards
+              </button>
+            </div>
+          </>
+        }
+      >
+        {view === "table" ? (
+          <ReusableTable
+            columns={columns}
+            data={allData?.data}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={deleteData}
+            itemsPerPage={10}
+            printData={printData}
+          />
+        ) : (
+          <div className="h-full overflow-auto bg-gray-100 p-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {allData?.data?.map((employee, index) => (
+                <div key={index} onClick={() => { setId(employee.id); setForm(true); }}
+                  className={`overflow-hidden rounded-lg border transition-all duration-200 hover:shadow-md cursor-pointer ${employee?.active ? "border-green-200" : "border-red-200"}`}>
+                  <div className={`p-4 ${employee?.active ? "bg-green-50" : "bg-red-50"}`}>
+                    <div className="flex items-center">
+                      <img src={employee?.imageBase64 || imageDefault} alt="Profile"
+                        className={`h-12 w-12 rounded-full border-2 object-cover ${employee?.active ? "border-green-500" : "border-red-500"}`} />
+                      <div className="ml-3">
+                        <h3 className="font-medium text-gray-900">{employee?.name}</h3>
+                        <p className="text-xs text-gray-500">{employee?.regNo}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white p-4">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div><p className="text-gray-500">Department</p><p className="font-medium">{employee?.department?.name || "-"}</p></div>
+                      <div><p className="text-gray-500">Status</p><p className={`font-medium ${employee?.active ? "text-green-600" : "text-red-600"}`}>{employee?.active ? "Active" : "Inactive"}</p></div>
+                      <div><p className="text-gray-500">Mobile</p><p className="font-medium">{employee?.mobile || "-"}</p></div>
+                      <div><p className="text-gray-500">Email</p><p className="font-medium truncate">{employee?.email || "-"}</p></div>
                     </div>
                   </div>
                 </div>
-                <div className="bg-white p-4">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div><p className="text-gray-500">Department</p><p className="font-medium">{employee?.department?.name || "-"}</p></div>
-                    <div><p className="text-gray-500">Status</p><p className={`font-medium ${employee?.active ? "text-green-600" : "text-red-600"}`}>{employee?.active ? "Active" : "Inactive"}</p></div>
-                    <div><p className="text-gray-500">Mobile</p><p className="font-medium">{employee?.mobile || "-"}</p></div>
-                    <div><p className="text-gray-500">Email</p><p className="font-medium truncate">{employee?.email || "-"}</p></div>
-                  </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {form && (
+          <Modal isOpen={form} form={form} widthClass={"w-[95%]  h-[95vh]"}
+            onClose={() => { setForm(false); setErrors({}); }}>
+            <div className="h-full flex flex-col bg-gray-200">
+              <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-2">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit Employee" : "Employee Master") : "Add New Employee"}
+                </h2>
+                <div className="flex gap-2">
+                  {readOnly && (
+                    <button type="button" onClick={() => { setForm(false); setSearchValue(""); setId(false); }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded">
+                      Cancel
+                    </button>
+                  )}
+                  {!readOnly && (
+                    <button type="button" onClick={() => saveData("close")}
+                      ref={saveCloseButtonRef} // ✅ Add ref
+                      tabIndex={0}
+                      onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
+                      className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs">
+                      <Check size={14} /> {id ? "Update" : "Save & close"}
+                    </button>
+                  )}
+                  {(!readOnly && !id) && (
+                    <button type="button" onClick={() => saveData("new")}
+                      ref={saveNewButtonRef} // ✅ Add ref
+                      tabIndex={0}
+                      onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                      <Check size={14} /> Save & New
+                    </button>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {form && (
-        <Modal isOpen={form} form={form} widthClass={"w-[95%]  h-[95vh]"}
-          onClose={() => { setForm(false); setErrors({}); }}>
-          <div className="h-full flex flex-col bg-gray-200">
-            <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-2">
-              <h2 className="text-lg font-semibold text-gray-800">
-                {id ? (!readOnly ? "Edit Employee" : "Employee Master") : "Add New Employee"}
-              </h2>
-              <div className="flex gap-2">
-                {readOnly && (
-                  <button type="button" onClick={() => { setForm(false); setSearchValue(""); setId(false); }}
-                    className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded">
-                    Cancel
-                  </button>
-                )}
-                {!readOnly && (
-                  <button type="button" onClick={() => saveData("close")}
-                    ref={saveCloseButtonRef} // ✅ Add ref
-                    tabIndex={0}
-                    onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
-                    className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs">
-                    <Check size={14} /> {id ? "Update" : "Save & close"}
-                  </button>
-                )}
-                {(!readOnly && !id) && (
-                  <button type="button" onClick={() => saveData("new")}
-                    ref={saveNewButtonRef} // ✅ Add ref
-                    tabIndex={0}
-                    onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
-                    className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
-                    <Check size={14} /> Save & New
-                  </button>
-                )}
-              </div>
-            </div>
+              <div className="flex-1 overflow-auto p-3">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
 
-            <div className="flex-1 overflow-auto p-3">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                  {/* ── LEFT COL ── */}
+                  <div className="lg:col-span-3 space-y-3">
+                    <div className="bg-white p-3 rounded-md border border-gray-200">
+                      <SingleImageFileUploadComponent
+                        setWebCam={setCameraOpen} disabled={readOnly}
+                        image={image} setImage={setImage} className="mb-3"
+                      />
+                      <div className="space-y-2">
 
-                {/* ── LEFT COL ── */}
-                <div className="lg:col-span-3 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
-                    <SingleImageFileUploadComponent
-                      setWebCam={setCameraOpen} disabled={readOnly}
-                      image={image} setImage={setImage} className="mb-3"
-                    />
-                    <div className="space-y-2">
+                        {/* Full Name */}
+                        <TextInputNew1
+                          ref={nameRef}
+                          name="Full Name"
+                          value={name}
+                          setValue={(val) => { setName(val); clearError("name"); }}
+                          required={true}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          onKeyDown={(e) => handleKeyNext(e, input2Ref)}
+                          className={errorClass("name")}
+                        />
+                        {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
 
-                      {/* Full Name */}
-                      <TextInputNew1
-                        ref={nameRef}
-                        name="Full Name"
-                        value={name}
-                        setValue={(val) => { setName(val); clearError("name"); }}
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* Gender */}
+                          <div>
+                            <DropdownInput
+                              ref={input2Ref}
+                              name="Gender"
+                              options={genderList}
+                              value={gender}
+                              setValue={(val) => { setGender(val); clearError("gender"); }}
+                              required
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              className={errorClass("gender")}
+                            />
+                            {errors.gender && <span className="text-red-500 text-xs ml-1">{errors.gender}</span>}
+                          </div>
+
+                          {/* Blood Group */}
+                          <div>
+                            <DropdownInput
+                              name="Blood Group"
+                              options={bloodList}
+                              value={bloodGroup}
+                              setValue={setBloodGroup}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Date of Birth */}
+                        <DateInput
+                          name="Date of Birth"
+                          value={dob}
+                          setValue={(val) => { setDob(val); clearError("dob"); }}
+                          required
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className={errorClass("dob")}
+                        />
+                        {errors.dob && <span className="text-red-500 text-xs ml-1">{errors.dob}</span>}
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-md border border-gray-200 h-[90px]">
+                      <h3 className="font-medium text-gray-800 mb-2 text-sm">Employment Status</h3>
+                      <ToggleButton
+                        options={statusDropdown}
+                        value={active}
+                        setActive={setActive}
                         required={true}
                         readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        onKeyDown={(e) => handleKeyNext(e, input2Ref)}
-                        className={errorClass("name")}
                       />
-                      {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
+                      {errors.active && <span className="text-red-500 text-xs ml-1">{errors.active}</span>}
+                    </div>
+                  </div>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        {/* Gender */}
+                  {/* ── MIDDLE COL ── */}
+                  <div className="lg:col-span-5 space-y-3">
+                    <div className="bg-white p-3 rounded-md border border-gray-200">
+                      <h3 className="font-medium text-gray-800 mb-2 text-sm">Official Details</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+                        {/* Employee Category */}
                         <div>
-                          <DropdownInput
-                            ref={input2Ref}
-                            name="Gender"
-                            options={genderList}
-                            value={gender}
-                            setValue={(val) => { setGender(val); clearError("gender"); }}
-                            required
-                            readOnly={readOnly}
-                            disabled={childRecord.current > 0}
-                            className={errorClass("gender")}
-                          />
-                          {errors.gender && <span className="text-red-500 text-xs ml-1">{errors.gender}</span>}
-                        </div>
-
-                        {/* Blood Group */}
-                        <div>
-                          <DropdownInput
-                            name="Blood Group"
-                            options={bloodList}
-                            value={bloodGroup}
-                            setValue={setBloodGroup}
-                            readOnly={readOnly}
-                            disabled={childRecord.current > 0}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Date of Birth */}
-                      <DateInput
-                        name="Date of Birth"
-                        value={dob}
-                        setValue={(val) => { setDob(val); clearError("dob"); }}
-                        required
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className={errorClass("dob")}
-                      />
-                      {errors.dob && <span className="text-red-500 text-xs ml-1">{errors.dob}</span>}
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-md border border-gray-200 h-[90px]">
-                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Employment Status</h3>
-                    <ToggleButton
-                      options={statusDropdown}
-                      value={active}
-                      setActive={setActive}
-                      required={true}
-                      readOnly={readOnly}
-                    />
-                    {errors.active && <span className="text-red-500 text-xs ml-1">{errors.active}</span>}
-                  </div>
-                </div>
-
-                {/* ── MIDDLE COL ── */}
-                <div className="lg:col-span-5 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
-                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Official Details</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-
-                      {/* Employee Category */}
-                      <div>
-                        <DropdownInputNew
-                          ref={input3Ref}
-                          nextRef={input4Ref}
-                          name="Employee Category"
-                          options={dropDownListObject(
-                            id ? employeeCategoryList?.data : employeeCategoryList?.data?.filter((item) => item.active),
-                            "name", "id"
-                          )}
-                          value={employeeCategory}
-                          setValue={(val) => { setEmployeeCategory(val); clearError("employeeCategory"); }}
-                          required={true}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                          addNewLabel="+ Add New Employee Category"
-                          childComponent={EmployeeCategoryMaster}
-                          addNewModalWidth="w-[40%] h-[40%]"
-                          className={errorClass("employeeCategory")}
-                        />
-                        {errors.employeeCategory && <span className="text-red-500 text-xs ml-1">{errors.employeeCategory}</span>}
-                      </div>
-
-                      {/* Department */}
-                      <div>
-                        <DropdownInputNew
-                          ref={input4Ref}
-                          name="Department"
-                          options={dropDownListObject(
-                            id ? departmentList?.data : departmentList?.data?.filter((item) => item.active),
-                            "name", "id"
-                          )}
-                          value={department}
-                          setValue={(val) => { setDepartment(val); clearError("department"); }}
-                          readOnly={readOnly}
-                          required={true}
-                          disabled={childRecord.current > 0}
-                          addNewLabel="+ Add New Department"
-                          childComponent={DepartmentMaster}
-                          addNewModalWidth="w-[40%] h-[45%]"
-                          className={errorClass("department")}
-                        />
-                        {errors.department && <span className="text-red-500 text-xs ml-1">{errors.department}</span>}
-                      </div>
-
-                      {/* Designation */}
-                      <div>
-                        <TextInputNew1
-                          name="Designation"
-                          value={designation}
-                          setValue={setDesignation}
-                          readOnly={readOnly}
-                          required={isCurrentEmployeeDoctor(employeeCategory)}
-                          disabled={childRecord.current > 0}
-                        />
-                      </div>
-
-                      {/* Joining Date */}
-                      <div>
-                        <DateInput
-                          name="Joining Date"
-                          value={joiningDate}
-                          setValue={(val) => { setJoiningDate(val); clearError("joiningDate"); }}
-                          required={true}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                          className={errorClass("joiningDate")}
-                        />
-                        {errors.joiningDate && <span className="text-red-500 text-xs ml-1">{errors.joiningDate}</span>}
-                      </div>
-
-                      {/* Employee Id */}
-                      <div>
-                        <TextInputNew1
-                          name="Employee Id"
-                          value={employeeId}
-                          setValue={(val) => { setEmployeeId(val); clearError("employeeId"); }}
-                          readOnly={readOnly}
-                          required={true}
-                          disabled={childRecord.current > 0}
-                          className={errorClass("employeeId")}
-                        />
-                        {errors.employeeId && <span className="text-red-500 text-xs ml-1">{errors.employeeId}</span>}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
-                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Additional Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-
-                      {/* Father Name */}
-                      <div>
-                        <TextInputNew1
-                          name="Father Name"
-                          value={fatherName}
-                          setValue={setFatherName}
-                          required
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                        />
-                      </div>
-
-                      {/* Marital Status */}
-                      <div>
-                        <DropdownInput
-                          name="Marital Status"
-                          options={maritalStatusList}
-                          value={maritalStatus}
-                          setValue={(val) => { setMaritalStatus(val); clearError("maritalStatus"); }}
-                          readOnly={readOnly}
-                          required={true}
-                          disabled={childRecord.current > 0}
-                        />
-                        {errors.maritalStatus && <span className="text-red-500 text-xs ml-1">{errors.maritalStatus}</span>}
-
-                      </div>
-
-                      {/* Aadhar No */}
-                      <div>
-                        <TextInput
-                          name="Aadhar No"
-                          value={aadharNo}
-                          type="aadhar"
-                          setValue={(val) => { setAadharNo(val); clearError("aadharNo"); }}
-                          required
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                          className={errorClass("aadharNo")}
-                        />
-                        {errors.aadharNo && <span className="text-red-500 text-xs ml-1">{errors.aadharNo}</span>}
-                      </div>
-
-                      {/* Pan No */}
-                      <div>
-                        <TextInput
-                          name="Pan No"
-                          value={panNo}
-                          type="pan_no"
-                          setValue={setPanNo}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                        />
-                      </div>
-
-                      {/* Degree */}
-                      <div className="col-span-2">
-                        <TextInputNew1
-                          name="Degree"
-                          value={degree}
-                          setValue={setDegree}
-                          readOnly={readOnly}
-
-                        />
-                      </div>
-
-                      {/* Specialization */}
-                      <div className="md:col-span-2">
-                        <TextAreaNew
-                          rows={2}
-                          name="Specialization"
-                          value={specialization}
-                          setValue={setSpecialization}
-                          readOnly={readOnly}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── RIGHT COL ── */}
-                <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white p-3 rounded-md border border-gray-200">
-                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Bank Details</h3>
-                    <div className=" grid grid-cols-2 gap-2">
-                      <div className="col-span-2">
-                        <TextInputNew1
-                          name="Bank Name"
-                          type="text"
-                          value={bankName}
-                          setValue={setBankName}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <TextInputNew1
-                          name="Branch Name"
-                          value={branchName}
-                          setValue={setbranchName}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                        />
-                      </div>
-                      <TextInput
-                        name="Account No"
-                        type="number"
-                        value={accountNo}
-                        setValue={setAccountNo}
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                      />
-                      <div>
-                        <TextInputNew1
-                          name="IFSC No"
-                          value={ifscNo}
-                          setValue={setIfscNo}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-md border border-gray-200 mt-2">
-                    <h3 className="font-medium text-gray-800 mb-2 text-sm">Contact Information</h3>
-                    <div className="space-y-2">
-
-                      {/* Mobile No */}
-                      <div className="w-full">
-                        <TextInputNew1
-                          name="Mobile No"
-                          type="number"
-                          value={mobile}
-                          setValue={(val) => { setMobile(val); clearError("mobile"); }}
-                          required={true}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                          className={errorClass("mobile")}
-                        />
-                        {errors.mobile && <span className="text-red-500 text-xs ml-1">{errors.mobile}</span>}
-                      </div>
-
-                      {/* Email */}
-                      <div className="w-full">
-                        <TextInputNew1
-                          name="Email Id"
-                          type="email"
-                          value={email}
-                          setValue={setEmail}
-                          readOnly={readOnly}
-                          disabled={childRecord.current > 0}
-                        />
-                      </div>
-
-                      {/* Address */}
-                      <TextAreaNew
-                        name="Address"
-                        rows="2"
-                        value={localAddress}
-                        setValue={(val) => { setlocalAddress(val); clearError("localAddress"); }}
-                        required
-                        readOnly={readOnly}
-                        disabled={childRecord.current > 0}
-                        className={errorClass("localAddress")}
-                      />
-                      {errors.localAddress && <span className="text-red-500 text-xs ml-1">{errors.localAddress}</span>}
-
-                      <div className="col-span-2 flex flex-row gap-2">
-                        {/* Pincode */}
-                        <div className="w-20">
-                          <TextInput
-                            name="Pincode"
-                            type="number"
-                            value={permPincode}
-                            setValue={(val) => { setPermPincode(val); clearError("permPincode"); }}
-                            readOnly={readOnly}
-                            disabled={childRecord.current > 0}
-                            required
-                            className={errorClass("permPincode")}
-                          />
-                          {errors.permPincode && <span className="text-red-500 text-xs ml-1">{errors.permPincode}</span>}
-                        </div>
-
-                        {/* City */}
-                        <div className="w-64">
                           <DropdownInputNew
-                            name="City/State"
-                            options={dropDownListMergedObject(
-                              (cityList?.data || []).filter((item) => id || item.active),
+                            ref={input3Ref}
+                            nextRef={input4Ref}
+                            name="Employee Category"
+                            options={dropDownListObject(
+                              id ? employeeCategoryList?.data : employeeCategoryList?.data?.filter((item) => item.active),
                               "name", "id"
                             )}
-                            value={permCity}
-                            setValue={(val) => { setPermCity(val); clearError("permCity"); }}
+                            value={employeeCategory}
+                            setValue={(val) => { setEmployeeCategory(val); clearError("employeeCategory"); }}
+                            required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
-                            required
-                            addNewLabel="+ Add New City"
-                            childComponent={CityMaster}
-                            addNewModalWidth="w-[40%] h-[350px]"
-                            className={errorClass("permCity")}
-                            ref={toggleButtonRef}
-                            nextRef={saveCloseButtonRef}
+                            addNewLabel="+ Add New Employee Category"
+                            childComponent={EmployeeCategoryMaster}
+                            addNewModalWidth="w-[40%] h-[40%]"
+                            className={errorClass("employeeCategory")}
                           />
-                          {errors.permCity && <span className="text-red-500 text-xs ml-1">{errors.permCity}</span>}
+                          {errors.employeeCategory && <span className="text-red-500 text-xs ml-1">{errors.employeeCategory}</span>}
+                        </div>
+
+                        {/* Department */}
+                        <div>
+                          <DropdownInputNew
+                            ref={input4Ref}
+                            name="Department"
+                            options={dropDownListObject(
+                              id ? departmentList?.data : departmentList?.data?.filter((item) => item.active),
+                              "name", "id"
+                            )}
+                            value={department}
+                            setValue={(val) => { setDepartment(val); clearError("department"); }}
+                            readOnly={readOnly}
+                            required={true}
+                            disabled={childRecord.current > 0}
+                            addNewLabel="+ Add New Department"
+                            childComponent={DepartmentMaster}
+                            addNewModalWidth="w-[40%] h-[45%]"
+                            className={errorClass("department")}
+                          />
+                          {errors.department && <span className="text-red-500 text-xs ml-1">{errors.department}</span>}
+                        </div>
+
+                        {/* Designation */}
+                        <div>
+                          <TextInputNew1
+                            name="Designation"
+                            value={designation}
+                            setValue={setDesignation}
+                            readOnly={readOnly}
+                            required={isCurrentEmployeeDoctor(employeeCategory)}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+
+                        {/* Joining Date */}
+                        <div>
+                          <DateInput
+                            name="Joining Date"
+                            value={joiningDate}
+                            setValue={(val) => { setJoiningDate(val); clearError("joiningDate"); }}
+                            required={true}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            className={errorClass("joiningDate")}
+                          />
+                          {errors.joiningDate && <span className="text-red-500 text-xs ml-1">{errors.joiningDate}</span>}
+                        </div>
+
+                        {/* Employee Id */}
+                        <div>
+                          <TextInputNew1
+                            name="Employee Id"
+                            value={employeeId}
+                            setValue={(val) => { setEmployeeId(val); clearError("employeeId"); }}
+                            readOnly={readOnly}
+                            required={true}
+                            disabled={childRecord.current > 0}
+                            className={errorClass("employeeId")}
+                          />
+                          {errors.employeeId && <span className="text-red-500 text-xs ml-1">{errors.employeeId}</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-md border border-gray-200">
+                      <h3 className="font-medium text-gray-800 mb-2 text-sm">Additional Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+                        {/* Father Name */}
+                        <div>
+                          <TextInputNew1
+                            name="Father Name"
+                            value={fatherName}
+                            setValue={setFatherName}
+                            required
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+
+                        {/* Marital Status */}
+                        <div>
+                          <DropdownInput
+                            name="Marital Status"
+                            options={maritalStatusList}
+                            value={maritalStatus}
+                            setValue={(val) => { setMaritalStatus(val); clearError("maritalStatus"); }}
+                            readOnly={readOnly}
+                            required={true}
+                            disabled={childRecord.current > 0}
+                          />
+                          {errors.maritalStatus && <span className="text-red-500 text-xs ml-1">{errors.maritalStatus}</span>}
+
+                        </div>
+
+                        {/* Aadhar No */}
+                        <div>
+                          <TextInput
+                            name="Aadhar No"
+                            value={aadharNo}
+                            type="aadhar"
+                            setValue={(val) => { setAadharNo(val); clearError("aadharNo"); }}
+                            required
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            className={errorClass("aadharNo")}
+                          />
+                          {errors.aadharNo && <span className="text-red-500 text-xs ml-1">{errors.aadharNo}</span>}
+                        </div>
+
+                        {/* Pan No */}
+                        <div>
+                          <TextInput
+                            name="Pan No"
+                            value={panNo}
+                            type="pan_no"
+                            setValue={setPanNo}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+
+                        {/* Degree */}
+                        <div className="col-span-2">
+                          <TextInputNew1
+                            name="Degree"
+                            value={degree}
+                            setValue={setDegree}
+                            readOnly={readOnly}
+
+                          />
+                        </div>
+
+                        {/* Specialization */}
+                        <div className="md:col-span-2">
+                          <TextAreaNew
+                            rows={2}
+                            name="Specialization"
+                            value={specialization}
+                            setValue={setSpecialization}
+                            readOnly={readOnly}
+                          />
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
+                  {/* ── RIGHT COL ── */}
+                  <div className="lg:col-span-4 space-y-3">
+                    <div className="bg-white p-3 rounded-md border border-gray-200">
+                      <h3 className="font-medium text-gray-800 mb-2 text-sm">Bank Details</h3>
+                      <div className=" grid grid-cols-2 gap-2">
+                        <div className="col-span-2">
+                          <TextInputNew1
+                            name="Bank Name"
+                            type="text"
+                            value={bankName}
+                            setValue={setBankName}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <TextInputNew1
+                            name="Branch Name"
+                            value={branchName}
+                            setValue={setbranchName}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+                        <TextInput
+                          name="Account No"
+                          type="number"
+                          value={accountNo}
+                          setValue={setAccountNo}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                        />
+                        <div>
+                          <TextInputNew1
+                            name="IFSC No"
+                            value={ifscNo}
+                            setValue={setIfscNo}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-md border border-gray-200 mt-2">
+                      <h3 className="font-medium text-gray-800 mb-2 text-sm">Contact Information</h3>
+                      <div className="space-y-2">
+
+                        {/* Mobile No */}
+                        <div className="w-full">
+                          <TextInputNew1
+                            name="Mobile No"
+                            type="number"
+                            value={mobile}
+                            setValue={(val) => { setMobile(val); clearError("mobile"); }}
+                            required={true}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            className={errorClass("mobile")}
+                          />
+                          {errors.mobile && <span className="text-red-500 text-xs ml-1">{errors.mobile}</span>}
+                        </div>
+
+                        {/* Email */}
+                        <div className="w-full">
+                          <TextInputNew1
+                            name="Email Id"
+                            type="email"
+                            value={email}
+                            setValue={setEmail}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+
+                        {/* Address */}
+                        <TextAreaNew
+                          name="Address"
+                          rows="2"
+                          value={localAddress}
+                          setValue={(val) => { setlocalAddress(val); clearError("localAddress"); }}
+                          required
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className={errorClass("localAddress")}
+                        />
+                        {errors.localAddress && <span className="text-red-500 text-xs ml-1">{errors.localAddress}</span>}
+
+                        <div className="col-span-2 flex flex-row gap-2">
+                          {/* Pincode */}
+                          <div className="w-20">
+                            <TextInput
+                              name="Pincode"
+                              type="number"
+                              value={permPincode}
+                              setValue={(val) => { setPermPincode(val); clearError("permPincode"); }}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              required
+                              className={errorClass("permPincode")}
+                            />
+                            {errors.permPincode && <span className="text-red-500 text-xs ml-1">{errors.permPincode}</span>}
+                          </div>
+
+                          {/* City */}
+                          <div className="w-64">
+                            <DropdownInputNew
+                              name="City/State"
+                              options={dropDownListMergedObject(
+                                (cityList?.data || []).filter((item) => id || item.active),
+                                "name", "id"
+                              )}
+                              value={permCity}
+                              setValue={(val) => { setPermCity(val); clearError("permCity"); }}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              required
+                              addNewLabel="+ Add New City"
+                              childComponent={CityMaster}
+                              addNewModalWidth="w-[40%] h-[350px]"
+                              className={errorClass("permCity")}
+                              ref={toggleButtonRef}
+                              nextRef={saveCloseButtonRef}
+                            />
+                            {errors.permCity && <span className="text-red-500 text-xs ml-1">{errors.permCity}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
             </div>
-          </div>
 
-          <Modal isOpen={cameraOpen} onClose={() => setCameraOpen(false)}>
-            <LiveWebCam picture={image} setPicture={setImage} onClose={() => setCameraOpen(false)} />
-          </Modal>
+            <Modal isOpen={cameraOpen} onClose={() => setCameraOpen(false)}>
+              <LiveWebCam picture={image} setPicture={setImage} onClose={() => setCameraOpen(false)} />
+            </Modal>
 
-          <Modal isOpen={leavingForm} onClose={() => setLeavingForm(false)}>
-            <EmployeeLeavingForm
-              leavingReason={leavingReason} setLeavingReason={setLeavingReason}
-              leavingDate={leavingDate} setLeavingDate={setLeavingDate}
-              canRejoin={canRejoin} setCanRejoin={setCanRejoin}
-              rejoinReason={rejoinReason} setRejoinReason={setRejoinReason}
-              onSubmit={submitLeavingForm} onClose={() => setLeavingForm(false)}
-            />
+            <Modal isOpen={leavingForm} onClose={() => setLeavingForm(false)}>
+              <EmployeeLeavingForm
+                leavingReason={leavingReason} setLeavingReason={setLeavingReason}
+                leavingDate={leavingDate} setLeavingDate={setLeavingDate}
+                canRejoin={canRejoin} setCanRejoin={setCanRejoin}
+                rejoinReason={rejoinReason} setRejoinReason={setRejoinReason}
+                onSubmit={submitLeavingForm} onClose={() => setLeavingForm(false)}
+              />
+            </Modal>
           </Modal>
-        </Modal>
-      )}
-    </MasterPageLayout>
+        )}
+      </MasterPageLayout>
+    </>
+
   );
 }

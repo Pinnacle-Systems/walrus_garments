@@ -6,10 +6,11 @@ import { useGetItemCategoryQuery } from "../../redux/uniformService/ItemCategory
 import { useGetcollectionsQuery } from "../../redux/uniformService/CollectionsService";
 import secureLocalStorage from "react-secure-storage";
 import Swal from 'sweetalert2';
-import { Check, X, Trash2, Globe, Package, FolderTree, Power, Settings } from "lucide-react";
+import { Check, X, Trash2, Globe, Package, FolderTree, Power, Settings, Eye, Info, Sparkles } from "lucide-react";
 import {
     TextInputNew1,
     DropdownInputNew,
+    MultiSelectDropdownNew,
     ToggleButton,
     ReusableTable,
 } from "../../Inputs";
@@ -21,7 +22,8 @@ import { useFormKeyboardNavigation } from '../../CustomHooks/useFormKeyboardNavi
 const OFFER_TYPES = [
     { show: 'Percentage Discount', value: 'Percentage' },
     { show: 'Fixed Amount Off', value: 'Fixed' },
-    { show: 'Volume Tiered', value: 'Volume' }
+    { show: 'Volume Tiered', value: 'Volume' },
+    { show: 'Price Override', value: 'Override' }
 ];
 
 const SCOPE_OPTIONS = [
@@ -33,8 +35,8 @@ const SCOPE_OPTIONS = [
 const CONDITION_FIELDS = [
     { show: 'Min Total Qty', value: 'Minimum Quantity' },
     { show: 'Cart Value', value: 'Cart Value' },
-    { show: 'Size Qty', value: 'Specific Size Quantity' },
-    { show: 'Equal Ratio', value: 'Equal Ratio' }
+    // { show: 'Size Qty', value: 'Specific Size Quantity' },
+    // { show: 'Equal Ratio', value: 'Equal Ratio' }
 ];
 
 const OPERATORS = [
@@ -49,25 +51,38 @@ const STACKING_RULES = [
     { value: 'Stackable', label: 'Stackable' }
 ];
 
-const INITIAL_FORM_STATE = {
-    name: "", code: "", description: "", benefitType: "Percentage",
-    status: "Active", priority: 1, scope: "Global", scopeSelection: [],
-    validFrom: new Date().toISOString().split('T')[0], validTo: "",
-    noEndDate: true, conditions: [{ field: "Minimum Quantity", operator: ">=", value: 1 }],
-    benefit: { percentage: 0, amount: 0, applyOn: 'Each line', tiers: [] },
-    stacking: "Best Of",
-    conditionLogic: "AND"
-};
+// Initial values moved to states
+
 
 const OffersPromotions = () => {
     const [form, setForm] = useState(false);
     const [readOnly, setReadOnly] = useState(false);
     const [id, setId] = useState("");
     const [searchValue, setSearchValue] = useState("");
-    const [formState, setFormState] = useState(INITIAL_FORM_STATE);
+    const [name, setName] = useState("");
+    const [code, setCode] = useState("");
+    const [description, setDescription] = useState("");
+    const [benefitType, setBenefitType] = useState("Percentage");
+    const [status, setStatus] = useState("Active");
+    const [priority, setPriority] = useState(1);
+    const [scope, setScope] = useState("Global");
+    const [scopeSelection, setScopeSelection] = useState([]);
+    const [validFrom, setValidFrom] = useState(new Date().toISOString().split('T')[0]);
+    const [validTo, setValidTo] = useState("");
+    const [noEndDate, setNoEndDate] = useState(true);
+    const [conditions, setConditions] = useState([{ field: "Minimum Quantity", operator: ">=", value: 1 }]);
+    const [benefitPercentage, setBenefitPercentage] = useState(0);
+    const [benefitAmount, setBenefitAmount] = useState(0);
+    const [benefitMaxDiscount, setBenefitMaxDiscount] = useState(0);
+    const [benefitApplyOn, setBenefitApplyOn] = useState('Each line');
+    const [benefitTiers, setBenefitTiers] = useState([]);
+    const [stacking, setStacking] = useState("Best Of");
+    const [conditionLogic, setConditionLogic] = useState("AND");
 
     const [showSelectionModal, setShowSelectionModal] = useState(false);
     const [selectionSearch, setSelectionSearch] = useState("");
+    const [previewItem, setPreviewItem] = useState(null);
+    const [showPreview, setShowPreview] = useState(false);
 
     const { refs, handlers } = useFormKeyboardNavigation();
     const { firstInputRef: nameRef, saveCloseButtonRef } = refs;
@@ -79,7 +94,7 @@ const OffersPromotions = () => {
 
     // --- Queries & Mutations ---
     const { data: sizes } = useGetSizeMasterQuery(params);
-    const sizeOptions = useMemo(() => (sizes?.data || []).map(s => ({ show: s.name, value: s.id })), [sizes]);
+    const sizeOptions = useMemo(() => (sizes?.data || []).map(s => ({ label: s.name, value: s.id })), [sizes]);
 
     const { data: items } = useGetItemMasterQuery({ params });
     const itemOptions = useMemo(() => (items?.data || []).map(i => ({ label: i.name, value: i.id })), [items]);
@@ -91,77 +106,107 @@ const OffersPromotions = () => {
     const collectionOptions = useMemo(() => (collections?.data || []).map(c => ({ label: c.name, value: c.id })), [collections]);
 
     const { data: allData, isLoading, isFetching } = useGetoffersPromotionsQuery({ params, searchParams: searchValue });
-    const { data: singleData, isFetching: isSingleFetching } = useGetoffersPromotionsByIdQuery(id, { skip: !id });
+    const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetoffersPromotionsByIdQuery(id, { skip: !id });
 
     const [addData] = useAddoffersPromotionsMutation();
     const [updateData] = useUpdateoffersPromotionsMutation();
     const [removeData] = useDeleteoffersPromotionsMutation();
 
     // --- Helpers ---
-    const updateState = (key, val) => setFormState(prev => ({ ...prev, [key]: val }));
     const updateCondition = (idx, key, val) => {
-        const newConds = [...formState.conditions];
+        const newConds = [...conditions];
         newConds[idx] = { ...newConds[idx], [key]: val };
-        updateState('conditions', newConds);
+        setConditions(newConds);
     };
-    const updateBenefit = (key, val) => updateState('benefit', { ...formState.benefit, [key]: val });
+
     const updateTier = (idx, key, val) => {
-        const newTiers = [...formState.benefit.tiers];
+        const newTiers = [...benefitTiers];
         newTiers[idx] = { ...newTiers[idx], [key]: val };
-        updateBenefit('tiers', newTiers);
+        setBenefitTiers(newTiers);
     };
 
     const syncFormWithDb = useCallback((data) => {
         if (data) {
-            setFormState({
-                ...INITIAL_FORM_STATE,
-                ...data,
-                status: data.active ? 'Active' : 'Inactive',
-                noEndDate: !data.validTo,
-                scope: data.scopeMode || "Global",
-                scopeSelection: data.OfferScope ? data.OfferScope.map(s => {
-                    const option = data.scopeMode === 'Item' ? itemOptions.find(i => i.value === s.refId) : collectionOptions.find(c => c.value === s.refId);
-                    return option || { label: `ID: ${s.refId}`, value: s.refId };
-                }) : [],
-                conditions: data.OfferRule?.[0]?.conditions ? data.OfferRule[0].conditions : INITIAL_FORM_STATE.conditions,
-                conditionLogic: data.OfferRule?.[0]?.logic || "AND",
-                stacking: data.stacking || "Best Of",
-                benefit: {
-                    ...INITIAL_FORM_STATE.benefit,
-                    percentage: (data.discountType === 'Percentage' ? data.discountValue : 0),
-                    amount: (data.discountType === 'Fixed' ? data.discountValue : 0),
-                    maxDiscount: data.maxDiscountValue || 0,
-                    applyOn: data.applyOn || "Each line",
-                    tiers: data.tiers ? (typeof data.tiers === 'string' ? JSON.parse(data.tiers) : data.tiers) : []
+            setName(data.name || "");
+            setCode(data.code || "");
+            setDescription(data.description || "");
+            setBenefitType(data.discountType || "Percentage");
+            setStatus(data.active ? 'Active' : 'Inactive');
+            setPriority(data.priority || 1);
+            setScope(data.scopeMode || "Global");
+            setValidFrom(data.validFrom || new Date().toISOString().split('T')[0]);
+            setValidTo(data.validTo || "");
+            setNoEndDate(!data.validTo);
+            setStacking(data.stacking || "Best Of");
+            setConditionLogic(data.OfferRule?.[0]?.logic || "AND");
+
+            setScopeSelection(data.OfferScope ? data.OfferScope.map(s => {
+                const option = data.scopeMode === 'Item' ? itemOptions.find(i => i.value === s.refId) : collectionOptions.find(c => c.value === s.refId);
+                return option || { label: `ID: ${s.refId}`, value: s.refId };
+            }) : []);
+
+            setConditions((data.OfferRule?.[0]?.conditions?.rules || [{ field: "Minimum Quantity", operator: ">=", value: 1 }]).map(c => {
+                if ((c.field === 'Specific Size Quantity' || c.field === 'Equal Ratio') && c.sizeId && !c.sizes) {
+                    const opt = sizeOptions.find(o => String(o.value) === String(c.sizeId));
+                    return { ...c, sizes: opt ? [opt] : [] };
                 }
-            });
+                return c;
+            }));
+
+            setBenefitPercentage(data.discountType === 'Percentage' ? data.discountValue : 0);
+            setBenefitAmount(data.discountType === 'Fixed' ? data.discountValue : 0);
+            setBenefitMaxDiscount(data.maxDiscountValue || 0);
+            setBenefitApplyOn(data.applyOn || "Each line");
+            setBenefitTiers(data.OfferTier?.length > 0 ? data.OfferTier : (data.tiers ? (typeof data.tiers === 'string' ? JSON.parse(data.tiers) : data.tiers) : []));
         } else {
-            setFormState(INITIAL_FORM_STATE);
+            setName("");
+            setCode("");
+            setDescription("");
+            setBenefitType("Percentage");
+            setStatus("Active");
+            setPriority(1);
+            setScope("Global");
+            setScopeSelection([]);
+            setValidFrom(new Date().toISOString().split('T')[0]);
+            setValidTo("");
+            setNoEndDate(true);
+            setConditions([{ field: "Minimum Quantity", operator: ">=", value: 1 }]);
+            setBenefitPercentage(0);
+            setBenefitAmount(0);
+            setBenefitMaxDiscount(0);
+            setBenefitApplyOn('Each line');
+            setBenefitTiers([]);
+            setStacking("Best Of");
+            setConditionLogic("AND");
         }
-    }, [itemOptions, collectionOptions]);
+    }, [id, itemOptions, collectionOptions, sizeOptions]);
 
     useEffect(() => {
-        if (singleData?.data && !isSingleFetching) {
+        if (singleData?.data) {
             syncFormWithDb(singleData.data);
         }
-    }, [singleData, isSingleFetching, syncFormWithDb]);
+    }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-    const data = {
-        ...formState,
+    const dataForSubmit = {
         ...params,
-        discountType: formState.benefitType,
-        discountValue: formState.benefitType === 'Percentage' ? formState.benefit.percentage : formState.benefit.amount,
-        maxDiscountValue: formState.benefit.maxDiscount,
-        active: formState.status === 'Active',
+        name,
+        code,
+        description,
+        priority,
+        scope,
+        validFrom,
+        validTo,
+        stacking,
+        conditionLogic,
+        conditions,
+        discountType: benefitType,
+        discountValue: benefitType === 'Percentage' ? benefitPercentage : benefitAmount,
+        maxDiscountValue: benefitMaxDiscount,
+        applyOn: benefitApplyOn,
+        active: status === 'Active',
         id,
-        scope: formState.scope,
-        scopeSelection: formState.scopeSelection,
-        validFrom: formState.validFrom,
-        validTo: formState.validTo,
-        priority: formState.priority,
-        description: formState.description,
-        tiers: JSON.stringify(formState.benefit.tiers || []),
-        selectionIds: JSON.stringify(formState.scopeSelection || [])
+        tiers: JSON.stringify(benefitTiers || []),
+        selectionIds: JSON.stringify(scopeSelection || [])
     };
 
     const validateData = (data) => {
@@ -185,6 +230,7 @@ const OffersPromotions = () => {
                 onNew();
             } else {
                 setForm(false);
+                setId("");
                 syncFormWithDb(undefined);
             }
         } catch (error) {
@@ -197,7 +243,7 @@ const OffersPromotions = () => {
     };
 
     const saveData = async (nextProcess) => {
-        const finalData = { ...data };
+        const finalData = { ...dataForSubmit };
 
         if (!validateData(finalData)) {
             Swal.fire({
@@ -220,13 +266,46 @@ const OffersPromotions = () => {
         }
     };
 
+    // const handleDelete = async (id) => {
+    //     const result = await Swal.fire({ title: 'Delete?', text: "Permanent Action", icon: 'warning', showCancelButton: true, confirmButtonColor: '#0f172a' });
+    //     if (result.isConfirmed) {
+    //         try { await removeData(id).unwrap(); Swal.fire('Deleted!', '', 'success'); }
+    //         catch (err) { Swal.fire('Error', 'Deletion failed.', 'error'); }
+    //     }
+    // };
     const handleDelete = async (id) => {
-        const result = await Swal.fire({ title: 'Delete?', text: "Permanent Action", icon: 'warning', showCancelButton: true, confirmButtonColor: '#0f172a' });
-        if (result.isConfirmed) {
-            try { await removeData(id).unwrap(); Swal.fire('Deleted!', '', 'success'); }
-            catch (err) { Swal.fire('Error', 'Deletion failed.', 'error'); }
+        if (id) {
+            if (!window.confirm("Are you sure to delete...?")) {
+                return;
+            }
+            try {
+                let deldata = await removeData(id).unwrap();
+                if (deldata?.statusCode == 1) {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Submission error',
+                        text: deldata.data?.message || 'Something went wrong!',
+                    });
+                    return;
+                }
+                setId("");
+                await Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+                });
+                setForm(false);
+                syncFormWithDb(undefined);
+            } catch (error) {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Submission error',
+                    text: error.data?.message || 'Something went wrong!',
+                });
+                setForm(false);
+            }
         }
     };
+
 
     const onNew = () => {
         setId("");
@@ -247,7 +326,12 @@ const OffersPromotions = () => {
         setForm(true);
     };
 
-    const isFormValid = formState.name && formState.code && formState.validFrom;
+    const handlePreview = (item) => {
+        setPreviewItem(item);
+        setShowPreview(true);
+    };
+
+    const isFormValid = name && code && validFrom;
 
     // --- Row components ---
     const ACTIVE = (<div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white"><Power size={10} /></div>);
@@ -255,60 +339,74 @@ const OffersPromotions = () => {
 
     const columns = [
         { header: "S.No", accessor: (item, index) => index + 1, className: "w-12 text-center" },
-        { header: "Offer Name", accessor: (item) => item.name, className: "text-left font-bold" },
-        { header: "Type", accessor: (item) => item.discountType, className: "text-left" },
-        { header: "Value", accessor: (item) => (item.discountType === 'Percentage' ? `${item.discountValue}%` : `₹${item.discountValue}`), className: "text-right font-black" },
-        { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "w-16 text-center" }
+        { header: "Offer Name", accessor: (item) => item.name, className: "w-64 text-left" },
+        { header: "Type", accessor: (item) => item.discountType, className: "w-24 text-left" },
+        { header: "Value", accessor: (item) => (['Volume', 'Override'].includes(item.discountType) ? "Tiered" : (item.discountType === 'Percentage' ? `${item.discountValue}%` : `₹${item.discountValue}`)), className: "w-24 text-right" },
+        { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "w-16 text-center" },
+        {
+            header: "Preview",
+            accessor: (item) => (
+                <button
+                    onClick={(e) => { e.stopPropagation(); handlePreview(item); }}
+                    className="p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-1 mx-auto group"
+                >
+                    <Eye size={12} className="group-hover:scale-110" />
+                </button>
+            ),
+            className: "w-16 text-center"
+        }
     ];
 
-    const formBody = (
-        <div className="flex-1 overflow-auto p-3">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 h-full">
+    // console.log(formState, "formState")
 
-                {/* COL 1: IDENTITY & TIMELINE (2 Units) */}
-                <div className="lg:col-span-2 space-y-3 flex flex-col h-full">
-                    <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm">
-                        <h3 className="font-bold text-gray-800 mb-2 text-[11px] uppercase tracking-wider opacity-60">Identity</h3>
-                        <div className="space-y-3">
-                            <TextInputNew1 ref={nameRef} name="Offer Name" value={formState.name} setValue={(v) => updateState('name', v)} readOnly={readOnly} required />
-                            <TextInputNew1 name="Code" value={formState.code} setValue={(v) => updateState('code', v)} readOnly={readOnly} required />
-                            <DropdownInputNew name="Offer Type" options={OFFER_TYPES} value={formState.benefitType} setValue={(v) => updateState('benefitType', v)} readOnly={readOnly} />
-                            <TextInputNew1 name="Priority" type="number" value={formState.priority} setValue={(v) => updateState('priority', v)} readOnly={readOnly} />
+    const formBody = (
+        <div className="flex-1 flex flex-col overflow-hidden p-2 bg-gray-100/50">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 flex-1 min-h-0">
+
+                {/* COL 1: BASIC DETAILS & TIMELINE (3 Units) */}
+                <div className="lg:col-span-3 space-y-2 flex flex-col h-full overflow-y-auto pr-1">
+                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
+                        <h3 className="font-bold text-gray-800 mb-1.5 text-[10px] uppercase tracking-wider opacity-60">Basic Details</h3>
+                        <div className="space-y-2">
+                            <TextInputNew1 ref={nameRef} name="Offer Name" value={name} setValue={setName} readOnly={readOnly} required />
+                            <TextInputNew1 name="Code" value={code} setValue={setCode} readOnly={readOnly} required />
+                            <DropdownInputNew name="Offer Type" options={OFFER_TYPES} value={benefitType} setValue={setBenefitType} readOnly={readOnly} />
+                            <TextInputNew1 name="Priority" type="number" value={priority} setValue={setPriority} readOnly={readOnly} />
                         </div>
                     </div>
 
-                    <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm">
-                        <h3 className="font-bold text-gray-800 mb-2 text-[11px] uppercase tracking-wider opacity-60">Timeline</h3>
-                        <div className="space-y-3 mb-2">
-                            <TextInputNew1 name="Starts From" type="date" value={formState.validFrom} setValue={(v) => updateState('validFrom', v)} readOnly={readOnly} required />
+                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm">
+                        <h3 className="font-bold text-gray-800 mb-1.5 text-[10px] uppercase tracking-wider opacity-60">Timeline</h3>
+                        <div className="space-y-2 mb-1.5">
+                            <TextInputNew1 name="Starts From" type="date" value={validFrom} setValue={setValidFrom} readOnly={readOnly} required />
                             <div className="space-y-1">
-                                <TextInputNew1 name="Ends At" type="date" value={formState.validTo} setValue={(v) => updateState('validTo', v)} readOnly={readOnly || formState.noEndDate} disabled={formState.noEndDate} />
+                                <TextInputNew1 name="Ends At" type="date" value={validTo} setValue={setValidTo} readOnly={readOnly || noEndDate} disabled={noEndDate} />
                                 <label className="flex items-center gap-2 cursor-pointer mt-1 pl-1">
-                                    <input type="checkbox" checked={formState.noEndDate} onChange={(e) => updateState('noEndDate', e.target.checked)} disabled={readOnly} className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                    <input type="checkbox" checked={noEndDate} onChange={(e) => setNoEndDate(e.target.checked)} disabled={readOnly} className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Running Forever</span>
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm mt-auto">
-                        <h3 className="font-bold text-gray-800 mb-2 text-[11px] uppercase tracking-wider opacity-60">Status</h3>
-                        <ToggleButton name="Is Active" value={formState.status === 'Active'} setActive={(v) => updateState('status', v ? 'Active' : 'Inactive')} readOnly={readOnly} />
+                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm mt-auto">
+                        <h3 className="font-bold text-gray-800 mb-1.5 text-[10px] uppercase tracking-wider opacity-60">Status</h3>
+                        <ToggleButton name="Is Active" value={status === 'Active'} setActive={(v) => setStatus(v ? 'Active' : 'Inactive')} readOnly={readOnly} />
                     </div>
                 </div>
 
-                {/* COL 2: SCOPE & RULES (7 Units) - Table Structure */}
-                <div className="lg:col-span-7 flex flex-col h-full space-y-3">
-                    <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm flex flex-col">
-                        <h3 className="font-bold text-gray-800 mb-3 text-[11px] uppercase tracking-wider opacity-60">Targeting Strategy</h3>
-                        <table className="w-full text-[11px] border-collapse">
+                {/* COL 2: SCOPE & RULES (6 Units) - Table Structure */}
+                <div className="lg:col-span-6 flex flex-col h-full space-y-2">
+                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm flex flex-col">
+                        <h3 className="font-bold text-gray-800 mb-2 text-[10px] uppercase tracking-wider opacity-60">Targeting Strategy</h3>
+                        <table className="w-full text-[10px] border-collapse">
                             <tbody>
                                 <tr className="border-b border-gray-50">
                                     <td className="py-2 px-1 font-bold text-gray-400 uppercase w-20 text-[9px]">Scope Mode</td>
                                     <td className="py-2 px-1">
                                         <div className="grid grid-cols-3 gap-2">
                                             {SCOPE_OPTIONS.map(opt => (
-                                                <div key={opt.id} onClick={() => !readOnly && updateState('scope', opt.id)} className={`p-1 rounded border-2 text-center cursor-pointer transition-all ${formState.scope === opt.id ? 'border-indigo-600 bg-indigo-50 shadow-sm text-indigo-700' : 'border-gray-50 bg-gray-50 hover:bg-white'}`}>
+                                                <div key={opt.id} onClick={() => { if (!readOnly && scope !== opt.id) { setScope(opt.id); setScopeSelection([]); } }} className={`p-1 rounded border-2 text-center cursor-pointer transition-all ${scope === opt.id ? 'border-indigo-600 bg-indigo-50 shadow-sm text-indigo-700' : 'border-gray-50 bg-gray-50 hover:bg-white'}`}>
                                                     <div className="flex justify-center mb-0.5"><opt.icon size={11} /></div>
                                                     <div className="text-[9px] font-bold uppercase">{opt.label}</div>
                                                 </div>
@@ -316,7 +414,7 @@ const OffersPromotions = () => {
                                         </div>
                                     </td>
                                 </tr>
-                                {formState.scope !== 'Global' && (
+                                {scope !== 'Global' && (
                                     <tr>
                                         <td className="py-3 px-1 font-bold text-gray-400 uppercase align-top text-[9px]">Scope Target</td>
                                         <td className="py-2 px-1">
@@ -325,7 +423,7 @@ const OffersPromotions = () => {
                                                 onClick={() => setShowSelectionModal(true)}
                                                 className="w-full py-2 px-3 bg-indigo-50 border border-indigo-100 rounded text-indigo-700 font-bold text-[10px] uppercase hover:bg-indigo-100 transition-all flex justify-between items-center"
                                             >
-                                                <span>{formState.scopeSelection?.length || 0} {formState.scope}s Included</span>
+                                                <span>{scopeSelection?.length || 0} {scope}s Included</span>
                                                 <Settings size={12} className="opacity-50" />
                                             </button>
                                         </td>
@@ -335,16 +433,16 @@ const OffersPromotions = () => {
                         </table>
                     </div>
 
-                    <div className="bg-white rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0">
-                        <div className="p-3 border-b bg-gray-50 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <h3 className="font-bold text-gray-800 text-[13px] uppercase tracking-wider opacity-60">Eligibility Rules</h3>
+                    <div className="bg-white rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[35vh] lg:max-h-none">
+                        <div className="p-2 border-b bg-gray-50 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-bold text-gray-800 text-[11px] uppercase tracking-wider opacity-60">Eligibility Rules</h3>
                                 <div className="flex bg-gray-200 p-0.5 rounded-md">
                                     {['AND', 'OR'].map(logic => (
                                         <button
                                             key={logic}
-                                            onClick={() => !readOnly && updateState('conditionLogic', logic)}
-                                            className={`px-3 py-1 text-[10px] font-bold uppercase rounded transition-all ${formState.conditionLogic === logic ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                            onClick={() => !readOnly && setConditionLogic(logic)}
+                                            className={`px-3 py-1 text-[10px] font-bold uppercase rounded transition-all ${conditionLogic === logic ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                                         >
                                             {logic === 'AND' ? 'Match All' : 'Match Any'}
                                         </button>
@@ -353,7 +451,7 @@ const OffersPromotions = () => {
                             </div>
                             {!readOnly && (
                                 <button
-                                    onClick={() => updateState('conditions', [...formState.conditions, { field: "Minimum Quantity", operator: ">=", value: 1 }])}
+                                    onClick={() => setConditions([...conditions, { field: "Minimum Quantity", operator: ">=", value: 1 }])}
                                     className="text-[11px] font-bold text-blue-600 hover:underline uppercase"
                                 >
                                     + Add Rule
@@ -361,18 +459,18 @@ const OffersPromotions = () => {
                             )}
                         </div>
                         <div className="flex-1 overflow-auto">
-                            <table className="w-full text-[12px] text-left table-fixed">
+                            <table className="w-full text-[11px] text-left table-fixed">
                                 <thead className="bg-gray-100/80 sticky top-0 z-10">
                                     <tr>
                                         <th className="p-2 border-b font-bold text-gray-500 uppercase tracking-tighter text-[10px] w-12 text-center">S.No</th>
                                         <th className="p-2 border-b font-bold text-gray-500 uppercase tracking-tighter text-[10px] w-48">Condition</th>
-                                        <th className="p-2 border-b font-bold text-gray-500 uppercase tracking-tighter text-[10px] w-40 text-center">Operation</th>
-                                        <th className="p-2 border-b font-bold text-gray-500 uppercase tracking-tighter text-[10px] w-64 text-center">Value</th>
+                                        <th className="p-2 border-b font-bold text-gray-500 uppercase tracking-tighter text-[10px] w-60 text-center">Operation</th>
+                                        <th className="p-2 border-b font-bold text-gray-500 uppercase tracking-tighter text-[10px] w-24 text-center">Value</th>
                                         {!readOnly && <th className="p-2 border-b font-bold text-gray-500 uppercase tracking-tighter text-[10px] w-10 text-center"></th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {formState.conditions.map((cond, idx) => (
+                                    {conditions.map((cond, idx) => (
                                         <tr key={idx} className="hover:bg-blue-50/40 transition-colors group">
                                             <td className="p-2 text-center text-gray-400 font-bold">{idx + 1}</td>
                                             <td className="p-1">
@@ -387,10 +485,16 @@ const OffersPromotions = () => {
                                             </td>
                                             <td className="p-1 text-center">
                                                 <div className="w-full px-1">
-                                                    {cond.field === 'Specific Size Quantity' ? (
+                                                    {cond.field === 'Specific Size Quantity' || cond.field === 'Equal Ratio' ? (
                                                         <div className="flex gap-2 items-center">
-                                                            <div className="flex-1">
-                                                                <DropdownInputNew labelHidden={true} options={sizeOptions} value={cond.sizeId} setValue={(v) => updateCondition(idx, 'sizeId', v)} readOnly={readOnly} placeholder="Size" />
+                                                            <div className="flex-1 min-w-[120px]">
+                                                                <MultiSelectDropdownNew
+                                                                    labelHidden={true}
+                                                                    options={sizeOptions}
+                                                                    selected={cond.sizes || []}
+                                                                    setSelected={(v) => updateCondition(idx, 'sizes', v)}
+                                                                    readOnly={readOnly}
+                                                                />
                                                             </div>
                                                             <div className="w-20">
                                                                 <TextInputNew1 labelHidden={true} type="number" value={cond.value} setValue={(v) => updateCondition(idx, 'value', v)} readOnly={readOnly} placeholder="Qty" />
@@ -402,14 +506,14 @@ const OffersPromotions = () => {
                                                             <TextInputNew1 labelHidden={true} type="number" value={cond.value} setValue={(v) => updateCondition(idx, 'value', v)} readOnly={readOnly} />
                                                         </div>
                                                     ) : (
-                                                        <TextInputNew1 labelHidden={true} type="number" value={cond.value} setValue={(v) => updateCondition(idx, 'value', v)} readOnly={readOnly} />
+                                                        <TextInputNew1 labelHidden={true} type="number" value={cond.value} setValue={(v) => updateCondition(idx, 'value', v)} readOnly={readOnly} className={"text-right"} />
                                                     )}
                                                 </div>
                                             </td>
                                             {!readOnly && (
                                                 <td className="p-1 text-center">
                                                     <button
-                                                        onClick={() => updateState('conditions', formState.conditions.filter((_, i) => i !== idx))}
+                                                        onClick={() => setConditions(conditions.filter((_, i) => i !== idx))}
                                                         className="text-red-300 hover:text-red-500 transition-colors p-1"
                                                     >
                                                         <Trash2 size={12} />
@@ -418,7 +522,7 @@ const OffersPromotions = () => {
                                             )}
                                         </tr>
                                     ))}
-                                    {formState.conditions.length === 0 && (
+                                    {conditions.length === 0 && (
                                         <tr>
                                             <td colSpan={readOnly ? 3 : 4} className="p-8 text-center text-gray-400 italic font-medium tracking-tight">
                                                 No conditions set. Offer applies to all eligible scope items.
@@ -432,76 +536,85 @@ const OffersPromotions = () => {
                 </div>
 
                 {/* COL 3: REWARD & CONFLICTS (3 Units) */}
-                <div className="lg:col-span-3 flex flex-col h-full space-y-3">
-                    <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm">
-                        <h3 className="font-bold text-gray-800 mb-3 text-[13px] uppercase tracking-wider opacity-60">Stacking Logic</h3>
-                        <div className="space-y-1.5">
-                            {STACKING_RULES.map(rule => (
-                                <div key={rule.value} onClick={() => !readOnly && updateState('stacking', rule.value)} className={`px-3 py-2.5 rounded-md border flex items-center justify-between cursor-pointer transition-all ${formState.stacking === rule.value ? 'border-blue-600 bg-blue-50 text-blue-800 shadow-sm' : 'border-gray-100 text-gray-500 bg-gray-50/30 hover:bg-white'}`}>
-                                    <span className="text-[12px] font-bold uppercase tracking-wider">{rule.label}</span>
-                                    {formState.stacking === rule.value && <div className="bg-blue-600 rounded-full p-1 text-white"><Check size={8} /></div>}
-                                </div>
-                            ))}
+                <div className="lg:col-span-3 flex flex-col h-full space-y-2 overflow-hidden">
+                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[35vh] lg:max-h-none">
+                        <div className="flex justify-between items-center mb-1.5">
+                            <h3 className="font-bold text-gray-800 text-[11px] uppercase tracking-wider opacity-60">Reward Benefit</h3>
+                            {['Volume', 'Override'].includes(benefitType) && !readOnly && (
+                                <button
+                                    onClick={() => setBenefitTiers([...benefitTiers, { minQty: 1, type: 'Percentage', value: 0 }])}
+                                    className="text-[11px] font-bold text-blue-600 hover:underline uppercase"
+                                >
+                                    + Add Tier
+                                </button>
+                            )}
                         </div>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0">
-                        <h3 className="font-bold text-gray-800 mb-2 text-[13px] uppercase tracking-wider opacity-60">Reward Benefit</h3>
-                        <div className="flex-1 bg-gray-50/50 rounded-lg p-3 border border-gray-100 flex flex-col">
-                            {formState.benefitType === 'Percentage' && (
-                                <div className="space-y-4">
+                        <div className="flex-1 bg-gray-50/50 rounded-lg p-2 border border-gray-100 flex flex-col overflow-hidden">
+                            {benefitType === 'Percentage' && (
+                                <div className="space-y-2 overflow-y-auto">
                                     <div className="grid grid-cols-2 gap-3">
-                                        <TextInputNew1 name="Discount %" type="number" value={formState.benefit.percentage} setValue={(v) => updateBenefit('percentage', v)} readOnly={readOnly} />
-                                        <TextInputNew1 name="Max Cap (₹)" type="number" value={formState.benefit.maxDiscount} setValue={(v) => updateBenefit('maxDiscount', v)} readOnly={readOnly} />
+                                        <TextInputNew1 name="Discount %" type="number" value={benefitPercentage} setValue={setBenefitPercentage} readOnly={readOnly} />
+                                        <TextInputNew1 name="Max Cap (₹)" type="number" value={benefitMaxDiscount} setValue={setBenefitMaxDiscount} readOnly={readOnly} />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Applicable On</label>
                                         <div className="flex flex-col gap-1.5">
                                             {['Each line', 'Entire document', 'Cheapest item'].map(opt => (
-                                                <button key={opt} onClick={() => updateBenefit('applyOn', opt)} className={`px-3 py-2 rounded text-[11px] font-bold uppercase transition-all text-left flex justify-between items-center ${formState.benefit.applyOn === opt ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-100 hover:border-indigo-200'}`}>
+                                                <button key={opt} onClick={() => setBenefitApplyOn(opt)} className={`px-3 py-2 rounded text-[11px] font-bold uppercase transition-all text-left flex justify-between items-center ${benefitApplyOn === opt ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-100 hover:border-indigo-200'}`}>
                                                     {opt}
-                                                    {formState.benefit.applyOn === opt && <Check size={12} />}
+                                                    {benefitApplyOn === opt && <Check size={12} />}
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
                             )}
-                            {formState.benefitType === 'Fixed' && (
-                                <div className="space-y-4">
-                                    <TextInputNew1 name="Flat Amount Off (₹)" type="number" value={formState.benefit.amount} setValue={(v) => updateBenefit('amount', v)} readOnly={readOnly} />
+                            {benefitType === 'Fixed' && (
+                                <div className="space-y-2 overflow-y-auto">
+                                    <TextInputNew1 name="Flat Amount Off (₹)" type="number" value={benefitAmount} setValue={setBenefitAmount} readOnly={readOnly} />
                                     <div className="space-y-2">
                                         <label className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Applicable On</label>
                                         <div className="grid grid-cols-1 gap-1.5">
                                             {['Entire document', 'Each line'].map(opt => (
-                                                <button key={opt} onClick={() => updateBenefit('applyOn', opt)} className={`px-3 py-2 rounded text-[11px] font-bold uppercase transition-all text-left flex justify-between items-center ${formState.benefit.applyOn === opt ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-100 hover:border-slate-300'}`}>
+                                                <button key={opt} onClick={() => setBenefitApplyOn(opt)} className={`px-3 py-2 rounded text-[11px] font-bold uppercase transition-all text-left flex justify-between items-center ${benefitApplyOn === opt ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-gray-500 border border-gray-100 hover:border-slate-300'}`}>
                                                     {opt}
-                                                    {formState.benefit.applyOn === opt && <Check size={12} />}
+                                                    {benefitApplyOn === opt && <Check size={12} />}
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
                             )}
-                            {formState.benefitType === 'Volume' && (
-                                <div className="flex flex-col h-full">
-                                    <div className="flex-1 overflow-auto bg-white rounded border border-gray-100 shadow-inner mb-2">
-                                        <table className="w-full text-left text-[11px]">
-                                            <thead className="text-gray-400 uppercase font-black tracking-widest border-b border-gray-50 sticky top-0 bg-white z-10">
-                                                <tr><th className="p-2">Min Qty</th><th className="p-2">Reward</th><th className="p-2 text-right">Value</th></tr>
+                            {['Volume', 'Override'].includes(benefitType) && (
+                                <div className="flex flex-col h-full overflow-hidden">
+                                    <div className="flex-1 overflow-auto bg-white rounded border border-gray-100 shadow-inner mb-1">
+                                        <table className="w-full text-left text-[10px]">
+                                            <thead className="text-gray-400 uppercase font-bold text-[9px] tracking-widest border-b border-gray-50 sticky top-0 bg-white z-10">
+                                                <tr><th className="p-1.5">Min Qty</th><th className="p-1.5">Reward</th><th className="p-1.5 text-right">Value</th></tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-50">
-                                                {(formState.benefit.tiers || []).map((tier, idx) => (
+                                                {(benefitTiers || []).map((tier, idx) => (
                                                     <tr key={idx} className="hover:bg-blue-50/50">
-                                                        <td className="p-2 font-bold"><input type="number" value={tier.minQty} onChange={(e) => updateTier(idx, 'minQty', e.target.value)} className="w-12 bg-transparent focus:ring-0 text-gray-700" /></td>
-                                                        <td className="p-2 text-gray-500 uppercase">{tier.type === 'Percentage' ? 'Percent' : 'Amount'}</td>
-                                                        <td className="p-2 text-right font-black text-indigo-700"><input type="number" value={tier.value} onChange={(e) => updateTier(idx, 'value', e.target.value)} className="w-16 bg-transparent text-right focus:ring-0" /></td>
+                                                        <td className="p-1.5 font-bold"><input type="number" value={tier.minQty} onChange={(e) => updateTier(idx, 'minQty', e.target.value)} className="w-10 bg-transparent focus:ring-0 text-gray-700 text-[9px]" /></td>
+                                                        <td className="p-1.5">
+                                                            <div className="flex bg-gray-100 p-0.5 rounded w-fit">
+                                                                {[{ l: '%', v: 'Percentage' }, { l: '₹', v: 'Fixed' }].map(t => (
+                                                                    <button
+                                                                        key={t.v}
+                                                                        onClick={() => !readOnly && updateTier(idx, 'type', t.v)}
+                                                                        className={`px-1.5 py-0.5 rounded text-[8px] font-bold transition-all ${tier.type === t.v ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-500'}`}
+                                                                    >
+                                                                        {t.l}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-1.5 text-right font-bold text-indigo-700 text-[9px]"><input type="number" value={tier.value} onChange={(e) => updateTier(idx, 'value', e.target.value)} className="w-12 bg-transparent text-right focus:ring-0 text-[9px]" /></td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
                                     </div>
-                                    {!readOnly && <button onClick={() => updateBenefit('tiers', [...(formState.benefit.tiers || []), { minQty: 1, type: 'Percentage', value: 0 }])} className="w-full py-2 text-[11px] font-bold text-gray-500 border border-dashed border-gray-300 rounded hover:bg-gray-100 hover:text-black transition-all uppercase">+ Add Tier</button>}
                                 </div>
                             )}
                         </div>
@@ -519,7 +632,7 @@ const OffersPromotions = () => {
             </div>
 
             {form && (
-                <Modal isOpen={form} form={form} widthClass="w-[90%] h-[98vh]" onClose={() => setForm(false)}>
+                <Modal isOpen={form} form={form} widthClass="w-[95%] h-[98vh]" onClose={() => { setForm(false); setId(""); }}>
                     <div className="h-full flex flex-col bg-gray-200">
                         <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white rounded-t-lg">
                             <h2 className="text-lg font-semibold text-gray-800">
@@ -558,8 +671,8 @@ const OffersPromotions = () => {
                     <div className="h-full flex flex-col bg-gray-100">
                         <div className="p-4 bg-white border-b flex justify-between items-center">
                             <div>
-                                <h2 className="text-lg font-bold text-gray-800">Select {formState.scope}s</h2>
-                                <p className="text-[10px] text-gray-400 uppercase font-black">Managing targeting for: {formState.name || 'this promotion'}</p>
+                                <h2 className="text-lg font-bold text-gray-800">Select {scope}s</h2>
+                                <p className="text-[10px] text-gray-400 uppercase font-black">Managing targeting for: {name || 'this promotion'}</p>
                             </div>
                             <button onClick={() => setShowSelectionModal(false)} className="p-2 hover:bg-red-50 text-red-500 rounded-full transition-all">
                                 <X size={20} />
@@ -572,7 +685,7 @@ const OffersPromotions = () => {
                                 <div className="p-3 border-b bg-gray-50">
                                     <input
                                         type="text"
-                                        placeholder={`Search ${formState.scope}s...`}
+                                        placeholder={`Search ${scope}s...`}
                                         className="w-full p-2 border rounded-md text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
                                         value={selectionSearch}
                                         onChange={(e) => setSelectionSearch(e.target.value)}
@@ -580,18 +693,18 @@ const OffersPromotions = () => {
                                 </div>
                                 <div className="flex-1 overflow-auto p-2">
                                     <div className="grid grid-cols-1 gap-1">
-                                        {(formState.scope === 'Item' ? itemOptions : collectionOptions)
+                                        {(scope === 'Item' ? itemOptions : collectionOptions)
                                             .filter(opt => opt.label?.toLowerCase().includes(selectionSearch.toLowerCase()))
                                             .map(opt => {
-                                                const isSelected = formState.scopeSelection.some(s => s.value === opt.value);
+                                                const isSelected = scopeSelection.some(s => s.value === opt.value);
                                                 return (
                                                     <div
                                                         key={opt.value}
                                                         onClick={() => {
                                                             if (isSelected) {
-                                                                updateState('scopeSelection', formState.scopeSelection.filter(s => s.value !== opt.value));
+                                                                setScopeSelection(scopeSelection.filter(s => s.value !== opt.value));
                                                             } else {
-                                                                updateState('scopeSelection', [...formState.scopeSelection, opt]);
+                                                                setScopeSelection([...scopeSelection, opt]);
                                                             }
                                                         }}
                                                         className={`p-2.5 rounded border-b  cursor-pointer flex items-center justify-between transition-all ${isSelected ? 'bg-indigo-50/50 border-indigo-200' : 'hover:bg-gray-50 border-transparent'}`}
@@ -608,21 +721,21 @@ const OffersPromotions = () => {
                             {/* RIGHT: SELECTED PREVIEW */}
                             <div className="col-span-12 lg:col-span-5 flex flex-col bg-white rounded-lg border shadow-sm overflow-hidden text-[11px]">
                                 <div className="p-3 border-b bg-gray-50 flex justify-between items-center">
-                                    <span className="font-bold uppercase tracking-widest text-gray-500 text-[10px]">Selected ({formState.scopeSelection.length})</span>
-                                    <button onClick={() => updateState('scopeSelection', [])} className="text-red-500 hover:underline font-bold text-[9px] uppercase">Clear All</button>
+                                    <span className="font-bold uppercase tracking-widest text-gray-500 text-[10px]">Selected ({scopeSelection.length})</span>
+                                    <button onClick={() => setScopeSelection([])} className="text-red-500 hover:underline font-bold text-[9px] uppercase">Clear All</button>
                                 </div>
                                 <div className="flex-1 overflow-auto bg-gray-50/30">
-                                    {formState.scopeSelection.map(s => (
+                                    {scopeSelection.map(s => (
                                         <div key={s.value} className="p-2 border-b flex justify-between items-center bg-white m-1 rounded shadow-sm">
                                             <span className="font-medium text-gray-700 truncate mr-2">{s.label}</span>
-                                            <button onClick={() => updateState('scopeSelection', formState.scopeSelection.filter(item => item.value !== s.value))} className="text-red-400 hover:text-red-600">
+                                            <button onClick={() => setScopeSelection(scopeSelection.filter(item => item.value !== s.value))} className="text-red-400 hover:text-red-600">
                                                 <Trash2 size={12} />
                                             </button>
                                         </div>
                                     ))}
-                                    {formState.scopeSelection.length === 0 && (
+                                    {scopeSelection.length === 0 && (
                                         <div className="h-full flex items-center justify-center p-10 text-center text-gray-400 italic">
-                                            No selections made. This promotion will not target specific {formState.scope}s.
+                                            No selections made. This promotion will not target specific {scope}s.
                                         </div>
                                     )}
                                 </div>
@@ -630,6 +743,104 @@ const OffersPromotions = () => {
                                     <button onClick={() => setShowSelectionModal(false)} className="w-full py-2 bg-indigo-600 text-white rounded font-bold uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all">Confirm Selection</button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+            {showPreview && (
+                <Modal isOpen={showPreview} widthClass="w-[60%] h-[auto] max-h-[85vh]" onClose={() => setShowPreview(false)}>
+                    <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
+                        {/* Header */}
+                        <div className="p-5 bg-gradient-to-br from-indigo-950 via-blue-900 to-indigo-900 text-white flex justify-between items-center border-b border-indigo-700/50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2bg-white/10 rounded-xl backdrop-blur-md border border-white/20 shadow-inner">
+                                    <Sparkles size={24} className="text-yellow-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-black tracking-tight uppercase leading-none">{previewItem?.name}</h2>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mt-1 inline-block">Offer Intelligence Summary</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowPreview(false)} className="p-2 text-white/50 hover:text-white transition-colors bg-white/5 rounded-full border border-white/10">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 bg-gray-50/50 space-y-6 overflow-y-auto max-h-[60vh]">
+                            {/* Visual Logic Row */}
+                            <div className="grid grid-cols-3 gap-6">
+                                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-full mb-3"><Globe size={20} /></div>
+                                    <h4 className="font-black text-[10px] uppercase text-gray-400 tracking-wider mb-1">Applicability</h4>
+                                    <p className="text-xs font-bold text-gray-700">{previewItem?.scopeMode === 'Global' ? 'Store-Wide' : previewItem?.scopeMode}</p>
+                                </div>
+                                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-full mb-3"><Settings size={20} /></div>
+                                    <h4 className="font-black text-[10px] uppercase text-gray-400 tracking-wider mb-1">Offer Type</h4>
+                                    <p className="text-xs font-bold text-gray-700">{previewItem?.discountType}</p>
+                                </div>
+                                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+                                    <div className="p-3 bg-amber-50 text-amber-600 rounded-full mb-3"><Package size={20} /></div>
+                                    <h4 className="font-black text-[10px] uppercase text-gray-400 tracking-wider mb-1">Stacking</h4>
+                                    <p className="text-xs font-bold text-gray-700">{previewItem?.stacking || 'Normal'}</p>
+                                </div>
+                            </div>
+
+                            {/* Human Language Explanation */}
+                            <div className="bg-indigo-50/50 border-l-4 border-indigo-600 rounded-lg p-5">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Info size={16} className="text-indigo-600" />
+                                    <h3 className="text-sm font-black text-indigo-900 uppercase">How it works</h3>
+                                </div>
+                                <div className="space-y-4 text-gray-700 leading-relaxed text-[13px]">
+                                    <p>
+                                        This promotion targets <span className="font-black text-indigo-700 italic">
+                                            {previewItem?.scopeMode === 'Global' ? 'every single product in the store' : `specific ${previewItem?.scopeMode}s (${previewItem?.OfferScope?.length || 0} items)`}
+                                        </span>.
+                                    </p>
+                                    <p>
+                                        It will be triggered when a customer meets <span className="font-black"> ALL </span> of the following conditions:
+                                        <ul className="list-disc ml-5 mt-2 text-xs space-y-1">
+                                            {(previewItem?.OfferRule?.[0]?.conditions?.rules || []).map((rule, idx) => (
+                                                <li key={idx}>The {rule.field} is {rule.operator} {rule.value}</li>
+                                            ))}
+                                        </ul>
+                                    </p>
+                                    <div className="bg-white/60 p-4 rounded-lg border border-indigo-100 mt-2">
+                                        <h4 className="text-[10px] font-black text-indigo-900 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                            <Sparkles size={10} /> Live Calculation Example
+                                        </h4>
+                                        <div className="text-xs font-medium space-y-2">
+                                            {['Volume', 'Override'].includes(previewItem?.discountType) ? (
+                                                <div>
+                                                    <p className="mb-2">If a customer purchases different quantities, the reward scales as follows:</p>
+                                                    <div className="grid grid-cols-2 gap-2 max-w-sm">
+                                                        {(previewItem?.OfferTier || []).map((tier, idx) => (
+                                                            <div key={idx} className="bg-indigo-900 text-white p-2 rounded-md flex justify-between">
+                                                                <span className="font-bold">{tier.minQty}+ Items:</span>
+                                                                <span className="font-black">-{tier.value}{tier.type === 'Percentage' ? '%' : '₹'}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="p-3 bg-white border border-dashed border-gray-300 rounded text-center leading-relaxed">
+                                                    "If I buy items worth <span className="font-bold text-indigo-700">₹1,000</span>, I will get <span className="bg-green-100 px-1 rounded font-black text-green-700 line-through decoration-red-400">₹{previewItem?.discountType === 'Percentage' ? (1000 * previewItem?.discountValue / 100) : previewItem?.discountValue}</span> off, paying only <span className="font-black text-indigo-950">₹{previewItem?.discountType === 'Percentage' ? (1000 - (1000 * previewItem?.discountValue / 100)) : (1000 - previewItem?.discountValue)}</span>."
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-4 bg-white border-t flex justify-between items-center">
+                            <div className="flex items-center gap-2 text-gray-400 text-[10px] font-black uppercase tracking-tighter">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Valid from: {previewItem?.validFrom || 'Immediate'}
+                            </div>
+                            <button onClick={() => setShowPreview(false)} className="px-6 py-2 bg-indigo-950 text-white rounded-md font-bold uppercase tracking-widest text-[11px] hover:bg-black transition-all">Close Intelligence View</button>
                         </div>
                     </div>
                 </Modal>

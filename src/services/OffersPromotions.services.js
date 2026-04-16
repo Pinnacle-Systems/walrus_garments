@@ -11,7 +11,8 @@ async function get(req) {
         },
         include: {
             OfferScope: true,
-            OfferRule: true
+            OfferRule: true,
+            OfferTier: true
         },
         orderBy: {
             priority: 'desc'
@@ -26,7 +27,8 @@ async function getOne(id) {
         where: { id: parseInt(id) },
         include: {
             OfferScope: true,
-            OfferRule: true
+            OfferRule: true,
+            OfferTier: true
         }
     })
     if (!data) return NoRecordFound("Offer");
@@ -47,7 +49,8 @@ async function getSearch(req) {
         },
         include: {
             OfferScope: true,
-            OfferRule: true
+            OfferRule: true,
+            OfferTier: true
         }
     })
     return { statusCode: 0, data };
@@ -93,7 +96,7 @@ async function create(body) {
             maxDiscountValue: maxDiscountValue ? parseFloat(maxDiscountValue) : 0,
             freeItemId: freeItemId ? parseInt(freeItemId) : undefined,
             freeItemQty: freeItemQty ? parseFloat(freeItemQty) : 1,
-            branchId: branchId ? parseInt(branchId) : undefined,
+            // branchId: branchId ? parseInt(branchId) : undefined,
             OfferScope: {
                 create: parsedSelection.map(s => ({
                     type: scope,
@@ -114,6 +117,13 @@ async function create(body) {
                         }
                     }
                 }
+            },
+            OfferTier: {
+                create: (typeof tiers === 'string' ? JSON.parse(tiers) : (tiers || [])).map(t => ({
+                    minQty: t.minQty ? parseFloat(t.minQty) : 0,
+                    type: t.type,
+                    value: t.value ? parseFloat(t.value) : 0
+                }))
             }
         }
     })
@@ -146,7 +156,7 @@ async function update(id, body) {
         data: {
             name,
             code,
-            offerType,
+            // offerType: offerType ? String(offerType) : undefined,
             active,
             priority: priority ? parseInt(priority) : undefined,
             startTime,
@@ -189,9 +199,19 @@ async function update(id, body) {
                         }
                     }
                 }
+            },
+            OfferTier: {
+                deleteMany: {},
+                create: (typeof tiers === 'string' ? JSON.parse(tiers) : (tiers || [])).map(t => ({
+                    minQty: t.minQty ? parseFloat(t.minQty) : 0,
+                    type: t.type,
+                    value: t.value ? parseFloat(t.value) : 0
+                }))
             }
         },
     })
+    console.log(data, "offer create data")
+
     return { statusCode: 0, data };
 }
 

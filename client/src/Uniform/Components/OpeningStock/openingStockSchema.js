@@ -21,7 +21,7 @@ const FIXED_FIELD_DEFINITIONS = [
   {
     key: "sales_price",
     label: "Sales Price",
-    required: false,
+    required: true,
     type: "number",
     widthClass: "w-32",
     sampleValue: "599",

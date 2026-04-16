@@ -285,6 +285,7 @@ export const MultiSelectDropdownNew = ({
   className = "",
   required,
   disabled,
+  labelHidden = false,
 }) => {
 
   const customStyles = {
@@ -343,9 +344,11 @@ export const MultiSelectDropdownNew = ({
   };
   return (
     <div className={`block text-xs font-bold text-gray-600 mb-1 ${className} `}>
-      <span className="mb-3">
-        {required ? <RequiredLabel name={label ? label : name} /> : name}
-      </span>
+      {!labelHidden && (
+        <span className="mb-3">
+          {required ? <RequiredLabel name={label ? label : name} /> : (label || name)}
+        </span>
+      )}
 
       <div className="mt-1 ">
         <Select
@@ -1824,7 +1827,8 @@ export const ReusableTable = ({
   itemsPerPage = 15,
   width,
   childRecordLabel = "",
-  heightClass = "h-[calc(100%-0.75rem)]"
+  heightClass = "h-[calc(100%-0.75rem)]",
+  printData
 }) => {
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -2047,7 +2051,18 @@ export const ReusableTable = ({
                                 )}
 
                             </div>
-
+                            {printData && (
+                              <button
+                                className="text-green-600 gap-1 px-1   bg-green-50 rounded"
+                                onClick={() => hasPermission(() => printData(item.id), "edit")}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                  <rect x="6" y="14" width="12" height="8"></rect>
+                                </svg>
+                              </button>
+                            )}
                           </div>
                         </td>
                       )}
@@ -2733,7 +2748,8 @@ export const TextInputNew1 = forwardRef(({
   width = "full",
   max,
   handleChange,
-  onKeyDown
+  onKeyDown,
+  labelHidden = false,
 }, ref) => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -2750,7 +2766,7 @@ export const TextInputNew1 = forwardRef(({
   };
   return (
     <div className={`mb ${width}`}>
-      {name && (
+      {(name && !labelHidden) && (
         <label className="block text-xs font-bold text-gray-600 mb-1">
           {required ? <RequiredLabel name={label ? label : name} /> : name}
         </label>

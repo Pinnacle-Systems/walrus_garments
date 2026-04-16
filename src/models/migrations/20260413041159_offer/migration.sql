@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE `offer` MODIFY `offerType` VARCHAR(191) NULL,
+    MODIFY `active` BOOLEAN NULL DEFAULT true,
+    MODIFY `priority` INTEGER NULL DEFAULT 0,
+    MODIFY `discountType` VARCHAR(191) NULL,
+    MODIFY `createdAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
+    MODIFY `updatedAt` DATETIME(3) NULL;

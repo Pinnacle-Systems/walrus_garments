@@ -77,10 +77,12 @@ function findByName(name, list = []) {
 function buildLegacySeedMap(rows = []) {
   const nameToCode = new Map();
   const codeToName = new Map();
+  const nameToPrice = new Map();
 
   rows.forEach((row, index) => {
     const normalizedName = normalizeLookupValue(row?.item_name);
     const normalizedCode = normalizeCodeValue(row?.item_code);
+    const normalizedPrice = normalizeCodeValue(row?.sales_price);
 
     if (!normalizedName || !normalizedCode) {
       return;
@@ -96,13 +98,27 @@ function buildLegacySeedMap(rows = []) {
       throw Error(`Opening stock row ${index + 1} reuses item code ${normalizedCode} for a different item name.`);
     }
 
+    const existingPriceForName = nameToPrice.get(normalizedName);
+    if (
+      existingPriceForName !== undefined &&
+      existingPriceForName !== normalizedPrice
+    ) {
+      throw Error(
+        `Opening stock row ${index + 1} uses a different sales price for item ${row?.item_name}. ` +
+        `Expected ${existingPriceForName}, but got ${normalizedPrice}.`
+      );
+    }
+
     nameToCode.set(normalizedName, normalizedCode);
     codeToName.set(normalizedCode, normalizedName);
+    nameToPrice.set(normalizedName, normalizedPrice); // 👈 store price
+
   });
 
   return {
     nameToCode,
     codeToName,
+    nameToPrice
   };
 }
 
@@ -452,9 +468,13 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
   const isFieldValueMissing = React.useCallback((row, field) => {
     const value = row?.[field.key];
 
+
     if (field.key === "qty") {
       return !value || Number(value) <= 0;
     }
+
+
+
 
     if (field.key === "uom") {
       return !getResolvedUom(row)?.id;
@@ -907,8 +927,19 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       buildLegacySeedMap(stockItems);
     } catch (error) {
       // toast.error(error.message);
-      Swal.fire((error.data?.message || error.message));
-      return;
+      Swal.fire({
+        title: error.data?.message || error.message,
+        // width: '5000px',
+        customClass: {
+          popup: 'custom-swal-popup'
+        },
+        didOpen: () => {
+          const popup = Swal.getPopup();
+          if (popup) {
+            popup.style.height = '200px';
+          }
+        }
+      }); return;
     }
 
     const reviewState = buildMissingReviewState();
