@@ -219,6 +219,7 @@ const StockTransferForm = ({
             setStockItems(data?.FromLocationTransferItems ? data?.FromLocationTransferItems : [])
             setDeliveryChallanNo(data?.deliveryChallanNo ? data?.deliveryChallanNo : "")
 
+
         } else {
             setDocId(data?.docId ? data?.docId : "")
 
@@ -523,7 +524,7 @@ const StockTransferForm = ({
                             searchItem={searchItem} setSearchItem={setSearchItem}
                             searchColor={searchColor} setSearchColor={setSearchColor}
                             searchSize={searchSize} setSearchSize={setSearchSize}
-                            stockDrivenFields={stockDrivenFields}
+                            stockDrivenFields={stockDrivenFields} readOnly={readOnly}
                         />
                     </div>
                     <div className="flex flex-col md:flex-row gap-2 justify-between flex-none bg-white p-2 rounded-md border border-slate-200 shadow-sm">

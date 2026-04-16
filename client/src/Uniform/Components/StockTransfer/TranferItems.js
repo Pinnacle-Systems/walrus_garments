@@ -34,7 +34,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
 
     const currentStockQty = allStockData?.data?.[0]?._sum?.qty
 
-    console.log(currentStockQty, "currentStockQty", allStockData?.data?.[0]?._sum?.qty)
+    console.log(readOnly, id, "check condtion")
 
 
 
@@ -47,7 +47,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                 className={`hover:bg-gray-50  transition-colors border-b border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                     }`}
                 onContextMenu={(e) => {
-                    if (!readOnly) {
+                    if (!readOnly && !id) {
                         handleRightClickFromOrder(e, index, "notes");
                     }
                 }}
