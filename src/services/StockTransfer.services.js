@@ -563,6 +563,50 @@ async function create(req) {
 
     let data;
     await prisma.$transaction(async (tx) => {
+        // Validation for DISCOUNT SECTION
+        const toLocation = await tx.location.findUnique({ where: { id: parseInt(toLocationId) } });
+        if (toLocation?.storeName === "DISCOUNT SECTION") {
+            for (const item of stockItems) {
+                if (!item.itemId) continue;
+
+                // 1. Check stock in From Location (must match transferQty)
+                const currentStock = await tx.stock.aggregate({
+                    where: {
+                        itemId: parseInt(item.itemId),
+                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                        colorId: item.colorId ? parseInt(item.colorId) : null,
+                        storeId: parseInt(fromLocationId),
+                        ...buildStockRuntimeFieldWhere(item)
+                    },
+                    _sum: { qty: true }
+                });
+
+                const availableQty = parseFloat(currentStock._sum.qty || 0);
+                const transferQty = parseFloat(item.transferQty || 0);
+
+                if (availableQty.toFixed(3) !== transferQty.toFixed(3)) {
+                    throw new Error(`Item ID ${item.itemId} must be transferred fully (${availableQty}) to DISCOUNT SECTION.`);
+                }
+
+                // 2. Check stock in OTHER locations (must be 0)
+                const otherStock = await tx.stock.aggregate({
+                    where: {
+                        itemId: parseInt(item.itemId),
+                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                        colorId: item.colorId ? parseInt(item.colorId) : null,
+                        storeId: { not: parseInt(fromLocationId) },
+                        ...buildStockRuntimeFieldWhere(item)
+                    },
+                    _sum: { qty: true }
+                });
+
+                console.log(otherStock, "otherStock")
+
+                if (parseFloat(otherStock._sum.qty || 0) > 0) {
+                    throw new Error(`Item ID ${item.itemId} has stock (${parseFloat(otherStock._sum.qty).toFixed(3)}) in other locations. Clear that stock first.`);
+                }
+            }
+        }
 
         data = await tx.StockTransfer.create({
             data: {
@@ -688,6 +732,61 @@ const update = async (id, body) => {
         updateData.deliveryChallanNo = deliveryChallanNo;
     }
     await prisma.$transaction(async (tx) => {
+        // Validation for DISCOUNT SECTION (Update)
+        const toLocId = toLocationId || dataFound.toLocationId;
+        const fromLocId = fromLocationId || dataFound.fromLocationId;
+
+        const toLocation = await tx.location.findUnique({ where: { id: parseInt(toLocId) } });
+        if (toLocation?.storeName === "DISCOUNT SECTION") {
+            for (const item of stockItems) {
+                if (!item.itemId) continue;
+
+                // 1. Check stock in From Location
+                const currentStock = await tx.stock.aggregate({
+                    where: {
+                        itemId: parseInt(item.itemId),
+                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                        colorId: item.colorId ? parseInt(item.colorId) : null,
+                        storeId: parseInt(fromLocId),
+                        ...buildStockRuntimeFieldWhere(item)
+                    },
+                    _sum: { qty: true }
+                });
+
+                let existingItemQty = 0;
+                if (item.id) {
+                    const existingRecord = await tx.FromLocationTransferItems.findUnique({
+                        where: { id: parseInt(item.id) },
+                        select: { transferQty: true }
+                    });
+                    existingItemQty = parseFloat(existingRecord?.transferQty || 0);
+                }
+
+                const availableQty = parseFloat(currentStock._sum.qty || 0) + existingItemQty;
+                const transferQty = parseFloat(item.transferQty || 0);
+
+                if (availableQty.toFixed(3) !== transferQty.toFixed(3)) {
+                    throw new Error(`Item ID ${item.itemId} must be transferred fully (${availableQty}) from this location.`);
+                }
+
+                // 2. Check stock in OTHER locations
+                const otherStock = await tx.stock.aggregate({
+                    where: {
+                        itemId: parseInt(item.itemId),
+                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                        colorId: item.colorId ? parseInt(item.colorId) : null,
+                        storeId: { not: parseInt(fromLocId) },
+                        ...buildStockRuntimeFieldWhere(item)
+                    },
+                    _sum: { qty: true }
+                });
+
+                if (parseFloat(otherStock._sum.qty || 0) > 0) {
+                    throw new Error(`Item ID ${item.itemId} has stock in other locations. Clear that stock first.`);
+                }
+            }
+        }
+
         data = await tx.stockTransfer.update({
             where: {
                 id: parseInt(id),

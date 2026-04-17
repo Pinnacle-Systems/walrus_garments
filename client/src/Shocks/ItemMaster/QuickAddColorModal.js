@@ -42,7 +42,16 @@ const QuickAddColorModal = ({ isOpen, onClose, colorName, onCreated }) => {
         icon: "warning",
       }); return;
     }
-
+    if (code.length < 3) {
+      Swal.fire({
+        title: "Please enter 3 digit valid code...",
+        icon: "error",
+        didClose: () => {
+          codeRef?.current?.focus();
+        }
+      });
+      return;
+    }
 
     if (foundItem) {
       await Swal.fire({

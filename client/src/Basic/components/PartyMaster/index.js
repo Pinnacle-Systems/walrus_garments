@@ -218,15 +218,17 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
 
 
   if (view == "Customer") {
-    filterParty = allData?.data?.filter(item => item.isClient)
+    filterParty = allData?.data?.filter(item => item.isClient && !item.isB2C)
   }
   if (view === "Supplier") {
-    filterParty = allData?.data?.filter(item => item.isSupplier)
+    filterParty = allData?.data?.filter(item => item.isSupplier && !item.isB2C)
   }
   if (view == "All") {
-    filterParty = allData?.data
+    filterParty = allData?.data?.filter(item => !item.isB2C)
   }
-
+  if (view == "B2C") {
+    filterParty = allData?.data?.filter(item => item.isB2C)
+  }
 
 
   const syncFormWithDb = useCallback(
@@ -1035,17 +1037,17 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
 
 
 
-                    <div className="col-span-2">
+                    <div className="col-span-2">{console.log(allData?.data?.filter(i => i.id != id && (i.gstNo || i.panNo || i.aadharNo)), "Parent Company")}
                       <DropdownInputNew
                         name="Customer/supplier"
                         options={dropDownListObject(
                           id
-                            ? allData?.data?.filter(i => i.id != id && !i.parentId && i.gstNo)
+                            ? allData?.data?.filter(i => i.id != id && !i.parentId && (i.gstNo || i.panNo || i.aadharNo))
                             : allData?.data?.filter((item) =>
                               item.active &&
                               item.id !== id &&
                               !item.parentId &&
-                              item.gstNo &&
+                              (item.gstNo || item.panNo || item.aadharNo) &&
                               (
                                 (isClient && isSupplier) ||
                                 (isClient && item.isClient) ||
@@ -1658,17 +1660,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       titleClassName="text-xl font-bold text-gray-800"
       headerActions={
         <>
-          <button
-            onClick={() => {
-              setForm(true);
-              onNew();
-              setParentId("")
-            }}
-            className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
-          >
-            <Plus size={12} />
-            <span>Add New Customer/Supplier</span>
-          </button>
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => { setView("All") }}
@@ -1690,6 +1682,24 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
             >
               <LayoutGrid size={16} />
               Supplier
+            </button>
+            <button
+              onClick={() => { setView("B2C"); }}
+              className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "B2C" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}
+            >
+              <LayoutGrid size={16} />
+              B2C
+            </button>
+            <button
+              onClick={() => {
+                setForm(true);
+                onNew();
+                setParentId("")
+              }}
+              className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+            >
+              <Plus size={12} />
+              <span>Add New Customer/Supplier</span>
             </button>
           </div>
         </>
@@ -1850,17 +1860,17 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
 
 
 
-                      <div className="col-span-2">
+                      <div className="col-span-2">{console.log(allData?.data?.filter(i => i.id != id && (i.gstNo || i.panNo || i.aadharNo)), "Parent Company")}
                         <DropdownInputNew
                           name="Customer/supplier"
                           options={dropDownListObject(
                             id
-                              ? allData?.data?.filter(i => i.id != id && !i.parentId && i.gstNo)
+                              ? allData?.data?.filter(i => i.id != id && !i.parentId && (i.gstNo || i.panNo || i.aadharNo))
                               : allData?.data?.filter((item) =>
                                 item.active &&
                                 item.id !== id &&
                                 !item.parentId &&
-                                item.gstNo &&
+                                (item.gstNo || item.panNo || item.aadharNo) &&
                                 (
                                   (isClient && isSupplier) ||
                                   (isClient && item.isClient) ||

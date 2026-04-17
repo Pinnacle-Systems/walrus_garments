@@ -1,7 +1,7 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 import { normalizeLegacyBarcode, validateLegacyPriceRowShape } from './legacyStockRules.js';
-import { validateUniqueBarcodesWithinPayload } from './itemBarcodeRules.js';
+import { validateUniqueBarcodesWithinPayload, validateUniqueSkuCodesWithinPayload } from './itemBarcodeRules.js';
 import {
     getBarcodeGenerationMethod,
     validateVariantRows,
@@ -150,6 +150,40 @@ async function ensureUniqueItemBarcodes({ itemId, itemPriceList = [] }) {
         throw Error(`Barcode ${conflictingRow.barcode} is already associated with item ${conflictingRow.item.name}.`);
     }
 }
+
+
+async function ensureUniqueItemSkuCodes({ itemId, itemPriceList = [] }) {
+    const skuEntries = validateUniqueSkuCodesWithinPayload(itemPriceList);
+    const skus = [...new Set(skuEntries.map((entry) => entry.sku))];
+
+    if (!skus.length) {
+        return;
+    }
+
+    const conflictingRows = await prisma.itemPriceList.findMany({
+        where: {
+            sku: {
+                in: skus,
+            },
+            itemId: itemId ? { not: parseInt(itemId) } : undefined,
+        },
+        include: {
+            item: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            }
+        }
+    });
+
+    const conflictingRow = conflictingRows[0];
+    if (conflictingRow?.item?.name) {
+        throw Error(`SKU ${conflictingRow.sku} is already associated with item ${conflictingRow.item.name}.`);
+    }
+}
+
+
 
 function validateAndNormalizeMinimumStockQtyRows(rows = []) {
     const seenLocations = new Set();
@@ -365,7 +399,7 @@ async function getSearch(req) {
 }
 async function create(body) {
     const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, aliasName, itemPriceList, active,
-        sectionId, sectionType, subCategory, mainCategory, isLegacy, creationSource
+        sectionId, sectionType, subCategory, mainCategory, isLegacy, creationSource, isSameAsBarcode
     } = body
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
     const normalizedName = normalizeItemName(name);
@@ -384,6 +418,9 @@ async function create(body) {
         creationSource,
     });
     await ensureUniqueItemBarcodes({
+        itemPriceList,
+    });
+    await ensureUniqueItemSkuCodes({
         itemPriceList,
     });
     validateVariantRows({
@@ -405,6 +442,7 @@ async function create(body) {
             subCategoryId: parseIntOrUndefined(subCategory),
             aliasName: normalizedAliasName,
             isLegacy: normalizedIsLegacy,
+            isSameAsBarcode: parseOptionalBoolean(isSameAsBarcode),
             active: parseOptionalBoolean(active),
 
             ItemPriceList: itemPriceList?.length > 0
@@ -580,7 +618,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 
 
 async function update(id, body) {
-    const { styleId, sizeId, name, hsnId, code, active, itemPriceList, sectionId, fields, mainCategory, subCategory, aliasName, isLegacy } = body
+    const { styleId, sizeId, name, hsnId, code, active, itemPriceList, sectionId, fields, mainCategory, subCategory, aliasName, isLegacy, isSameAsBarcode } = body
 
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
 
@@ -606,6 +644,10 @@ async function update(id, body) {
         existingItem: dataFound,
     });
     await ensureUniqueItemBarcodes({
+        itemId: id,
+        itemPriceList,
+    });
+    await ensureUniqueItemSkuCodes({
         itemId: id,
         itemPriceList,
     });
@@ -640,6 +682,7 @@ async function update(id, body) {
                 mainCategoryId: parseIntOrUndefined(mainCategory),
                 subCategoryId: parseIntOrUndefined(subCategory),
                 aliasName: aliasName ? aliasName : undefined,
+                isSameAsBarcode: parseOptionalBoolean(isSameAsBarcode),
                 field1: fields?.[0] ?? "",
                 field2: fields?.[1] ?? "",
                 field3: fields?.[2] ?? "",

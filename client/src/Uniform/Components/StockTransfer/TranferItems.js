@@ -1,6 +1,6 @@
 import Swal from "sweetalert2";
 import { findFromList } from "../../../Utils/helper";
-import { useGetStockQuery } from "../../../redux/services/StockService";
+import { useGetStockQuery, useGetUnifiedStockQuery } from "../../../redux/services/StockService";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -27,12 +27,19 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
         {
             searchParams
 
-        }, { skip: !fromLocationId || !id }
-    );
+        }, { skip: !fromLocationId || !id });
 
-    console.log(allStockData, "allStockData", item?.itemId)
+    const { data: branchStockData } = useGetUnifiedStockQuery({
+        params: {
+            itemId: item?.itemId,
+            sizeId: item?.sizeId,
+            colorId: item?.colorId,
+            // No storeId to get total across all locations
+        }
+    }, { skip: !item?.itemId });
 
-    const currentStockQty = allStockData?.data?.[0]?._sum?.qty
+    const totalBranchStock = branchStockData?.data?.[0]?._sum?.qty || 0;
+    const hasOtherLocationStock = parseFloat(totalBranchStock) > parseFloat(item?.stockQty || 0);
 
     console.log(readOnly, id, "check condtion")
 
@@ -74,11 +81,21 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                         {item?.[field.key] || ""}
                     </td>
                 ))}
-                <td className="w-12 border border-gray-300 text-[11px] text-right   px-2">
-                    {item?.stockQty}
+                <td className="w-12 border border-gray-300 text-[11px] text-right px-2 relative group">
+                    <div className="flex items-center justify-end gap-1">
+                        {item?.stockQty}
+                        {hasOtherLocationStock && (
+                            <span 
+                                title={`Total ${parseFloat(totalBranchStock).toFixed(3)} available in all locations`}
+                                className="cursor-help text-blue-500 hover:text-blue-700 font-bold"
+                            >
+                                ⓘ
+                            </span>
+                        )}
+                    </div>
                 </td>
 
-                {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
+                {/* {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
                     <td className="w-48 border border-gray-300 text-[11px]  px-2">
                         <input
                             className=" h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
@@ -109,7 +126,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                             placeHolder="0.000"
                         />
                     </td>
-                )}
+                )} */}
 
 
 

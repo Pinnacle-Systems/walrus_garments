@@ -100,11 +100,11 @@ async function getSearch(req) {
 }
 
 async function create(body) {
-    const { name, companyId, active, accessory } = await body
+    const { name, companyId, active, code } = await body
     const data = await prisma.size.create(
         {
             data: {
-                name, companyId: parseInt(companyId), active,
+                name, companyId: parseInt(companyId), active, code
                 // isAccessory: accessory
             }
         }
@@ -113,7 +113,7 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, active, accessory } = await body
+    const { name, active, code } = await body
     const dataFound = await prisma.size.findUnique({
         where: {
             id: parseInt(id)
@@ -126,8 +126,7 @@ async function update(id, body) {
         },
         data:
         {
-            name, active,
-            // isAccessory: accessory
+            name, active, code
         },
     })
     return { statusCode: 0, data };

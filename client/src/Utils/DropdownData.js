@@ -87,9 +87,10 @@ export const directOrPo = [
     // { show: "Order Purchase Inward", value: "PurchaseInward" },
     { show: "Direct Inward", value: "DirectInward" },
 
-
-
 ]
+
+
+
 export const purchaseType = [
     { show: "General Purchase", value: "General Purchase" },
     { show: "Order Purchase", value: "Order Purchase" },
@@ -367,4 +368,15 @@ export const PaymentType = [
 export const TransactionAgainst = [
     { show: "Quotation", value: "QUOTATION" },
     { show: "Sales Invoice", value: "SALESINVOICE" },
+]
+
+
+export const platformList = [
+    { show: "Flipkart ", value: "FLIPKART" },
+    { show: "Amazon", value: "AMAZON" },
+    { show: "Meesho", value: "MEESHO" },
+    { show: "Myntra", value: "MYNTRA" },
+    { show: "JioMart ", value: "JIOMART" },
+    { show: "IndiaMART ", value: "INDIAMART" },
+    { show: "Other", value: "OTHER" },
 ]

@@ -19,7 +19,7 @@ import { Loader } from "../../../Basic/components";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import { useGetUomQuery } from "../../../redux/services/UomMasterService";
-import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
+import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import Modal from "../../../UiComponents/Modal";
@@ -55,6 +55,8 @@ const StockTransferForm = ({
     const { data: colorList } = useGetColorMasterQuery({ params: { ...params } });
     const { data: uomList } = useGetUomQuery({ params });
     const { data: itemList } = useGetItemMasterQuery({ params });
+    const { data: itemPriceList } = useGetItemPriceListQuery({ params });
+
     const { data: sizeList } = useGetSizeMasterQuery({ params });
     const { data: locationData } = useGetLocationMasterQuery({ params: { ...params } });
     const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
@@ -344,6 +346,20 @@ const StockTransferForm = ({
             return;
         }
 
+        if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
+            const hasMismatch = stockItems?.filter(i => i.itemId)?.some(i => 
+                parseFloat(i.stockQty || 0).toFixed(3) !== parseFloat(i.transferQty || 0).toFixed(3)
+            );
+            if (hasMismatch) {
+                Swal.fire({
+                    title: "Validation Error",
+                    text: "For DISCOUNT SECTION, Stock Quantity and Transfer Quantity must match exactly for all items.",
+                    icon: "error",
+                });
+                return;
+            }
+        }
+
 
 
         if (!window.confirm("Are you sure save the details ...?")) {
@@ -389,6 +405,7 @@ const StockTransferForm = ({
                     // barCodePerPage={barCodePerPage}
                     sizeList={sizeList}
                     itemList={itemList}
+                    itemPriceList={itemPriceList}
                 />
             </Modal>
             <Modal
@@ -498,7 +515,14 @@ const StockTransferForm = ({
                                         />
                                     </div>
 
-
+                                    <div className="col-span-1">
+                                        <button
+                                            className="1 px-2 py-0.5 mt-6 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
+                                            onClick={() => setOrderToGeneral(true)}
+                                        >
+                                            Fill Stock
+                                        </button>
+                                    </div>
 
 
 
@@ -558,7 +582,30 @@ const StockTransferForm = ({
                                 Edit
                             </button>
                             <button className="bg-slate-600 text-white px-4 py-1.5 rounded-md hover:bg-slate-700 flex items-center text-sm shadow-sm transition-all active:scale-95"
-                                onClick={() => setBarcodePrintOpen(true)}
+                                onClick={() => {
+                                    const selectedItems = stockItems?.filter(i => i.itemId && i.transferQty);
+                                    if (selectedItems?.length > 0) {
+                                        if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
+                                            const hasMismatch = selectedItems.some(i => 
+                                                parseFloat(i.stockQty || 0).toFixed(3) !== parseFloat(i.transferQty || 0).toFixed(3)
+                                            );
+                                            if (hasMismatch) {
+                                                Swal.fire({
+                                                    title: "Validation Error",
+                                                    text: "Cannot generate barcodes: Stock Quantity and Transfer Quantity must match exactly for all items in DISCOUNT SECTION.",
+                                                    icon: "error",
+                                                });
+                                                return;
+                                            }
+                                        }
+                                        setBarcodePrintOpen(true)
+                                    } else {
+                                        Swal.fire({
+                                            icon: "error",
+                                            text: "Please select at least one item and enter Transfer Quantity to print barcode",
+                                        })
+                                    }
+                                }}
                                 disabled={findFromList(toLocationId, locationData?.data, "storeName") != "DISCOUNT SECTION"}
                             >
                                 <FiPrinter className="w-4 h-4 mr-2" />

@@ -5,6 +5,11 @@ export function normalizeLegacyBarcode(barcode) {
     return normalizedBarcode || undefined;
 }
 
+export function normalizeLegacySkuCode(skuCode) {
+    const normalizedSkuCode = skuCode?.toString().trim();
+    return normalizedSkuCode || undefined;
+}
+
 export function validateLegacyPriceRowShape(itemPriceList = []) {
     if (!Array.isArray(itemPriceList) || itemPriceList.length !== 1) {
         throw Error("Legacy items must include exactly one price row.");

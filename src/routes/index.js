@@ -126,5 +126,6 @@ export { default as pointOfSales } from "./pointOfSales.route.js"
 export { default as subCategory } from "./SubCategory.route.js"
 export { default as offersPromotions } from "./offersPromotions.route.js"
 export { default as collections } from "./collections.route.js"
+export { default as deliveryChallan } from "./deliveryChallan.route.js"
 
 

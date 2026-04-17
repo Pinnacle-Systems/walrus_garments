@@ -156,6 +156,17 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       return;
     }
 
+    if (code.length < 3) {
+      Swal.fire({
+        title: "Please enter 3 digit valid code...",
+        icon: "error",
+        didClose: () => {
+          codeRef?.current?.focus();
+        }
+      });
+      return;
+    }
+
     let foundItem;
     if (id) {
       foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item.name.toUpperCase() === upperName);
@@ -169,8 +180,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       foundItemColor = allData?.data?.filter(i => i.id != id)?.some(item => item.code == code);
     } else {
       foundItemColor = allData?.data?.some(item => item.code == code);
-
     }
+
     if (foundItem) {
       Swal.fire({
         text: "The Color Name already exists.",
@@ -444,14 +455,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       }}
       onKeyDown={handleKeyDown}
     >
-        <ReusableTable
-          columns={columns}
-          data={allData?.data}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={deleteData}
-          itemsPerPage={15}
-        />
+      <ReusableTable
+        columns={columns}
+        data={allData?.data}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={deleteData}
+        itemsPerPage={15}
+      />
 
       <div>
         {form === true && (

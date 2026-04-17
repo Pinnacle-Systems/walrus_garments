@@ -11,6 +11,7 @@ const QuickAddSizeModal = ({ isOpen, onClose, sizeName, onCreated }) => {
   const params = getCommonParams();
   const [name, setName] = useState(sizeName || "");
   const [active, setActive] = useState(true);
+  const [code, setCode] = useState(sizeName || "");
 
   const { data: allData, isLoading, isFetching } = useGetSizeMasterQuery({ params });
 
@@ -18,18 +19,33 @@ const QuickAddSizeModal = ({ isOpen, onClose, sizeName, onCreated }) => {
 
   const handleSave = async () => {
 
-    let foundItem = allData?.data?.some(item => item?.name?.trim() == name?.trim());
+    let foundItem = allData?.data?.some(item => item?.name?.trim() == name?.trim() && item?.code?.trim() == code?.trim());
 
+
+    if (code.length < 2) {
+      Swal.fire({
+        title: "Please enter 2 digit valid code...",
+        icon: "error",
+        didClose: () => {
+          codeRef?.current?.focus();
+        }
+      });
+      return;
+    }
 
     if (foundItem) {
       Swal.fire({
-        text: "The size name is already exists.",
+        text: "The size name and code is already exists.",
         icon: "warning",
       });
       return false;
     }
     if (!name) {
-      toast.info("Please fill size name");
+      // toast.info("Please fill size name");
+      Swal.fire({
+        text: "Please fill size name",
+        icon: "warning",
+      });
       return;
     }
 
@@ -71,11 +87,19 @@ const QuickAddSizeModal = ({ isOpen, onClose, sizeName, onCreated }) => {
           </button> */}
         </div>
 
-        <div className="space-y-4">
+        `        <div className="space-y-4">
           <TextInput
             name="Size Name"
             value={name}
             setValue={setName}
+            required={true}
+          />
+        </div>
+        <div className="space-y-4">
+          <TextInput
+            name="Code"
+            value={code}
+            setValue={setCode}
             required={true}
           />
         </div>

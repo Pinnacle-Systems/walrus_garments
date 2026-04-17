@@ -35,23 +35,17 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
 
 
     function addItem(obj) {
-
         setStockItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             const isAlreadyAdded = newItems.some((i) =>
-                i.sizeId == obj.sizeId &&
-                i.itemId == obj.itemId &&
-                i.colorId == obj.colorId &&
-                stockDrivenFields.every((field) => String(i?.[field.key] || "") === String(obj?.[field.key] || ""))
+                parseInt(i.id) === parseInt(obj.id)
             );
 
             if (isAlreadyAdded) {
                 return newItems
             }
 
-
-
-            const emptyIndex = newItems.findIndex(v => v?.itemId == "");
+            const emptyIndex = newItems.findIndex(v => v?.itemId === "" || v?.itemId === undefined || v?.itemId === null);
 
             if (emptyIndex !== -1) {
                 newItems[emptyIndex] = obj;
@@ -59,10 +53,8 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                 newItems.push(obj);
             }
 
-
             return newItems
         });
-
     }
 
 
@@ -70,16 +62,10 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
         setStockItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
             newItems = newItems?.filter(item =>
-                !(
-                    parseInt(item.itemId) === parseInt(obj?.itemId) &&
-                    parseInt(item.sizeId) === parseInt(obj?.sizeId) &&
-                    parseInt(item.colorId) === parseInt(obj?.colorId) &&
-                    stockDrivenFields.every((field) => String(item?.[field.key] || "") === String(obj?.[field.key] || ""))
-                )
+                parseInt(item.id || 0) !== parseInt(obj?.id || 0)
             )
             return newItems
         });
-
     }
 
     function handleChange(obj) {
@@ -91,19 +77,16 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
     }
 
     function isItemAdded(obj) {
-        return stockItems?.findIndex(item =>
-            parseInt(item?.itemId) == parseInt(obj?.itemId) &&
-            parseInt(item?.sizeId) == parseInt(obj?.sizeId) &&
-            parseInt(item?.colorId) == parseInt(obj?.colorId) &&
-            stockDrivenFields.every((field) => String(item?.[field.key] || "") === String(obj?.[field.key] || ""))
-        ) !== -1
+        return stockItems?.some(item =>
+            parseInt(item?.id) === parseInt(obj?.id)
+        )
     }
 
     function handleSelectAllChange(value, poItems) {
         if (value) {
-            poItems?.forEach(item => addItem(item.id, item))
+            poItems?.forEach(item => addItem(item))
         } else {
-            poItems?.forEach(item => removeItem(item.id))
+            poItems?.forEach(item => removeItem(item))
         }
     }
 
@@ -156,7 +139,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                         </div>
                         <div className="justify-end items-center mt-4 mb-5">
 
-                            <div className="max-h-[600px] overflow-y-auto ">
+                            <div className="max-h-[540px] overflow-y-auto ">
                                 <table className="w-full border-collapse table-fixed">
                                     <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
                                         <tr>
@@ -241,7 +224,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                                        
                                                         border-b border-gray-200
                                                         text-[12px]
-                                                        ${yarnItem?.remainingQty === 0
+                                                        ${parseFloat(yarnItem?._sum?.qty || 0) === 0
                                                         ? "bg-gray-600 text-white"
                                                         : index % 2 === 0
                                                             ? "bg-white"
@@ -251,7 +234,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
 
 
                                                 onClick={() => {
-                                                    if (yarnItem?.remainingQty !== 0) {
+                                                    if (parseFloat(yarnItem?._sum?.qty || 0) !== 0) {
                                                         handleChange(yarnItem)
                                                     }
                                                 }}

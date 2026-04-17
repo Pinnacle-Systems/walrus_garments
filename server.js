@@ -70,6 +70,7 @@ import {
   subCategory,
   offersPromotions,
   collections,
+  deliveryChallan,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -243,6 +244,7 @@ app.use("/pointOfSales", pointOfSales)
 app.use("/subCategory", subCategory)
 app.use("/offersPromotions", offersPromotions)
 app.use("/collections", collections)
+app.use("/deliveryChallan", deliveryChallan)
 
 
 

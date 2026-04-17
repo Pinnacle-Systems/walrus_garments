@@ -242,7 +242,6 @@ async function get(req) {
 
 
         },
-
         by: [
             "itemId",
             "sizeId",
@@ -256,12 +255,14 @@ async function get(req) {
             qty: true,
         },
     })
-    // data = data.filter(item => (item._sum.qty > 0));
+    data = data.filter(item => (item._sum.qty > 0));
 
 
-    // console.log(data, 'data')
-
-
+    // Add random unique ID to each item
+    data = data.map(item => ({
+        ...item,
+        id: Math.floor(Math.random() * 10000000)
+    }));
 
 
     data = manualFilterSearchData(searchYarnAliasName, searchColor, data)

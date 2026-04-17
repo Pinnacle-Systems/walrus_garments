@@ -26,6 +26,7 @@ import {
   HsnMasterApi,
   AccessoryStockApi,
   paymentApi,
+  DeliveryChallanApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -217,6 +218,7 @@ const commonReducers = {
   SubCategoryMaster: SubCategoryMasterApi.reducer,
   offersPromotions: offersPromotionsApi.reducer,
   collections: collectionsApi.reducer,
+  deliveryChallan: DeliveryChallanApi.reducer,
 
 }
 const commonMiddleware = [countryMasterApi.middleware,
@@ -344,7 +346,8 @@ paymentApi.middleware,
 pointOfSalesApi.middleware,
 SubCategoryMasterApi.middleware,
 offersPromotionsApi.middleware,
-collectionsApi.middleware
+collectionsApi.middleware,
+DeliveryChallanApi.middleware
 ];
 
 

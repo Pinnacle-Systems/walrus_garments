@@ -62,4 +62,5 @@ export { default as PointOfSale } from "./PointOfSale";
 export { default as SalesReturn } from "./SalesReturn";
 export { default as Payment } from "./PaymentDetail";
 export { default as PartyOverAllLedger } from "./PurchaseOverAllLedger";
+export { default as DeliveryChallan } from "./DeliveryChallan";
 

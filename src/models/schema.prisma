@@ -1822,6 +1822,7 @@ model Dia {
 model Size {
   id                                        Int                                         @id @default(autoincrement())
   name                                      String?
+  code                                      String?
   isAccessory                               Boolean?                                    @default(false)
   Company                                   Company?                                    @relation(fields: [companyId], references: [id])
   companyId                                 Int?
@@ -4943,6 +4944,7 @@ model Item {
   mainCategoryId                     Int?
   SubCategory                        SubCategory?                         @relation(fields: [subCategoryId], references: [id])
   subCategoryId                      Int?
+  isSameAsBarcode                    Boolean                              @default(false)
   DirectItems                        DirectItems[]
   Stock                              Stock[]
   ItemPriceList                      ItemPriceList[]
@@ -5414,21 +5416,22 @@ model Payment {
 }
 
 model Pos {
-  id          Int        @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   docId       String?
   date        DateTime?
-  Branch      Branch?    @relation(fields: [branchId], references: [id])
+  Branch      Branch?       @relation(fields: [branchId], references: [id])
   branchId    Int?
-  Party       Party?     @relation(fields: [customerId], references: [id])
+  Party       Party?        @relation(fields: [customerId], references: [id])
   customerId  Int?
-  createdAt   DateTime?  @default(now())
-  updatedAt   DateTime?  @updatedAt
-  createdBy   User?      @relation("createdBy", fields: [createdById], references: [id])
+  createdAt   DateTime?     @default(now())
+  updatedAt   DateTime?     @updatedAt
+  createdBy   User?         @relation("createdBy", fields: [createdById], references: [id])
   createdById Int?
-  updatedBy   User?      @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy   User?         @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById Int?
   description String?
   PosItems    PosItems[]
+  PosPayments PosPayments[]
 }
 
 model PosItems {
@@ -5454,6 +5457,17 @@ model PosItems {
   priceType     String?
   Employee      Employee?          @relation(fields: [salesPersonId], references: [id])
   salesPersonId Int?
+}
+
+model PosPayments {
+  id             Int     @id @default(autoincrement())
+  Pos            Pos?    @relation(fields: [PosId], references: [id], onDelete: Cascade)
+  PosId          Int?
+  amount         String?
+  reference_no   String?
+  card_type      String?
+  bank_name      String?
+  transaction_id String?
 }
 
 model Collections {

@@ -13,7 +13,7 @@ import { useGetStyleMasterQuery } from "../../redux/uniformService/StyleMasterSe
 import { useGetSizeMasterQuery } from "../../redux/uniformService/SizeMasterService";
 import { useGetHsnMasterQuery } from "../../redux/services/HsnMasterServices";
 import { useGetColorMasterQuery } from "../../redux/uniformService/ColorMasterService";
-import { capitalizeFirstLetter, findFromList, resolveBarcodeGenerationMethod } from "../../Utils/helper";
+import { capitalizeFirstLetter, findFromList, isGridDatasValid, resolveBarcodeGenerationMethod } from "../../Utils/helper";
 import { useGetSectionMasterQuery } from "../../redux/uniformService/SectionMasterService";
 import { useGetLocationMasterQuery } from "../../redux/uniformService/LocationMasterServices";
 import { useGetItemControlPanelMasterQuery } from "../../redux/uniformService/ItemControlPanelService";
@@ -29,6 +29,7 @@ import { useGetSubCategoryQuery } from "../../redux/uniformService/SubCategoryMa
 import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
 import { SubCategoryMaster } from "..";
 import MasterPageLayout from "../../Basic/components/MasterPageLayout";
+import { toast } from "react-toastify";
 
 
 const createStandardPriceRow = () => ({
@@ -85,6 +86,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
   const [childRecord, setChildRecord] = useState("")
+  const [isSameAsBarcode, setIsSameAsBarcode] = useState(false);
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
   const {
     firstInputRef: nameRef,
@@ -183,7 +185,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         setStyleId(data?.styleId ? data?.styleId : "")
         setSizeId(data?.sizeId ? data?.sizeId : "")
         setName(data?.name ? data?.name : "")
-        setCode(data?.cose ? data?.code : "")
+        setCode(data?.code ? data?.code : "")
         setItemType(data?.itemType ? data?.itemType : "")
         setHsnId(data?.hsnId ? data?.hsnId : "")
         setPurchasePrice(data?.purchasePrice ? data?.purchasePrice : "")
@@ -200,6 +202,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         setMainCategory(data?.mainCategoryId ? data?.mainCategoryId : "")
         setSubCategory(data?.subCategoryId ? data?.subCategoryId : "")
         setAliasName(data?.aliasName ? data?.aliasName : "")
+        setIsSameAsBarcode(data?.isSameAsBarcode ? data?.isSameAsBarcode : false)
       } else {
 
         setName(data?.name ? data?.name : "")
@@ -218,6 +221,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         setMainCategory(data?.mainCategoryId ? data?.mainCategoryId : "")
         setSubCategory(data?.subCategoryId ? data?.subCategoryId : "")
         setAliasName(data?.aliasName ? data?.aliasName : "")
+        setIsSameAsBarcode(data?.isSameAsBarcode ? data?.isSameAsBarcode : false)
 
         const initialState = {};
         itemControlData?.data?.forEach((i) => {
@@ -287,6 +291,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     hsnId,
     active,
     isLegacy: isLegacyItem,
+    isSameAsBarcode,
     itemPriceList: effectivePricingMode === "STANDARD" ?
       [{
         id: itemPriceList?.[0]?.id,
@@ -385,8 +390,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
   const saveData = (nextProcess) => {
 
-    // if price method === standard
-    //  data = {...data, itemPricelist: [sizeId: null, colorId: null, purchasePrice, salesPrice]}
+    const mandatoryFields = ["salesPrice"]
 
 
     let foundItem;
@@ -400,6 +404,20 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     } else {
       foundItem = allData?.data?.some(
         (item) => item.name?.trim().toLowerCase() === name?.trim().toLowerCase()
+      );
+    }
+
+    let foundCode;
+    if (id) {
+      foundCode = allData?.data
+        ?.filter((i) => i.id !== id)
+        ?.some(
+          (item) =>
+            item.code?.trim().toLowerCase() === code?.trim().toLowerCase()
+        );
+    } else {
+      foundCode = allData?.data?.some(
+        (item) => item.code?.trim().toLowerCase() === code?.trim().toLowerCase()
       );
     }
 
@@ -438,6 +456,33 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       return false;
     }
 
+    if (effectivePricingMode !== "STANDARD") {
+      if (
+        !isGridDatasValid(
+          data?.itemPriceList,
+          false,
+          mandatoryFields,
+        )
+      ) {
+        Swal.fire({
+          title: "Please fill all Item Price List Mandatory fields...!",
+          icon: "warning",
+        });
+        return;
+      }
+      if (code.trim().length !== 4) {
+        Swal.fire({
+          text: "The Item Code should be must be 4 digits.",
+          icon: "warning",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        return false;
+      }
+
+    }
+
+
 
 
     if (foundItem) {
@@ -449,6 +494,19 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       });
       return false;
     }
+
+    if (foundCode) {
+      Swal.fire({
+        text: "The Item Code already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return false;
+    }
+
+
+
     if (id) {
       if (!window.confirm("Are you sure update the details ...?")) {
         return;
@@ -593,9 +651,31 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     setItemPriceList(orderDetails => {
       const newBlend = structuredClone(orderDetails);
       newBlend[index][field] = value;
+      if (field === "barcode" && isSameAsBarcode) {
+        newBlend[index]["sku"] = value;
+      }
       return newBlend
     }
     );
+  };
+
+  const handleCodeChange = (val) => {
+    setCode(val);
+    if (!val) return;
+
+    const exists = allData?.data?.some(item =>
+      item.id !== id && item.code?.trim().toLowerCase() === val.trim().toLowerCase()
+    );
+
+    if (exists) {
+      Swal.fire({
+        text: "The Item Code already exists.",
+        icon: "warning",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      setTimeout(() => setCode(""), 0);
+    }
   };
 
   function handleMinimumStockRowsChange(rowIndex, rows) {
@@ -622,13 +702,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   console.log(itemPriceList, "itemPriceList");
 
   const generateBarcodeValue = (code, sizeName, item) => {
-    const colorCode = findFromList(item?.colorId, colorData?.data, "code") ?? "00"
+    const colorCode = (findFromList(item?.colorId, colorData?.data, "code") ?? "000").slice(0, 3);
+    const sizeCode = (findFromList(item?.sizeId, sizeData?.data, "code") ?? "00").slice(0, 2);
     const shortName = code
       ?.replace(/\s+/g, "")   // remove spaces
       ?.toUpperCase()
       ?.slice(0, 4) || "";
 
-    return `WR${shortName}${sizeName?.toUpperCase() || ""}${colorCode?.toUpperCase() || ""}`;
+    return `WR${shortName}${colorCode?.toUpperCase() || ""}${sizeCode?.toUpperCase() || ""}`;
   };
 
   function setItems() {
@@ -772,6 +853,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     }
   }, [form, effectivePricingMode, itemPriceList.length]);
 
+  useEffect(() => {
+    if (isSameAsBarcode) {
+      if (effectivePricingMode === "STANDARD") {
+        setSku(barcode);
+      } else {
+        setItemPriceList(prev => prev.map(item => ({ ...item, sku: item.barcode })));
+      }
+    }
+  }, [isSameAsBarcode, barcode, itemPriceList.length, effectivePricingMode]);
+
 
 
   const input1Ref = useRef(null);
@@ -880,10 +971,13 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 <TextInputNew1
                   name="Item Code"
                   value={code}
-                  setValue={setCode}
+                  setValue={handleCodeChange}
+                  // setValue={setCode}
+
                   readOnly={readOnly}
                   disabled={disableLinkedRecordField}
                   required={true}
+                  max={4}
                 />
               </div>
               <div className="col-span-2">
@@ -1010,14 +1104,38 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                             />
                           </div>
                           <div className="col-span-2">
-                            <TextInputNew1
-                              name="Sku"
-                              value={sku}
-                              setValue={setSku}
-                              readOnly={readOnly}
-                              disabled={id ? disableLinkedRecordField : false}
-                              required={true}
-                            />
+                            <div className="flex flex-col gap-1">
+                              <label className="block text-xs font-bold text-gray-600">
+                                Sku
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <label className="flex items-center gap-1 text-[10px] whitespace-nowrap text-gray-500 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSameAsBarcode}
+                                    onChange={(e) => setIsSameAsBarcode(e.target.checked)}
+                                    className="accent-blue-600 w-3 h-3"
+                                  />
+                                  <span>Same</span>
+                                </label>
+                                {isSameAsBarcode && barcode !== "" ? (
+                                  <div className="flex-1 px-2 py-1.5 text-xs bg-slate-50 border border-gray-200 rounded-lg italic text-gray-500 truncate">
+                                    {sku}
+                                  </div>
+                                ) : (
+                                  <TextInputNew1
+                                    name="Sku"
+                                    value={sku}
+                                    setValue={setSku}
+                                    readOnly={readOnly}
+                                    disabled={id ? disableLinkedRecordField : false}
+                                    required={true}
+                                    labelHidden={true}
+                                    width="flex-1"
+                                  />
+                                )}
+                              </div>
+                            </div>
                           </div>
                           <div className="col-span-1">
                             <TextInputNew1
@@ -1125,6 +1243,37 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                           <button
                             type="button"
                             onClick={() => {
+                              if (!name) {
+                                Swal.fire({
+                                  icon: "error",
+                                  text: "Please enter item name",
+                                })
+                                return
+                              }
+                              if (!code) {
+                                Swal.fire({
+                                  icon: "error",
+                                  text: "Please enter item code",
+                                })
+                                return
+                              }
+
+                              if (sizeList.length === 0) {
+                                // toast.error("Please select at least one size")
+                                Swal.fire({
+                                  icon: "error",
+                                  text: "Please select at least one size",
+                                })
+                                return
+                              }
+                              if (effectivePricingMode == "SIZE_COLOR" && colorList.length === 0) {
+                                // toast.error("Please select at least one color")
+                                Swal.fire({
+                                  icon: "error",
+                                  text: "Please select at least one color",
+                                })
+                                return
+                              }
                               setItems()
                             }}
                             className="px-3 py-1 rounded items-center gap-1 text-xs h-8 w-14 mt-4 bg-gray-200"
@@ -1148,9 +1297,24 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                   <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Color Name</th>
                                 )}
                                 <th className={`w-20 px-2 py-2 text-center font-medium text-[12px] `}>Barcode</th>
-                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sku</th>
-                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price</th>
-                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th>
+                                <th className={`w-36 px-2 py-1 text-center font-medium text-[12px] `}>
+                                  <div className="flex flex-col items-center leading-tight">
+                                    <span>Sku</span>
+                                    <label className="flex items-center gap-1 text-[9px] font-normal cursor-pointer text-gray-600">
+                                      <input
+                                        type="checkbox"
+                                        checked={isSameAsBarcode}
+                                        onChange={(e) => setIsSameAsBarcode(e.target.checked)}
+                                        className="w-2.5 h-2.5"
+                                      />
+                                      <span>Same as Barcode</span>
+                                    </label>
+                                  </div>
+                                </th>
+                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price
+                                  <span className="text-red-500">*</span>
+                                </th>
+                                {/* <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th> */}
                                 {/* <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th> */}
                               </tr>
                             </thead>
@@ -1181,23 +1345,31 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                       onFocus={e => e.target.select()}
                                       className="text-right rounded w-full px-1 py-1 text-xs"
                                       value={item.barcode}
-                                      disabled={readOnly || isLegacyItem}
+                                      disabled={readOnly || isLegacyItem || true}
                                       onChange={e => handleInputChange(e.target.value, index, "barcode")}
                                       onBlur={e => handleInputChange(e.target.value, index, "barcode")}
                                     />
                                   </td>
-                                  <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
-                                    <input
-                                      type="text"
-                                      min="0"
-                                      rows={1}
-                                      onFocus={e => e.target.select()}
-                                      className="text-right rounded w-full px-1 py-1 text-xs"
-                                      value={item.sku}
-                                      disabled={readOnly || isLegacyItem}
-                                      onChange={e => handleInputChange(e.target.value, index, "sku")}
-                                      onBlur={e => handleInputChange(e.target.value, index, "sku")}
-                                    />
+                                  <td className="border border-gray-200 w-36 px-1 py-1 text-left text-xs">
+                                    <div className="flex items-center gap-1">
+                                      {isSameAsBarcode && item.barcode !== "" ? (
+                                        <span className="flex-1 text-right pr-2 italic text-gray-400 truncate select-none">
+                                          {item.sku}
+                                        </span>
+                                      ) : (
+                                        <input
+                                          type="text"
+                                          min="0"
+                                          rows={1}
+                                          onFocus={e => e.target.select()}
+                                          className="text-right rounded w-full px-1 py-1 text-xs border-none focus:ring-0"
+                                          value={item.sku}
+                                          disabled={readOnly || isLegacyItem}
+                                          onChange={e => handleInputChange(e.target.value, index, "sku")}
+                                          onBlur={e => handleInputChange(e.target.value, index, "sku")}
+                                        />
+                                      )}
+                                    </div>
                                   </td>
                                   <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
                                     <input
@@ -1212,7 +1384,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                       onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
                                     />
                                   </td>
-                                  <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                                  {/* <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
                                     <input
                                       type="text"
                                       min="0"
@@ -1224,7 +1396,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                       onChange={e => handleInputChange(e.target.value, index, "offerPrice")}
                                       onBlur={e => handleInputChange(e.target.value, index, "offerPrice")}
                                     />
-                                  </td>
+                                  </td> */}
                                   {/* <td className="border border-gray-200 px-2 py-1 text-xs">
                                     <button
                                       type="button"
@@ -1515,6 +1687,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                           readOnly={readOnly}
                           disabled={childRecord > 0}
                           required={true}
+                          max={4}
+
                         />
                       </div>
 

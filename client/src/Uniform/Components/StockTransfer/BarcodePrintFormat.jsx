@@ -20,6 +20,7 @@ const BarCodePrintFormat = ({
   data,
   sizeList,
   itemList,
+  itemPriceList,
   labelConfig = {
     labelWidth: 45, // mm
     labelHeight: 30, // mm
@@ -35,17 +36,29 @@ const BarCodePrintFormat = ({
   };
 
 
-    console.log(data,"data")
+  console.log(data, "data for stockItems")
 
-  const allBarcodes = data?.flatMap((item) =>
-    Array.from({ length: parseInt(item?.transferQty || 0) }, () => ({
+  const allBarcodes = data?.flatMap((item) => {
+    const itemObj = itemList?.data?.find((i) => parseInt(i.id) === parseInt(item.itemId));
+    const priceObj = itemPriceList?.data?.find(
+      (p) =>
+        parseInt(p.itemId) === parseInt(item.itemId) &&
+        (itemObj?.isLegacy
+          ? true
+          : parseInt(p.sizeId) === parseInt(item.sizeId) &&
+          parseInt(p.colorId) === parseInt(item.colorId))
+    );
+    console.log(itemObj, "itemPriceList", itemPriceList)
+
+
+    return Array.from({ length: parseInt(item?.transferQty || 0) }, () => ({
       barCode: item.barCode,
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: findFromList(item.itemId, itemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
-      price : item.discountPrice
-    }))
-  );
+      price: priceObj?.salesPrice || 0,
+    }));
+  });
 
   const {
     labelWidth,
@@ -136,7 +149,7 @@ const BarCodePrintFormat = ({
                     textAlign: "left",
                   }}
                 >
-                 Sale Price {code.price ? code?.price : ""}
+                  Sale Price {code.price ? code?.price : ""}
                 </Text>
               </View>
             ))}

@@ -31,6 +31,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const [active, setActive] = useState(false);
     const [errors, setErrors] = useState({});
     const [childRecord, setChildRecord] = useState(0);
+    const [code, setCode] = useState("");
 
 
     // const nameRef = useRef(null);
@@ -75,11 +76,13 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             if (!id) {
                 setName("");
                 setActive(true);
+                setCode("");
                 setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
 
             } else {
                 setName(data?.name || "");
                 setActive(id ? (data?.active ?? false) : true);
+                setCode(data?.code ? data?.code : "");
                 setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
             }
         },
@@ -91,11 +94,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
     const data = {
-        id, name, accessory, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId")
+        id, name, accessory, active, companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
+        code
     }
 
     const validateData = (data) => {
-        if (data.name) {
+        if (data.name && data?.code) {
             return true;
         }
         return false;
@@ -149,16 +153,27 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             });
             return;
         }
+
+        if (code.length < 2) {
+            Swal.fire({
+                title: "Please enter 2 digit valid code...",
+                icon: "error",
+                didClose: () => {
+                    codeRef?.current?.focus();
+                }
+            });
+            return;
+        }
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.name?.trim().toUpperCase() == upperName.trim());
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.name?.trim().toUpperCase() == upperName.trim() && item?.code?.trim() == code.trim());
         } else {
-            foundItem = allData?.data?.some(item => item?.name?.trim().toUpperCase() == upperName.trim());
+            foundItem = allData?.data?.some(item => item?.name?.trim().toUpperCase() == upperName.trim() && item?.code?.trim() == code.trim());
 
         }
         if (foundItem) {
             Swal.fire({
-                text: "The Size Name already exists.",
+                text: "The Size Name and Code already exists.",
                 icon: "warning",
                 didClose: () => {
                     nameRef?.current?.focus();
@@ -166,6 +181,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             });
             return false;
         }
+
+
+
         if (id) {
             if (!window.confirm("Are you sure update the details ...?")) {
                 return;
@@ -348,23 +366,25 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                         <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
                             <div className="space-y-4 ">
                                 <div className="grid grid-cols-2  gap-3  h-full" ref={formRef}>
-                                    <fieldset className=' rounded mt-2'>
-                                        <div className='mb-3'>
-                                            <TextInputNew1 name="Size" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord > 0)}
-                                                ref={nameRef}
-                                            />
-                                        </div>
+                                    <div className=''>
+                                        <TextInputNew1 name="Size" type="text" value={name} setValue={handleNameChange} required={true} readOnly={readOnly} disabled={(childRecord > 0)}
+                                            ref={nameRef}
+                                        />
+                                    </div>
+                                    <div className=''>
+                                        <TextInputNew1 name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord > 0)}
+                                        />
+                                    </div>
 
 
 
-                                        <div className='mt-5'>
-                                            <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}
-                                                onKeyDown={handlers.handleToggleKeyDown}
-                                                ref={toggleButtonRef}
-                                            />
-                                        </div>
+                                    <div className=''>
+                                        <ToggleButton name="Status" options={statusDropdown} value={active} setActive={setActive} required={true} readOnly={readOnly}
+                                            onKeyDown={handlers.handleToggleKeyDown}
+                                            ref={toggleButtonRef}
+                                        />
+                                    </div>
 
-                                    </fieldset>
                                 </div>
                             </div>
                         </div>
@@ -418,14 +438,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             onAdd={onNew}
             onKeyDown={handleKeyDown}
         >
-                <ReusableTable
-                    columns={columns}
-                    data={allData?.data}
-                    onView={handleView}
-                    onEdit={handleEdit}
-                    onDelete={deleteData}
-                    itemsPerPage={15}
-                />
+            <ReusableTable
+                columns={columns}
+                data={allData?.data}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={deleteData}
+                itemsPerPage={15}
+            />
 
             {form && (
                 <Modal
