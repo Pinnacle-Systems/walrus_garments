@@ -94,25 +94,31 @@ async function validateLegacyItemPayload({
 
     const { normalizedBarcode } = validateLegacyPriceRowShape(itemPriceList);
 
-    const conflictingBarcodeRow = await prisma.itemPriceList.findFirst({
+    const conflictingBarcodeRow = await prisma.itemBarcode.findFirst({
         where: {
             barcode: normalizedBarcode,
-            item: {
-                id: itemId ? { not: parseInt(itemId) } : undefined,
+            ItemPriceList: {
+                item: {
+                    id: itemId ? { not: parseInt(itemId) } : undefined,
+                }
             }
         },
         include: {
-            item: {
-                select: {
-                    id: true,
-                    name: true,
+            ItemPriceList: {
+                include: {
+                    item: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    }
                 }
             }
         }
     });
 
-    if (conflictingBarcodeRow?.item && conflictingBarcodeRow.item.name !== itemName) {
-        throw Error(`Legacy barcode ${normalizedBarcode} is already associated with item ${conflictingBarcodeRow.item.name}.`);
+    if (conflictingBarcodeRow?.ItemPriceList?.item && conflictingBarcodeRow.ItemPriceList.item.name !== itemName) {
+        throw Error(`Legacy barcode ${normalizedBarcode} is already associated with item ${conflictingBarcodeRow.ItemPriceList.item.name}.`);
     }
 }
 
@@ -124,30 +130,36 @@ async function ensureUniqueItemBarcodes({ itemId, itemPriceList = [] }) {
         return;
     }
 
-    const conflictingRows = await prisma.itemPriceList.findMany({
+    const conflictingRecords = await prisma.itemBarcode.findMany({
         where: {
             barcode: {
                 in: barcodes,
             },
-            item: itemId
-                ? {
-                    id: { not: parseInt(itemId) },
-                }
-                : undefined,
+            ItemPriceList: {
+                item: itemId
+                    ? {
+                        id: { not: parseInt(itemId) },
+                    }
+                    : undefined,
+            }
         },
         include: {
-            item: {
-                select: {
-                    id: true,
-                    name: true,
+            ItemPriceList: {
+                include: {
+                    item: {
+                        select: {
+                            id: true,
+                            name: true,
+                        }
+                    }
                 }
             }
         }
     });
 
-    const conflictingRow = conflictingRows[0];
-    if (conflictingRow?.item?.name) {
-        throw Error(`Barcode ${conflictingRow.barcode} is already associated with item ${conflictingRow.item.name}.`);
+    const conflictingRecord = conflictingRecords[0];
+    if (conflictingRecord?.ItemPriceList?.item?.name) {
+        throw Error(`Barcode ${conflictingRecord.barcode} is already associated with item ${conflictingRecord.ItemPriceList.item.name}.`);
     }
 }
 
@@ -247,6 +259,52 @@ async function syncMinimumStockQty(tx, itemPriceListId, minimumStockQtyRows = []
     });
 }
 
+async function syncItemBarcodes(tx, itemPriceListId, barcodeRows = []) {
+    // 1. Fetch current barcodes for this variant
+    const currentBarcodes = await tx.itemBarcode.findMany({
+        where: { itemPriceListId: parseInt(itemPriceListId) }
+    });
+
+    // 2. Determine which ones to mark inactive (not in the new payload)
+    const payloadBarcodeStrings = new Set(barcodeRows.map(b => b.barcode));
+    const toDeactivate = currentBarcodes.filter(b => b.active && !payloadBarcodeStrings.has(b.barcode));
+
+    if (toDeactivate.length > 0) {
+        await tx.itemBarcode.updateMany({
+            where: { id: { in: toDeactivate.map(b => b.id) } },
+            data: { active: false }
+        });
+    }
+
+    // 3. Insert or Update (reactivate) barcodes from payload
+    for (const row of barcodeRows) {
+        const existing = currentBarcodes.find(b => b.barcode === row.barcode);
+
+        if (existing) {
+            // If it exists, ensure it's active and has correct metadata
+            await tx.itemBarcode.update({
+                where: { id: existing.id },
+                data: {
+                    active: true,
+                    barcodeType: row.barcodeType || "REGULAR",
+                    clearanceReason: row.clearanceReason || null
+                }
+            });
+        } else {
+            // New barcode for this variant
+            await tx.itemBarcode.create({
+                data: {
+                    itemPriceListId: parseInt(itemPriceListId),
+                    barcode: row.barcode,
+                    barcodeType: row.barcodeType || "REGULAR",
+                    clearanceReason: row.clearanceReason || null,
+                    active: true
+                }
+            });
+        }
+    }
+}
+
 async function get(req) {
     const active = parseOptionalBoolean(req.query?.active);
     const items = await prisma.item.findMany({
@@ -255,7 +313,11 @@ async function get(req) {
         },
         include: {
             Hsn: true,
-            ItemPriceList: true,
+            ItemPriceList: {
+                include: {
+                    ItemBarcodes: { where: { active: true } }
+                }
+            },
             _count: {
                 select: {
                     DirectItems: true,
@@ -324,10 +386,9 @@ async function getOne(id) {
                     offerPrice: true,
                     MinimumStockQty: true,
                     sku: true,
-                    barcode: true,
-
-
-
+                    ItemBarcodes: {
+                        where: { active: true }
+                    },
                 }
             },
             _count: {
@@ -362,6 +423,7 @@ export async function getItemPriceList(req) {
             item: true,
             Color: true,
             Size: true,
+            ItemBarcodes: true
 
         }
     });
@@ -386,7 +448,11 @@ async function getSearch(req) {
         },
         include: {
             Hsn: true,
-            ItemPriceList: true,
+            ItemPriceList: {
+                include: {
+                    ItemBarcodes: { where: { active: true } }
+                }
+            },
         }
     })
     return {
@@ -447,25 +513,40 @@ async function create(body) {
 
             ItemPriceList: itemPriceList?.length > 0
                 ? {
-                    create: itemPriceList.map((item) => ({
-                        ...(function () {
-                            const minimumStockQtyRows = validateAndNormalizeMinimumStockQtyRows(item?.MinimumStockQty);
-                            return {
-                                colorId: parseIntOrUndefined(item?.colorId),
-                                sizeId: parseIntOrUndefined(item?.sizeId),
-                                offerPrice: normalizePriceString(item?.offerPrice),
-                                salesPrice: normalizePriceString(item?.salesPrice),
-                                sku: item?.sku ? item?.sku : undefined,
-                                barcode: normalizeLegacyBarcode(item?.barcode),
+                    create: itemPriceList.map((item) => {
+                        const minimumStockQtyRows = validateAndNormalizeMinimumStockQtyRows(item?.MinimumStockQty);
+                        return {
+                            colorId: parseIntOrUndefined(item?.colorId),
+                            sizeId: parseIntOrUndefined(item?.sizeId),
+                            offerPrice: normalizePriceString(item?.offerPrice),
+                            salesPrice: normalizePriceString(item?.salesPrice),
+                            sku: item?.sku ? item?.sku : undefined,
 
-                                MinimumStockQty: minimumStockQtyRows.length > 0
-                                    ? {
-                                        create: minimumStockQtyRows,
-                                    }
-                                    : undefined,
-                            };
-                        })()
-                    })),
+                            ItemBarcodes: item?.ItemBarcodes?.length > 0
+                                ? {
+                                    create: item.ItemBarcodes.map(b => ({
+                                        barcode: normalizeLegacyBarcode(b.barcode),
+                                        barcodeType: b.barcodeType || "REGULAR",
+                                        clearanceReason: b.clearanceReason || null,
+                                        active: true
+                                    }))
+                                }
+                                : {
+                                    // Auto-generate logic if none provided
+                                    create: [{
+                                        barcode: normalizeLegacyBarcode(item?.barcode),
+                                        barcodeType: item?.barcodeType || "REGULAR",
+                                        active: true
+                                    }]
+                                },
+
+                            MinimumStockQty: minimumStockQtyRows.length > 0
+                                ? {
+                                    create: minimumStockQtyRows,
+                                }
+                                : undefined,
+                        };
+                    }),
                 }
                 : undefined,
 
@@ -586,13 +667,11 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                     colorId: parseIntOrUndefined(priceItem?.colorId),
                     salesPrice: normalizePriceString(priceItem?.salesPrice),
                     sku: priceItem?.sku ? priceItem?.sku : undefined,
-                    barcode: normalizeLegacyBarcode(priceItem?.barcode),
-
-
                 }
             });
 
             await syncMinimumStockQty(tx, updatedPriceItem.id, priceItem?.MinimumStockQty);
+            await syncItemBarcodes(tx, updatedPriceItem.id, priceItem?.ItemBarcodes);
             updatedPriceItems.push(updatedPriceItem);
         } else {
             const createdPriceItem = await tx.ItemPriceList.create({
@@ -603,8 +682,14 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                     colorId: parseIntOrUndefined(priceItem?.colorId),
                     salesPrice: normalizePriceString(priceItem?.salesPrice),
                     sku: priceItem?.sku ? priceItem?.sku : undefined,
-                    barcode: normalizeLegacyBarcode(priceItem?.barcode),
-
+                    ItemBarcodes: {
+                        create: priceItem?.ItemBarcodes?.map(b => ({
+                            barcode: normalizeLegacyBarcode(b.barcode),
+                            barcodeType: b.barcodeType || "REGULAR",
+                            clearanceReason: b.clearanceReason || null,
+                            active: true
+                        })) || []
+                    }
                 }
             });
 

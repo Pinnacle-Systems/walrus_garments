@@ -58,7 +58,8 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
       colorId: "",
       color: "",
       qty: 0,
-      barcode_no: "",
+      barcode: "",
+      barcodeType: "REGULAR",
     },
   ]);
 
@@ -94,7 +95,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
         ? moment.utc(data.createdAt).format("YYYY-MM-DD")
         : moment.utc(today).format("YYYY-MM-DD")
     );
-    setRows(data?.StockAdjustmentItems ? data?.StockAdjustmentItems : []);
+    setRows(data?.StockAdjustmentItems ? data?.StockAdjustmentItems.map(item => ({ ...item, barcodeType: item.barcodeType || "REGULAR" })) : []);
     setStoreId(data?.storeId ? data?.storeId : "")
   }, [id]);
 
@@ -131,8 +132,8 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
           noOfBags: "0",
           discountType: "",
           weightPerBag: "0.00",
-          // id: Date.now() + i + Math.random(),
-          poItemsId: ""
+          poItemsId: "",
+          barcodeType: "REGULAR"
         };
       });
       return [...prev, ...newArray];
@@ -148,7 +149,8 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
       updatedRows[index] = { ...updatedRows[index], [field]: value, ...extraData };
 
       // Auto-price lookup (only if item, size, or color changed)
-      if (["itemId", "sizeId", "colorId"].includes(field)) {
+      // Auto-price lookup (only if item, size, color, or barcodeType changed)
+      if (["itemId", "sizeId", "colorId", "barcodeType"].includes(field)) {
         const itemBarcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
         const selectedItem = itemList?.data?.find((i) => i.id === updatedRows[index].itemId);
 
@@ -162,13 +164,16 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
           );
 
           // Barcode logic
+          const type = updatedRows[index].barcodeType || "REGULAR";
           if (selectedItem.isLegacy) {
-            updatedRows[index].barcode = selectedItem.ItemPriceList?.[0]?.barcode || selectedItem.barcode || "";
+            updatedRows[index].barcode = selectedItem.ItemPriceList?.[0]?.ItemBarcodes?.find(b => b.barcodeType === type)?.barcode ||
+              selectedItem.ItemPriceList?.[0]?.barcode ||
+              selectedItem.barcode || "";
           } else {
             const priceEntry = selectedItem.ItemPriceList?.find(
               p => String(p.sizeId) === String(updatedRows[index].sizeId) && String(p.colorId) === String(updatedRows[index].colorId)
             );
-            updatedRows[index].barcode = priceEntry?.barcode || "";
+            updatedRows[index].barcode = priceEntry?.ItemBarcodes?.find(b => b.barcodeType === type)?.barcode || "";
           }
         } else {
           updatedRows[index].barcode = "";
@@ -195,7 +200,8 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
       discountTypes: "",
       discountValue: "0.00",
       id: Date.now() + Math.random(),
-      poItemsId: ""
+      poItemsId: "",
+      barcodeType: "REGULAR"
     };
     stockDrivenFields.forEach((field) => {
       newRow[field.key] = "";
@@ -381,6 +387,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                     <th key={field.key} className={`w-32 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>{field.label} <span className="text-red-500">*</span></th>
                   ))}
                   <th className={`w-32 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>UOM <span className="text-red-500">*</span></th>
+                  <th className={`w-24 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>Type <span className="text-red-500">*</span></th>
                   <th className={`w-40 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>Barcode <span className="text-red-500">*</span></th>
                   {/* <th className={`w-24 bg-gray-200 px-1 py-1 text-center font-medium text-[12px]`}>Price <span className="text-red-500">*</span></th> */}
                   <th className={`w-24 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]`}>Adjust Type <span className="text-red-500">*</span></th>
@@ -500,6 +507,17 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                           childComponent={UomMaster}
                           addNewLabel="+ Add New Uom"
                         />
+                      </td>
+                      <td className="w-24 border border-gray-300 p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
+                        <select
+                          disabled={readOnly}
+                          className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 shadow-none outline-none focus:bg-transparent focus:outline-none"
+                          value={row.barcodeType}
+                          onChange={(e) => updateRow(idx, "barcodeType", e.target.value)}
+                        >
+                          <option value="REGULAR">REGULAR</option>
+                          <option value="CLEARANCE">CLEARANCE</option>
+                        </select>
                       </td>
                       <td className="w-40 border border-gray-300 p-0 text-[11px] text-right">
                         <div className="flex h-full min-h-[22px] items-center justify-end px-1">

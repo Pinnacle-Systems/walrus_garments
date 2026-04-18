@@ -11,7 +11,7 @@ import { useGetLocationMasterQuery } from '../../../redux/uniformService/Locatio
 import { useLazyGetUnifiedStockByBarcodeQuery } from '../../../redux/services/StockService';
 import { getCommonParams } from '../../../Utils/helper';
 import Swal from 'sweetalert2';
-import { useGetPointOfSalesQuery, useAddPointOfSalesMutation } from '../../../redux/uniformService/PointOfSalesService';
+import { useGetPointOfSalesQuery, useAddPointOfSalesMutation, useUpdatePointOfSalesMutation } from '../../../redux/uniformService/PointOfSalesService';
 import { useGetoffersPromotionsQuery } from '../../../redux/uniformService/Offer&PromotionsService';
 import { useGetEmployeeQuery } from '../../../redux/services/EmployeeMasterService';
 import PosReports from './PosReports';
@@ -46,6 +46,8 @@ const PointOfSale = () => {
     const [guestName, setGuestName] = useState('');
     const [guestMobile, setGuestMobile] = useState('');
     const [showReports, setShowReports] = useState(true);
+    const [editMode, setEditMode] = useState(false);
+    const [editingInvoiceId, setEditingInvoiceId] = useState(null);
     const [addParty] = useAddPartyMutation();
     const scannerRef = useRef(null);
     const discountRef = useRef(null);
@@ -166,8 +168,10 @@ const PointOfSale = () => {
         const potentialOffersTemp = [];
         activeOffers.forEach(off => {
             const inScopeItems = cart.filter(item => {
+                if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
                 if (off.scopeMode === 'Global') return true;
                 if (off.scopeMode === 'Item') return off.OfferScope?.some(s => s.refId === (item.itemId || item.id));
+                if (off.scopeMode === 'Collection') return off.OfferScope?.some(s => s.refId === (item.itemId || item.id));
                 return false;
             });
             if (!inScopeItems.length) return;
@@ -223,7 +227,7 @@ const PointOfSale = () => {
 
             newAppliedOffersMap.set(selectedOffer.id, selectedOffer);
             let currentItemPrice = item.salesPrice !== undefined ? parseFloat(item.salesPrice) : parseFloat(item.price);
-            
+
             if (selectedOffer.discountType === 'Percentage') currentItemPrice *= (1 - parseFloat(selectedOffer.discountValue || 0) / 100);
             else if (selectedOffer.discountType === 'Fixed') currentItemPrice = Math.max(0, currentItemPrice - ((selectedOffer.discountValue || 0) / (parseFloat(item.qty) || 1)));
             else if (['Override', 'Volume'].includes(selectedOffer.discountType)) {
@@ -246,9 +250,13 @@ const PointOfSale = () => {
     const getItemApplicableOffers = (item) => {
         if (!item || !activeOffers.length) return [];
         return activeOffers.filter(off => {
+            if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
             let isInScope = off.scopeMode === 'Global' || (off.scopeMode === 'Item' && off.OfferScope?.some(s => s.refId === item.itemId)) || (off.scopeMode === 'Collection' && off.OfferScope?.some(s => s.refId === item.itemId));
             if (!isInScope) return false;
-            const inScopeItems = cart.filter(cit => off.scopeMode === 'Global' || (off.scopeMode === 'Item' && off.OfferScope?.some(s => s.refId === cit.itemId)) || (off.scopeMode === 'Collection' && off.OfferScope?.some(s => s.refId === cit.itemId)));
+            const inScopeItems = cart.filter(cit => {
+                if (cit.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+                return off.scopeMode === 'Global' || (off.scopeMode === 'Item' && off.OfferScope?.some(s => s.refId === cit.itemId)) || (off.scopeMode === 'Collection' && off.OfferScope?.some(s => s.refId === cit.itemId));
+            });
             const scopeQty = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
             const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
             const rules = off.OfferRule?.[0]?.conditions?.rules || [];
@@ -269,6 +277,7 @@ const PointOfSale = () => {
     const { data: customerData } = useGetPartyQuery({ params: { branchId, userId, finYearId } });
     const { data: locationsData } = useGetLocationMasterQuery({ params: { branchId, companyId } });
     const [addPointOfSales] = useAddPointOfSalesMutation();
+    const [updatePointOfSales] = useUpdatePointOfSalesMutation();
     const [getStockByBarcode, { isLoading: isBarcodeLoading }] = useLazyGetUnifiedStockByBarcodeQuery();
     const { data: posData } = useGetPointOfSalesQuery({ params: { branchId, companyId, finYearId } });
 
@@ -284,7 +293,15 @@ const PointOfSale = () => {
         return new Promise((resolve) => {
             setBarcodeResolution({
                 open: true,
-                matches: matches.map(m => ({ ...m, item_name: m.item_name || m?.Item?.name || "Item", size: m.size || m?.Size?.name || "-", color: m.color || m?.Color?.name || "-", location: m.location || "-", stockQty: m.stockQty || 0 })),
+                matches: matches.map(m => ({ 
+                    ...m, 
+                    item_name: m.item_name || m?.Item?.name || "Item", 
+                    size: m.size || m?.Size?.name || "-", 
+                    color: m.color || m?.Color?.name || "-", 
+                    location: m.location || "-", 
+                    stockQty: m.stockQty || 0,
+                    storeId: m.storeId || m.locationId 
+                })),
                 resolve
             });
         });
@@ -305,7 +322,11 @@ const PointOfSale = () => {
                     return;
                 }
             } catch (error) { console.error("Barcode search failed", error); }
-            const localItem = items.find(i => i.name?.toLowerCase() === barcode.toLowerCase() || i.code?.toLowerCase() === barcode.toLowerCase() || findDefaultPriceRow(i)?.barcode === barcode);
+            const localItem = items.find(i =>
+                i.name?.toLowerCase() === barcode.toLowerCase() ||
+                i.code?.toLowerCase() === barcode.toLowerCase() ||
+                i.ItemPriceList?.some(row => row.ItemBarcodes?.some(b => b.barcode === barcode))
+            );
             if (!localItem) { Swal.fire({ title: "Warning", text: "Barcode not found", icon: "warning" }); return; }
             const normItem = normalizeLocalItemForPos(localItem, branchId, retailStoreId);
             if (!normItem?.barcode) { Swal.fire({ title: "Warning", text: "Item missing barcode", icon: "warning" }); return; }
@@ -338,7 +359,17 @@ const PointOfSale = () => {
             const variantHit = itemPrices.find(p => p.sizeId === product.sizeId && p.colorId === product.colorId);
             const lookupPrice = variantHit?.salesPrice || itemPrices.find(p => !p.sizeId && !p.colorId)?.salesPrice || itemPrices[0]?.salesPrice || 0;
             const masterItem = product?.Item || items.find(i => i.id === itemId);
-            return [...prev, { ...product, Item: masterItem, salesPrice: lookupPrice, price: lookupPrice, rate: lookupPrice, qty: 1, priceType: 'SalesPrice', taxPercent: masterItem?.Hsn?.tax || 5 }];
+            return [...prev, { 
+                ...product, 
+                Item: masterItem, 
+                salesPrice: lookupPrice, 
+                price: lookupPrice, 
+                rate: lookupPrice, 
+                qty: 1, 
+                priceType: 'SalesPrice', 
+                taxPercent: masterItem?.Hsn?.tax || 5,
+                sourceStoreId: product.storeId || product.locationId || retailStoreId
+            }];
         });
         setShowSalesPersonModal(true);
         setTimeout(() => salesPersonScannerRef.current?.focus(), 500);
@@ -357,6 +388,42 @@ const PointOfSale = () => {
         if (!empId) { setCart(prev => prev.map((item, i) => i === index ? { ...item, salesPersonId: null, salesPersonName: null, salesPersonBarcode: null } : item)); return; }
         const employee = employees.find(e => e.id === parseInt(empId));
         setCart(prev => prev.map((item, i) => i === index ? { ...item, salesPersonId: employee?.id, salesPersonName: employee?.name, salesPersonBarcode: employee?.employeeId || employee?.regNo } : item));
+    };
+
+    const handleEditPOS = (sale) => {
+        setEditMode(true);
+        setEditingInvoiceId(sale.id);
+        const mappedCart = (sale.PosItems || []).map(item => {
+            const masterItem = items.find(i => i.id === item.itemId);
+            const employee = employees.find(e => e.id === item.salesPersonId);
+            return {
+                ...item,
+                id: item.itemId, // Align with cart logic
+                Item: masterItem,
+                salesPrice: parseFloat(item.price),
+                price: parseFloat(item.price),
+                qty: parseFloat(item.qty),
+                taxPercent: masterItem?.Hsn?.tax || 5,
+                salesPersonId: item.salesPersonId,
+                salesPersonName: employee?.name,
+                stockQty: 9999, // Allow editing without strict stock check for existing items (or fetch actual stock)
+                sourceStoreId: retailStoreId // Default for old items, though we could try to resolve from stock
+            };
+        });
+        setCart(mappedCart);
+        setDiscount(parseFloat(sale.discountValue || 0));
+        if (sale.Party) {
+            setSelectedCustomer(sale.Party);
+            setIsGuestCustomer(false);
+            setGuestName(sale.Party.name);
+            setGuestMobile(sale.Party.contact);
+        } else {
+            setSelectedCustomer(null);
+            setIsGuestCustomer(true);
+            setGuestName("Walk-in");
+            setGuestMobile("");
+        }
+        setShowReports(true);
     };
 
     const removeFromCart = (cartKey) => setCart(prev => prev.filter(item => `${item.id}-${item.sizeId}-${item.colorId}` !== cartKey));
@@ -405,7 +472,8 @@ const PointOfSale = () => {
     const [paidCash, setPaidCash] = useState(0);
     const [paidUPI, setPaidUPI] = useState(0);
     const [paidCard, setPaidCard] = useState(0);
-    const receivedAmount = paidCash + paidUPI + paidCard;
+    const [paidOnline, setPaidOnline] = useState(0);
+    const receivedAmount = paidCash + paidUPI + paidCard + paidOnline;
     const balanceReturn = Math.max(0, receivedAmount - total);
 
     const handleCheckout = async () => {
@@ -436,11 +504,18 @@ const PointOfSale = () => {
             }
 
             const invoicePayload = { date: new Date().toISOString().split('T')[0], customerId, supplierId: customerId, branchId, userId, companyId, finYearId, paymentMethod, storeId: retailStoreId, poType: "General", poInwardOrDirectInward: "DirectInward", netAmount: total, taxAmount: tax, discountValue: discount, discountType: "Flat", paidCash, paidUPI, paidCard, receivedAmount, balanceReturn, posItems: cart, promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff };
-            const apiResponse = await addPointOfSales(invoicePayload).unwrap();
+            
+            let apiResponse;
+            if (editMode) {
+                apiResponse = await updatePointOfSales({ id: editingInvoiceId, ...invoicePayload }).unwrap();
+            } else {
+                apiResponse = await addPointOfSales(invoicePayload).unwrap();
+            }
 
-            Swal.fire({ title: 'Payment Successful!', icon: 'success', timer: 2000, showConfirmButton: false });
+            Swal.fire({ title: editMode ? 'Updated Successfully!' : 'Payment Successful!', icon: 'success', timer: 2000, showConfirmButton: false });
             setPrintData({ docId: apiResponse?.data?.docId || docId, date: new Date(), customerData: selectedCustomer || { name: guestName, contact: guestMobile }, items: cart, payments: { cash: paidCash, upi: paidUPI, card: paidCard }, summary: { subtotal, tax, discount, total, received: receivedAmount, balance: balanceReturn, roundOff }, branchData: locations.find(l => l.id === retailStoreId) });
             setCart([]); setDiscount(0); setSelectedCustomer(null); setPaidCash(0); setPaidUPI(0); setPaidCard(0);
+            setEditMode(false); setEditingInvoiceId(null);
         } catch (error) { Swal.fire({ title: "Error", text: error.message || "Failed to save invoice.", icon: "error" }); }
         finally { setIsProcessing(false); }
     };
@@ -526,12 +601,12 @@ const PointOfSale = () => {
                 <div className=" bg-[#F1F1F0] min-h-screen">
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-3 items-start sm:items-center  gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <h1 className="text-md font-bold text-gray-800">Point Of Sale</h1>
-                        <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => setShowReports(true)}>
+                        <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => { setShowReports(true); setEditMode(false); setEditingInvoiceId(null); setCart([]); setDiscount(0); }}>
                             <Plus size={14} /> Create New
                         </button>
                     </div>
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden h-[85vh] mt-2 border-2">
-                        <PosReports recentSales={recentSales} />
+                        <PosReports recentSales={recentSales} onEdit={handleEditPOS} />
                     </div>
                 </div>
             )}
@@ -549,6 +624,8 @@ const PointOfSale = () => {
                 receivedAmount={receivedAmount}
                 handleCheckout={handleCheckout}
                 isProcessing={isProcessing}
+                paidOnline={paidOnline}
+                setPaidOnline={setPaidOnline}
             />
 
             <ReceiptViewerModal

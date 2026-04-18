@@ -185,10 +185,19 @@ const ManualAddStock = ({ params }) => {
     }
     if (!window.confirm("Save stock?")) return;
     try {
+      const selectedLocationName = locationList?.data?.find(loc => String(loc.id) === String(selectedLocationId))?.storeName;
+      const isDiscountSection = selectedLocationName?.toUpperCase() === "DISCOUNT SECTION";
+
       const payload = {
-
-        branchId: selectedBranchId, storeId: selectedLocationId, companyId, finYearId, userId, stockItems: rows.map(({ id, ...rest }) => rest)
-
+        branchId: selectedBranchId,
+        storeId: selectedLocationId,
+        companyId,
+        finYearId,
+        userId,
+        stockItems: rows.map(({ id, ...rest }) => ({
+          ...rest,
+          barcodeType: isDiscountSection ? "CLEARANCE" : "REGULAR"
+        }))
       };
       const resp = await addStock(payload).unwrap();
 

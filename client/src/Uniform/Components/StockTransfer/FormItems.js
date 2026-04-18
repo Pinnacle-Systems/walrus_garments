@@ -19,7 +19,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
     yarnList, setRequirementId, stockItems, setStockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
     toOrderId, fromOrderId, orderData, fromLocationId, locationData, sizeList, itemList, uomList, toLocationId,
     orderToGeneral, setOrderToGeneral, searchColor, setSearchColor, searchItem, setSearchItem, searchSize, setSearchSize
-    , stockDrivenFields = []
+    , stockDrivenFields = [], itemPriceList = []
 
 }) => {
 
@@ -87,7 +87,14 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 
         setStockItems(stock => {
             const newBlend = structuredClone(stock);
-            newBlend[index][field] = parseFloat(value);
+            
+            // Avoid parseFloat for string fields like barcode or clearanceBarcode
+            if (field === "clearanceBarcode" || field === "barcode") {
+                newBlend[index][field] = value;
+            } else {
+                newBlend[index][field] = parseFloat(value);
+            }
+            
             return newBlend
         });
 
@@ -186,12 +193,13 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                 itemList={itemList} sizeList={sizeList} colorList={colorList} fromLocationId={fromLocationId}
                                 stockItems={stockItems} toLocationId={toLocationId} locationData={locationData}
                                 stockDrivenFields={stockDrivenFields} id={id}
+                                itemPriceList={itemPriceList}
                             />)}
                         </tbody>
                         <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300 font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
                             <tr>
                                 <td
-                                    colSpan={5 + stockDrivenFields.length + 1}
+                                    colSpan={5 + stockDrivenFields.length}
                                     className="bg-gray-300 px-1 py-1 text-right text-[12px]"
                                 >
                                     Total:

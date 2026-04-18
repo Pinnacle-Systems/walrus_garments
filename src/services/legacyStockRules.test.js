@@ -32,7 +32,7 @@ test("validateResolvedOpeningStockLegacyItems rejects inactive resolved items", 
             name: "LEGACY SHIRT",
             active: false,
             isLegacy: true,
-            ItemPriceList: [{ barcode: "LEG-001", sizeId: null, colorId: null }],
+            ItemPriceList: [{ sizeId: null, colorId: null, ItemBarcodes: [{ barcode: "LEG-001" }] }],
         }]
     ]);
 
@@ -50,7 +50,7 @@ test("validateResolvedOpeningStockLegacyItems rejects barcode mismatches", () =>
             name: "LEGACY SHIRT",
             active: true,
             isLegacy: true,
-            ItemPriceList: [{ barcode: "LEG-001", sizeId: null, colorId: null }],
+            ItemPriceList: [{ sizeId: null, colorId: null, ItemBarcodes: [{ barcode: "LEG-001" }] }],
         }]
     ]);
 
@@ -68,7 +68,7 @@ test("resolveOpeningStockLegacyItems fills a missing itemId from a unique barcod
             name: "LEGACY SHIRT RENAMED",
             active: true,
             isLegacy: true,
-            ItemPriceList: [{ barcode: "LEG-001", sizeId: null, colorId: null }],
+            ItemPriceList: [{ sizeId: null, colorId: null, ItemBarcodes: [{ barcode: "LEG-001" }] }],
         }
     ];
 
@@ -85,14 +85,14 @@ test("resolveOpeningStockLegacyItems rejects ambiguous barcode matches", () => {
             name: "LEGACY SHIRT A",
             active: true,
             isLegacy: true,
-            ItemPriceList: [{ barcode: "LEG-001", sizeId: null, colorId: null }],
+            ItemPriceList: [{ sizeId: null, colorId: null, ItemBarcodes: [{ barcode: "LEG-001" }] }],
         },
         {
             id: 11,
             name: "LEGACY SHIRT B",
             active: true,
             isLegacy: true,
-            ItemPriceList: [{ barcode: "LEG-001", sizeId: null, colorId: null }],
+            ItemPriceList: [{ sizeId: null, colorId: null, ItemBarcodes: [{ barcode: "LEG-001" }] }],
         }
     ];
 

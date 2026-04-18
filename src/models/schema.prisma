@@ -4964,6 +4964,33 @@ model Item {
   CollectionItems                    CollectionItems[]
 }
 
+model ItemBarcode {
+  id              Int            @id @default(autoincrement())
+  ItemPriceList   ItemPriceList? @relation(fields: [itemPriceListId], references: [id], onDelete: Cascade)
+  itemPriceListId Int?
+
+  /// actual scannable code
+  barcode String @unique
+
+  /// REGULAR = normal selling barcode
+  /// CLEARANCE = sticker / alternate barcode used for clearance billing
+  barcodeType ItemBarcodeType @default(REGULAR)
+
+  /// optional operational metadata
+  active          Boolean? @default(true)
+  clearanceReason String?
+
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@index([itemPriceListId, barcodeType])
+}
+
+enum ItemBarcodeType {
+  REGULAR
+  CLEARANCE
+}
+
 model ItemPriceList {
   id              Int               @id @default(autoincrement())
   item            Item?             @relation(fields: [itemId], references: [id], onDelete: Cascade)
@@ -4976,7 +5003,7 @@ model ItemPriceList {
   salesPrice      String?
   offerPrice      String?
   sku             String?
-  barcode         String?
+  ItemBarcodes    ItemBarcode[]
   MinimumStockQty MinimumStockQty[]
 }
 
@@ -5464,9 +5491,8 @@ model PosPayments {
   Pos            Pos?    @relation(fields: [PosId], references: [id], onDelete: Cascade)
   PosId          Int?
   amount         String?
+  paymentMode    String?
   reference_no   String?
-  card_type      String?
-  bank_name      String?
   transaction_id String?
 }
 
@@ -5512,6 +5538,8 @@ model Offer {
   perCustomerLimit Int?
 
   stacking String?
+
+  applyToClearance Boolean? @default(false)
 
   discountType     String? // Percentage, Flat, FreeItem
   discountValue    Float?  @default(0)

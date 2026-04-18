@@ -1,16 +1,20 @@
 import { normalizeLegacyBarcode, normalizeLegacySkuCode } from "./legacyStockRules.js";
 
 export function collectNormalizedItemBarcodes(itemPriceList = []) {
-    return itemPriceList.reduce((entries, row, index) => {
-        const normalizedBarcode = normalizeLegacyBarcode(row?.barcode);
-        if (!normalizedBarcode) {
-            return entries;
-        }
+    return itemPriceList.reduce((entries, row, rowIndex) => {
+        const barcodes = row?.ItemBarcodes || [];
 
-        entries.push({
-            barcode: normalizedBarcode,
-            rowIndex: index,
-            rowId: row?.id ? parseInt(row.id) : undefined,
+        barcodes.forEach((b, bIndex) => {
+            const normalizedBarcode = normalizeLegacyBarcode(b?.barcode);
+            if (!normalizedBarcode) return;
+
+            entries.push({
+                barcode: normalizedBarcode,
+                rowIndex,
+                bIndex,
+                id: b?.id ? parseInt(b.id) : undefined,
+                barcodeType: b?.barcodeType || "REGULAR"
+            });
         });
 
         return entries;

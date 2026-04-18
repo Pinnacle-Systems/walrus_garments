@@ -24,6 +24,7 @@ import HsnMaster from "../../Basic/components/HsnMaster";
 import ItemCategroyMaster from "../ItemCategroyMaster";
 import SectionMaster from "../SectionMaster";
 import LocationStockEditor, { createEmptyLocationThreshold, getConfiguredLocationAlertCount, validateLocationThresholdRows } from "./LocationStockEditor";
+import ItemBarcodeEditor, { coerceLegacyBarcode, getBarcodeSummary } from "./ItemBarcodeEditor";
 import { shouldDisableLinkedRecordField } from "./legacyEditPermissions";
 import { useGetSubCategoryQuery } from "../../redux/uniformService/SubCategoryMasterService";
 import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
@@ -38,7 +39,7 @@ const createStandardPriceRow = () => ({
   offerPrice: "",
   salesPrice: "",
   sku: "",
-  barcode: "",
+  ItemBarcodes: [{ barcode: "", barcodeType: "REGULAR", active: true }],
   MinimumStockQty: [createEmptyLocationThreshold()],
 });
 
@@ -239,11 +240,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           setOfferPrice(data?.ItemPriceList?.[0]?.offerPrice ? data?.ItemPriceList?.[0]?.offerPrice : "")
           setSalesPrice(data?.ItemPriceList?.[0]?.salesPrice ? data?.ItemPriceList?.[0]?.salesPrice : "")
           setSku(data?.ItemPriceList?.[0]?.sku ? data?.ItemPriceList?.[0]?.sku : "")
-          setBarcode(data?.ItemPriceList?.[0]?.barcode ? data?.ItemPriceList?.[0]?.barcode : "")
-          setItemPriceList(data?.ItemPriceList?.length ? data?.ItemPriceList : [createStandardPriceRow()])
+          setItemPriceList(data?.ItemPriceList?.length
+            ? data.ItemPriceList.map(row => ({ ...row, ItemBarcodes: coerceLegacyBarcode(row) }))
+            : [createStandardPriceRow()])
 
         } else {
-          setItemPriceList(data?.ItemPriceList ? data?.ItemPriceList : [])
+          setItemPriceList(data?.ItemPriceList
+            ? data.ItemPriceList.map(row => ({ ...row, ItemBarcodes: coerceLegacyBarcode(row) }))
+            : [])
           const uniqueSizes = [...new Set(data?.ItemPriceList?.map(item => item.sizeId))];
 
           const uniqueColors = [...new Set(data?.ItemPriceList?.map(item => item.colorId))];
@@ -275,11 +279,50 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     [barcodeGenerationMethod, effectivePricingMode, id, itemControlData?.data, sizeData?.data, colorData?.data]
   );
 
-  console.log(childRecord, "childRecord")
+  console.log(itemPriceList, "itemPriceList")
 
   useEffect(() => {
     syncFormWithDb(singleData?.data);
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  // Sync the 'barcode' state with the primary barcode of the first price row (for UI conditions)
+  useEffect(() => {
+    if (effectivePricingMode === "STANDARD" && itemPriceList?.[0]?.ItemBarcodes) {
+      const primaryBarcode = (itemPriceList[0].ItemBarcodes.find(b => b.barcodeType === "REGULAR")?.barcode ||
+        itemPriceList[0].ItemBarcodes[0]?.barcode || "").trim();
+      if (barcode !== primaryBarcode) {
+        setBarcode(primaryBarcode);
+      }
+    }
+  }, [itemPriceList, effectivePricingMode, barcode]);
+
+  // Sync SKU(s) with primary Barcode(s) when 'isSameAsBarcode' is enabled
+  useEffect(() => {
+    if (isSameAsBarcode) {
+      if (effectivePricingMode === "STANDARD") {
+        const primaryBarcode = (itemPriceList?.[0]?.ItemBarcodes?.find(b => b.barcodeType === "REGULAR")?.barcode ||
+          itemPriceList?.[0]?.ItemBarcodes?.[0]?.barcode || "").trim();
+        if (primaryBarcode && sku !== primaryBarcode) {
+          setSku(primaryBarcode);
+        }
+      } else if (itemPriceList.length > 0) {
+        // For Size/Color modes, sync each row's SKU with its own primary barcode
+        let changed = false;
+        const nextList = itemPriceList.map(item => {
+          const primaryBarcode = (item.ItemBarcodes?.find(b => b.barcodeType === "REGULAR")?.barcode ||
+            item.ItemBarcodes?.[0]?.barcode || "").trim();
+          if (primaryBarcode && item.sku !== primaryBarcode) {
+            changed = true;
+            return { ...item, sku: primaryBarcode };
+          }
+          return item;
+        });
+        if (changed) {
+          setItemPriceList(nextList);
+        }
+      }
+    }
+  }, [isSameAsBarcode, itemPriceList, effectivePricingMode, sku]);
 
   const data = {
     id,
@@ -301,7 +344,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         offerPrice,
         salesPrice,
         sku: sku?.trim() || "",
-        barcode: barcode?.trim() || "",
+        ItemBarcodes: itemPriceList?.[0]?.ItemBarcodes || [],
         MinimumStockQty: validateLocationThresholdRows(itemPriceList?.[0]?.MinimumStockQty || []).cleanedRows
       }] :
       sanitizePriceRowsForSave(itemPriceList),
@@ -320,7 +363,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
     if (effectivePricingMode === "STANDARD") {
       const standardPrice = data?.itemPriceList?.[0];
-      if (!standardPrice?.barcode?.trim() || !standardPrice?.sku?.trim() || !standardPrice?.salesPrice?.trim()) {
+      const hasBarcodes = (standardPrice?.ItemBarcodes || []).some(b => b.barcode?.trim());
+      if (!hasBarcodes || !standardPrice?.sku?.trim() || !standardPrice?.salesPrice?.trim()) {
         return false;
       }
     }
@@ -699,7 +743,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
 
 
-  console.log(itemPriceList, "itemPriceList");
 
   const generateBarcodeValue = (code, sizeName, item) => {
     const colorCode = (findFromList(item?.colorId, colorData?.data, "code") ?? "000").slice(0, 3);
@@ -750,7 +793,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           // Update barcode but keep prices and other data
           return {
             ...existing,
-            barcode: generateBarcodeValue(code, existing.sizeName, existing)
+            ItemBarcodes: existing.ItemBarcodes?.length
+              ? existing.ItemBarcodes
+              : [{ barcode: generateBarcodeValue(code, existing.sizeName, existing), barcodeType: "REGULAR", active: true }]
           };
         } else {
           // New combination
@@ -765,7 +810,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           };
           return {
             ...newItem,
-            barcode: generateBarcodeValue(code, combo.sizeName, newItem)
+            ItemBarcodes: [{ barcode: generateBarcodeValue(code, combo.sizeName, newItem), barcodeType: "REGULAR", active: true }]
           };
         }
       });
@@ -783,7 +828,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         };
         return {
           ...newItem,
-          barcode: generateBarcodeValue(code, combo.sizeName, newItem)
+          ItemBarcodes: [{ barcode: generateBarcodeValue(code, combo.sizeName, newItem), barcodeType: "REGULAR", active: true }]
         };
       });
       setItemPriceList(itemPriceArray);
@@ -1094,13 +1139,20 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                       <div className="col-span-8 min-h-0">
                         <div className="grid grid-cols-9 items-start gap-4">
                           <div className="col-span-2">
-                            <TextInputNew1
-                              name="Barcode"
-                              value={barcode}
-                              setValue={setBarcode}
-                              readOnly={readOnly}
-                              disabled={id ? disableLinkedRecordField : false}
-                              required={true}
+                            <label className="block text-xs font-bold text-gray-600 mb-1">
+                              Barcodes <span className="text-red-500">*</span>
+                            </label>
+                            <ItemBarcodeEditor
+                              barcodes={itemPriceList?.[0]?.ItemBarcodes || []}
+                              onChange={(newBarcodes) => {
+                                setItemPriceList(prev => {
+                                  const updated = structuredClone(prev);
+                                  if (!updated[0]) return prev;
+                                  updated[0].ItemBarcodes = newBarcodes;
+                                  return updated;
+                                });
+                              }}
+                              readOnly={readOnly || (id ? disableLinkedRecordField : false)}
                             />
                           </div>
                           <div className="col-span-2">
@@ -1337,22 +1389,26 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                       {findFromList(item?.colorId, colorData?.data, "name")}
                                     </td>
                                   )}
-                                  <td className="border border-gray-200 w-20 px-1 py-1 text-left text-xs">
-                                    <input
-                                      type="text"
-                                      min="0"
-                                      rows={1}
-                                      onFocus={e => e.target.select()}
-                                      className="text-right rounded w-full px-1 py-1 text-xs"
-                                      value={item.barcode}
-                                      disabled={readOnly || isLegacyItem || true}
-                                      onChange={e => handleInputChange(e.target.value, index, "barcode")}
-                                      onBlur={e => handleInputChange(e.target.value, index, "barcode")}
+                                  <td className="border border-gray-200 w-20 px-1 py-1 text-center">
+                                    <ItemBarcodeEditor
+                                      barcodes={item?.ItemBarcodes || []}
+                                      onChange={(newBarcodes) => {
+                                        setItemPriceList(prev => {
+                                          const updated = structuredClone(prev);
+                                          updated[index].ItemBarcodes = newBarcodes;
+                                          return updated;
+                                        });
+                                      }}
+                                      readOnly={readOnly || isLegacyItem}
+                                      label={[
+                                        findFromList(item?.sizeId, sizeData?.data, "name"),
+                                        findFromList(item?.colorId, colorData?.data, "name")
+                                      ].filter(Boolean).join(" / ")}
                                     />
                                   </td>
                                   <td className="border border-gray-200 w-36 px-1 py-1 text-left text-xs">
                                     <div className="flex items-center gap-1">
-                                      {isSameAsBarcode && item.barcode !== "" ? (
+                                      {isSameAsBarcode && (item?.ItemBarcodes?.[0]?.barcode || item?.barcode) ? (
                                         <span className="flex-1 text-right pr-2 italic text-gray-400 truncate select-none">
                                           {item.sku}
                                         </span>

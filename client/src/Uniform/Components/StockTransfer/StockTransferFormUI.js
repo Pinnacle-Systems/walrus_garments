@@ -346,19 +346,19 @@ const StockTransferForm = ({
             return;
         }
 
-        if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
-            const hasMismatch = stockItems?.filter(i => i.itemId)?.some(i => 
-                parseFloat(i.stockQty || 0).toFixed(3) !== parseFloat(i.transferQty || 0).toFixed(3)
-            );
-            if (hasMismatch) {
-                Swal.fire({
-                    title: "Validation Error",
-                    text: "For DISCOUNT SECTION, Stock Quantity and Transfer Quantity must match exactly for all items.",
-                    icon: "error",
-                });
-                return;
-            }
-        }
+        // if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
+        //     const hasMismatch = stockItems?.filter(i => i.itemId)?.some(i => 
+        //         parseFloat(i.stockQty || 0).toFixed(3) !== parseFloat(i.transferQty || 0).toFixed(3)
+        //     );
+        //     if (hasMismatch) {
+        //         Swal.fire({
+        //             title: "Validation Error",
+        //             text: "For DISCOUNT SECTION, Stock Quantity and Transfer Quantity must match exactly for all items.",
+        //             icon: "error",
+        //         });
+        //         return;
+        //     }
+        // }
 
 
 
@@ -549,6 +549,7 @@ const StockTransferForm = ({
                             searchColor={searchColor} setSearchColor={setSearchColor}
                             searchSize={searchSize} setSearchSize={setSearchSize}
                             stockDrivenFields={stockDrivenFields} readOnly={readOnly}
+                            itemPriceList={itemPriceList?.data}
                         />
                     </div>
                     <div className="flex flex-col md:flex-row gap-2 justify-between flex-none bg-white p-2 rounded-md border border-slate-200 shadow-sm">
@@ -586,7 +587,7 @@ const StockTransferForm = ({
                                     const selectedItems = stockItems?.filter(i => i.itemId && i.transferQty);
                                     if (selectedItems?.length > 0) {
                                         if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
-                                            const hasMismatch = selectedItems.some(i => 
+                                            const hasMismatch = selectedItems.some(i =>
                                                 parseFloat(i.stockQty || 0).toFixed(3) !== parseFloat(i.transferQty || 0).toFixed(3)
                                             );
                                             if (hasMismatch) {

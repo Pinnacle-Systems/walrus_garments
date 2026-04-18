@@ -10,6 +10,8 @@ const PaymentModal = ({
     setPaidCash,
     paidUPI,
     setPaidUPI,
+    paidOnline,
+    setPaidOnline,
     paidCard,
     setPaidCard,
     receivedAmount,
@@ -50,7 +52,8 @@ const PaymentModal = ({
                     <div className="grid grid-cols-1 gap-4">
                         {[
                             { label: 'Cash Payment', icon: <Banknote size={14} />, value: paidCash, setter: setPaidCash, color: 'emerald' },
-                            { label: 'UPI / Online', icon: <ScanBarcode size={14} />, value: paidUPI, setter: setPaidUPI, color: 'indigo' },
+                            { label: 'UPI', icon: <ScanBarcode size={14} />, value: paidUPI, setter: setPaidUPI, color: 'indigo' },
+                            { label: 'Online / Bank Transfer', icon: <ScanBarcode size={14} />, value: paidOnline, setter: setPaidOnline, color: 'indigo' },
                             { label: 'Card Payment', icon: <CreditCard size={14} />, value: paidCard, setter: setPaidCard, color: 'blue' }
                         ].map((pod) => (
                             <div key={pod.label} className="relative">

@@ -110,7 +110,7 @@ async function getSearch(req) {
 
 async function create(body) {
     try {
-        const { customerId, posItems, finYearId, branchId } = await body;
+        const { customerId, posItems, finYearId, branchId, storeId } = await body;
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
         const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -122,22 +122,12 @@ async function create(body) {
             const posRecord = await tx.pos.create({
                 data: {
                     customerId: customerId ? parseInt(customerId) : undefined,
-                    // saleOrderId: saleOrderId ? parseInt(saleOrderId) : undefined,
                     docId: docId,
                     branchId: branchId ? parseInt(branchId) : undefined,
                     createdById: body.userId ? parseInt(body.userId) : undefined,
-                    // totalAmount: parseFloat(body.netAmount || 0),
-                    // taxAmount: parseFloat(body.taxAmount || 0),
-                    // discountValue: parseFloat(body.discountValue || 0),
-                    // paidCash: parseFloat(body.paidCash || 0),
-                    // paidUPI: parseFloat(body.paidUPI || 0),
-                    // paidCard: parseFloat(body.paidCard || 0),
-                    // receivedAmount: parseFloat(body.receivedAmount || 0),
-                    // balanceReturn: parseFloat(body.balanceReturn || 0),
-                    // paymentMethod: body.paymentMethod,
                     PosItems: {
                         createMany: {
-                            data: posItems.map((item) => ({
+                            data: (posItems || []).map((item) => ({
                                 itemId: parseInt(item.itemId || item.id),
                                 sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                                 colorId: item.colorId ? parseInt(item.colorId) : null,
@@ -145,19 +135,20 @@ async function create(body) {
                                 qty: String(item.qty),
                                 price: String(item.price),
                                 salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
-
                             }))
                         }
                     }
                 }
             });
 
+            // 2. Resolve Fulfillment and Stock
             const posFulfillmentLines = (posItems || [])
                 .filter((item) => item?.itemId || item?.id)
                 .map((item, lineIndex) => ({
                     ...item,
                     lineIndex,
                     itemId: parseInt(item.itemId || item.id),
+                    storeId: item.sourceStoreId ? parseInt(item.sourceStoreId) : parseInt(storeId),
                     fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
                     branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
                 }));
@@ -176,15 +167,54 @@ async function create(body) {
                 throw new Error(allocationValidationMessage);
             }
 
-            const stockEntries = buildStockOutEntries(allocations, {
-                transactionId: posRecord.id,
-                inOrOut: "POS",
-            }).map((entry, index) => ({
-                ...entry,
-                price: allocations[index]?.lineIndex >= 0 && posFulfillmentLines[allocations[index].lineIndex]?.price
-                    ? parseFloat(posFulfillmentLines[allocations[index].lineIndex].price)
-                    : null,
-            }));
+            const stockEntries = [];
+            const retailStoreId = parseInt(storeId);
+
+            for (const allocation of allocations) {
+                const sourceStoreId = parseInt(allocation.storeId);
+                const qty = parseFloat(allocation.allocatedQty);
+                const itemLine = posFulfillmentLines[allocation.lineIndex];
+                const price = parseFloat(itemLine?.price || 0);
+
+                const baseEntry = {
+                    itemId: allocation.itemId,
+                    sizeId: allocation.sizeId,
+                    colorId: allocation.colorId,
+                    uomId: allocation.uomId,
+                    branchId: allocation.branchId,
+                    barcode: allocation.barcode,
+                    transactionId: posRecord.id,
+                    price: price,
+                };
+
+                if (sourceStoreId === retailStoreId) {
+                    stockEntries.push({
+                        ...baseEntry,
+                        qty: -qty,
+                        storeId: retailStoreId,
+                        inOrOut: "POS",
+                    });
+                } else {
+                    stockEntries.push({
+                        ...baseEntry,
+                        qty: -qty,
+                        storeId: sourceStoreId,
+                        inOrOut: "StockTransferOut",
+                    });
+                    stockEntries.push({
+                        ...baseEntry,
+                        qty: qty,
+                        storeId: retailStoreId,
+                        inOrOut: "StockTransferIn",
+                    });
+                    stockEntries.push({
+                        ...baseEntry,
+                        qty: -qty,
+                        storeId: retailStoreId,
+                        inOrOut: "POS",
+                    });
+                }
+            }
 
             await tx.stock.createMany({
                 data: stockEntries
@@ -205,145 +235,129 @@ async function create(body) {
     }
 }
 
-async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInward, storeId, branchId) {
-
-    if (item?.id) {
-
-
-        let updatedata = await tx.SalesInvoiceItems.update({
-            where: {
-                id: parseInt(item.id)
-            },
-            data: {
-                quotationId: parseInt(quotationId),
-                itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
-                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-                hsnId: item["hsnId"] ? parseInt(item["hsnId"]) : 0,
-                qty: item["qty"] ? String(item["qty"]) : "",
-                price: item["price"] ? String(item["price"]) : "",
-
-
-
-
-            }
-        })
-
-
-
-
-
-    }
-
-
-    else {
-        let data = await tx.SalesInvoiceItems.create({
-            data: {
-                quotationId: parseInt(quotationId),
-                itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
-                sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
-                colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
-                uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
-                hsnId: item["hsnId"] ? parseInt(item["hsnId"]) : 0,
-                qty: item["qty"] ? item["qty"] : 0,
-                price: item["price"] ? item["price"] : 0,
-            }
-        })
-
-
-    }
-}
-
-async function updateAllPInwardReturnItems(tx, directInwardReturnItems, directInwardOrReturnId, poType, poInwardOrDirectInward, storeId, branchId) {
-    let promises = directInwardReturnItems?.map(async (item) => await updateOrCreate(tx, item, directInwardOrReturnId, poType, poInwardOrDirectInward, storeId, branchId))
-    return Promise.all(promises)
-}
-
 async function update(id, body) {
-    const { customerId, discountType, discountValue, invoiceItems, branchId } = await body
+    try {
+        const { customerId, posItems, branchId, storeId } = await body;
 
-    const dataFound = await prisma.salesInvoice.findUnique({
-        where: {
-            id: parseInt(id)
-        },
-        include: {
-            SalesInvoiceItems: true
-        }
-    })
-    if (!dataFound) return NoRecordFound("Sale Order");
+        const dataFound = await prisma.pos.findUnique({
+            where: { id: parseInt(id) },
+            include: { PosItems: true }
+        });
+        if (!dataFound) return NoRecordFound("POS");
 
-    let oldItemIds = dataFound?.SalesInvoiceItems.map(item => parseInt(item.id))
-    let currentItemIds = invoiceItems.filter(i => i?.id)?.map(item => parseInt(item.id))
-    let removedItemIds = oldItemIds.filter(id => !currentItemIds.includes(id));
-
-    let salesInvoiceData;
-
-    await prisma.$transaction(async (tx) => {
-        // Delete removed items
-        if (removedItemIds.length > 0) {
-            await tx.salesInvoiceItems.deleteMany({
+        const result = await prisma.$transaction(async (tx) => {
+            await tx.stock.deleteMany({
                 where: {
-                    id: { in: removedItemIds }
+                    transactionId: parseInt(id),
+                    OR: [
+                        { inOrOut: "POS" },
+                        { inOrOut: "StockTransferOut" },
+                        { inOrOut: "StockTransferIn" }
+                    ]
                 }
             });
-        }
 
-        // Update main record
-        salesInvoiceData = await tx.salesInvoice.update({
-            where: {
-                id: parseInt(id)
-            },
-            data: {
-                customerId: customerId ? parseInt(customerId) : undefined,
+            const updatedPos = await tx.pos.update({
+                where: { id: parseInt(id) },
+                data: {
+                    customerId: customerId ? parseInt(customerId) : undefined,
+                    branchId: branchId ? parseInt(branchId) : undefined,
+                    updatedBy: body.userId ? { connect: { id: parseInt(body.userId) } } : undefined,
+                }
+            });
 
-                branchId: branchId ? parseInt(branchId) : undefined,
-            },
-        })
+            await tx.posItems.deleteMany({ where: { PosId: parseInt(id) } });
+            await tx.posItems.createMany({
+                data: (posItems || []).map((item) => ({
+                    PosId: parseInt(id),
+                    itemId: parseInt(item.itemId || item.id),
+                    sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                    colorId: item.colorId ? parseInt(item.colorId) : null,
+                    uomId: item.uomId ? parseInt(item.uomId) : null,
+                    qty: String(item.qty),
+                    price: String(item.price),
+                    salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+                }))
+            });
 
-        for (const item of (invoiceItems || []).filter(i => i.itemId)) {
-            if (item.id) {
-                await tx.salesInvoiceItems.update({
-                    where: { id: parseInt(item.id) },
-                    data: {
-                        itemId: item.itemId ? parseInt(item.itemId) : null,
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        uomId: item.uomId ? parseInt(item.uomId) : null,
-                        hsnId: item.hsnId ? parseInt(item.hsnId) : null,
-                        qty: item.qty ? item.qty.toString() : "0",
-                        price: item.price ? item.price.toString() : "0",
-                        salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+            const posFulfillmentLines = (posItems || [])
+                .filter((item) => item?.itemId || item?.id)
+                .map((item, lineIndex) => ({
+                    ...item,
+                    lineIndex,
+                    itemId: parseInt(item.itemId || item.id),
+                    storeId: item.sourceStoreId ? parseInt(item.sourceStoreId) : parseInt(storeId),
+                    fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
+                    branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
+                }));
 
-                    }
-                });
-            } else {
-                await tx.salesInvoiceItems.create({
-                    data: {
-                        salesInvoiceId: salesInvoiceData.id,
-                        itemId: item.itemId ? parseInt(item.itemId) : null,
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        uomId: item.uomId ? parseInt(item.uomId) : null,
-                        hsnId: item.hsnId ? parseInt(item.hsnId) : null,
-                        qty: item.qty ? item.qty.toString() : "0",
-                        price: item.price ? item.price.toString() : "0",
-                        salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+            const resolution = await resolveHybridFulfillmentLines(tx, posFulfillmentLines, {
+                branchId,
+            });
+            const resolutionError = getHybridFulfillmentResolutionError(resolution);
+            if (resolutionError) throw resolutionError;
 
-                    }
-                });
+            const allocations = extractResolvedAllocations(resolution);
+            const allocationValidationMessage = await validateFulfillmentAllocations(tx, allocations);
+            if (allocationValidationMessage) throw new Error(allocationValidationMessage);
+
+            const stockEntries = [];
+            const retailStoreId = parseInt(storeId);
+
+            for (const allocation of allocations) {
+                const sourceStoreId = parseInt(allocation.storeId);
+                const qty = parseFloat(allocation.allocatedQty);
+                const itemLine = posFulfillmentLines[allocation.lineIndex];
+                const price = parseFloat(itemLine?.price || 0);
+
+                const baseEntry = {
+                    itemId: allocation.itemId,
+                    sizeId: allocation.sizeId,
+                    colorId: allocation.colorId,
+                    uomId: allocation.uomId,
+                    branchId: allocation.branchId,
+                    barcode: allocation.barcode,
+                    transactionId: parseInt(id),
+                    price: price,
+                };
+
+                if (sourceStoreId === retailStoreId) {
+                    stockEntries.push({ ...baseEntry, qty: -qty, storeId: retailStoreId, inOrOut: "POS" });
+                } else {
+                    stockEntries.push({ ...baseEntry, qty: -qty, storeId: sourceStoreId, inOrOut: "StockTransferOut" });
+                    stockEntries.push({ ...baseEntry, qty: qty, storeId: retailStoreId, inOrOut: "StockTransferIn" });
+                    stockEntries.push({ ...baseEntry, qty: -qty, storeId: retailStoreId, inOrOut: "POS" });
+                }
             }
-        }
-    })
-    return { statusCode: 0, data: salesInvoiceData };
+
+            await tx.stock.createMany({ data: stockEntries });
+
+            return updatedPos;
+        });
+
+        return { statusCode: 0, data: result };
+    } catch (error) {
+        console.error("POS Update Error:", error);
+        return { statusCode: 1, message: "Failed to update sale: " + error.message };
+    }
 }
+
 async function remove(id) {
-    const data = await prisma.salesInvoice.delete({
-        where: {
-            id: parseInt(id)
-        },
-    })
-    return { statusCode: 0, data };
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            await tx.stock.deleteMany({
+                where: {
+                    transactionId: parseInt(id),
+                    OR: [{ inOrOut: "POS" }, { inOrOut: "StockTransferOut" }, { inOrOut: "StockTransferIn" }]
+                }
+            });
+            await tx.pos.delete({ where: { id: parseInt(id) } });
+        });
+        return { statusCode: 0, data: result };
+    } catch (error) {
+        console.error("POS Deletion Error:", error);
+        return { statusCode: 1, message: "Failed to delete sale: " + error.message };
+    }
 }
 
 export {

@@ -109,7 +109,7 @@ const POSCartTable = ({
                                         </div>
                                     </td>
                                     <td className="px-2 py-0.5 border-r border-slate-200 text-center">
-                                        <select
+                                        {/* <select
                                             value={item.salesPersonId || ""}
                                             onChange={(e) => handleRowSalesPersonChange(index, e.target.value)}
                                             className="w-full bg-transparent text-[10px] font-black text-slate-700 outline-none border-none focus:ring-0 cursor-pointer text-center p-0"
@@ -118,8 +118,8 @@ const POSCartTable = ({
                                             {employees.map(emp => (
                                                 <option key={emp.id} value={emp.id}>{emp.name}</option>
                                             ))}
-                                        </select>
-                                        <div className="text-[8px] font-bold text-slate-400 mt-0.5">
+                                        </select> */}
+                                        <div className="text-[12px] font-bold text-slate-400 mt-0.5">
                                             {item.salesPersonBarcode || ""}
                                         </div>
                                     </td>

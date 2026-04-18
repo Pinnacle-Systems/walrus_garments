@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function TransferItems({ item, index, handleRightClickFromOrder, readOnly, handleInputChangeFromOrder,
-    itemList, sizeList, colorList, fromLocationId, id, locationData, toLocationId, stockDrivenFields = []
+    itemList, sizeList, colorList, fromLocationId, id, locationData, toLocationId, stockDrivenFields = [],
+    itemPriceList = []
 }) {
 
 
@@ -41,7 +42,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
     const totalBranchStock = branchStockData?.data?.[0]?._sum?.qty || 0;
     const hasOtherLocationStock = parseFloat(totalBranchStock) > parseFloat(item?.stockQty || 0);
 
-    console.log(readOnly, id, "check condtion")
+    console.log(itemPriceList, "itemPriceList")
 
 
 
@@ -73,8 +74,44 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                 <td className="w-48 border border-gray-300 text-[11px]  px-2">
                     {findFromList(item?.colorId, colorList, "name")}
                 </td>
-                <td className="w-48 border border-gray-300 text-[11px]  text-left px-2">
-                    {item?.barcode ? item?.barcode : ""}
+                <td className="w-48 border border-gray-300 text-[11px] text-left px-2">
+                    {(() => {
+                        const isDiscountSection = findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION";
+                        const regularBarcode = item?.barcode || "";
+
+                        if (!isDiscountSection) {
+                            return regularBarcode;
+                        }
+
+                        // DISCOUNT SECTION Logic
+                        const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
+                        const isLegacy = itemObj?.isLegacy;
+
+                        const variant = (itemPriceList?.data || itemPriceList || [])?.find(p =>
+                            parseInt(p.itemId) === parseInt(item.itemId) &&
+                            (isLegacy ? true : (
+                                parseInt(p.sizeId) === parseInt(item.sizeId) &&
+                                parseInt(p.colorId) === parseInt(item.colorId)
+                            ))
+                        );
+
+                        const existingClearance = variant?.ItemBarcodes?.find(b => b.barcodeType === "CLEARANCE")?.barcode;
+                        const existingRegular = variant?.ItemBarcodes?.find(b => b.barcodeType === "REGULAR")?.barcode;
+
+                        if (existingClearance) {
+                            if (item.clearanceBarcode !== existingClearance) {
+                                setTimeout(() => handleInputChangeFromOrder(existingClearance, index, "clearanceBarcode"), 0);
+                            }
+                            return existingClearance;
+                        } else if (item.itemId && existingRegular) {
+                            const generatedCode = `DS-${existingRegular}`;
+                            if (item.clearanceBarcode !== generatedCode) {
+                                setTimeout(() => handleInputChangeFromOrder(generatedCode, index, "clearanceBarcode"), 0);
+                            }
+                            return <span className="text-blue-600 font-medium">{generatedCode} (New)</span>;
+                        }
+                        return "";
+                    })()}
                 </td>
                 {stockDrivenFields.map((field) => (
                     <td key={field.key} className="w-32 border border-gray-300 text-[11px]  px-2">
@@ -85,7 +122,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                     <div className="flex items-center justify-end gap-1">
                         {item?.stockQty}
                         {hasOtherLocationStock && (
-                            <span 
+                            <span
                                 title={`Total ${parseFloat(totalBranchStock).toFixed(3)} available in all locations`}
                                 className="cursor-help text-blue-500 hover:text-blue-700 font-bold"
                             >
@@ -166,6 +203,8 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                     // placeHolder="0.000"
                     />
                 </td>
+
+
 
             </tr>
 

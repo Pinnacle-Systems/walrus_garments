@@ -32,24 +32,33 @@ const BarCodePrintFormat = ({
 
 
   const getBarcodeFromList = (itemId, sizeId, colorId) => {
-    if (!itemPriceList?.data || !itemId || !sizeId) return null;
-    return itemPriceList.data.find(item =>
+    if (!itemPriceList?.data || !itemId) return null;
+    const found = itemPriceList.data.find(item =>
       String(item.itemId) === String(itemId) &&
       String(item.sizeId) === String(sizeId) &&
       (colorId ? String(item.colorId) === String(colorId) : !item.colorId)
     );
+
+    if (found) {
+      const regularBarcode = found.ItemBarcodes?.find(b => b.barcodeType === "REGULAR")?.barcode ||
+        found.ItemBarcodes?.[0]?.barcode ||
+        found.barcode || "";
+      return { ...found, barcode: regularBarcode };
+    }
+    return null;
   };
 
 
-  const allBarcodes = data?.flatMap((item) =>
-    Array.from({ length: parseInt(item?.qty || 0) }, () => ({
-      barCode: getBarcodeFromList(item.itemId, item.sizeId, item.colorId)?.barcode,
+  const allBarcodes = data?.flatMap((item) => {
+    const priceRow = getBarcodeFromList(item.itemId, item.sizeId, item.colorId);
+    return Array.from({ length: parseInt(item?.qty || 0) }, () => ({
+      barCode: priceRow?.barcode,
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: findFromList(item.itemId, itemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
-      price: getBarcodeFromList(item.itemId, item.sizeId, item.colorId)?.salesPrice
-    }))
-  );
+      price: priceRow?.salesPrice
+    }));
+  });
 
   const {
     labelWidth,

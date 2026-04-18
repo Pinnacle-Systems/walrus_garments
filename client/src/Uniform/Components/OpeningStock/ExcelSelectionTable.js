@@ -122,8 +122,20 @@ function buildLegacySeedMap(rows = []) {
   };
 }
 
-function getExistingLegacyBarcode(item) {
-  return normalizeCodeValue(item?.ItemPriceList?.[0]?.barcode);
+function getExistingLegacyBarcode(item, isDiscountSection) {
+  const priceRow = item?.ItemPriceList?.[0];
+  const barcodes = priceRow?.ItemBarcodes || [];
+
+  if (isDiscountSection) {
+    const clearance = barcodes.find(b => b.active !== false && b.barcodeType === "CLEARANCE");
+    if (clearance) return normalizeCodeValue(clearance.barcode);
+  } else {
+    const regular = barcodes.find(b => b.active !== false && b.barcodeType === "REGULAR");
+    if (regular) return normalizeCodeValue(regular.barcode);
+  }
+
+  // Fallback to first active barcode if none of specific type
+  return normalizeCodeValue(barcodes.find((b) => b.active !== false)?.barcode || priceRow?.barcode);
 }
 
 function getExistingLegacySalesPrice(item) {
@@ -156,23 +168,6 @@ function normalizeComparablePrice(value) {
   }
 
   return String(value).trim();
-}
-
-function applyResolvedLegacyItemToRow(row, resolvedItem) {
-  if (!resolvedItem) {
-    return row;
-  }
-
-  const existingPriceRow = resolvedItem.ItemPriceList?.[0] || {};
-
-  return {
-    ...row,
-    itemId: resolvedItem.id || row.itemId || "",
-    item_name: resolvedItem.name || row.item_name || "",
-    item_code: row.item_code || resolvedItem.code || existingPriceRow.barcode || "",
-    sales_price: normalizeComparablePrice(row.sales_price) ? row.sales_price : (existingPriceRow.salesPrice ?? row.sales_price),
-    offer_price: normalizeComparablePrice(row.offer_price) ? row.offer_price : (existingPriceRow.offerPrice ?? row.offer_price),
-  };
 }
 
 function clearResolvedLegacyItemFromRow(row) {
@@ -231,6 +226,23 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     () => getOpeningStockHeaderMap(openingStockFields),
     [openingStockFields]
   );
+
+  const isDiscountSection = locationList?.data?.find(loc => String(loc.id) === String(selectedLocationId))?.storeName?.toUpperCase() === "DISCOUNT SECTION";
+
+  const applyResolvedLegacyItemToRow = React.useCallback((row, resolvedItem) => {
+    if (!resolvedItem) return row;
+    const existingPriceRow = resolvedItem.ItemPriceList?.[0] || {};
+
+    return {
+      ...row,
+      itemId: resolvedItem.id || row.itemId || "",
+      item_name: resolvedItem.name || row.item_name || "",
+      item_code: row.item_code || getExistingLegacyBarcode(resolvedItem, isDiscountSection) || "",
+      sales_price: normalizeComparablePrice(row.sales_price) ? row.sales_price : (existingPriceRow.salesPrice ?? row.sales_price),
+      offer_price: normalizeComparablePrice(row.offer_price) ? row.offer_price : (existingPriceRow.offerPrice ?? row.offer_price),
+    };
+  }, [isDiscountSection]);
+
   const openingStockTemplateRow = React.useMemo(
     () => getOpeningStockTemplateRow(openingStockFields),
     [openingStockFields]
@@ -247,26 +259,38 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     const barcodeMap = new Map();
 
     legacyItems.forEach((item) => {
-      const normalizedBarcode = getExistingLegacyBarcode(item);
-      if (!normalizedBarcode) {
-        return;
+      const priceRow = item?.ItemPriceList?.[0];
+      const barcodes = [];
+
+      if (priceRow?.ItemBarcodes?.length > 0) {
+        priceRow.ItemBarcodes.forEach((b) => {
+          if (b.active !== false && b.barcode) {
+            barcodes.push(normalizeCodeValue(b.barcode));
+          }
+        });
+      } else if (priceRow?.barcode) {
+        barcodes.push(normalizeCodeValue(priceRow.barcode));
       }
 
-      const matches = barcodeMap.get(normalizedBarcode) || [];
-      matches.push(item);
-      barcodeMap.set(normalizedBarcode, matches);
+      barcodes.forEach((normalizedBarcode) => {
+        const matches = barcodeMap.get(normalizedBarcode) || [];
+        if (!matches.includes(item)) {
+          matches.push(item);
+          barcodeMap.set(normalizedBarcode, matches);
+        }
+      });
     });
 
     return barcodeMap;
   }, [legacyItems]);
-  const itemLookupOptions = React.useMemo(
-    () => legacyItems.map((item) => ({
+  const itemLookupOptions = React.useMemo(() => {
+    const isDiscountSection = locationList?.data?.find(loc => String(loc.id) === String(selectedLocationId))?.storeName?.toUpperCase() === "DISCOUNT SECTION";
+    return legacyItems.map((item) => ({
       value: String(item.id),
       label: item.name || "",
-      code: item.code || getExistingLegacyBarcode(item) || "",
-    })),
-    [legacyItems]
-  );
+      code: getExistingLegacyBarcode(item, isDiscountSection) || item.code || "",
+    }));
+  }, [legacyItems, locationList, selectedLocationId]);
   const sizeByName = React.useMemo(
     () => new Map((sizeList?.data || []).map((size) => [normalizeLookupValue(size.name), size])),
     [sizeList]
@@ -317,12 +341,6 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     });
   }, []);
 
-  const getResolvedItem = React.useCallback((row) => {
-    const resolvedFromState = row?.itemId
-      ? legacyItems.find((item) => String(item.id) === String(row.itemId))
-      : undefined;
-    return resolvedFromState || itemByName.get(normalizeLookupValue(row?.item_name));
-  }, [itemByName, legacyItems]);
   const getBarcodeMatches = React.useCallback((row) => {
     const normalizedBarcode = normalizeCodeValue(row?.item_code);
     if (!normalizedBarcode) {
@@ -331,6 +349,28 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
 
     return itemsByBarcode.get(normalizedBarcode) || [];
   }, [itemsByBarcode]);
+
+  const getResolvedItem = React.useCallback((row) => {
+    const fromState = row?.itemId
+      ? legacyItems.find((item) => String(item.id) === String(row.itemId))
+      : undefined;
+    if (fromState) return fromState;
+
+    const byName = itemByName.get(normalizeLookupValue(row?.item_name));
+    if (byName) return byName;
+
+    // Fallback: Resolve by barcode if unique match found
+    const barcodeMatches = getBarcodeMatches(row);
+    if (barcodeMatches.length === 1) {
+      return barcodeMatches[0];
+    }
+
+    return undefined;
+  }, [getBarcodeMatches, itemByName, legacyItems]);
+
+
+
+
   const getItemIdentityAttentionState = React.useCallback((row) => {
     const normalizedName = normalizeLookupValue(row?.item_name);
     if (!normalizedName) {
@@ -342,28 +382,11 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       return null;
     }
 
-    const barcodeMatches = getBarcodeMatches(row);
-    const normalizedBarcode = normalizeCodeValue(row?.item_code);
-
-    if (normalizedBarcode && barcodeMatches.length > 1) {
-      return {
-        tone: "conflict",
-        message: `Barcode ${normalizedBarcode} matches multiple Item Master rows. Clean up Item Master before loading stock.`,
-      };
-    }
-
-    if (normalizedBarcode && barcodeMatches.length === 1) {
-      return {
-        tone: "conflict",
-        message: `Row name ${normalizeMasterValue(row.item_name)} differs from Item Master item ${barcodeMatches[0].name} for barcode ${normalizedBarcode}. Update Item Master before loading stock.`,
-      };
-    }
-
     return {
       tone: "pending",
       message: `Item ${normalizeMasterValue(row.item_name)} will be created during save`,
     };
-  }, [getBarcodeMatches, getResolvedItem]);
+  }, [getResolvedItem]);
 
   const getResolvedSize = React.useCallback((row) => {
     const resolvedFromState = row?.sizeId
@@ -563,84 +586,64 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     return "";
   }, [isFieldValueMissing, openingStockFields, stockItems]);
 
-  const buildMissingReviewState = React.useCallback(() => {
-    buildLegacySeedMap(stockItems);
 
-    const missingItems = [];
-    const missingSizes = [];
-    const missingColors = [];
-    const seenItems = new Set();
-    const seenSizes = new Set();
-    const seenColors = new Set();
-
-    stockItems.forEach((row) => {
-      const normalizedItemName = normalizeLookupValue(row?.item_name);
-      const normalizedSize = normalizeLookupValue(row?.size);
-      const normalizedColor = normalizeLookupValue(row?.color);
-
-      const itemIdentityAttentionState = getItemIdentityAttentionState(row);
-      if (normalizedItemName && itemIdentityAttentionState?.tone === "pending" && !seenItems.has(normalizedItemName)) {
-        seenItems.add(normalizedItemName);
-        missingItems.push({
-          name: normalizeMasterValue(row.item_name),
-          itemCode: normalizeCodeValue(row.item_code),
-          salesPrice: getRowSalesPrice(row),
-          offerPrice: getRowOfferPrice(row),
-        });
-      }
-
-      if (stockMaintenance.trackSize && normalizedSize && !getResolvedSize(row) && !seenSizes.has(normalizedSize)) {
-        seenSizes.add(normalizedSize);
-        missingSizes.push(normalizeMasterValue(row.size));
-      }
-
-      if (stockMaintenance.trackColor && normalizedColor && !getResolvedColor(row) && !seenColors.has(normalizedColor)) {
-        seenColors.add(normalizedColor);
-        missingColors.push({
-          name: normalizeMasterValue(row.color),
-          code: "",
-        });
-      }
-    });
-
-    return {
-      items: missingItems,
-      sizes: missingSizes,
-      colors: missingColors,
-    };
-  }, [getItemIdentityAttentionState, getResolvedColor, getResolvedSize, stockItems, stockMaintenance.trackColor, stockMaintenance.trackSize]);
-
-  const getExistingLegacyConflicts = React.useCallback(() => {
+  const getExistingLegacyConflicts = React.useCallback(({ isDiscountSection, selectedLocationName }) => {
     const conflicts = [];
 
     stockItems.forEach((row, index) => {
-      const itemIdentityAttentionState = getItemIdentityAttentionState(row);
-      if (itemIdentityAttentionState?.tone === "conflict") {
-        conflicts.push(`Row ${index + 1}: ${itemIdentityAttentionState.message}`);
-        return;
-      }
-
-      const existingItem = getResolvedItem(row);
-      if (!existingItem) {
-        return;
-      }
-
-      const rowName = normalizeMasterValue(row?.item_name || "");
-      const itemName = normalizeMasterValue(existingItem?.name || "");
-      if (rowName && itemName && rowName !== itemName) {
-        conflicts.push(`Row ${index + 1} item name differs from Item Master (${existingItem.name}). Update Item Master before loading stock.`);
-      }
-
-      const rowCode = normalizeCodeValue(row?.item_code);
-      const itemCode = normalizeCodeValue(existingItem?.code);
-      if (rowCode && itemCode && rowCode !== itemCode) {
-        conflicts.push(`Row ${index + 1} item code ${rowCode} differs from Item Master code ${itemCode}. Update Item Master before loading stock.`);
-      }
-
       const rowBarcode = normalizeCodeValue(row?.item_code);
-      const itemBarcode = getExistingLegacyBarcode(existingItem);
-      if (rowBarcode && itemBarcode && rowBarcode !== itemBarcode) {
-        conflicts.push(`Row ${index + 1} barcode ${rowBarcode} differs from Item Master barcode ${itemBarcode}. Update Item Master before loading stock.`);
+      const barcodeMatches = getBarcodeMatches(row);
+      const existingItem = getResolvedItem(row);
+
+      // 1. Check if barcode is used by OTHER items
+      if (rowBarcode && barcodeMatches.length > 0) {
+        const otherItemMatch = barcodeMatches.find(m => (!existingItem || String(m.id) !== String(existingItem.id)));
+        if (otherItemMatch) {
+          conflicts.push(`Row ${index + 1}: Barcode ${rowBarcode} is already used by another item (${otherItemMatch.name}).`);
+          return;
+        }
+      }
+
+      // 2. Item-specific validation if item exists
+      if (existingItem) {
+        const rowName = normalizeMasterValue(row?.item_name || "");
+        const itemName = normalizeMasterValue(existingItem?.name || "");
+        if (rowName && itemName && rowName !== itemName) {
+          conflicts.push(`Row ${index + 1} item name differs from Item Master (${existingItem.name}) for barcode ${rowBarcode}. Update Item Master before loading stock.`);
+        }
+
+        const priceRow = existingItem?.ItemPriceList?.[0];
+        const activeBarcodes = priceRow?.ItemBarcodes?.filter(b => b.active !== false && b.barcode) || [];
+        const existingRegularBarcodes = activeBarcodes
+          .filter(b => b.barcodeType === "REGULAR")
+          .map(b => normalizeCodeValue(b.barcode));
+        const existingClearanceBarcodes = activeBarcodes
+          .filter(b => b.barcodeType === "CLEARANCE")
+          .map(b => normalizeCodeValue(b.barcode));
+
+        if (activeBarcodes.length === 0 && priceRow?.barcode) {
+          existingRegularBarcodes.push(normalizeCodeValue(priceRow.barcode));
+        }
+
+        if (isDiscountSection) {
+          // DISCOUNT SECTION: Must use CLEARANCE
+          if (rowBarcode && existingRegularBarcodes.includes(rowBarcode)) {
+            conflicts.push(`Row ${index + 1}: Barcode ${rowBarcode} is already a Regular barcode for item ${existingItem.name}. Cannot use it as a Clearance barcode.`);
+          } else if (existingClearanceBarcodes.length > 0) {
+            if (rowBarcode && !existingClearanceBarcodes.includes(rowBarcode)) {
+              conflicts.push(`Row ${index + 1}: Already this item has a different Clearance barcode (${existingClearanceBarcodes[0]}). One item can only have one Clearance barcode.`);
+            }
+          }
+        } else {
+          // REGULAR LOCATION: Must use REGULAR
+          if (rowBarcode && existingClearanceBarcodes.includes(rowBarcode)) {
+            conflicts.push(`Row ${index + 1}: Barcode ${rowBarcode} is already a Clearance barcode for item ${existingItem.name}. Cannot use it as a Regular barcode.`);
+          } else if (existingRegularBarcodes.length > 0) {
+            if (rowBarcode && !existingRegularBarcodes.includes(rowBarcode)) {
+              conflicts.push(`Row ${index + 1}: Already this item has a different Regular barcode (${existingRegularBarcodes[0]}). One item can only have one Regular barcode.`);
+            }
+          }
+        }
       }
 
       const rowSalesPrice = normalizeComparablePrice(getRowSalesPrice(row));
@@ -659,7 +662,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     return conflicts;
   }, [getItemIdentityAttentionState, getResolvedItem, stockItems]);
 
-  const hydrateExistingLegacyItems = React.useCallback(async () => {
+  const hydrateExistingLegacyItems = React.useCallback(async ({ isDiscountSection }) => {
     const hydratedItemIds = new Set();
 
     for (const row of stockItems) {
@@ -669,21 +672,31 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       }
 
       const normalizedItemCode = normalizeCodeValue(row.item_code);
-      const nextCode = existingItem.code || normalizedItemCode;
       const existingPriceRow = existingItem.ItemPriceList?.[0] || {};
-      const nextBarcode = getExistingLegacyBarcode(existingItem) || normalizedItemCode;
+      const nextBarcode = getExistingLegacyBarcode(existingItem, isDiscountSection) || normalizedItemCode;
       const nextSalesPrice = normalizeComparablePrice(getExistingLegacySalesPrice(existingItem)) || getRowSalesPrice(row);
       const nextOfferPrice = normalizeComparablePrice(getExistingLegacyOfferPrice(existingItem)) || getRowOfferPrice(row);
-      const shouldHydrate = (!existingItem.code && normalizedItemCode)
-        || (!getExistingLegacyBarcode(existingItem) && normalizedItemCode)
+      const shouldHydrate = (!getExistingLegacyBarcode(existingItem, isDiscountSection) && normalizedItemCode)
         || (!normalizeComparablePrice(getExistingLegacySalesPrice(existingItem)) && normalizeComparablePrice(row?.sales_price))
         || (!normalizeComparablePrice(getExistingLegacyOfferPrice(existingItem)) && normalizeComparablePrice(row?.offer_price));
 
       if (shouldHydrate) {
+        const currentBarcodes = existingPriceRow.ItemBarcodes || [];
+        const hasBarcode = currentBarcodes.some(b => b.active !== false && normalizeCodeValue(b.barcode) === nextBarcode);
+
+        const updatedItemBarcodes = [...currentBarcodes];
+        if (!hasBarcode && nextBarcode) {
+          updatedItemBarcodes.push({
+            barcode: nextBarcode,
+            barcodeType: isDiscountSection ? "CLEARANCE" : "REGULAR",
+            active: true
+          });
+        }
+
         await updateItem({
           id: existingItem.id,
           name: existingItem.name,
-          code: nextCode,
+          code: existingItem.code,
           sectionId: existingItem.sectionId,
           mainCategory: existingItem.mainCategoryId,
           subCategory: existingItem.subCategoryId,
@@ -698,6 +711,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
               salesPrice: nextSalesPrice,
               sku: existingPriceRow.sku || "",
               barcode: nextBarcode,
+              ItemBarcodes: updatedItemBarcodes,
               MinimumStockQty: existingPriceRow.MinimumStockQty || [],
             },
           ],
@@ -741,7 +755,10 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       return;
     }
 
-    const existingLegacyConflicts = getExistingLegacyConflicts();
+    const selectedLocationName = locationList?.data?.find(loc => String(loc.id) === String(selectedLocationId))?.storeName;
+    const isDiscountSection = selectedLocationName?.toUpperCase() === "DISCOUNT SECTION";
+
+    const existingLegacyConflicts = getExistingLegacyConflicts({ isDiscountSection, selectedLocationName });
     if (existingLegacyConflicts.length > 0) {
       Swal.fire({
         text: existingLegacyConflicts[0],
@@ -804,7 +821,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
         pcsId = response.data?.id;
       }
 
-      await hydrateExistingLegacyItems();
+      await hydrateExistingLegacyItems({ isDiscountSection });
 
       const newItemIdMap = {};
       for (const item of missingItems) {
@@ -823,6 +840,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
               salesPrice: item.salesPrice ? parseFloat(item.salesPrice) : 0,
               offerPrice: item.offerPrice ? parseFloat(item.offerPrice) : 0,
               barcode: normalizedItemCode,
+              barcodeType: isDiscountSection ? "CLEARANCE" : "REGULAR",
             },
           ],
           companyId,
@@ -873,6 +891,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
         }) => ({
           ...rest,
           barcode: normalizeCodeValue(item_code),
+          barcodeType: isDiscountSection ? "CLEARANCE" : "REGULAR"
         })),
       };
 
@@ -915,6 +934,54 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     stockItems,
     userId,
   ]);
+
+  const buildMissingReviewState = React.useCallback(() => {
+    buildLegacySeedMap(stockItems);
+
+    const missingItems = [];
+    const missingSizes = [];
+    const missingColors = [];
+    const seenItems = new Set();
+    const seenSizes = new Set();
+    const seenColors = new Set();
+
+    stockItems.forEach((row) => {
+      const normalizedItemName = normalizeLookupValue(row?.item_name);
+      const normalizedSize = normalizeLookupValue(row?.size);
+      const normalizedColor = normalizeLookupValue(row?.color);
+
+      const itemIdentityAttentionState = getItemIdentityAttentionState(row);
+      if (normalizedItemName && itemIdentityAttentionState?.tone === "pending" && !seenItems.has(normalizedItemName)) {
+        seenItems.add(normalizedItemName);
+        missingItems.push({
+          name: normalizeMasterValue(row.item_name),
+          itemCode: normalizeCodeValue(row.item_code),
+          salesPrice: getRowSalesPrice(row),
+          offerPrice: getRowOfferPrice(row),
+        });
+      }
+
+      if (stockMaintenance.trackSize && normalizedSize && !getResolvedSize(row) && !seenSizes.has(normalizedSize)) {
+        seenSizes.add(normalizedSize);
+        missingSizes.push(normalizeMasterValue(row.size));
+      }
+
+      if (stockMaintenance.trackColor && normalizedColor && !getResolvedColor(row) && !seenColors.has(normalizedColor)) {
+        seenColors.add(normalizedColor);
+        missingColors.push({
+          name: normalizeMasterValue(row.color),
+          code: "",
+        });
+      }
+    });
+
+    return {
+      items: missingItems,
+      sizes: missingSizes,
+      colors: missingColors,
+    };
+  }, [getItemIdentityAttentionState, getResolvedColor, getResolvedSize, stockItems, stockMaintenance.trackColor, stockMaintenance.trackSize]);
+
 
   const saveData = React.useCallback(async () => {
     if (stockItems.length === 0) {
@@ -1544,7 +1611,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                       <tr>
                         <th className={`${transactionTableHeaderCellClassName} w-12`}>S.No</th>
                         <th className={`${transactionTableHeaderCellClassName} w-96`}>Item Name</th>
-                        <th className={`${transactionTableHeaderCellClassName} w-32`}>Item Code</th>
+                        <th className={`${transactionTableHeaderCellClassName} w-32`}>Bar Code</th>
                         <th className={`${transactionTableHeaderCellClassName} w-32`}>Sales Price</th>
                       </tr>
                     </thead>

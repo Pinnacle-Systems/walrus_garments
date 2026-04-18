@@ -79,18 +79,21 @@ const YarnPoItems = ({
         if (!itemPriceList?.data || !itemId) return null;
         const itemRows = itemPriceList.data.filter(item => String(item.itemId) === String(itemId));
         if (!itemRows.length) return null;
-        // if (!sizeId) {
-        //     return itemRows.find(item => !item.sizeId && !item.colorId) || itemRows[0];
-        // }
-        // if (!colorId) {
-        //     return itemRows.find(item => String(item.sizeId) === String(sizeId) && !item.colorId) ||
-        //         itemRows.find(item => String(item.sizeId) === String(sizeId));
-        // }
-        return itemRows.find(item =>
+
+        const found = itemRows.find(item =>
             String(item.itemId) === String(itemId) &&
             String(item.sizeId) === String(sizeId) &&
             String(item.colorId) === String(colorId)
-        ) || null;
+        );
+
+        if (found) {
+            // Find REGULAR barcode in ItemBarcodes array
+            const regularBarcode = found.ItemBarcodes?.find(b => b.barcodeType === "REGULAR")?.barcode ||
+                found.ItemBarcodes?.[0]?.barcode ||
+                found.barcode || "";
+            return { ...found, barcode: regularBarcode };
+        }
+        return null;
     };
 
 
@@ -112,10 +115,13 @@ const YarnPoItems = ({
                 ? selectedItem?.ItemPriceList?.[0]
                 : null;
 
-            if (standardPrice?.barcode) {
-                newBlend[index]["barcode"] = standardPrice.barcode;
-                if (!newBlend[index]["price"] || newBlend[index]["price"] === "0.00") {
-                    // newBlend[index]["price"] = standardPrice.salesPrice || "0.00";
+            if (standardPrice) {
+                const resolvedBarcode = standardPrice.ItemBarcodes?.find(b => b.barcodeType === "REGULAR")?.barcode ||
+                    standardPrice.ItemBarcodes?.[0]?.barcode ||
+                    standardPrice.barcode || "";
+
+                if (resolvedBarcode) {
+                    newBlend[index]["barcode"] = resolvedBarcode;
                 }
             }
         }
@@ -132,7 +138,9 @@ const YarnPoItems = ({
         }
 
         if (field === "barcode") {
-            const foundPrice = itemPriceList?.data?.find(item => item.barcode === value);
+            const foundPrice = itemPriceList?.data?.find(item =>
+                (item.ItemBarcodes?.some(b => b.barcode === value)) || (item.barcode === value)
+            );
             if (foundPrice) {
                 newBlend[index]["itemId"] = foundPrice.itemId;
                 newBlend[index]["sizeId"] = foundPrice.sizeId;
