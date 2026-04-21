@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ScanBarcode, Gift, Trash2 } from 'lucide-react';
+import { ScanBarcode, Gift, Trash2, RefreshCw, ShoppingCart } from 'lucide-react';
 
 const POSCartTable = ({
     isBarcodeLoading,
@@ -15,6 +15,8 @@ const POSCartTable = ({
     removeFromCart,
     qtyInputRefs
 }) => {
+
+    console.log(cart, "cart")
     return (
         <main className="flex-1 min-w-0 bg-white flex flex-col relative">
             {/* Barcode Search Loader Overlay */}

@@ -2,6 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Banknote, X, ScanBarcode, CreditCard, CheckCircle2 } from 'lucide-react';
 
+import Swal from 'sweetalert2';
+
 const PaymentModal = ({
     isOpen,
     onClose,
@@ -14,9 +16,14 @@ const PaymentModal = ({
     setPaidOnline,
     paidCard,
     setPaidCard,
+    upiRefNo,
+    setUpiRefNo,
     receivedAmount,
     handleCheckout,
-    isProcessing
+    isProcessing,
+    checkRefNo,
+    isAdmin,
+    setIsProcessing
 }) => {
     if (!isOpen) return null;
 
@@ -51,23 +58,35 @@ const PaymentModal = ({
                     {/* Split Inputs */}
                     <div className="grid grid-cols-1 gap-4">
                         {[
-                            { label: 'Cash Payment', icon: <Banknote size={14} />, value: paidCash, setter: setPaidCash, color: 'emerald' },
-                            { label: 'UPI', icon: <ScanBarcode size={14} />, value: paidUPI, setter: setPaidUPI, color: 'indigo' },
-                            { label: 'Online / Bank Transfer', icon: <ScanBarcode size={14} />, value: paidOnline, setter: setPaidOnline, color: 'indigo' },
-                            { label: 'Card Payment', icon: <CreditCard size={14} />, value: paidCard, setter: setPaidCard, color: 'blue' }
+                            { id: 'cash', label: 'Cash Payment', icon: <Banknote size={14} />, value: paidCash, setter: setPaidCash, color: 'emerald' },
+                            { id: 'upi', label: 'UPI', icon: <ScanBarcode size={14} />, value: paidUPI, setter: setPaidUPI, color: 'indigo' },
+                            { id: 'online', label: 'Online / Bank Transfer', icon: <ScanBarcode size={14} />, value: paidOnline, setter: setPaidOnline, color: 'indigo' },
+                            { id: 'card', label: 'Card Payment', icon: <CreditCard size={14} />, value: paidCard, setter: setPaidCard, color: 'blue' }
                         ].map((pod) => (
-                            <div key={pod.label} className="relative">
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                                    <span className={`text-${pod.color}-500 opacity-60`}>{pod.icon}</span>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{pod.label}</span>
+                            <div key={pod.label} className="space-y-2">
+                                <div className="relative">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                                        <span className={`text-${pod.color}-500 opacity-60`}>{pod.icon}</span>
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{pod.label}</span>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-white border border-slate-200 rounded-xl pl-32 pr-4 py-4 text-sm font-black text-slate-800 outline-none focus:border-indigo-500 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] text-right transition-all"
+                                        value={pod.value}
+                                        onChange={(e) => pod.setter(Number(e.target.value))}
+                                        onFocus={(e) => e.target.select()}
+                                    />
                                 </div>
-                                <input
-                                    type="number"
-                                    className="w-full bg-white border border-slate-200 rounded-xl pl-32 pr-4 py-4 text-sm font-black text-slate-800 outline-none focus:border-indigo-500 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] text-right transition-all"
-                                    value={pod.value}
-                                    onChange={(e) => pod.setter(Number(e.target.value))}
-                                    onFocus={(e) => e.target.select()}
-                                />
+
+                                {(pod.id === 'upi') && pod.value > 0 && (
+                                    <input
+                                        type="text"
+                                        placeholder={`Enter ${pod.label} Reference No (Optional)`}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-lg px-4 py-2 text-[10px] font-bold text-slate-600 outline-none focus:border-indigo-300 transition-all placeholder:text-slate-300"
+                                        value={upiRefNo}
+                                        onChange={(e) => setUpiRefNo(e.target.value)}
+                                    />
+                                )}
                             </div>
                         ))}
                     </div>
@@ -76,7 +95,7 @@ const PaymentModal = ({
                     <div className="space-y-3">
                         <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase px-2">
                             <span>Sum Received</span>
-                            <span>₹{receivedAmount.toLocaleString()}</span>
+                            <span>₹{receivedAmount?.toLocaleString()}</span>
                         </div>
                         <div className={`p-4 rounded-2xl flex items-center justify-between shadow-lg transition-colors ${receivedAmount >= total ? 'bg-emerald-600 text-white shadow-emerald-100' : 'bg-slate-100 text-slate-400'}`}>
                             <div className="flex flex-col leading-none">
@@ -93,6 +112,41 @@ const PaymentModal = ({
                     <button
                         disabled={receivedAmount < total || isProcessing}
                         onClick={async () => {
+                            const trimmedRefNo = upiRefNo?.trim();
+                            if ((paidUPI > 0 || paidOnline > 0) && trimmedRefNo) {
+                                setIsProcessing(true);
+                                try {
+                                    const checkRes = await checkRefNo(trimmedRefNo).unwrap();
+                                    if (checkRes.exists) {
+                                        if (!isAdmin) {
+                                            Swal.fire({
+                                                title: "Reference Already Used",
+                                                text: `Transaction ID ${trimmedRefNo} is already recorded in ${checkRes.source}. Only Admins can authorize duplicates.`,
+                                                icon: "error"
+                                            });
+                                            setIsProcessing(false);
+                                            return;
+                                        } else {
+                                            const confirmOverride = await Swal.fire({
+                                                title: "Duplicate Reference Detected",
+                                                text: `Ref No ${trimmedRefNo} found in ${checkRes.source}. Are you sure you want to authorize this duplicate?`,
+                                                icon: "warning",
+                                                showCancelButton: true,
+                                                confirmButtonText: 'Yes, Authorize',
+                                                cancelButtonText: 'No, Cancel'
+                                            });
+                                            if (!confirmOverride.isConfirmed) {
+                                                setIsProcessing(false);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                } catch (err) {
+                                    console.error("Ref Check Error:", err);
+                                } finally {
+                                    setIsProcessing(false);
+                                }
+                            }
                             await handleCheckout();
                             onClose();
                         }}

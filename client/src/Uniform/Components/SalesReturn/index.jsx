@@ -42,6 +42,9 @@ const SalesDelivery = () => {
     const [deliveryItems, setDeliveryItems] = useState([]);
     const [partyId, setPartyId] = useState('')
     const [salesDeliveryId, setSalesDeliveryId] = useState('')
+    const [exchangeItems, setExchangeItems] = useState([]);
+    const [returnType, setReturnType] = useState("Bulk Sales");
+    const [posId, setPosId] = useState('')
     const { branchId, userId, companyId, finYearId } = getCommonParams();
 
     const params = {
@@ -125,6 +128,8 @@ const SalesDelivery = () => {
         setReadOnly(false);
         setCustomerId("")
         setPartyId('')
+        setPosId('')
+        setSalesDeliveryId('')
     }
 
     return (
@@ -141,7 +146,8 @@ const SalesDelivery = () => {
                         inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                         deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems}
                         partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                        supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} salesDeliveryId={salesDeliveryId} setSalesDeliveryId={setSalesDeliveryId}
+                        supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} salesDeliveryId={salesDeliveryId} setSalesDeliveryId={setSalesDeliveryId} setPosId={setPosId} posId={posId} returnType={returnType} setReturnType={setReturnType}
+                        exchangeItems={exchangeItems} setExchangeItems={setExchangeItems}
                         termsData={termsData}
                     />
                 </div>

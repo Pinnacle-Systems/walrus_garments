@@ -6,7 +6,7 @@ import { useGetItemCategoryQuery } from "../../redux/uniformService/ItemCategory
 import { useGetcollectionsQuery } from "../../redux/uniformService/CollectionsService";
 import secureLocalStorage from "react-secure-storage";
 import Swal from 'sweetalert2';
-import { Check, X, Trash2, Globe, Package, FolderTree, Power, Settings, Eye, Info, Sparkles } from "lucide-react";
+import { Check, X, Trash2, Globe, Package, FolderTree, Power, Settings, Eye, Info, Sparkles, Layers } from "lucide-react";
 import {
     TextInputNew1,
     DropdownInputNew,
@@ -79,6 +79,8 @@ const OffersPromotions = () => {
     const [benefitTiers, setBenefitTiers] = useState([]);
     const [stacking, setStacking] = useState("Best Of");
     const [conditionLogic, setConditionLogic] = useState("AND");
+    const [applyToLogic, setApplyToLogic] = useState("AND"); // Placeholder if needed
+    const [applyToRegular, setApplyToRegular] = useState(true);
     const [applyToClearance, setApplyToClearance] = useState(false);
 
     const [showSelectionModal, setShowSelectionModal] = useState(false);
@@ -160,6 +162,7 @@ const OffersPromotions = () => {
             setBenefitMaxDiscount(data.maxDiscountValue || 0);
             setBenefitApplyOn(data.applyOn || "Each line");
             setBenefitTiers(data.OfferTier?.length > 0 ? data.OfferTier : (data.tiers ? (typeof data.tiers === 'string' ? JSON.parse(data.tiers) : data.tiers) : []));
+            setApplyToRegular(data.applyToRegular !== undefined ? Boolean(data.applyToRegular) : true);
             setApplyToClearance(Boolean(data.applyToClearance));
         } else {
             setName("");
@@ -181,6 +184,7 @@ const OffersPromotions = () => {
             setBenefitTiers([]);
             setStacking("Best Of");
             setConditionLogic("AND");
+            setApplyToRegular(true);
             setApplyToClearance(false);
         }
     }, [id, itemOptions, collectionOptions, sizeOptions]);
@@ -208,6 +212,7 @@ const OffersPromotions = () => {
         maxDiscountValue: benefitMaxDiscount,
         applyOn: benefitApplyOn,
         active: status === 'Active',
+        applyToRegular,
         applyToClearance,
         id,
         tiers: JSON.stringify(benefitTiers || []),
@@ -402,7 +407,7 @@ const OffersPromotions = () => {
                 </div>
 
                 {/* COL 2: SCOPE & RULES (6 Units) - Table Structure */}
-                <div className="lg:col-span-6 flex flex-col h-full space-y-2">
+                <div className="lg:col-span-6 flex flex-col h-full min-h-0 space-y-2">
                     <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm flex flex-col">
                         <h3 className="font-bold text-gray-800 mb-2 text-[10px] uppercase tracking-wider opacity-60">Targeting Strategy</h3>
                         <table className="w-full text-[10px] border-collapse">
@@ -421,16 +426,49 @@ const OffersPromotions = () => {
                                     </td>
                                 </tr>
                                 <tr className="border-b border-gray-50">
-                                    <td className="py-2 px-1 font-bold text-gray-400 uppercase w-20 text-[9px]">Clearance Items</td>
+                                    <td className="py-2 px-1 font-bold text-gray-400 uppercase w-20 text-[9px]">Item Scope</td>
                                     <td className="py-2 px-1">
-                                        <div className="flex items-center gap-4">
-                                            <ToggleButton value={applyToClearance} setActive={setApplyToClearance} readOnly={readOnly} />
-                                            <span className="text-[10px] text-gray-500 font-medium italic">Apply this promotion to clearance items?</span>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[
+                                                { id: 'Regular', label: 'Regular Stock', icon: Package },
+                                                { id: 'Clearance', label: 'Clearance Stock', icon: Sparkles },
+                                                { id: 'Both', label: 'Both', icon: Layers }
+                                            ].map(opt => {
+                                                const isActive = opt.id === 'Both' ? (applyToRegular && applyToClearance) :
+                                                    opt.id === 'Regular' ? (applyToRegular && !applyToClearance) :
+                                                        (!applyToRegular && applyToClearance);
+
+                                                return (
+                                                    <div
+                                                        key={opt.id}
+                                                        onClick={() => {
+                                                            if (!readOnly) {
+                                                                if (opt.id === 'Regular') { setApplyToRegular(true); setApplyToClearance(false); }
+                                                                else if (opt.id === 'Clearance') { setApplyToRegular(false); setApplyToClearance(true); }
+                                                                else { setApplyToRegular(true); setApplyToClearance(true); }
+                                                            }
+                                                        }}
+                                                        className={`p-1 rounded border-2 text-center cursor-pointer transition-all ${isActive ? 'border-indigo-600 bg-indigo-50 shadow-sm text-indigo-700' : 'border-gray-50 bg-gray-50 hover:bg-white'}`}
+                                                    >
+                                                        <div className="flex justify-center mb-0.5">
+                                                            {opt.id === 'Both' ? (
+                                                                <div className="flex -space-x-1">
+                                                                    <Package size={11} />
+                                                                    <Sparkles size={11} className="text-yellow-500" />
+                                                                </div>
+                                                            ) : (
+                                                                <opt.icon size={11} className={opt.id === 'Clearance' ? 'text-yellow-500' : ''} />
+                                                            )}
+                                                        </div>
+                                                        <div className="text-[9px] font-bold uppercase">{opt.label}</div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </td>
                                 </tr>
                                 {scope !== 'Global' && (
-                                    <tr>
+                                    <tr className="border-b border-gray-50">
                                         <td className="py-3 px-1 font-bold text-gray-400 uppercase align-top text-[9px]">Scope Target</td>
                                         <td className="py-2 px-1">
                                             <button
@@ -444,11 +482,13 @@ const OffersPromotions = () => {
                                         </td>
                                     </tr>
                                 )}
+
+
                             </tbody>
                         </table>
                     </div>
 
-                    <div className="bg-white rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[35vh] lg:max-h-none">
+                    <div className="bg-white rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[58vh]">
                         <div className="p-2 border-b bg-gray-50 flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <h3 className="font-bold text-gray-800 text-[11px] uppercase tracking-wider opacity-60">Eligibility Rules</h3>
@@ -551,19 +591,19 @@ const OffersPromotions = () => {
                 </div>
 
                 {/* COL 3: REWARD & CONFLICTS (3 Units) */}
-                <div className="lg:col-span-3 flex flex-col h-full space-y-2 overflow-hidden">
-                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[35vh] lg:max-h-none">
+                <div className="lg:col-span-3 flex flex-col h-full min-h-0 space-y-2 overflow-hidden">
+                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[58vh]">
                         <div className="flex justify-between items-center mb-1.5">
                             <h3 className="font-bold text-gray-800 text-[11px] uppercase tracking-wider opacity-60">Reward Benefit</h3>
                             {!readOnly && (
                                 <div className="flex items-center gap-2">
                                     {['Percentage', 'Fixed'].includes(benefitType) && (
                                         <div className="flex bg-gray-200 p-0.5 rounded-md scale-90 origin-right">
-                                            {[{ l: '%', v: 'Percentage' }, { l: '₹', v: 'Fixed' }].map(t => (
+                                            {[{ l: '%', v: 'Percentage' }, { l: 'Flat', v: 'Fixed' }].map(t => (
                                                 <button
                                                     key={t.v}
                                                     onClick={() => setBenefitType(t.v)}
-                                                    className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded transition-all ${benefitType === t.v ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                                    className={`px-3 py-0.5 text-[10px] font-bold uppercase rounded transition-all ${benefitType === t.v ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                                                 >
                                                     {t.l}
                                                 </button>
@@ -622,20 +662,20 @@ const OffersPromotions = () => {
                                     <div className="flex-1 overflow-auto bg-white rounded border border-gray-100 shadow-inner mb-1">
                                         <table className="w-full text-left text-[10px]">
                                             <thead className="text-gray-400 uppercase font-bold text-[9px] tracking-widest border-b border-gray-50 sticky top-0 bg-white z-10">
-                                                <tr>
-                                                    <th className="p-1.5">Min Qty</th>
-                                                    <th className="p-1.5">Reward</th>
-                                                    <th className="p-1.5 text-right">Value</th>
-                                                    {!readOnly && <th className="p-1.5 w-6"></th>}
+                                                <tr className="bg-gray-50">
+                                                    <th className="p-0.5 border border-gray-200">Min Qty</th>
+                                                    <th className="p-0.5 border border-gray-200">Reward Type</th>
+                                                    <th className="p-0.5 border border-gray-200 text-right">Value</th>
+                                                    {!readOnly && <th className="p-0.5 border border-gray-200 w-6"></th>}
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-50">
                                                 {(benefitTiers || []).map((tier, idx) => (
                                                     <tr key={idx} className="hover:bg-blue-50/50">
-                                                        <td className="p-1.5 font-bold"><input type="number" value={tier.minQty} onChange={(e) => updateTier(idx, 'minQty', e.target.value)} className="w-10 bg-transparent focus:ring-0 text-gray-700 text-[9px]" /></td>
-                                                        <td className="p-1.5">
-                                                            <div className="flex bg-gray-100 p-0.5 rounded w-fit">
-                                                                {[{ l: '%', v: 'Percentage' }, { l: '₹', v: 'Fixed' }].map(t => (
+                                                        <td className="p-0.5 border border-gray-200 font-bold"><input type="number" value={tier.minQty} onChange={(e) => updateTier(idx, 'minQty', e.target.value)} className="w-10 bg-transparent focus:ring-0 text-gray-700 text-[9px]" /></td>
+                                                        <td className="p-0.5 border border-gray-200 text-center">
+                                                            <div className="flex bg-gray-100 p-0.5 rounded w-fit mx-auto">
+                                                                {[{ l: '%', v: 'Percentage' }, { l: 'Flat', v: 'Fixed' }].map(t => (
                                                                     <button
                                                                         key={t.v}
                                                                         onClick={() => !readOnly && updateTier(idx, 'type', t.v)}
@@ -646,9 +686,9 @@ const OffersPromotions = () => {
                                                                 ))}
                                                             </div>
                                                         </td>
-                                                        <td className="p-1.5 text-right font-bold text-indigo-700 text-[9px]"><input type="number" value={tier.value} onChange={(e) => updateTier(idx, 'value', e.target.value)} className="w-12 bg-transparent text-right focus:ring-0 text-[9px]" /></td>
+                                                        <td className="p-0.5 border border-gray-200 text-right font-bold text-indigo-700 text-[9px]"><input type="number" value={tier.value} onChange={(e) => updateTier(idx, 'value', e.target.value)} className="w-12 bg-transparent text-right focus:ring-0 text-[9px]" /></td>
                                                         {!readOnly && (
-                                                            <td className="p-1.5 text-center">
+                                                            <td className="p-0.5 border border-gray-200 text-center">
                                                                 <button
                                                                     onClick={() => setBenefitTiers(benefitTiers.filter((_, i) => i !== idx))}
                                                                     className="text-red-300 hover:text-red-500 transition-colors"

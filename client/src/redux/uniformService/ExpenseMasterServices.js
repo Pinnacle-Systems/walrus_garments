@@ -1,20 +1,20 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { POINT_OF_SALES } from "../../Api";
+import { EXPENSE_MASTER } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
-const pointOfSalesApi = createApi({
-    reducerPath: "pointOfSales",
+const ExpenseMasterApi = createApi({
+    reducerPath: "ExpenseMaster",
     baseQuery: fetchBaseQuery({
         baseUrl: BASE_URL,
     }),
-    tagTypes: ["pointOfSales"],
+    tagTypes: ["ExpenseMaster"],
     endpoints: (builder) => ({
-        getPointOfSales: builder.query({
+        getExpenseMaster: builder.query({
             query: ({ params, searchParams }) => {
                 if (searchParams) {
                     return {
-                        url: POINT_OF_SALES + "/search/" + searchParams,
+                        url: EXPENSE_MASTER + "/search/" + searchParams,
                         method: "GET",
                         headers: {
                             "Content-type": "application/json; charset=UTF-8",
@@ -23,7 +23,7 @@ const pointOfSalesApi = createApi({
                     };
                 }
                 return {
-                    url: POINT_OF_SALES,
+                    url: EXPENSE_MASTER,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
@@ -31,68 +31,58 @@ const pointOfSalesApi = createApi({
                     params
                 };
             },
-            providesTags: ["pointOfSales"],
+            providesTags: ["ExpenseMaster"],
         }),
-        getPointOfSalesById: builder.query({
+        getExpenseMasterById: builder.query({
             query: (id) => {
                 return {
-                    url: `${POINT_OF_SALES}/${id}`,
+                    url: `${EXPENSE_MASTER}/${id}`,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
                     },
                 };
             },
-            providesTags: ["pointOfSales"],
+            providesTags: ["ExpenseMaster"],
         }),
-        addPointOfSales: builder.mutation({
+        addExpenseMaster: builder.mutation({
             query: (payload) => ({
-                url: POINT_OF_SALES,
+                url: EXPENSE_MASTER,
                 method: "POST",
                 body: payload,
                 headers: {
                     "Content-type": "application/json; charset=UTF-8",
                 },
             }),
-            invalidatesTags: ["pointOfSales"],
+            invalidatesTags: ["ExpenseMaster"],
         }),
-        updatePointOfSales: builder.mutation({
+        updateExpenseMaster: builder.mutation({
             query: (payload) => {
                 const { id, ...body } = payload;
                 return {
-                    url: `${POINT_OF_SALES}/${id}`,
+                    url: `${EXPENSE_MASTER}/${id}`,
                     method: "PUT",
                     body,
                 };
             },
-            invalidatesTags: ["pointOfSales"],
+            invalidatesTags: ["ExpenseMaster"],
         }),
-        deletePointOfSales: builder.mutation({
+        deleteExpenseMaster: builder.mutation({
             query: (id) => ({
-                url: `${POINT_OF_SALES}/${id}`,
+                url: `${EXPENSE_MASTER}/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: ["pointOfSales"],
-        }),
-        checkReferenceNumber: builder.query({
-            query: (refNo) => ({
-                url: `${POINT_OF_SALES}/check-ref`,
-                method: "GET",
-                params: { refNo }
-            })
+            invalidatesTags: ["ExpenseMaster"],
         }),
     }),
 });
 
 export const {
-    useGetPointOfSalesQuery,
-    useLazyGetPointOfSalesQuery,
-    useGetPointOfSalesByIdQuery,
-    useLazyGetPointOfSalesByIdQuery,
-    useAddPointOfSalesMutation,
-    useUpdatePointOfSalesMutation,
-    useDeletePointOfSalesMutation,
-    useLazyCheckReferenceNumberQuery
-} = pointOfSalesApi;
+    useGetExpenseMasterQuery,
+    useGetExpenseMasterByIdQuery,
+    useAddExpenseMasterMutation,
+    useUpdateExpenseMasterMutation,
+    useDeleteExpenseMasterMutation,
+} = ExpenseMasterApi;
 
-export default pointOfSalesApi;
+export default ExpenseMasterApi;

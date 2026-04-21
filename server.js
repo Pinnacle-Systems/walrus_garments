@@ -71,6 +71,9 @@ import {
   offersPromotions,
   collections,
   deliveryChallan,
+  salesReport,
+  expense,
+  expenseEntry,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -245,7 +248,9 @@ app.use("/subCategory", subCategory)
 app.use("/offersPromotions", offersPromotions)
 app.use("/collections", collections)
 app.use("/deliveryChallan", deliveryChallan)
-
+app.use("/salesReport", salesReport)
+app.use("/expense", expense)
+app.use("/expenseEntry", expenseEntry)
 
 
 

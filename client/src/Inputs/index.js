@@ -2394,7 +2394,7 @@ export const ReusableSearchableInput = forwardRef(
     ref
   ) => {
 
-    // console.log(optionList?.filter(item  => item[show]), "optionList")
+    console.log(optionList?.filter(item => item.id == searchTerm), "optionList", searchTerm)
 
     const companyId = secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "userCompanyId"
@@ -2410,8 +2410,10 @@ export const ReusableSearchableInput = forwardRef(
       isFetching: isPartyFetching,
     } = useGetPartyQuery({ params: { companyId, userId, isAddressCombined: true } });
 
+    // Ensure we have a list to resolve names from, prioritizing passed options but falling back to the full party list
+    const effectiveOptionList = optionList || partyList?.data || [];
 
-    console.log(partyList, "partyList")
+    console.log(effectiveOptionList?.filter(item => item.id == searchTerm), "effectiveOptionList", searchTerm);
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -2526,7 +2528,7 @@ export const ReusableSearchableInput = forwardRef(
             {label}
           </label> */}
           {label && (
-            <label className="mb-1 block text-[12px] font-bold text-gray-600">
+            <label className="m block text-[12px] font-bold text-gray-600">
               {required ? <RequiredLabel name={label ? label : name} /> : label}
             </label>
           )}
@@ -2560,9 +2562,9 @@ export const ReusableSearchableInput = forwardRef(
                   className="w-full pl-8 pr-2 py-1.5 text-xs border border-slate-300 rounded-md 
                   focus:border-indigo-300 focus:outline-none transition-all duration-200
                   hover:border-slate-400 text-gray-800"
-                  ref={ref} // ✅ parent gets this ref
+                  ref={ref}
                   placeholder={placeholder}
-                  value={findFromList(searchTerm, optionList, "name")}
+                  value={findFromList(searchTerm, effectiveOptionList, "name")}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();

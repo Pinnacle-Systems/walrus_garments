@@ -1,20 +1,20 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { POINT_OF_SALES } from "../../Api";
+import { EXPENSE_ENTRY } from "../../Api";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
-const pointOfSalesApi = createApi({
-    reducerPath: "pointOfSales",
+const ExpenseEntryApi = createApi({
+    reducerPath: "ExpenseEntry",
     baseQuery: fetchBaseQuery({
         baseUrl: BASE_URL,
     }),
-    tagTypes: ["pointOfSales"],
+    tagTypes: ["ExpenseEntry"],
     endpoints: (builder) => ({
-        getPointOfSales: builder.query({
+        getExpenseEntry: builder.query({
             query: ({ params, searchParams }) => {
                 if (searchParams) {
                     return {
-                        url: POINT_OF_SALES + "/search/" + searchParams,
+                        url: EXPENSE_ENTRY + "/search/" + searchParams,
                         method: "GET",
                         headers: {
                             "Content-type": "application/json; charset=UTF-8",
@@ -23,7 +23,7 @@ const pointOfSalesApi = createApi({
                     };
                 }
                 return {
-                    url: POINT_OF_SALES,
+                    url: EXPENSE_ENTRY,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
@@ -31,68 +31,58 @@ const pointOfSalesApi = createApi({
                     params
                 };
             },
-            providesTags: ["pointOfSales"],
+            providesTags: ["ExpenseEntry"],
         }),
-        getPointOfSalesById: builder.query({
+        getExpenseEntryById: builder.query({
             query: (id) => {
                 return {
-                    url: `${POINT_OF_SALES}/${id}`,
+                    url: `${EXPENSE_ENTRY}/${id}`,
                     method: "GET",
                     headers: {
                         "Content-type": "application/json; charset=UTF-8",
                     },
                 };
             },
-            providesTags: ["pointOfSales"],
+            providesTags: ["ExpenseEntry"],
         }),
-        addPointOfSales: builder.mutation({
+        addExpenseEntry: builder.mutation({
             query: (payload) => ({
-                url: POINT_OF_SALES,
+                url: EXPENSE_ENTRY,
                 method: "POST",
                 body: payload,
                 headers: {
                     "Content-type": "application/json; charset=UTF-8",
                 },
             }),
-            invalidatesTags: ["pointOfSales"],
+            invalidatesTags: ["ExpenseEntry"],
         }),
-        updatePointOfSales: builder.mutation({
+        updateExpenseEntry: builder.mutation({
             query: (payload) => {
                 const { id, ...body } = payload;
                 return {
-                    url: `${POINT_OF_SALES}/${id}`,
+                    url: `${EXPENSE_ENTRY}/${id}`,
                     method: "PUT",
                     body,
                 };
             },
-            invalidatesTags: ["pointOfSales"],
+            invalidatesTags: ["ExpenseEntry"],
         }),
-        deletePointOfSales: builder.mutation({
+        deleteExpenseEntry: builder.mutation({
             query: (id) => ({
-                url: `${POINT_OF_SALES}/${id}`,
+                url: `${EXPENSE_ENTRY}/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: ["pointOfSales"],
-        }),
-        checkReferenceNumber: builder.query({
-            query: (refNo) => ({
-                url: `${POINT_OF_SALES}/check-ref`,
-                method: "GET",
-                params: { refNo }
-            })
+            invalidatesTags: ["ExpenseEntry"],
         }),
     }),
 });
 
 export const {
-    useGetPointOfSalesQuery,
-    useLazyGetPointOfSalesQuery,
-    useGetPointOfSalesByIdQuery,
-    useLazyGetPointOfSalesByIdQuery,
-    useAddPointOfSalesMutation,
-    useUpdatePointOfSalesMutation,
-    useDeletePointOfSalesMutation,
-    useLazyCheckReferenceNumberQuery
-} = pointOfSalesApi;
+    useGetExpenseEntryQuery,
+    useGetExpenseEntryByIdQuery,
+    useAddExpenseEntryMutation,
+    useUpdateExpenseEntryMutation,
+    useDeleteExpenseEntryMutation,
+} = ExpenseEntryApi;
 
-export default pointOfSalesApi;
+export default ExpenseEntryApi;

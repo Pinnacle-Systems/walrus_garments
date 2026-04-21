@@ -72,8 +72,8 @@ const POSSidebar = ({
                     </h3>
                     <div className="space-y-2">
                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
-                            <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                             <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
+                             <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         {totalOfferDiscount > 0 && (
                             <div className="space-y-1">
@@ -125,8 +125,8 @@ const POSSidebar = ({
                             <span>₹{roundOff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className="flex justify-between items-center font-black text-lg text-indigo-700 pt-2.5 border-t border-slate-200 mt-2">
-                            <span className="text-[12px] uppercase tracking-widest text-indigo-400">Net Amount</span>
-                            <span>₹{total.toLocaleString()}</span>
+                             <span className="text-[12px] uppercase tracking-widest text-indigo-400">Net Payable</span>
+                             <span>₹{Math.abs(total).toLocaleString()}</span>
                         </div>
                     </div>
                 </div>

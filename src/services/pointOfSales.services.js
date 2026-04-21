@@ -47,30 +47,54 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 }
 
 async function get(req) {
+    const { branchId, active, pagination, pageNumber, dataPerPage, serachDocNo, searchDate, searchCustomerName } = req.query;
 
-    const { companyId, active } = req.query
+    let where = {
+        branchId: branchId ? parseInt(branchId) : undefined,
+        active: active ? Boolean(active) : undefined,
+        docId: serachDocNo ? { contains: serachDocNo } : undefined,
+        Party: searchCustomerName ? { name: { contains: searchCustomerName } } : undefined,
+    };
 
-    console.log(companyId, active, "companyId, active ")
+    if (searchDate) {
+        where.date = {
+            gte: new Date(`${searchDate}T00:00:00.000Z`),
+            lte: new Date(`${searchDate}T23:59:59.999Z`),
+        };
+    }
+
+    let totalCount = 0;
+    if (pagination) {
+        totalCount = await prisma.pos.count({ where });
+    }
 
     let data = await prisma.pos.findMany({
-        where: {
-            active: active ? Boolean(active) : undefined,
-        },
+        where,
         include: {
             Party: {
                 select: {
-                    name: true
+                    id: true,
+                    name: true,
+                    contact: true,
+                    isB2C: true
+                }
+            },
+            PosItems: {
+                include: {
+                    Item: true,
+                    Color: true,
+                    Size: true
                 }
             }
         },
         orderBy: {
             id: "desc"
-        }
+        },
+        skip: pagination ? (parseInt(pageNumber) - 1) * parseInt(dataPerPage) : undefined,
+        take: pagination ? parseInt(dataPerPage) : undefined,
     });
 
-
-
-    return { statusCode: 0, data };
+    return { statusCode: 0, data, totalCount };
 }
 
 
@@ -81,7 +105,22 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            PosItems: true
+            PosItems: {
+                include: {
+                    Item: true,
+                    Color: true,
+                    Size: true
+                }
+            },
+            Party: {
+                select: {
+                    id: true,
+                    name: true,
+                    contact: true,
+                    isB2C: true
+                }
+            },
+            PosPayments: true
         }
     })
     if (!data) return NoRecordFound("size");
@@ -110,7 +149,20 @@ async function getSearch(req) {
 
 async function create(body) {
     try {
-        const { customerId, posItems, finYearId, branchId, storeId } = await body;
+        const {
+            customerId, posItems, posPayments, finYearId, branchId, storeId,
+            netAmount, taxAmount, discountValue, discountType,
+            manualDiscount, promotionalDiscount, roundOff,
+            paidCash, paidUPI, paidCard, paidOnline,
+            receivedAmount, balanceReturn, paymentMethod
+        } = await body;
+
+        // Derive flat fields from array if provided
+        const extractAmount = (mode) => posPayments?.find(p => p.paymentMode === mode)?.amount || 0;
+        const pCash = posPayments ? extractAmount("Cash") : (paidCash || 0);
+        const pUPI = posPayments ? extractAmount("UPI") : (paidUPI || 0);
+        const pCard = posPayments ? extractAmount("Card") : (paidCard || 0);
+        const pOnline = posPayments ? extractAmount("Online") : (paidOnline || 0);
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
         const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -135,6 +187,16 @@ async function create(body) {
                                 qty: String(item.qty),
                                 price: String(item.price),
                                 salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+                            }))
+                        }
+                    },
+                    PosPayments: {
+                        createMany: {
+                            data: (posPayments || []).map(p => ({
+                                amount: String(p.amount),
+                                paymentMode: p.paymentMode,
+                                reference_no: p.reference_no,
+                                transaction_id: p.transaction_id
                             }))
                         }
                     }
@@ -237,7 +299,19 @@ async function create(body) {
 
 async function update(id, body) {
     try {
-        const { customerId, posItems, branchId, storeId } = await body;
+        const {
+            customerId, posItems, posPayments, branchId, storeId,
+            netAmount, taxAmount, discountValue, discountType,
+            manualDiscount, promotionalDiscount, roundOff,
+            paidCash, paidUPI, paidCard, paidOnline,
+            receivedAmount, balanceReturn, paymentMethod
+        } = await body;
+
+        const extractAmount = (mode) => posPayments?.find(p => p.paymentMode === mode)?.amount || 0;
+        const pCash = posPayments ? extractAmount("Cash") : (paidCash || 0);
+        const pUPI = posPayments ? extractAmount("UPI") : (paidUPI || 0);
+        const pCard = posPayments ? extractAmount("Card") : (paidCard || 0);
+        const pOnline = posPayments ? extractAmount("Online") : (paidOnline || 0);
 
         const dataFound = await prisma.pos.findUnique({
             where: { id: parseInt(id) },
@@ -262,7 +336,7 @@ async function update(id, body) {
                 data: {
                     customerId: customerId ? parseInt(customerId) : undefined,
                     branchId: branchId ? parseInt(branchId) : undefined,
-                    updatedBy: body.userId ? { connect: { id: parseInt(body.userId) } } : undefined,
+                    // updatedBy: body.userId ? { connect: { id: parseInt(body.userId) } } : undefined,
                 }
             });
 
@@ -277,6 +351,17 @@ async function update(id, body) {
                     qty: String(item.qty),
                     price: String(item.price),
                     salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+                }))
+            });
+
+            await tx.posPayments.deleteMany({ where: { PosId: parseInt(id) } });
+            await tx.posPayments.createMany({
+                data: (posPayments || []).map(p => ({
+                    PosId: parseInt(id),
+                    amount: String(p.amount),
+                    paymentMode: p.paymentMode,
+                    reference_no: p.reference_no,
+                    transaction_id: p.transaction_id
                 }))
             });
 
@@ -360,11 +445,31 @@ async function remove(id) {
     }
 }
 
+async function checkReferenceNumber(req) {
+    const { refNo } = req.query;
+    if (!refNo) return { statusCode: 1, message: "Reference number is required" };
+
+    const posPayment = await prisma.posPayments.findFirst({
+        where: { reference_no: refNo }
+    });
+
+    const payment = await prisma.payment.findFirst({
+        where: { paymentRefNo: refNo }
+    });
+
+    return {
+        statusCode: 0,
+        exists: !!(posPayment || payment),
+        source: posPayment ? "POS" : (payment ? "Payments" : null)
+    };
+}
+
 export {
     get,
     getOne,
     getSearch,
     create,
     update,
-    remove
+    remove,
+    checkReferenceNumber
 }

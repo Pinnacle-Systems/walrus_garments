@@ -8,7 +8,8 @@ const POSHeader = ({
     setSearchQuery,
     handleScan,
     setShowReports,
-    retailLocation
+    retailLocation,
+    setSelectedReportSaleId
 }) => {
     return (
         <header className="h-14 bg-white border-b border-slate-200 px-4 flex items-center shrink-0 z-30 justify-between shadow-sm">
@@ -34,8 +35,8 @@ const POSHeader = ({
                 </div>
             </div>
             <div className="flex items-center gap-6 ml-4">
-                <button 
-                    onClick={() => setShowReports(false)} 
+                <button
+                    onClick={() => { setSelectedReportSaleId(null); setShowReports(false) }}
                     className="flex items-center gap-2 text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg text-xs font-black hover:bg-indigo-100 hover:scale-105 active:scale-95 transition-all outline-none"
                 >
                     <Clock size={16} /> <span className="hidden sm:inline">POS Reports</span>

@@ -11,11 +11,19 @@ import { useGetLocationMasterQuery } from '../../../redux/uniformService/Locatio
 import { useLazyGetUnifiedStockByBarcodeQuery } from '../../../redux/services/StockService';
 import { getCommonParams } from '../../../Utils/helper';
 import Swal from 'sweetalert2';
-import { useGetPointOfSalesQuery, useAddPointOfSalesMutation, useUpdatePointOfSalesMutation } from '../../../redux/uniformService/PointOfSalesService';
+import {
+    useGetPointOfSalesQuery,
+    useLazyGetPointOfSalesQuery,
+    useLazyGetPointOfSalesByIdQuery,
+    useAddPointOfSalesMutation,
+    useUpdatePointOfSalesMutation,
+    useGetPointOfSalesByIdQuery,
+    useLazyCheckReferenceNumberQuery
+} from '../../../redux/uniformService/PointOfSalesService';
 import { useGetoffersPromotionsQuery } from '../../../redux/uniformService/Offer&PromotionsService';
 import { useGetEmployeeQuery } from '../../../redux/services/EmployeeMasterService';
 import PosReports from './PosReports';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { findDefaultPriceRow, normalizeLocalItemForPos } from './utils/posHelpers';
 
 // Sub-components
@@ -29,8 +37,10 @@ import SalesPersonModal from './components/SalesPersonModal';
 import PaymentModal from './components/PaymentModal';
 import ReceiptViewerModal from './components/ReceiptViewerModal';
 
+
 const PointOfSale = () => {
     const dispatch = useDispatch();
+
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [cart, setCart] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -56,10 +66,25 @@ const PointOfSale = () => {
     const [printData, setPrintData] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [docId, setDocId] = useState("");
+
     const [barcodeResolution, setBarcodeResolution] = useState({ open: false, matches: [], resolve: null });
+
     const [showSalesPersonModal, setShowSalesPersonModal] = useState(false);
     const [salesPersonBarcode, setSalesPersonBarcode] = useState('');
     const salesPersonScannerRef = useRef(null);
+
+    // Reports Pagination & Search States
+    const [currentPageNumber, setCurrentPageNumber] = useState(1);
+    const [dataPerPage, setDataPerPage] = useState("10");
+    const [reportsSearchDocNo, setReportsSearchDocNo] = useState("");
+    const [reportsSearchDate, setReportsSearchDate] = useState("");
+    const [reportsSearchCustomerName, setReportsSearchCustomerName] = useState("");
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    const isAdmin = user?.role === 'Admin' || user?.roleName === 'Admin' || user?.Role?.name === 'Admin';
+
+    const lastPopulatedRef = useRef("");
+    const [checkRefNo] = useLazyCheckReferenceNumberQuery();
 
     const { data: employeeData } = useGetEmployeeQuery({
         params: { branchId, userId, companyId, finYearId }
@@ -127,7 +152,6 @@ const PointOfSale = () => {
                 }
                 return;
             }
-            if (e.key === 'F12') { e.preventDefault(); setShowReports(prev => !prev); return; }
 
             if (!isTyping) {
                 if (e.key === 'ArrowDown') { e.preventDefault(); setActiveRowIndex(prev => Math.min(prev + 1, cart.length - 1)); return; }
@@ -147,31 +171,21 @@ const PointOfSale = () => {
     }, [cart, activeRowIndex, isProcessing, guestName, guestMobile, isGuestCustomer, selectedCustomer]);
 
     // Offers & Promotions Logic
-    const [appliedOffers, setAppliedOffers] = useState([]);
-    const [potentialOffers, setPotentialOffers] = useState([]);
-    const [showItemOfferModal, setShowItemOfferModal] = useState(false);
-    const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
     const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
     const { data: offersData } = useGetoffersPromotionsQuery({
         params: { branchId, userId, finYearId, active: true }
     });
     const activeOffers = offersData?.data || [];
 
-    useEffect(() => {
-        if (!activeOffers.length || !cart.length) {
-            setPotentialOffers([]);
-            setAppliedOffers([]);
-            setCart(prev => prev.map(item => ({ ...item, priceType: 'SalesPrice', price: item.salesPrice || item.price })));
-            return;
-        }
+    const potentialOffers = useMemo(() => {
+        if (!activeOffers.length || !cart.length) return [];
 
-        const potentialOffersTemp = [];
+        const potential = [];
         activeOffers.forEach(off => {
             const inScopeItems = cart.filter(item => {
                 if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
                 if (off.scopeMode === 'Global') return true;
-                if (off.scopeMode === 'Item') return off.OfferScope?.some(s => s.refId === (item.itemId || item.id));
-                if (off.scopeMode === 'Collection') return off.OfferScope?.some(s => s.refId === (item.itemId || item.id));
+                if (off.scopeMode === 'Item' || off.scopeMode === 'Collection') return off.OfferScope?.some(s => s.refId === (item.itemId || item.id));
                 return false;
             });
             if (!inScopeItems.length) return;
@@ -180,8 +194,6 @@ const PointOfSale = () => {
             const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.salesPrice || i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
 
             const rules = off.OfferRule?.[0]?.conditions?.rules || [];
-            const logic = off.OfferRule?.[0]?.logic || 'AND';
-
             const results = rules.map(rule => {
                 const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
                 if (rule.operator === '>=') return target >= parseFloat(rule.value);
@@ -190,7 +202,7 @@ const PointOfSale = () => {
                 return true;
             });
 
-            const isValid = logic === 'AND' ? results.every(r => r) : results.some(r => r);
+            const isValid = off.OfferRule?.[0]?.logic === 'OR' ? results.some(r => r) : results.every(r => r);
             if (!isValid && rules.length > 0) return;
 
             let discountValue = 0;
@@ -200,8 +212,7 @@ const PointOfSale = () => {
             } else if (off.discountType === 'Fixed') {
                 discountValue = off.discountValue || 0;
             } else if (['Volume', 'Override'].includes(off.discountType)) {
-                const tiers = off.OfferTier || [];
-                const sortedTiers = [...tiers].sort((a, b) => b.minQty - a.minQty);
+                const sortedTiers = [...(off.OfferTier || [])].sort((a, b) => b.minQty - a.minQty);
                 const tier = sortedTiers.find(t => scopeQty >= t.minQty);
                 if (tier) {
                     if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
@@ -209,15 +220,15 @@ const PointOfSale = () => {
                     else discountValue = tier.value;
                 }
             }
-            if (discountValue > 0) potentialOffersTemp.push({ ...off, calculatedDiscount: discountValue, inScopeItems });
+            if (discountValue > 0) potential.push({ ...off, calculatedDiscount: discountValue, inScopeItems });
         });
-        setPotentialOffers(potentialOffersTemp);
+        return potential;
     }, [cart, activeOffers]);
 
-    useEffect(() => {
-        if (!cart.length) { setAppliedOffers([]); return; }
-        const newAppliedOffersMap = new Map();
-        const newCart = cart.map(item => {
+    const { cartWithOffers, appliedOffers } = useMemo(() => {
+        if (!cart.length) return { cartWithOffers: [], appliedOffers: [] };
+        const appliedSet = new Set();
+        const computed = cart.map(item => {
             const cartKey = `${item.id}-${item.sizeId}-${item.colorId}`;
             const rowOfferId = selectedOffersByRow[cartKey];
             if (!rowOfferId) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
@@ -225,7 +236,7 @@ const PointOfSale = () => {
             const selectedOffer = potentialOffers.find(o => o.id === rowOfferId) || activeOffers.find(o => o.id === rowOfferId);
             if (!selectedOffer) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
 
-            newAppliedOffersMap.set(selectedOffer.id, selectedOffer);
+            appliedSet.add(selectedOffer);
             let currentItemPrice = item.salesPrice !== undefined ? parseFloat(item.salesPrice) : parseFloat(item.price);
 
             if (selectedOffer.discountType === 'Percentage') currentItemPrice *= (1 - parseFloat(selectedOffer.discountValue || 0) / 100);
@@ -239,11 +250,13 @@ const PointOfSale = () => {
             }
             return { ...item, priceType: 'offerPrice', price: Math.max(0, currentItemPrice), appliedOfferName: selectedOffer.name };
         });
-        if (JSON.stringify(newCart) !== JSON.stringify(cart)) setCart(newCart);
-        setAppliedOffers(Array.from(newAppliedOffersMap.values()));
-    }, [selectedOffersByRow, potentialOffers, activeOffers]);
+        return { cartWithOffers: computed, appliedOffers: Array.from(appliedSet) };
+    }, [cart, selectedOffersByRow, potentialOffers, activeOffers]);
 
-    const totalOfferDiscount = cart.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
+    const [showItemOfferModal, setShowItemOfferModal] = useState(false);
+    const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
+
+    const totalOfferDiscount = cartWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
 
     const handleShowItemOffers = (item) => { setSelectedItemForOffers(item); setShowItemOfferModal(true); };
 
@@ -253,7 +266,7 @@ const PointOfSale = () => {
             if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
             let isInScope = off.scopeMode === 'Global' || (off.scopeMode === 'Item' && off.OfferScope?.some(s => s.refId === item.itemId)) || (off.scopeMode === 'Collection' && off.OfferScope?.some(s => s.refId === item.itemId));
             if (!isInScope) return false;
-            const inScopeItems = cart.filter(cit => {
+            const inScopeItems = cartWithOffers.filter(cit => {
                 if (cit.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
                 return off.scopeMode === 'Global' || (off.scopeMode === 'Item' && off.OfferScope?.some(s => s.refId === cit.itemId)) || (off.scopeMode === 'Collection' && off.OfferScope?.some(s => s.refId === cit.itemId));
             });
@@ -279,7 +292,115 @@ const PointOfSale = () => {
     const [addPointOfSales] = useAddPointOfSalesMutation();
     const [updatePointOfSales] = useUpdatePointOfSalesMutation();
     const [getStockByBarcode, { isLoading: isBarcodeLoading }] = useLazyGetUnifiedStockByBarcodeQuery();
-    const { data: posData } = useGetPointOfSalesQuery({ params: { branchId, companyId, finYearId } });
+    const [fetchRecentSales, { data: posData, isFetching: isRecentSalesFetching }] = useLazyGetPointOfSalesQuery();
+
+    // Single Query Sync States
+    const [selectedReportSaleId, setSelectedReportSaleId] = useState(null);
+    const { data: fetchedSaleResponse, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetPointOfSalesByIdQuery(selectedReportSaleId, { skip: !selectedReportSaleId });
+
+
+
+
+    const syncFormWithDb = useCallback((sale) => {
+        if (!sale) {
+            setCart([]);
+            setDiscount(0);
+            setEditingInvoiceId(null);
+            setSelectedCustomer(null);
+            setIsGuestCustomer(true);
+            setGuestName("");
+            setGuestMobile("");
+            setPaidCash(0);
+            setPaidUPI(0);
+            setPaidCard(0);
+            setPaidOnline(0);
+            setDocId("");
+            setUpiRefNo("");
+            return;
+        }
+
+        const mappedCart = (sale.PosItems || []).map(item => {
+            const masterItem = items.find(i => i.id === item.itemId);
+            const employee = employees.find(e => e.id === item.salesPersonId);
+            return {
+                ...item,
+                id: item.itemId,
+                // Item: masterItem,
+                salesPrice: parseFloat(item.price),
+                price: parseFloat(item.price),
+                qty: parseFloat(item.qty),
+                taxPercent: masterItem?.Hsn?.tax || 5,
+                salesPersonId: item.salesPersonId,
+                // salesPersonName: employee?.name,
+                stockQty: 0,
+                sourceStoreId: retailStoreId
+            };
+        });
+
+        setCart(mappedCart);
+        setEditingInvoiceId(sale.id);
+
+        const payments = sale.PosPayments || [];
+        let cash = 0, upi = 0, card = 0, online = 0;
+
+        payments.forEach(p => {
+            const mode = (p.paymentMode || p.mode || "").toLowerCase();
+            const amt = parseFloat(p.amount) || 0;
+            if (mode.includes('cash')) cash += amt;
+            else if (mode.includes('upi')) upi += amt;
+            else if (mode.includes('card')) card += amt;
+            else if (mode.includes('online')) online += amt;
+        });
+
+        setDiscount(parseFloat(sale.discountValue || 0));
+        setPaymentMethod(sale.paymentMethod || 'Cash');
+        setPaidCash(cash);
+        setPaidUPI(upi);
+        setPaidCard(card);
+        setPaidOnline(online);
+
+        if (sale.Party) {
+            setSelectedCustomer(sale.Party);
+            setIsGuestCustomer(false);
+            setGuestName(sale.Party.name);
+            setGuestMobile(sale.Party.contact);
+        } else {
+            setSelectedCustomer(null);
+            setIsGuestCustomer(true);
+            setGuestName(sale.customerName || "Walk-in");
+            setGuestMobile(sale.customerMobile || "");
+        }
+        if (sale.docId) setDocId(sale.docId);
+        setShowReports(true);
+    }, [selectedReportSaleId]);
+
+    useEffect(() => {
+        if (selectedReportSaleId) syncFormWithDb(fetchedSaleResponse?.data);
+        else syncFormWithDb(undefined);
+    }, [isSingleLoading, isSingleFetching, selectedReportSaleId, fetchedSaleResponse, syncFormWithDb]);
+
+
+    useEffect(() => {
+        if (!showReports) {
+            fetchRecentSales({
+                params: {
+                    branchId,
+                    companyId,
+                    finYearId,
+                    pagination: true,
+                    pageNumber: currentPageNumber,
+                    dataPerPage,
+                    serachDocNo: reportsSearchDocNo,
+                    searchDate: reportsSearchDate,
+                    searchCustomerName: reportsSearchCustomerName
+                }
+            });
+        }
+    }, [showReports, currentPageNumber, reportsSearchDocNo, reportsSearchDate, reportsSearchCustomerName, dataPerPage, fetchRecentSales, branchId, companyId, finYearId]);
+
+    useEffect(() => {
+        setCurrentPageNumber(1);
+    }, [reportsSearchDocNo, reportsSearchDate, reportsSearchCustomerName, dataPerPage]);
 
     const items = itemsData?.data || [];
     const recentSales = posData?.data?.slice(0, 50) || [];
@@ -293,14 +414,14 @@ const PointOfSale = () => {
         return new Promise((resolve) => {
             setBarcodeResolution({
                 open: true,
-                matches: matches.map(m => ({ 
-                    ...m, 
-                    item_name: m.item_name || m?.Item?.name || "Item", 
-                    size: m.size || m?.Size?.name || "-", 
-                    color: m.color || m?.Color?.name || "-", 
-                    location: m.location || "-", 
+                matches: matches.map(m => ({
+                    ...m,
+                    item_name: m.item_name || m?.Item?.name || "Item",
+                    size: m.size || m?.Size?.name || "-",
+                    color: m.color || m?.Color?.name || "-",
+                    location: m.location || "-",
                     stockQty: m.stockQty || 0,
-                    storeId: m.storeId || m.locationId 
+                    storeId: m.storeId || m.locationId
                 })),
                 resolve
             });
@@ -359,14 +480,14 @@ const PointOfSale = () => {
             const variantHit = itemPrices.find(p => p.sizeId === product.sizeId && p.colorId === product.colorId);
             const lookupPrice = variantHit?.salesPrice || itemPrices.find(p => !p.sizeId && !p.colorId)?.salesPrice || itemPrices[0]?.salesPrice || 0;
             const masterItem = product?.Item || items.find(i => i.id === itemId);
-            return [...prev, { 
-                ...product, 
-                Item: masterItem, 
-                salesPrice: lookupPrice, 
-                price: lookupPrice, 
-                rate: lookupPrice, 
-                qty: 1, 
-                priceType: 'SalesPrice', 
+            return [...prev, {
+                ...product,
+                Item: masterItem,
+                salesPrice: lookupPrice,
+                price: lookupPrice,
+                rate: lookupPrice,
+                qty: 1,
+                priceType: 'SalesPrice',
                 taxPercent: masterItem?.Hsn?.tax || 5,
                 sourceStoreId: product.storeId || product.locationId || retailStoreId
             }];
@@ -391,40 +512,12 @@ const PointOfSale = () => {
     };
 
     const handleEditPOS = (sale) => {
+        console.log(sale, 'sale')
         setEditMode(true);
-        setEditingInvoiceId(sale.id);
-        const mappedCart = (sale.PosItems || []).map(item => {
-            const masterItem = items.find(i => i.id === item.itemId);
-            const employee = employees.find(e => e.id === item.salesPersonId);
-            return {
-                ...item,
-                id: item.itemId, // Align with cart logic
-                Item: masterItem,
-                salesPrice: parseFloat(item.price),
-                price: parseFloat(item.price),
-                qty: parseFloat(item.qty),
-                taxPercent: masterItem?.Hsn?.tax || 5,
-                salesPersonId: item.salesPersonId,
-                salesPersonName: employee?.name,
-                stockQty: 9999, // Allow editing without strict stock check for existing items (or fetch actual stock)
-                sourceStoreId: retailStoreId // Default for old items, though we could try to resolve from stock
-            };
-        });
-        setCart(mappedCart);
-        setDiscount(parseFloat(sale.discountValue || 0));
-        if (sale.Party) {
-            setSelectedCustomer(sale.Party);
-            setIsGuestCustomer(false);
-            setGuestName(sale.Party.name);
-            setGuestMobile(sale.Party.contact);
-        } else {
-            setSelectedCustomer(null);
-            setIsGuestCustomer(true);
-            setGuestName("Walk-in");
-            setGuestMobile("");
-        }
-        setShowReports(true);
+        setSelectedReportSaleId(sale.id);
     };
+
+
 
     const removeFromCart = (cartKey) => setCart(prev => prev.filter(item => `${item.id}-${item.sizeId}-${item.colorId}` !== cartKey));
 
@@ -455,12 +548,12 @@ const PointOfSale = () => {
     };
 
     // Totals Calculation
-    const totalBeforeOffer = cart.reduce((sum, item) => sum + (parseFloat(item.salesPrice || item.price) || 0) * (parseFloat(item.qty) || 0), 0);
+    const totalBeforeOffer = cartWithOffers.reduce((sum, item) => sum + (parseFloat(item.salesPrice || item.price) || 0) * (parseFloat(item.qty) || 0), 0);
     const totalBeforeDiscount = Math.max(0, totalBeforeOffer - totalOfferDiscount);
     const totalWithoutRounding = Math.max(0, totalBeforeDiscount - discount);
     const total = Math.round(totalWithoutRounding);
     const roundOff = parseFloat((total - totalWithoutRounding).toFixed(2));
-    const tax = cart.reduce((sum, item) => {
+    const tax = cartWithOffers.reduce((sum, item) => {
         const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
         const itemTotal = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
         const itemDiscount = totalBeforeDiscount > 0 ? (itemTotal / totalBeforeDiscount) * discount : 0;
@@ -473,6 +566,7 @@ const PointOfSale = () => {
     const [paidUPI, setPaidUPI] = useState(0);
     const [paidCard, setPaidCard] = useState(0);
     const [paidOnline, setPaidOnline] = useState(0);
+    const [upiRefNo, setUpiRefNo] = useState('');
     const receivedAmount = paidCash + paidUPI + paidCard + paidOnline;
     const balanceReturn = Math.max(0, receivedAmount - total);
 
@@ -503,8 +597,15 @@ const PointOfSale = () => {
                 catch (e) { customerId = customers.find(c => c.contact === guestMobile)?.id; if (!customerId) throw new Error("Could not register guest."); }
             }
 
-            const invoicePayload = { date: new Date().toISOString().split('T')[0], customerId, supplierId: customerId, branchId, userId, companyId, finYearId, paymentMethod, storeId: retailStoreId, poType: "General", poInwardOrDirectInward: "DirectInward", netAmount: total, taxAmount: tax, discountValue: discount, discountType: "Flat", paidCash, paidUPI, paidCard, receivedAmount, balanceReturn, posItems: cart, promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff };
-            
+            const posPayments = [
+                ...(paidCash > 0 ? [{ amount: String(paidCash), paymentMode: 'Cash' }] : []),
+                ...(paidUPI > 0 ? [{ amount: String(paidUPI), paymentMode: 'UPI', reference_no: upiRefNo }] : []),
+                ...(paidCard > 0 ? [{ amount: String(paidCard), paymentMode: 'Card' }] : []),
+                ...(paidOnline > 0 ? [{ amount: String(paidOnline), paymentMode: 'Online', }] : []),
+            ];
+
+            const invoicePayload = { date: new Date().toISOString().split('T')[0], customerId, supplierId: customerId, branchId, userId, companyId, finYearId, paymentMethod, storeId: retailStoreId, poType: "General", poInwardOrDirectInward: "DirectInward", netAmount: total, taxAmount: tax, discountValue: discount, discountType: "Flat", paidCash, paidUPI, paidCard, paidOnline, receivedAmount, balanceReturn, posItems: cartWithOffers, posPayments, promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff };
+
             let apiResponse;
             if (editMode) {
                 apiResponse = await updatePointOfSales({ id: editingInvoiceId, ...invoicePayload }).unwrap();
@@ -512,14 +613,27 @@ const PointOfSale = () => {
                 apiResponse = await addPointOfSales(invoicePayload).unwrap();
             }
 
+            if (apiResponse.statusCode !== 0) {
+                throw new Error(apiResponse.message || "Failed to save invoice.");
+            }
+
             Swal.fire({ title: editMode ? 'Updated Successfully!' : 'Payment Successful!', icon: 'success', timer: 2000, showConfirmButton: false });
             setPrintData({ docId: apiResponse?.data?.docId || docId, date: new Date(), customerData: selectedCustomer || { name: guestName, contact: guestMobile }, items: cart, payments: { cash: paidCash, upi: paidUPI, card: paidCard }, summary: { subtotal, tax, discount, total, received: receivedAmount, balance: balanceReturn, roundOff }, branchData: locations.find(l => l.id === retailStoreId) });
-            setCart([]); setDiscount(0); setSelectedCustomer(null); setPaidCash(0); setPaidUPI(0); setPaidCard(0);
+            setCart([]); setDiscount(0); setSelectedCustomer(null); setPaidCash(0); setPaidUPI(0); setPaidCard(0); setUpiRefNo("");
             setEditMode(false); setEditingInvoiceId(null);
         } catch (error) { Swal.fire({ title: "Error", text: error.message || "Failed to save invoice.", icon: "error" }); }
         finally { setIsProcessing(false); }
     };
 
+
+    const onNew = () => {
+        setShowReports(true);
+        setEditMode(false);
+        setEditingInvoiceId(null);
+        setCart([]);
+        setDiscount(0);
+        setSelectedReportSaleId(null)
+    }
     return (
         <>
             <ItemOfferModal
@@ -547,12 +661,13 @@ const PointOfSale = () => {
                         handleScan={handleScan}
                         setShowReports={setShowReports}
                         retailLocation={retailLocation}
+                        setSelectedReportSaleId={setSelectedReportSaleId}
                     />
 
                     <div className="flex-1 flex overflow-hidden">
                         <POSCartTable
                             isBarcodeLoading={isBarcodeLoading}
-                            cart={cart}
+                            cart={cartWithOffers}
                             activeRowIndex={activeRowIndex}
                             setActiveRowIndex={setActiveRowIndex}
                             updateQuantity={updateQuantity}
@@ -580,7 +695,7 @@ const PointOfSale = () => {
                             roundOff={roundOff}
                             total={total}
                             isProcessing={isProcessing}
-                            cart={cart}
+                            cart={cartWithOffers}
                             handlePayNow={handlePayNow}
                             printData={printData}
                             setPrintData={setPrintData}
@@ -601,12 +716,27 @@ const PointOfSale = () => {
                 <div className=" bg-[#F1F1F0] min-h-screen">
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-3 items-start sm:items-center  gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
                         <h1 className="text-md font-bold text-gray-800">Point Of Sale</h1>
-                        <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => { setShowReports(true); setEditMode(false); setEditingInvoiceId(null); setCart([]); setDiscount(0); }}>
+                        <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => { onNew() }}>
                             <Plus size={14} /> Create New
                         </button>
                     </div>
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden h-[85vh] mt-2 border-2">
-                        <PosReports recentSales={recentSales} onEdit={handleEditPOS} />
+                        <PosReports
+                            recentSales={posData?.data || []}
+                            totalCount={posData?.totalCount || 0}
+                            currentPageNumber={currentPageNumber}
+                            setCurrentPageNumber={setCurrentPageNumber}
+                            dataPerPage={dataPerPage}
+                            setDataPerPage={setDataPerPage}
+                            serachDocNo={reportsSearchDocNo}
+                            setSerachDocNo={setReportsSearchDocNo}
+                            searchDate={reportsSearchDate}
+                            setSearchDate={setReportsSearchDate}
+                            searchCustomerName={reportsSearchCustomerName}
+                            setSearchCustomerName={setReportsSearchCustomerName}
+                            onEdit={handleEditPOS}
+                            isLoading={isRecentSalesFetching}
+                        />
                     </div>
                 </div>
             )}
@@ -621,11 +751,16 @@ const PointOfSale = () => {
                 setPaidUPI={setPaidUPI}
                 paidCard={paidCard}
                 setPaidCard={setPaidCard}
+                paidOnline={paidOnline}
+                setPaidOnline={setPaidOnline}
+                upiRefNo={upiRefNo}
+                setUpiRefNo={setUpiRefNo}
                 receivedAmount={receivedAmount}
                 handleCheckout={handleCheckout}
                 isProcessing={isProcessing}
-                paidOnline={paidOnline}
-                setPaidOnline={setPaidOnline}
+                checkRefNo={checkRefNo}
+                isAdmin={isAdmin}
+                setIsProcessing={setIsProcessing}
             />
 
             <ReceiptViewerModal

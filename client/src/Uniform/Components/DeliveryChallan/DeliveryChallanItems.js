@@ -20,7 +20,15 @@ import TransactionLineItemsSection, {
     transactionTableRowClassName,
     transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
-import { getCatalogSizeOptions } from "../../../Utils/salesCatalogRules";
+import {
+    getCatalogColorOptions,
+    getCatalogColumnVisibility,
+    getCatalogSizeOptions,
+    isLegacyCatalogItem,
+    itemUsesColor,
+    itemUsesSize,
+    resolveSellablePriceRow,
+} from "../../../Utils/salesCatalogRules";
 
 const DeliveryChallanItems = ({
     id,
@@ -92,16 +100,17 @@ const DeliveryChallanItems = ({
 
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(invoiceItems);
-        if (field === "itemPriceId") {
-            const selectedItemPriceList = itemPriceList?.data?.find(item => parseInt(item.id) === parseInt(value));
-            console.log(selectedItemPriceList, "selectedItemPriceList")
-            const selectedItem = itemList?.data?.find(item => parseInt(item.id) === parseInt(selectedItemPriceList?.itemId));
-
-            console.log(selectedItem, "selectedItem")
-
+        if (field === "itemId") {
+            const selectedItem = catalogItems?.find(item => String(item.id) === String(value));
             if (selectedItem) {
                 newBlend[index]["sectionId"] = selectedItem.sectionId;
                 newBlend[index]["hsnId"] = selectedItem.hsnId;
+                if (!itemUsesSize(catalogItems, catalogPriceRows, selectedItem.id)) {
+                    newBlend[index]["sizeId"] = "";
+                }
+                if (!itemUsesColor(catalogItems, catalogPriceRows, selectedItem.id)) {
+                    newBlend[index]["colorId"] = "";
+                }
                 const selectedHsn = hsnList?.data?.find(hsn => parseInt(hsn.id) === parseInt(selectedItem.hsnId));
                 newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
                 newBlend[index]["taxMethod"] = newBlend[index]["taxMethod"] || "Inclusive";
@@ -121,13 +130,23 @@ const DeliveryChallanItems = ({
             const currentColor = field === "colorId" ? value : newBlend[index].colorId;
             const currentQty = field === "qty" ? value : newBlend[index].qty;
 
+            const isLegacySelection = isLegacyCatalogItem(catalogItems, currentItem);
+            const requiresSize = itemUsesSize(catalogItems, catalogPriceRows, currentItem);
+            const requiresColor = itemUsesColor(catalogItems, catalogPriceRows, currentItem);
+
             if (currentItem) {
                 const templateDetail = getPriceFromTemplate(currentItem, currentQty);
                 if (templateDetail) {
                     newBlend[index]["price"] = templateDetail.price;
                     newBlend[index]["priceType"] = "BulkOfferPrice";
-                } else if (!showSize || currentSize) {
-                    const foundPrice = getBarcodeFromList(currentItem, currentSize, currentColor);
+                } else if (!requiresSize || currentSize || isLegacySelection) {
+                    const foundPrice = resolveSellablePriceRow(
+                        catalogItems,
+                        catalogPriceRows,
+                        currentItem,
+                        currentSize,
+                        requiresColor ? currentColor : ""
+                    );
                     if (foundPrice) {
                         const numericQty = parseFloat(currentQty || 0);
                         if (numericQty > 6 && foundPrice.offerPrice) {
@@ -194,15 +213,18 @@ const DeliveryChallanItems = ({
     const { data: uomList } = useGetUnitOfMeasurementMasterQuery({ params });
     const { data: colorList } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined } });
     const { data: hsnList } = useGetHsnMasterQuery({ params });
-    const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
-    const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
-    const showSize = stockMaintenance.trackSize;
-    const showColor = stockMaintenance.trackColor;
-    const isSizeReady = (row) => !showSize || Boolean(row.itemId);
-    const isColorReady = (row) => !showColor || Boolean(showSize ? row.sizeId : row.itemId);
+    const catalogItems = itemList?.data || [];
+    const catalogPriceRows = itemPriceList?.data || [];
+    const { showSize, showColor } = getCatalogColumnVisibility(catalogItems, catalogPriceRows);
+
+    const isLegacyRow = (row) => isLegacyCatalogItem(catalogItems, row?.itemId);
+    const rowRequiresSize = (row) => itemUsesSize(catalogItems, catalogPriceRows, row?.itemId);
+    const rowRequiresColor = (row) => itemUsesColor(catalogItems, catalogPriceRows, row?.itemId);
+    const isSizeReady = (row) => !rowRequiresSize(row) || Boolean(row.itemId);
+    const isColorReady = (row) => !rowRequiresColor(row) || Boolean(rowRequiresSize(row) ? row.sizeId : row.itemId);
     const isUomReady = (row) => {
-        if (showColor) return Boolean(row.colorId);
-        if (showSize) return Boolean(row.sizeId);
+        if (rowRequiresColor(row)) return Boolean(row.colorId);
+        if (rowRequiresSize(row)) return Boolean(row.sizeId);
         return Boolean(row.itemId);
     };
 
@@ -281,17 +303,16 @@ const DeliveryChallanItems = ({
 
                                             <td className={compactFocusCellClassName}>
                                                 <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "itemPriceId"); }}
+                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "itemId"); }}
                                                     tabIndex="0" disabled={readOnly}
                                                     className={compactSelectClassName}
-                                                    value={row.itemPriceId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "itemPriceId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "itemPriceId")}
+                                                    value={row.itemId}
+                                                    onChange={e => handleInputChange(e.target.value, index, "itemId")}
+                                                    onBlur={e => handleInputChange(e.target.value, index, "itemId")}
                                                 >
                                                     <option></option>
-                                                    {itemPriceList?.data?.filter(i => i.sku)?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend?.item?.name} {` ${blend?.sku ? `/ (${blend?.sku} )` : ""}`}
-                                                        </option>
+                                                    {itemList?.data?.map(blend => (
+                                                        <option value={blend.id} key={blend.id}>{blend?.name}</option>
                                                     ))}
                                                 </select>
                                             </td>
