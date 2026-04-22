@@ -3,13 +3,7 @@ import { prisma } from '../lib/prisma.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { getRemovedItems, getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
-import {
-    buildStockOutEntries,
-    extractResolvedAllocations,
-    getHybridFulfillmentResolutionError,
-    resolveHybridFulfillmentLines,
-    validateFulfillmentAllocations,
-} from './salesDeliveryConversionRules.js';
+
 
 
 
@@ -47,7 +41,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 }
 
 async function get(req) {
-    const { branchId, active, pagination, pageNumber, dataPerPage, serachDocNo, searchDate, searchCustomerName } = req.query;
+    const { branchId, active, pagination, pageNumber, dataPerPage, serachDocNo, searchDate, searchCustomerName, isExchnage } = req.query;
 
     let where = {
         branchId: branchId ? parseInt(branchId) : undefined,
@@ -64,9 +58,9 @@ async function get(req) {
     }
 
     let totalCount = 0;
-    if (pagination) {
-        totalCount = await prisma.pos.count({ where });
-    }
+    // if (pagination) {
+    //     totalCount = await prisma.pos.count({ where });
+    // }
 
     let data = await prisma.pos.findMany({
         where,
@@ -90,9 +84,11 @@ async function get(req) {
         orderBy: {
             id: "desc"
         },
-        skip: pagination ? (parseInt(pageNumber) - 1) * parseInt(dataPerPage) : undefined,
-        take: pagination ? parseInt(dataPerPage) : undefined,
+        // skip: pagination ? (parseInt(pageNumber) - 1) * parseInt(dataPerPage) : undefined,
+        // take: pagination ? parseInt(dataPerPage) : undefined,
     });
+
+    console.log(data, "data In Pos")
 
     return { statusCode: 0, data, totalCount };
 }
@@ -109,7 +105,9 @@ async function getOne(id) {
                 include: {
                     Item: true,
                     Color: true,
-                    Size: true
+                    Size: true,
+                    ReturnItems: true,
+                    Uom: true
                 }
             },
             Party: {
@@ -117,12 +115,21 @@ async function getOne(id) {
                     id: true,
                     name: true,
                     contact: true,
-                    isB2C: true
+                    isB2C: true,
+
                 }
             },
             PosPayments: true
         }
     })
+
+
+
+    data.PosItems = data.PosItems.map(item => ({
+        ...item,
+        returnedQty: item.ReturnItems.reduce((acc, curr) => acc + parseFloat(curr.qty || 0), 0)
+    }));
+
     if (!data) return NoRecordFound("size");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
@@ -150,19 +157,13 @@ async function getSearch(req) {
 async function create(body) {
     try {
         const {
-            customerId, posItems, posPayments, finYearId, branchId, storeId,
+            customerId, posItems, posPayments, finYearId, branchId, storeId, exchangeSalesNo,
             netAmount, taxAmount, discountValue, discountType,
             manualDiscount, promotionalDiscount, roundOff,
             paidCash, paidUPI, paidCard, paidOnline,
             receivedAmount, balanceReturn, paymentMethod
         } = await body;
 
-        // Derive flat fields from array if provided
-        const extractAmount = (mode) => posPayments?.find(p => p.paymentMode === mode)?.amount || 0;
-        const pCash = posPayments ? extractAmount("Cash") : (paidCash || 0);
-        const pUPI = posPayments ? extractAmount("UPI") : (paidUPI || 0);
-        const pCard = posPayments ? extractAmount("Card") : (paidCard || 0);
-        const pOnline = posPayments ? extractAmount("Online") : (paidOnline || 0);
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
         const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -170,13 +171,13 @@ async function create(body) {
 
         const result = await prisma.$transaction(async (tx) => {
 
-            // 1. Create the Main POS Record
             const posRecord = await tx.pos.create({
                 data: {
                     customerId: customerId ? parseInt(customerId) : undefined,
                     docId: docId,
                     branchId: branchId ? parseInt(branchId) : undefined,
                     createdById: body.userId ? parseInt(body.userId) : undefined,
+                    netAmount: netAmount ? String(netAmount) : "0",
                     PosItems: {
                         createMany: {
                             data: (posItems || []).map((item) => ({
@@ -187,6 +188,10 @@ async function create(body) {
                                 qty: String(item.qty),
                                 price: String(item.price),
                                 salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+                                isReturn: item.isReturn || false,
+                                originalItemId: item.originalItemId || null,
+                                retunBillId: item.retunBillId || null,
+
                             }))
                         }
                     },
@@ -196,85 +201,71 @@ async function create(body) {
                                 amount: String(p.amount),
                                 paymentMode: p.paymentMode,
                                 reference_no: p.reference_no,
-                                transaction_id: p.transaction_id
+                                transaction_id: p.transaction_id,
+                                retunBillId: exchangeSalesNo ? parseInt(exchangeSalesNo) : null,
+
                             }))
                         }
                     }
                 }
             });
 
-            // 2. Resolve Fulfillment and Stock
-            const posFulfillmentLines = (posItems || [])
-                .filter((item) => item?.itemId || item?.id)
-                .map((item, lineIndex) => ({
-                    ...item,
-                    lineIndex,
-                    itemId: parseInt(item.itemId || item.id),
-                    storeId: item.sourceStoreId ? parseInt(item.sourceStoreId) : parseInt(storeId),
-                    fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
-                    branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
-                }));
-
-            const resolution = await resolveHybridFulfillmentLines(tx, posFulfillmentLines, {
-                branchId,
-            });
-            const resolutionError = getHybridFulfillmentResolutionError(resolution);
-            if (resolutionError) {
-                throw resolutionError;
-            }
-
-            const allocations = extractResolvedAllocations(resolution);
-            const allocationValidationMessage = await validateFulfillmentAllocations(tx, allocations);
-            if (allocationValidationMessage) {
-                throw new Error(allocationValidationMessage);
-            }
-
             const stockEntries = [];
             const retailStoreId = parseInt(storeId);
 
-            for (const allocation of allocations) {
-                const sourceStoreId = parseInt(allocation.storeId);
-                const qty = parseFloat(allocation.allocatedQty);
-                const itemLine = posFulfillmentLines[allocation.lineIndex];
-                const price = parseFloat(itemLine?.price || 0);
+            for (const item of (posItems || [])) {
+                if (!item.itemId && !item.id) continue;
+
+                const itemId = parseInt(item.itemId || item.id);
+                const fulfillments = item.fulfillments && !item.isReturn ? item.fulfillments : [{ storeId: item.sourceStoreId || retailStoreId, qty: item.qty }];
+                const price = parseFloat(item.price || 0);
 
                 const baseEntry = {
-                    itemId: allocation.itemId,
-                    sizeId: allocation.sizeId,
-                    colorId: allocation.colorId,
-                    uomId: allocation.uomId,
-                    branchId: allocation.branchId,
-                    barcode: allocation.barcode,
+                    itemId,
+                    sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                    colorId: item.colorId ? parseInt(item.colorId) : null,
+                    uomId: item.uomId ? parseInt(item.uomId) : null,
+                    branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
+                    barcode: item.barcode || null,
                     transactionId: posRecord.id,
                     price: price,
                 };
 
-                if (sourceStoreId === retailStoreId) {
-                    stockEntries.push({
-                        ...baseEntry,
-                        qty: -qty,
-                        storeId: retailStoreId,
-                        inOrOut: "POS",
-                    });
+                // VALIDATION: Check stock for each fulfillment
+                if (!item.isReturn) {
+                    for (const f of fulfillments) {
+                        const fQty = parseFloat(f.qty);
+                        if (fQty <= 0) continue;
+
+                        const fStoreId = parseInt(f.storeId);
+                        const currentStock = await tx.stock.aggregate({
+                            _sum: { qty: true },
+                            where: {
+                                itemId,
+                                sizeId: baseEntry.sizeId,
+                                colorId: baseEntry.colorId,
+                                uomId: baseEntry.uomId,
+                                storeId: fStoreId,
+                                branchId: baseEntry.branchId
+                            }
+                        });
+
+                        const available = parseFloat(currentStock._sum.qty || 0);
+                        if (available < fQty) {
+                            throw new Error(`Insufficient stock in ${f.storeName || 'Store'}. Available: ${available}, Required: ${fQty}`);
+                        }
+
+                        // Create Stock reduction/transfer
+                        if (fStoreId !== retailStoreId) {
+                            stockEntries.push({ ...baseEntry, qty: -fQty, storeId: fStoreId, inOrOut: "StockTransferOut" });
+                            stockEntries.push({ ...baseEntry, qty: fQty, storeId: retailStoreId, inOrOut: "StockTransferIn" });
+                        }
+
+                        stockEntries.push({ ...baseEntry, qty: -fQty, storeId: retailStoreId, inOrOut: "POS" });
+                    }
                 } else {
-                    stockEntries.push({
-                        ...baseEntry,
-                        qty: -qty,
-                        storeId: sourceStoreId,
-                        inOrOut: "StockTransferOut",
-                    });
-                    stockEntries.push({
-                        ...baseEntry,
-                        qty: qty,
-                        storeId: retailStoreId,
-                        inOrOut: "StockTransferIn",
-                    });
-                    stockEntries.push({
-                        ...baseEntry,
-                        qty: -qty,
-                        storeId: retailStoreId,
-                        inOrOut: "POS",
-                    });
+                    // Return logic (Always to retailStoreId)
+                    stockEntries.push({ ...baseEntry, qty: parseFloat(item.qty), storeId: retailStoreId, inOrOut: "POSReturn" });
                 }
             }
 
@@ -307,16 +298,10 @@ async function update(id, body) {
             receivedAmount, balanceReturn, paymentMethod
         } = await body;
 
-        const extractAmount = (mode) => posPayments?.find(p => p.paymentMode === mode)?.amount || 0;
-        const pCash = posPayments ? extractAmount("Cash") : (paidCash || 0);
-        const pUPI = posPayments ? extractAmount("UPI") : (paidUPI || 0);
-        const pCard = posPayments ? extractAmount("Card") : (paidCard || 0);
-        const pOnline = posPayments ? extractAmount("Online") : (paidOnline || 0);
 
-        const dataFound = await prisma.pos.findUnique({
-            where: { id: parseInt(id) },
-            include: { PosItems: true }
-        });
+
+        const dataFound = await prisma.pos.findUnique({ where: { id: parseInt(id) }, include: { PosItems: true } });
+
         if (!dataFound) return NoRecordFound("POS");
 
         const result = await prisma.$transaction(async (tx) => {
@@ -351,6 +336,7 @@ async function update(id, body) {
                     qty: String(item.qty),
                     price: String(item.price),
                     salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+                    isReturn: item.isReturn || false,
                 }))
             });
 
@@ -365,53 +351,59 @@ async function update(id, body) {
                 }))
             });
 
-            const posFulfillmentLines = (posItems || [])
-                .filter((item) => item?.itemId || item?.id)
-                .map((item, lineIndex) => ({
-                    ...item,
-                    lineIndex,
-                    itemId: parseInt(item.itemId || item.id),
-                    storeId: item.sourceStoreId ? parseInt(item.sourceStoreId) : parseInt(storeId),
-                    fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
-                    branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
-                }));
-
-            const resolution = await resolveHybridFulfillmentLines(tx, posFulfillmentLines, {
-                branchId,
-            });
-            const resolutionError = getHybridFulfillmentResolutionError(resolution);
-            if (resolutionError) throw resolutionError;
-
-            const allocations = extractResolvedAllocations(resolution);
-            const allocationValidationMessage = await validateFulfillmentAllocations(tx, allocations);
-            if (allocationValidationMessage) throw new Error(allocationValidationMessage);
-
             const stockEntries = [];
             const retailStoreId = parseInt(storeId);
 
-            for (const allocation of allocations) {
-                const sourceStoreId = parseInt(allocation.storeId);
-                const qty = parseFloat(allocation.allocatedQty);
-                const itemLine = posFulfillmentLines[allocation.lineIndex];
-                const price = parseFloat(itemLine?.price || 0);
+            for (const item of (posItems || [])) {
+                if (!item.itemId && !item.id) continue;
+
+                const itemId = parseInt(item.itemId || item.id);
+                const fulfillments = item.fulfillments && !item.isReturn ? item.fulfillments : [{ storeId: item.sourceStoreId || retailStoreId, qty: item.qty }];
+                const price = parseFloat(item.price || 0);
 
                 const baseEntry = {
-                    itemId: allocation.itemId,
-                    sizeId: allocation.sizeId,
-                    colorId: allocation.colorId,
-                    uomId: allocation.uomId,
-                    branchId: allocation.branchId,
-                    barcode: allocation.barcode,
+                    itemId,
+                    sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                    colorId: item.colorId ? parseInt(item.colorId) : null,
+                    uomId: item.uomId ? parseInt(item.uomId) : null,
+                    branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
+                    barcode: item.barcode || null,
                     transactionId: parseInt(id),
                     price: price,
                 };
 
-                if (sourceStoreId === retailStoreId) {
-                    stockEntries.push({ ...baseEntry, qty: -qty, storeId: retailStoreId, inOrOut: "POS" });
+                if (!item.isReturn) {
+                    for (const f of fulfillments) {
+                        const fQty = parseFloat(f.qty);
+                        if (fQty <= 0) continue;
+
+                        const fStoreId = parseInt(f.storeId);
+                        const currentStock = await tx.stock.aggregate({
+                            _sum: { qty: true },
+                            where: {
+                                itemId,
+                                sizeId: baseEntry.sizeId,
+                                colorId: baseEntry.colorId,
+                                uomId: baseEntry.uomId,
+                                storeId: fStoreId,
+                                branchId: baseEntry.branchId
+                            }
+                        });
+
+                        const available = parseFloat(currentStock._sum.qty || 0);
+                        if (available < fQty) {
+                            throw new Error(`Insufficient stock in ${f.storeName || 'Store'}. Available: ${available}, Required: ${fQty}`);
+                        }
+
+                        if (fStoreId !== retailStoreId) {
+                            stockEntries.push({ ...baseEntry, qty: -fQty, storeId: fStoreId, inOrOut: "StockTransferOut" });
+                            stockEntries.push({ ...baseEntry, qty: fQty, storeId: retailStoreId, inOrOut: "StockTransferIn" });
+                        }
+
+                        stockEntries.push({ ...baseEntry, qty: -fQty, storeId: retailStoreId, inOrOut: "POS" });
+                    }
                 } else {
-                    stockEntries.push({ ...baseEntry, qty: -qty, storeId: sourceStoreId, inOrOut: "StockTransferOut" });
-                    stockEntries.push({ ...baseEntry, qty: qty, storeId: retailStoreId, inOrOut: "StockTransferIn" });
-                    stockEntries.push({ ...baseEntry, qty: -qty, storeId: retailStoreId, inOrOut: "POS" });
+                    stockEntries.push({ ...baseEntry, qty: parseFloat(item.qty), storeId: retailStoreId, inOrOut: "POS" });
                 }
             }
 

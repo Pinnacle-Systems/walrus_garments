@@ -5,6 +5,7 @@ import secureLocalStorage from 'react-secure-storage';
 import { FaChevronLeft, FaChevronRight, FaEllipsisV } from 'react-icons/fa';
 import { useGetQuotationMasterQuery, useGetQuotationQuery } from '../../../redux/uniformService/quotationServices';
 import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvoiceServices";
+import { useGetDeliveryChallanQuery } from "../../../redux/services/DeliveryChallanService";
 
 
 
@@ -13,7 +14,7 @@ import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvo
 const DeliveryChallanReport = ({
   onClick,
   onView,
-  itemsPerPage = 10,
+  itemsPerPage = 15,
   onEdit,
   onDelete,
   onMakePayment,
@@ -106,7 +107,9 @@ const DeliveryChallanReport = ({
 
 
 
-  const { data: allData, isFetching, isLoading } = useGetSalesInvoiceQuery({
+
+
+  const { data: allData, isFetching, isLoading } = useGetDeliveryChallanQuery({
     params: {
       branchId,
       ...searchFields,
@@ -130,7 +133,6 @@ const DeliveryChallanReport = ({
 
 
 
-  console.log(allData, "entire");
 
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
@@ -247,11 +249,11 @@ const DeliveryChallanReport = ({
                   </th>
 
                   <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
-                    <div>Customer</div>
+                    <div>Challan Type</div>
                   </th>
 
                   <th className="w-36   px-3  font-medium text-[13px]  text-gray-900  text-center ">
-                    Status
+                    PlatForm
                   </th>
                   <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
@@ -312,7 +314,7 @@ const DeliveryChallanReport = ({
                 <tbody>
                   <tr>
                     <td>
-                      <Loader />
+                      {/* <Loader /> */}
                     </td>
                   </tr>
                 </tbody>
@@ -320,16 +322,16 @@ const DeliveryChallanReport = ({
                 <tbody className="border-2">
                   {(allData?.data ? allData?.data : []).map((dataObj, index) => (
                     <tr
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          onClick(dataObj.id);
-                        }
-                      }}
+                      // onKeyDown={(e) => {
+                      //   if (e.key === "Enter") {
+                      //     onClick(dataObj.id);
+                      //   }
+                      // }}
                       tabIndex={0}
                       key={dataObj.id}
                       className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                         }`}
-                      onClick={() => onClick(dataObj.id)}
+                    // onClick={() => onClick(dataObj.id)}
                     >
                       <td className="text-center " >
                         {index + 1}
@@ -344,12 +346,8 @@ const DeliveryChallanReport = ({
 
 
                       <td className="py-1.5 text-left">
-                        {`${dataObj?.Party?.name}${dataObj?.Party?.BranchType?.name
-                          ? ` / ${dataObj?.Party?.BranchType?.name}`
-                          : ""
-                          }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`}                            </td>
+                        {dataObj.challanType}                            </td>
                       <td className="py-1.5 text-center">
-                        <span className="text-gray-400 text-[10px]">Standalone</span>
                       </td>
                       {rowActions && (
                         <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
@@ -386,39 +384,7 @@ const DeliveryChallanReport = ({
                                 {/* <span className="text-xs">delete</span> */}
                               </button>
                             )}
-                            <div className="relative">
-                              <button
-                                className="text-gray-600 hover:text-indigo-600 p-1 rounded-full hover:bg-gray-200 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveActionMenuId(activeActionMenuId === dataObj.id ? null : dataObj.id);
-                                }}
-                                title="More Actions"
-                              >
-                                <FaEllipsisV className="h-3.5 w-3.5" />
-                              </button>
 
-                              {activeActionMenuId === dataObj.id && (
-                                <div
-                                  className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden animate-in fade-in zoom-in duration-200"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <div className="py-1">
-                                    {shouldShowPostPayment(dataObj) && (
-                                      <button
-                                        className="w-full text-left px-4 py-2 text-sm text-indigo-700 hover:bg-indigo-50 flex items-center gap-2"
-                                        onClick={() => {
-                                          onMakePayment && onMakePayment(dataObj);
-                                          setActiveActionMenuId(null);
-                                        }}
-                                      >
-                                        <span className="font-semibold text-lg">💳</span> Post Payment
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
                           </div>
                         </td>
                       )}

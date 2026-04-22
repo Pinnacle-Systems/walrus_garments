@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ScanBarcode, Gift, Trash2, RefreshCw, ShoppingCart } from 'lucide-react';
+import { ScanBarcode, Gift, Trash2, RefreshCw, ShoppingCart, Eye } from 'lucide-react';
 
 const POSCartTable = ({
     isBarcodeLoading,
@@ -13,6 +13,7 @@ const POSCartTable = ({
     handleRowSalesPersonChange,
     updateRate,
     removeFromCart,
+    onViewStock,
     qtyInputRefs
 }) => {
 
@@ -60,7 +61,7 @@ const POSCartTable = ({
                     </thead>
                     <tbody>
                         {cart.map((item, index) => {
-                            const cartKey = `${item.id}-${item.sizeId}-${item.colorId}`;
+                            const cartKey = `${item.id}-${item.sizeId}-${item.colorId}-${!!item.isReturn}`;
                             const rowTotal = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
                             const isActiveRow = index === activeRowIndex;
                             return (
@@ -74,7 +75,13 @@ const POSCartTable = ({
                                         <div className="text-[12px] font-black text-slate-800 uppercase leading-tight truncate max-w-[280px]">{item?.Item?.name}</div>
                                         <div className="flex flex-wrap items-center gap-1 mt-1">
                                             <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{item.barcode}</span>
-                                            {parseFloat(item.salesPrice) > parseFloat(item.price) && (
+                                            {item.isReturn && (
+                                                <span className="bg-red-600 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5">
+                                                    <RefreshCw size={10} className="text-red-200" />
+                                                    RETURN
+                                                </span>
+                                            )}
+                                            {parseFloat(item.salesPrice) > parseFloat(item.price) && !item.isReturn && (
                                                 <span className="text-[10px] font-bold text-slate-300 line-through">₹{parseFloat(item.salesPrice).toLocaleString()}</span>
                                             )}
                                             {item.priceType === 'offerPrice' && (
@@ -88,7 +95,20 @@ const POSCartTable = ({
                                     <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Color?.name || '-'}</td>
                                     <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Size?.name || '-'}</td>
                                     <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Item?.Uom?.name || item?.Uom?.name || item?.uom || '-'}</td>
-                                    <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.stockQty || '-'}</td>
+                                    <td className="px-2 py-1 text-center border-r border-slate-200">
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <span className="text-[10px] font-black text-slate-500 uppercase">{item?.stockQty || '0'}</span>
+                                            {!item.isReturn && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onViewStock(item); }}
+                                                    className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-all"
+                                                    title="View Store-wise Stock"
+                                                >
+                                                    <Eye size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="px-2 py-0.5 border-r border-slate-200">
                                         <div className="flex items-center gap-1 justify-center">
                                             <button onClick={() => updateQuantity(item.id, -1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">-</button>

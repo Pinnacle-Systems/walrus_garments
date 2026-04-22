@@ -32,10 +32,13 @@ import POSCartTable from './components/POSCartTable';
 import POSSidebar from './components/POSSidebar';
 import POSFooter from './components/POSFooter';
 import ItemOfferModal from './components/ItemOfferModal';
+import ReturnExchangeModal from './components/ReturnExchangeModal';
 import BarcodeResolutionModal from './components/BarcodeResolutionModal';
 import SalesPersonModal from './components/SalesPersonModal';
 import PaymentModal from './components/PaymentModal';
 import ReceiptViewerModal from './components/ReceiptViewerModal';
+import StockLocationModal from './components/StockLocationModal';
+import PosReportsNew from './PosReportsNew';
 
 
 const PointOfSale = () => {
@@ -67,11 +70,19 @@ const PointOfSale = () => {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [docId, setDocId] = useState("");
 
+
+    const [transactionType, setTransactionType] = useState("SALE");
+    const [showReturnExchnageModal, setShowReturnExchnageModal] = useState(false);
+
+
+
     const [barcodeResolution, setBarcodeResolution] = useState({ open: false, matches: [], resolve: null });
 
     const [showSalesPersonModal, setShowSalesPersonModal] = useState(false);
     const [salesPersonBarcode, setSalesPersonBarcode] = useState('');
     const salesPersonScannerRef = useRef(null);
+
+    const [exchangeSalesNo, setExchangeSalesNo] = useState('');
 
     // Reports Pagination & Search States
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
@@ -79,6 +90,8 @@ const PointOfSale = () => {
     const [reportsSearchDocNo, setReportsSearchDocNo] = useState("");
     const [reportsSearchDate, setReportsSearchDate] = useState("");
     const [reportsSearchCustomerName, setReportsSearchCustomerName] = useState("");
+    const [showStockModal, setShowStockModal] = useState(false);
+    const [selectedItemForStock, setSelectedItemForStock] = useState(null);
 
     const user = JSON.parse(localStorage.getItem("user"));
     const isAdmin = user?.role === 'Admin' || user?.roleName === 'Admin' || user?.Role?.name === 'Admin';
@@ -108,8 +121,48 @@ const PointOfSale = () => {
             return;
         }
 
-        setShowPaymentModal(true);
+        if (total === 0) {
+            Swal.fire({
+                title: 'Equal Exchange',
+                text: 'The return value matches the purchase value. Save this exchange?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                confirmButtonText: 'Yes, Save'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    handleCheckout();
+                }
+            });
+        } else {
+            setShowPaymentModal(true);
+        }
     };
+
+    const allocateStock = useCallback((totalQty, stockDetails, retailStoreId) => {
+        let remaining = parseFloat(totalQty) || 0;
+        const fulfillments = [];
+        const sortedStocks = [...(stockDetails || [])].sort((a, b) => {
+            const isARetail = a.storeName?.toLowerCase().includes('retail') || parseInt(a.storeId) === parseInt(retailStoreId);
+            const isBRetail = b.storeName?.toLowerCase().includes('retail') || parseInt(b.storeId) === parseInt(retailStoreId);
+            if (isARetail && !isBRetail) return -1;
+            if (!isARetail && isBRetail) return 1;
+            return 0;
+        });
+
+        sortedStocks.forEach(s => {
+            const take = Math.min(remaining, parseFloat(s.stockQty) || 0);
+            fulfillments.push({ storeId: s.storeId, storeName: s.storeName, qty: take });
+            remaining -= take;
+        });
+
+        // If still remaining (though shouldn't happen with stock limits), add to last or retail
+        if (remaining > 0 && fulfillments.length > 0) {
+            fulfillments[0].qty += remaining;
+        }
+
+        return fulfillments;
+    }, []);
 
     // Keyboard Shortcuts
     useEffect(() => {
@@ -467,21 +520,102 @@ const PointOfSale = () => {
 
     // Cart Actions
     const addToCart = (product) => {
-        if ((parseFloat(product.stockQty) || 0) <= 0) { Swal.fire({ title: "Error", text: "Out of stock!", icon: "error" }); return; }
+
+
+        console.log(product, "product")
+
+
+        const itemId = product.itemId || product.id;
+        const sizeId = product.sizeId || 0;
+        const colorId = product.colorId || 0;
+        const uomId = product.uomId || product.Item?.uomId || 0;
+
+        console.log("DEBUG: addToCart Search Target:", { itemId, sizeId, colorId, uomId, isReturn: !!product.isReturn });
+
         setCart(prev => {
-            const existing = prev.find(item => item.id === product.id && item.sizeId === product.sizeId && item.colorId === product.colorId);
-            if (existing) {
-                if ((parseFloat(existing.qty) || 0) >= parseFloat(product.stockQty)) { toast.warning("Max stock reached"); return prev; }
-                return prev.map(item => (item.id === product.id && item.sizeId === product.sizeId && item.colorId === product.colorId) ? { ...item, qty: (parseFloat(item.qty) || 0) + 1 } : item);
+            const existingIndex = prev.findIndex((item, i) => {
+                const isIdMatch = (item.itemId == itemId) || (item.id == itemId);
+                const isSizeMatch = (item.sizeId || 0) == (sizeId || 0);
+                const isColorMatch = (item.colorId || 0) == (colorId || 0);
+                const isUomMatch = (item.uomId || 0) == (uomId || 0);
+                const isReturnMatch = !!item.isReturn === !!product.isReturn;
+
+
+
+
+                if (isIdMatch && isReturnMatch) {
+                    console.log(`   - Checking Row ${i}: ID Match! Size: ${isSizeMatch}, Color: ${isColorMatch}, Uom: ${isUomMatch}`);
+                }
+
+                return isIdMatch && isSizeMatch && isColorMatch && isUomMatch && isReturnMatch;
+            });
+
+            console.log(existingIndex, "existingIndex")
+
+
+            if (existingIndex > -1) {
+                const existing = prev[existingIndex];
+
+                console.log(existing, "existing")
+                const newQty = (parseFloat(existing.qty) || 0) + 1;
+
+                if (existing.isReturn) {
+                    if (newQty > (existing.maxReturnQty || 0)) {
+                        toast.warning(`Max return limit: ${existing.maxReturnQty}`);
+                        return prev;
+                    }
+                    const updatedCart = [...prev];
+                    updatedCart[existingIndex] = { ...existing, qty: newQty };
+                    return updatedCart;
+                } else {
+                    const stockDetails = [...(existing.stockDetails || [])];
+                    const currentStoreId = product.storeId || product.locationId;
+                    if (currentStoreId && !stockDetails.find(s => s.storeId == currentStoreId)) {
+                        stockDetails.push({
+                            storeId: currentStoreId,
+                            storeName: product.location || "Store",
+                            stockQty: product.stockQty || 0
+                        });
+                    }
+
+                    const totalStock = stockDetails.reduce((sum, s) => sum + (parseFloat(s.stockQty) || 0), 0);
+
+                    if (newQty > totalStock) {
+                        toast.warning("Max stock reached");
+                        return prev;
+                    }
+
+                    const updatedFulfillments = allocateStock(newQty, stockDetails, retailStoreId);
+                    const updatedCart = [...prev];
+                    updatedCart[existingIndex] = {
+                        ...existing,
+                        qty: newQty,
+                        stockQty: totalStock,
+                        stockDetails,
+                        fulfillments: updatedFulfillments
+                    };
+                    return updatedCart;
+                }
             }
-            const itemId = product.itemId || product.id;
+
             const fullPriceList = ItemPriceListData?.data || [];
             const itemPrices = fullPriceList.filter(p => p.itemId === itemId);
             const variantHit = itemPrices.find(p => p.sizeId === product.sizeId && p.colorId === product.colorId);
             const lookupPrice = variantHit?.salesPrice || itemPrices.find(p => !p.sizeId && !p.colorId)?.salesPrice || itemPrices[0]?.salesPrice || 0;
             const masterItem = product?.Item || items.find(i => i.id === itemId);
+
+            const stockDetails = [{
+                storeId: product.storeId || product.locationId || retailStoreId,
+                storeName: product.location || "Retail Store",
+                stockQty: product.stockQty || 0
+            }];
+
+            const totalStock = stockDetails.reduce((sum, s) => sum + (parseFloat(s.stockQty) || 0), 0);
+            const initialFulfillments = allocateStock(1, stockDetails, retailStoreId);
+
             return [...prev, {
                 ...product,
+                itemId,
                 Item: masterItem,
                 salesPrice: lookupPrice,
                 price: lookupPrice,
@@ -489,7 +623,10 @@ const PointOfSale = () => {
                 qty: 1,
                 priceType: 'SalesPrice',
                 taxPercent: masterItem?.Hsn?.tax || 5,
-                sourceStoreId: product.storeId || product.locationId || retailStoreId
+                stockQty: totalStock,
+                stockDetails,
+                fulfillments: initialFulfillments,
+                sourceStoreId: retailStoreId // Default for non-clubbed awareness
             }];
         });
         setShowSalesPersonModal(true);
@@ -525,12 +662,38 @@ const PointOfSale = () => {
         setCart(prev => prev.map(item => {
             if (item.id === id && item.sizeId === sizeId && item.colorId === colorId) {
                 const stockLimit = parseFloat(item.stockQty) || 0;
-                let newQty = isDirect ? Math.max(0, parseFloat(value) || 0) : Math.max(1, (parseFloat(item.qty) || 0) + (parseFloat(value) || 0));
-                if (newQty > stockLimit) { Swal.fire({ title: "Warning", text: `Stock limit: ${stockLimit}`, icon: "warning" }); newQty = stockLimit; }
-                return { ...item, qty: newQty };
+                const isReturn = !!item.isReturn;
+
+                let newQty;
+                if (isReturn) {
+                    newQty = isDirect ? (parseFloat(value) || 0) : (parseFloat(item.qty) || 0) + (parseFloat(value) || 0);
+                    if (newQty > (item.maxReturnQty || 0)) {
+                        Swal.fire({ title: "Warning", text: `Maximum return quantity is ${item.maxReturnQty}`, icon: "warning" });
+                        newQty = (item.maxReturnQty || 0);
+                    }
+                    if (newQty < 0) newQty = 0;
+                } else {
+                    newQty = isDirect ? Math.max(0, parseFloat(value) || 0) : Math.max(1, (parseFloat(item.qty) || 0) + (parseFloat(value) || 0));
+                    if (newQty > stockLimit) { Swal.fire({ title: "Warning", text: `Stock limit: ${stockLimit}`, icon: "warning" }); newQty = stockLimit; }
+                }
+
+                const updatedFulfillments = allocateStock(newQty, item.stockDetails, retailStoreId);
+                return { ...item, qty: newQty, fulfillments: updatedFulfillments };
             }
             return item;
         }));
+    };
+
+    const updateFulfillments = (itemId, sizeId, colorId, isReturn, fulfillments) => {
+        setCart(prev => prev.map(item =>
+            (item.itemId || item.id) === itemId &&
+                item.sizeId === sizeId &&
+                item.colorId === colorId &&
+                !!item.isReturn === !!isReturn
+                ? { ...item, fulfillments, qty: fulfillments.reduce((sum, f) => sum + f.qty, 0) }
+                : item
+        ));
+        setShowStockModal(false);
     };
 
     const updateRate = (id, value, sizeId, colorId) => {
@@ -548,17 +711,23 @@ const PointOfSale = () => {
     };
 
     // Totals Calculation
-    const totalBeforeOffer = cartWithOffers.reduce((sum, item) => sum + (parseFloat(item.salesPrice || item.price) || 0) * (parseFloat(item.qty) || 0), 0);
-    const totalBeforeDiscount = Math.max(0, totalBeforeOffer - totalOfferDiscount);
-    const totalWithoutRounding = Math.max(0, totalBeforeDiscount - discount);
+    const returnTotal = cartWithOffers.reduce((sum, item) => item.isReturn ? sum + (parseFloat(item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
+    const purchaseTotalBeforeOffer = cartWithOffers.reduce((sum, item) => !item.isReturn ? sum + (parseFloat(item.salesPrice || item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
+
+    const totalBeforeOffer = purchaseTotalBeforeOffer - returnTotal;
+    const totalBeforeDiscount = purchaseTotalBeforeOffer - totalOfferDiscount - returnTotal;
+    const totalWithoutRounding = totalBeforeDiscount - discount;
     const total = Math.round(totalWithoutRounding);
     const roundOff = parseFloat((total - totalWithoutRounding).toFixed(2));
     const tax = cartWithOffers.reduce((sum, item) => {
         const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
-        const itemTotal = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
-        const itemDiscount = totalBeforeDiscount > 0 ? (itemTotal / totalBeforeDiscount) * discount : 0;
-        const netItemTotal = itemTotal - itemDiscount;
-        return sum + (netItemTotal - (netItemTotal / (1 + (itemTaxPercent / 100))));
+        const itemValue = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
+        const multiplier = item.isReturn ? -1 : 1;
+        // Basic proportional discount spread (simplified)
+        const itemDiscount = totalBeforeDiscount !== 0 ? (itemValue / Math.abs(totalBeforeDiscount)) * discount : 0;
+        const netItemTotal = itemValue - itemDiscount;
+        const itemTax = (netItemTotal - (netItemTotal / (1 + (itemTaxPercent / 100)))) * multiplier;
+        return sum + itemTax;
     }, 0);
     const subtotal = totalWithoutRounding - tax;
 
@@ -574,19 +743,19 @@ const PointOfSale = () => {
         if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
         if (receivedAmount < total) { Swal.fire({ title: "Error", text: "Incomplete payment", icon: "error" }); return; }
 
-        const result = await Swal.fire({
-            title: 'Confirm Sale',
-            html: `
-                <div class="text-left space-y-2 p-4 bg-slate-50 rounded-xl">
-                    <div class="flex justify-between"><span>Subtotal:</span> <b>₹${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></div>
-                    <div class="flex justify-between"><span>Discount:</span> <b class="text-red-500">-₹${discount.toLocaleString()}</b></div>
-                    <div class="flex justify-between text-lg border-t pt-2 mt-2 font-bold"><span>Total:</span> <b class="text-indigo-600">₹${total.toLocaleString()}</b></div>
-                </div>
-            `,
-            icon: 'question', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#94a3b8', confirmButtonText: 'Confirm & Process'
-        });
+        // const result = await Swal.fire({
+        //     title: 'Confirm Sale',
+        //     html: `
+        //         <div class="text-left space-y-2 p-4 bg-slate-50 rounded-xl">
+        //             <div class="flex justify-between"><span>Subtotal:</span> <b>₹${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></div>
+        //             <div class="flex justify-between"><span>Discount:</span> <b class="text-red-500">-₹${discount.toLocaleString()}</b></div>
+        //             <div class="flex justify-between text-lg border-t pt-2 mt-2 font-bold"><span>Total:</span> <b class="text-indigo-600">₹${total.toLocaleString()}</b></div>
+        //         </div>
+        //     `,
+        //     icon: 'question', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#94a3b8', confirmButtonText: 'Confirm & Process'
+        // });
 
-        if (!result.isConfirmed) return;
+        // if (!result.isConfirmed) return;
         setIsProcessing(true);
 
         try {
@@ -604,7 +773,21 @@ const PointOfSale = () => {
                 ...(paidOnline > 0 ? [{ amount: String(paidOnline), paymentMode: 'Online', }] : []),
             ];
 
-            const invoicePayload = { date: new Date().toISOString().split('T')[0], customerId, supplierId: customerId, branchId, userId, companyId, finYearId, paymentMethod, storeId: retailStoreId, poType: "General", poInwardOrDirectInward: "DirectInward", netAmount: total, taxAmount: tax, discountValue: discount, discountType: "Flat", paidCash, paidUPI, paidCard, paidOnline, receivedAmount, balanceReturn, posItems: cartWithOffers, posPayments, promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff };
+            const invoicePayload = {
+                date: new Date().toISOString().split('T')[0],
+                customerId,
+                supplierId: customerId,
+                branchId, userId, companyId, finYearId,
+                paymentMethod,
+                storeId: retailStoreId,
+                poType: "General", poInwardOrDirectInward: "DirectInward",
+                netAmount: total, taxAmount: tax, discountValue: discount, discountType: "Flat",
+                paidCash, paidUPI, paidCard, paidOnline, receivedAmount, balanceReturn,
+                posItems: cartWithOffers,
+                posPayments,
+                promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff, transactionType,
+                exchangeSalesNo
+            };
 
             let apiResponse;
             if (editMode) {
@@ -625,6 +808,49 @@ const PointOfSale = () => {
         finally { setIsProcessing(false); }
     };
 
+    const handleBillSelected = (bill) => {
+
+        console.log(bill, "bill");
+        if (!bill) return;
+
+        if (bill.Party) {
+            setSelectedCustomer(bill.Party);
+            setIsGuestCustomer(false);
+            setGuestName(bill.Party.name);
+            setGuestMobile(bill.Party.contact);
+        } else {
+            setSelectedCustomer(null);
+            setIsGuestCustomer(true);
+            setGuestName(bill.customerName || "Walk-in");
+            setGuestMobile(bill.customerMobile || "");
+        }
+
+        const returnItems = (bill.PosItems || []).map(item => {
+            const masterItem = items.find(i => i.id === item.itemId);
+            return {
+                ...item,
+                Item: masterItem,
+                price: parseFloat(item.price),
+                qty: parseFloat(item.qty) - parseFloat(item.returnedQty || 0),
+                maxReturnQty: parseFloat(item.qty) - parseFloat(item.returnedQty || 0),
+                isReturn: true,
+                retunBillId: bill.id,
+                originalItemId: item.id,
+                taxPercent: masterItem?.Hsn?.tax || 5,
+                sourceStoreId: retailStoreId
+            };
+        });
+
+        setCart(prev => [...prev, ...returnItems]);
+        Swal.fire({
+            title: 'Items Added',
+            text: `${returnItems.length} items from Bill ${bill.docId} added as returns.`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    };
+
 
     const onNew = () => {
         setShowReports(true);
@@ -634,6 +860,11 @@ const PointOfSale = () => {
         setDiscount(0);
         setSelectedReportSaleId(null)
     }
+
+    const onViewStock = (item) => {
+        setSelectedItemForStock(item);
+        setShowStockModal(true);
+    };
     return (
         <>
             <ItemOfferModal
@@ -645,6 +876,15 @@ const PointOfSale = () => {
                 setSelectedOffersByRow={setSelectedOffersByRow}
                 Swal={Swal}
             />
+            <ReturnExchangeModal
+                isOpen={showReturnExchnageModal}
+                onClose={() => setShowReturnExchnageModal(false)}
+                onBillSelected={handleBillSelected}
+                Swal={Swal}
+                salesNo={exchangeSalesNo}
+                setSalesNo={setExchangeSalesNo}
+            />
+
 
             <BarcodeResolutionModal
                 barcodeResolution={barcodeResolution}
@@ -662,6 +902,9 @@ const PointOfSale = () => {
                         setShowReports={setShowReports}
                         retailLocation={retailLocation}
                         setSelectedReportSaleId={setSelectedReportSaleId}
+                        transactionType={transactionType}
+                        setTransactionType={setTransactionType}
+                        setShowReturnExchnageModal={setShowReturnExchnageModal}
                     />
 
                     <div className="flex-1 flex overflow-hidden">
@@ -672,6 +915,7 @@ const PointOfSale = () => {
                             setActiveRowIndex={setActiveRowIndex}
                             updateQuantity={updateQuantity}
                             handleShowItemOffers={handleShowItemOffers}
+                            onViewStock={onViewStock}
                             employees={employees}
                             handleRowSalesPersonChange={handleRowSalesPersonChange}
                             updateRate={updateRate}
@@ -699,6 +943,8 @@ const PointOfSale = () => {
                             handlePayNow={handlePayNow}
                             printData={printData}
                             setPrintData={setPrintData}
+                            returnTotal={returnTotal}
+                            purchaseTotal={purchaseTotalBeforeOffer}
                         />
                     </div>
 
@@ -721,7 +967,7 @@ const PointOfSale = () => {
                         </button>
                     </div>
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden h-[85vh] mt-2 border-2">
-                        <PosReports
+                        {/* <PosReports
                             recentSales={posData?.data || []}
                             totalCount={posData?.totalCount || 0}
                             currentPageNumber={currentPageNumber}
@@ -736,6 +982,13 @@ const PointOfSale = () => {
                             setSearchCustomerName={setReportsSearchCustomerName}
                             onEdit={handleEditPOS}
                             isLoading={isRecentSalesFetching}
+                        /> */}
+
+
+                        <PosReportsNew
+                            onEdit={handleEditPOS}
+                            onDelete={true}
+                            onView={true}
                         />
                     </div>
                 </div>
@@ -777,6 +1030,21 @@ const PointOfSale = () => {
                 setSalesPersonBarcode={setSalesPersonBarcode}
                 handleSalesPersonScan={handleSalesPersonScan}
                 employees={employees}
+            />
+
+            <StockLocationModal
+                isOpen={showStockModal}
+                onClose={() => setShowStockModal(false)}
+                item={selectedItemForStock}
+                onSave={(fulfillments) => {
+                    updateFulfillments(
+                        selectedItemForStock.itemId || selectedItemForStock.id,
+                        selectedItemForStock.sizeId,
+                        selectedItemForStock.colorId,
+                        selectedItemForStock.isReturn,
+                        fulfillments
+                    );
+                }}
             />
         </>
     );

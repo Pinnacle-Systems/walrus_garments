@@ -519,8 +519,9 @@ const StockTransferForm = ({
                                         <button
                                             className="1 px-2 py-0.5 mt-6 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
                                             onClick={() => setOrderToGeneral(true)}
+                                            disabled={id}
                                         >
-                                            Fill Stock
+                                            Available Stock
                                         </button>
                                     </div>
 

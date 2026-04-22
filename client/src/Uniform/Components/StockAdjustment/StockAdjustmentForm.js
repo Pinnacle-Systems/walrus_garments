@@ -148,8 +148,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
       updatedRows[index] = { ...updatedRows[index], [field]: value, ...extraData };
 
-      // Auto-price lookup (only if item, size, or color changed)
-      // Auto-price lookup (only if item, size, color, or barcodeType changed)
+
       if (["itemId", "sizeId", "colorId", "barcodeType"].includes(field)) {
         const itemBarcodeGenerationMethod = resolveBarcodeGenerationMethod(itemControlData?.data?.[0]);
         const selectedItem = itemList?.data?.find((i) => i.id === updatedRows[index].itemId);
@@ -165,6 +164,8 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
 
           // Barcode logic
           const type = updatedRows[index].barcodeType || "REGULAR";
+
+
           if (selectedItem.isLegacy) {
             updatedRows[index].barcode = selectedItem.ItemPriceList?.[0]?.ItemBarcodes?.find(b => b.barcodeType === type)?.barcode ||
               selectedItem.ItemPriceList?.[0]?.barcode ||
@@ -401,6 +402,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                   const selectedItemData = itemList?.data?.find(i => i.id === row.itemId);
                   const isLegacy = row.itemId ? selectedItemData?.isLegacy : true;
                   const priceList = selectedItemData?.ItemPriceList || [];
+                  const availableBarcodes = selectedItemData?.ItemPriceList?.[0]?.ItemBarcodes || [];
 
                   const filteredSizeOptions = isLegacy ? sizeOptions : sizeOptions.filter(o =>
                     priceList.some(p => String(p.sizeId) === String(o.value))
@@ -434,12 +436,25 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                           disabled={readOnly}
                           onChange={v => {
                             const selectedItem = itemList?.data?.find(i => i.id === (v || ""));
+                            const availableBarcodes = selectedItem?.ItemPriceList?.[0]?.ItemBarcodes || [];
+                            let defaultBarcodeType = "REGULAR";
+                            if (availableBarcodes.length > 0) {
+                              const hasRegular = availableBarcodes.some(b => b.barcodeType === "REGULAR");
+                              if (availableBarcodes.length === 1) {
+                                defaultBarcodeType = availableBarcodes[0].barcodeType;
+                              } else if (hasRegular) {
+                                defaultBarcodeType = "REGULAR";
+                              } else {
+                                defaultBarcodeType = availableBarcodes[0].barcodeType;
+                              }
+                            }
                             updateRow(idx, "itemId", v || "", {
                               item_name: selectedItem?.name || "",
                               sizeId: "",
                               size: "",
                               colorId: "",
                               color: "",
+                              barcodeType: defaultBarcodeType,
                               price: getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod) === "STANDARD"
                                 ? selectedItem?.ItemPriceList?.[0]?.salesPrice || 0
                                 : ""
@@ -510,14 +525,25 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
                       </td>
                       <td className="w-24 border border-gray-300 p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">
                         <select
-                          disabled={readOnly}
+                          disabled={readOnly || !row.itemId}
                           className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 shadow-none outline-none focus:bg-transparent focus:outline-none"
                           value={row.barcodeType}
                           onChange={(e) => updateRow(idx, "barcodeType", e.target.value)}
+                        // disabled={}
                         >
-                          <option value="REGULAR">REGULAR</option>
-                          <option value="CLEARANCE">CLEARANCE</option>
-                        </select>
+                          {availableBarcodes.length > 0 ? (
+                            availableBarcodes.map((b) => (
+                              <option key={b.barcodeType} value={b.barcodeType}>
+                                {b.barcodeType}
+                              </option>
+                            ))
+                          ) : (
+                            <>
+                              <option value="REGULAR">REGULAR</option>
+                              <option value="CLEARANCE">CLEARANCE</option>
+                            </>
+                          )}
+                        </select>{console.log(availableBarcodes, "availableBarcodes")}
                       </td>
                       <td className="w-40 border border-gray-300 p-0 text-[11px] text-right">
                         <div className="flex h-full min-h-[22px] items-center justify-end px-1">

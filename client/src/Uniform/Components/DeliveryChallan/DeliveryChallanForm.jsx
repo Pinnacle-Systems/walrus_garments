@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, DropdownInputNew, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
-import { directOrPo, platformList } from "../../../Utils/DropdownData";
+import { challanTypeList, directOrPo, platformList } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
 import { toast } from "react-toastify";
@@ -27,6 +27,7 @@ import { push } from "../../../redux/features/opentabs";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import DeliveryChallanItems from "./DeliveryChallanItems";
+import { useAddDeliveryChallanMutation, useUpdateDeliveryChallanMutation } from "../../../redux/services/DeliveryChallanService";
 
 
 
@@ -63,7 +64,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
   const [taxMethod, setTaxMethod] = useState("WithoutTax")
   const [isHeaderOpen, setIsHeaderOpen] = useState(true);
   const [platForm, setPlatForm] = useState("")
-
+  const [challanType, setChallanType] = useState("")
   const [suppliers, setSuppliers] = useState([
     "Supplier One",
     "Supplier Two",
@@ -122,8 +123,8 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
     : sourceAdvanceReceived;
   const shouldShowPaymentReceived = parseFloat(paymentReceivedAmount || 0) > 0;
 
-  const [addData] = useAddSalesInvoiceMutation();
-  const [updateData] = useUpdateSalesInvoiceMutation();
+  const [addData] = useAddDeliveryChallanMutation();
+  const [updateData] = useUpdateDeliveryChallanMutation();
 
 
 
@@ -197,35 +198,22 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
 
   const data = {
     docId,
-    poType: transType,
-    poInwardOrDirectInward,
-    supplierId: customerId, dcDate,
-    payTermId,
-    id, userId,
+    challanType,
+    platForm,
     storeId,
-    invoiceItems: invoiceItems?.filter(i => i.itemId),
-    discountType,
-    discountValue,
-    dcNo,
-    remarks,
-    specialInstructions,
-    vehicleNo,
-    finYearId,
-    locationId: locationId ? parseInt(locationId) : undefined,
+    date,
+    invoiceItems: invoiceItems.filter(i => i.itemId),
     branchId,
     customerId,
-    terms,
-    saleOrderId: convertSaleOrderId,
-    packingChargeEnabled,
-    packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
-    shippingChargeEnabled,
-    shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
+    finYearId,
+    userId,
+    id
   }
 
   console.log(convertSaleOrderId, "convertSaleOrderId")
   const validateData = (data) => {
 
-    if (data?.customerId) {
+    if (data?.challanType && data?.platForm) {
       return true
     }
 
@@ -257,7 +245,6 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
             title: `${text || 'Saved'} Successfully`,
 
           });
-          dispatch(push({ name: "SALES INVOICE", projectId: null }));
           invalidateTagsDispatch()
           if (nextProcess == "new") {
             syncFormWithDb(undefined);
@@ -481,77 +468,77 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
       showTermSelect
       termValue={term}
       onTermChange={handleTermTemplateChange}
-      termOptions={((id ? termsData?.data : termsData?.data?.filter((item) => item?.active)) || []).map((blend) => ({
-        value: blend.id,
-        label: blend?.name,
-        templateText: blend?.termsAndCondition || blend?.description || "",
-      }))}
-      chargeOptions={[
-        {
-          key: "packingChargeToggle",
-          label: "Packing",
-          checked: packingChargeEnabled,
-          onToggle: (checked) => {
-            setPackingChargeEnabled(checked);
-            if (!checked) {
-              setPackingCharge("");
-            } else if (!packingCharge) {
-              setPackingCharge("0.00");
-            }
-          },
-        },
-        {
-          key: "shippingChargeToggle",
-          label: "Shipping",
-          checked: shippingChargeEnabled,
-          onToggle: (checked) => {
-            setShippingChargeEnabled(checked);
-            if (!checked) {
-              setShippingCharge("");
-            } else if (!shippingCharge) {
-              setShippingCharge("0.00");
-            }
-          },
-        },
-      ]}
-      totalsRows={[
-        {
-          key: "totalQty",
-          label: "Total Qty",
-          value: parseFloat(getTotalQty()).toFixed(3),
-          summaryColumn: "left",
-        },
-        {
-          key: "beforeTaxAmount",
-          label: "Gross Amount",
-          value: `Rs.${parseFloat(subtotal || 0).toFixed(2)}`,
-          summaryColumn: "right",
-        },
-        {
-          key: "taxAmount",
-          label: "Tax Amount",
-          value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
-          summaryColumn: "right",
-        },
-        ...chargeRows,
-        {
-          key: "netAmount",
-          label: "Net Amount",
-          value: `Rs.${parseFloat(adjustedNetAmount || 0).toFixed(2)}`,
-          summaryColumn: "right",
-          emphasized: true,
-        },
-        ...(shouldShowPaymentReceived
-          ? [
-            {
-              key: "paymentReceived",
-              label: "Payment Received",
-              value: `Rs.${parseFloat(paymentReceivedAmount || 0).toFixed(2)}`,
-              summaryColumn: "left",
-            },
-          ]
-          : []),
-      ]}
+      // termOptions={((id ? termsData?.data : termsData?.data?.filter((item) => item?.active)) || []).map((blend) => ({
+      //   value: blend.id,
+      //   label: blend?.name,
+      //   templateText: blend?.termsAndCondition || blend?.description || "",
+      // }))}
+      // chargeOptions={[
+      //   {
+      //     key: "packingChargeToggle",
+      //     label: "Packing",
+      //     checked: packingChargeEnabled,
+      //     onToggle: (checked) => {
+      //       setPackingChargeEnabled(checked);
+      //       if (!checked) {
+      //         setPackingCharge("");
+      //       } else if (!packingCharge) {
+      //         setPackingCharge("0.00");
+      //       }
+      //     },
+      //   },
+      //   {
+      //     key: "shippingChargeToggle",
+      //     label: "Shipping",
+      //     checked: shippingChargeEnabled,
+      //     onToggle: (checked) => {
+      //       setShippingChargeEnabled(checked);
+      //       if (!checked) {
+      //         setShippingCharge("");
+      //       } else if (!shippingCharge) {
+      //         setShippingCharge("0.00");
+      //       }
+      //     },
+      //   },
+      // ]}
+      // totalsRows={[
+      //   {
+      //     key: "totalQty",
+      //     label: "Total Qty",
+      //     value: parseFloat(getTotalQty()).toFixed(3),
+      //     summaryColumn: "left",
+      //   },
+      //   {
+      //     key: "beforeTaxAmount",
+      //     label: "Gross Amount",
+      //     value: `Rs.${parseFloat(subtotal || 0).toFixed(2)}`,
+      //     summaryColumn: "right",
+      //   },
+      //   {
+      //     key: "taxAmount",
+      //     label: "Tax Amount",
+      //     value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
+      //     summaryColumn: "right",
+      //   },
+      //   ...chargeRows,
+      //   {
+      //     key: "netAmount",
+      //     label: "Net Amount",
+      //     value: `Rs.${parseFloat(adjustedNetAmount || 0).toFixed(2)}`,
+      //     summaryColumn: "right",
+      //     emphasized: true,
+      //   },
+      //   ...(shouldShowPaymentReceived
+      //     ? [
+      //       {
+      //         key: "paymentReceived",
+      //         label: "Payment Received",
+      //         value: `Rs.${parseFloat(paymentReceivedAmount || 0).toFixed(2)}`,
+      //         summaryColumn: "left",
+      //       },
+      //     ]
+      //     : []),
+      // ]}
       leftActions={
         <>
           <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
@@ -609,7 +596,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
       <Modal isOpen={printOpen} onClose={() => setPrintOpen(false)} widthClass="w-[95%] h-[95%]">
         <PDFViewer style={{ width: "100%", height: "90vh" }}>
           <PremiumSalesPrintFormat
-            title="SALES INVOICE"
+            title="DELIVERY CHALLAN"
             docId={docId}
             date={date}
             branchData={findFromList(branchId, branchList?.data, "all")}
@@ -627,7 +614,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
       <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
         <PDFViewer style={{ width: "100%", height: "90vh" }}>
           <ThermalSalesPrintFormat
-            title="SALES INVOICE"
+            title="DELIVERY CHALLAN"
             docId={docId}
             date={date}
             branchData={findFromList(branchId, branchList?.data, "all")}
@@ -643,13 +630,13 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
         </PDFViewer>
       </Modal>
       <TransactionEntryShell
-        title="Sales Invoice"
+        title="Delivery Challan"
         onClose={onClose}
         headerOpen={isHeaderOpen}
         setHeaderOpen={setIsHeaderOpen}
         summaryItems={summaryItems}
         openStateClassName="max-h-[600px] opacity-100 overflow-visible"
-        footer={footerContent}
+        // footer={footerContent}
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
 
@@ -662,14 +649,24 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
               </div>
 
             </TransactionHeaderSection>
-            <TransactionHeaderSection title="Other Details" className="col-span-2" bodyClassName={`${saleOrderDocId ? "grid-cols-12" : "grid-cols-2"}`}>
-
-              <div className="grid grid-cols-2">
+            <TransactionHeaderSection title="Other Details" className="col-span-2" bodyClassName={`${saleOrderDocId ? "grid-cols-12" : "grid-cols-5"}`}>
+              <div className="grid grid-cols-1">
+                <DropdownInputNew
+                  value={challanType}
+                  setValue={setChallanType}
+                  options={challanTypeList}
+                  name="Challan Type"
+                  required={true}
+                />
+              </div>
+              <div className="grid grid-cols-1">
                 <DropdownInputNew
                   value={platForm}
                   setValue={setPlatForm}
                   options={platformList}
                   name="Platform"
+                  required={true}
+
                 />
               </div>
 
@@ -702,6 +699,60 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
               priceTemplateList={priceTemplateList}
             />
           </fieldset>
+        </div>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => saveData("new")}
+              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+            >
+              <FiSave className="w-4 h-4 mr-2" />
+              Save & New
+            </button>
+            <button
+              onClick={() => saveData("close")}
+              className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+            >
+              <HiOutlineRefresh className="w-4 h-4 mr-2" />
+              Save & Close
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
+              onClick={() => setReadOnly(false)}
+            >
+              <FiEdit2 className="w-4 h-4 mr-2" />
+              Edit
+            </button>
+            <button
+              className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
+              onClick={() => {
+                if (!invoiceItems?.filter(i => i.itemId).length) {
+                  toast.warning("Please add some items first");
+                  return;
+                }
+                setPrintOpen(true);
+              }}
+            >
+              <FiPrinter className="w-4 h-4 mr-2" />
+              Print
+            </button>
+            <button
+              className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm"
+              onClick={() => {
+                if (!invoiceItems?.filter(i => i.itemId).length) {
+                  toast.warning("Please add some items first");
+                  return;
+                }
+                setThermalPrintOpen(true);
+              }}
+            >
+              <FiPrinter className="w-4 h-4 mr-2" />
+              Thermal Print
+            </button>
+          </div>
         </div>
       </TransactionEntryShell>
 

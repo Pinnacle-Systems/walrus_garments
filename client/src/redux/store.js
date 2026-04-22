@@ -221,7 +221,7 @@ const commonReducers = {
   SubCategoryMaster: SubCategoryMasterApi.reducer,
   offersPromotions: offersPromotionsApi.reducer,
   collections: collectionsApi.reducer,
-  deliveryChallan: DeliveryChallanApi.reducer,
+  DeliveryChallan: DeliveryChallanApi.reducer,
   salesReport: salesReportApi.reducer,
   ExpenseMaster: ExpenseMasterApi.reducer,
   ExpenseEntry: ExpenseEntryApi.reducer,

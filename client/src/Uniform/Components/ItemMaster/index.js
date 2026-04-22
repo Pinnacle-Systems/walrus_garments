@@ -465,60 +465,7 @@ export default function Form() {
                   </fieldset>
 
 
-                  {/* {
-                    itemTypeId &&
 
-                    <div className="grid grid-cols-4 gap-4">
-                      {panelData?.data?.filter(val => parseInt(val.itemTypeId) === parseInt(itemTypeId))?.map((item, index) => (
-                        <div
-                          key={index}
-                          className="p-4 bg-white rounded-lg shadow-lg mb-4"
-                        >
-                          <DropdownInput
-                            name="Panel"
-                            options={dropDownListObject(
-                              panelData?.data?.filter((item) => item.active),
-                              "name",
-                              "id"
-                            )}
-                            value={panelId[index]?.panelId || ""}
-                            setValue={(id) => handlePanelIdChange(id, index)}
-                            required={true}
-                            readOnly={readOnly}
-                          />
-
-                          <ul className="space-y-3">
-                            {process?.data?.map((addon, addonIndex) => (
-                              <li
-                                key={addonIndex}
-                                className="flex items-center space-x-3"
-                              >
-                                <label className="flex items-center cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    className="mr-2 h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                                    disabled={readOnly}
-                                    onChange={(e) =>
-                                      handleAddonChange(e, addon, index)
-                                    }
-                                    checked={
-                                      panelId[index]?.selectedAddons?.includes(
-                                        addon.id
-                                      ) || false
-                                    }
-                                  />
-                                  <span className="text-gray-700 text-xs hover:text-green-600 transition duration-300">
-                                    {addon.name}
-                                  </span>
-                                </label>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-
-                  } */}
 
                 </fieldset>
               </div>

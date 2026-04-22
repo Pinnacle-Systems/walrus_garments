@@ -12,18 +12,6 @@ async function get(req) {
     });
 
 
-    // data = data.map((item) => {
-    //     const types = [];
-
-    //     if (item._count.state) types.push("State Master");
-
-    //     return {
-    //         ...item,
-    //         referencedIn: types.join(", ")
-
-    //     };
-    // });
-
     return { statusCode: 0, data };
 }
 
@@ -68,7 +56,7 @@ async function create(body) {
     const data = await prisma.ExpenseCategory.create(
         {
             data: {
-                name,
+                name, active
             }
         }
     )
@@ -83,20 +71,20 @@ async function update(id, body) {
         }
     })
     if (!dataFound) return NoRecordFound("Expense Category");
-    const data = await prisma.country.update({
+    const data = await prisma.ExpenseCategory.update({
         where: {
             id: parseInt(id),
         },
         data:
         {
-            name,
+            name, active
         },
     })
     return { statusCode: 0, data };
 };
 
 async function remove(id) {
-    const data = await prisma.country.delete({
+    const data = await prisma.ExpenseCategory.delete({
         where: {
             id: parseInt(id)
         },

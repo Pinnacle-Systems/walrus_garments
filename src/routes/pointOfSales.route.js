@@ -6,11 +6,11 @@ import { get, getOne, getSearch, create, update, remove, checkReferenceNumber } 
 router.post('/', create);
 
 router.get('/', get);
+
 router.get('/check-ref', checkReferenceNumber);
 
 router.get('/:id', getOne);
 
-router.get('/search/:searchKey', getSearch);
 
 router.put('/:id', update);
 

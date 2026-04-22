@@ -87,14 +87,14 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
 
         setStockItems(stock => {
             const newBlend = structuredClone(stock);
-            
+
             // Avoid parseFloat for string fields like barcode or clearanceBarcode
             if (field === "clearanceBarcode" || field === "barcode") {
                 newBlend[index][field] = value;
             } else {
                 newBlend[index][field] = parseFloat(value);
             }
-            
+
             return newBlend
         });
 
@@ -136,6 +136,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
             <Modal
                 isOpen={orderToGeneral}
                 widthClass="  h-[94%] w-[90%]"
+                onClose={() => setOrderToGeneral(false)}
             >
                 <OrderToGeneral
                     tempOrderItems={tempOrderItems}
@@ -202,7 +203,9 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                     colSpan={5 + stockDrivenFields.length}
                                     className="bg-gray-300 px-1 py-1 text-right text-[12px]"
                                 >
-                                    Total:
+                                </td>
+                                <td className="bg-gray-300 px-1 py-1 text-right text-[11px] px-2">
+                                    Total :
                                 </td>
                                 <td className="bg-gray-300 px-1 py-1 text-right text-[11px] px-2">
                                     {(stockItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.transferQty || 0), 0).toFixed(2)}

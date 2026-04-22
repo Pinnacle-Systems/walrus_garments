@@ -1,35 +1,56 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
+import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
+import { getYearShortCodeForFinYear } from '../utils/helper.js';
+import { getTableRecordWithId } from '../utils/helperQueries.js';
+
+
+
+async function getNextDocId(branchId, shortCode, startTime, endTime) {
+
+
+    let lastObject = await prisma.Expense.findFirst({
+        where: {
+            branchId: parseInt(branchId),
+            AND: [
+                {
+                    createdAt: {
+                        gte: startTime
+
+                    }
+                },
+                {
+                    createdAt: {
+                        lte: endTime
+                    }
+                }
+            ],
+        },
+        orderBy: {
+            id: 'desc'
+        }
+    });
+    const branchObj = await getTableRecordWithId(branchId, "branch")
+    let newDocId = `${branchObj.branchCode}/${shortCode}/EXP/1`
+    if (lastObject) {
+        newDocId = `${branchObj.branchCode}/${shortCode}/EXP/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+    }
+    return newDocId
+}
 
 async function get(req) {
     const { companyId, active } = req.query
 
-    let data = await prisma.country.findMany({
+    let data = await prisma.Expense.findMany({
         where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
-            active: active ? Boolean(active) : undefined,
+            // companyId: companyId ? parseInt(companyId) : undefined,
+            // active: active ? Boolean(active) : undefined,
         },
-        include: {
-            _count: {
-                select: {
-                    state: true
-                }
-            }
-        }
+
     });
 
 
-    data = data.map((item) => {
-        const types = [];
 
-        if (item._count.state) types.push("State Master");
-
-        return {
-            ...item,
-            referencedIn: types.join(", ")
-
-        };
-    });
 
     return { statusCode: 0, data };
 }
@@ -37,7 +58,7 @@ async function get(req) {
 
 async function getOne(id) {
     const childRecord = await prisma.state.count({ where: { countryId: parseInt(id) } });
-    const data = await prisma.country.findUnique({
+    const data = await prisma.Expense.findUnique({
         where: {
             id: parseInt(id)
         }
@@ -70,12 +91,36 @@ async function getSearch(req) {
     return { statusCode: 0, data: data };
 }
 
+
 async function create(body) {
-    const { name, code, companyId, active } = await body
-    const data = await prisma.country.create(
+    const {
+
+        expenseEntryItems,
+        finYearId,
+        branchId,
+
+    } = await body
+
+    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
+    let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+
+    const data = await prisma.Expense.create(
         {
             data: {
-                name, code, companyId: parseInt(companyId), active
+                docId: docId,
+                ExpenseEntryItems: {
+                    createMany: expenseEntryItems?.length > 0 ? {
+                        data: expenseEntryItems?.map((temp) => {
+                            let newItem = {}
+                            newItem["expenseCategoryId"] = temp["expenseCategoryId"] ? parseInt(temp["expenseCategoryId"]) : null;
+                            newItem["description"] = temp["description"] ? String(temp["description"]) : null;
+                            newItem["amount"] = temp["amount"] ? temp["amount"].toString() : "0";
+                            newItem["referenceNo"] = temp["referenceNo"] ? String(temp["referenceNo"]) : null;
+                            return newItem
+                        })
+                    } : undefined
+                }
             }
         }
     )
@@ -83,27 +128,76 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, code, active } = await body
-    const dataFound = await prisma.country.findUnique({
+    const {
+        expenseEntryItems,
+        finYearId,
+        branchId,
+    } = await body
+
+    const dataFound = await prisma.Expense.findUnique({
         where: {
             id: parseInt(id)
+        },
+        include: {
+            ExpenseEntryItems: true
         }
     })
-    if (!dataFound) return NoRecordFound("Country");
-    const data = await prisma.country.update({
-        where: {
-            id: parseInt(id),
-        },
-        data:
-        {
-            name, code, active
-        },
+    if (!dataFound) return NoRecordFound("Sale Order");
+
+    let oldItemIds = dataFound?.ExpenseEntryItems.map(item => parseInt(item.id))
+    let currentItemIds = expenseEntryItems.filter(i => i?.id)?.map(item => parseInt(item.id))
+    let removedItemIds = oldItemIds.filter(id => !currentItemIds.includes(id));
+
+    let piData;
+
+    await prisma.$transaction(async (tx) => {
+        // Delete removed items
+        if (removedItemIds.length > 0) {
+            await tx.ExpenseEntryItems.deleteMany({
+                where: {
+                    id: { in: removedItemIds }
+                }
+            });
+        }
+
+        // Update main record
+        piData = await tx.Expense.update({
+            where: {
+                id: parseInt(id)
+            },
+            data: {
+
+            },
+        })
+
+        for (const item of (expenseEntryItems || []).filter(i => i.expenseCategoryId)) {
+            if (item.id) {
+                await tx.ExpenseEntryItems.update({
+                    where: { id: parseInt(item.id) },
+                    data: {
+                        expenseCategoryId: item.expenseCategoryId ? parseInt(item.expenseCategoryId) : null,
+                        description: item.description ? String(item.description) : null,
+                        amount: item.amount ? item.amount.toString() : "0",
+                        referenceNo: item.referenceNo ? String(item.referenceNo) : null,
+                    }
+                });
+            } else {
+                await tx.ExpenseEntryItems.create({
+                    data: {
+                        expenseCategoryId: item.expenseCategoryId ? parseInt(item.expenseCategoryId) : null,
+                        description: item.description ? String(item.description) : null,
+                        amount: item.amount ? item.amount.toString() : "0",
+                        referenceNo: item.referenceNo ? String(item.referenceNo) : null,
+                    }
+                });
+            }
+        }
     })
-    return { statusCode: 0, data };
-};
+    return { statusCode: 0, data: piData };
+}
 
 async function remove(id) {
-    const data = await prisma.country.delete({
+    const data = await prisma.Expense.delete({
         where: {
             id: parseInt(id)
         },

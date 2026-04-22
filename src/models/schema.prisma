@@ -2057,6 +2057,7 @@ model Location {
   ToLocation                         StockTransfer[]                      @relation(name: "toLocation")
   MinimumStockQty                    MinimumStockQty[]
   StockAdjustment                    StockAdjustment[]
+  DeliveryChallan                    DeliveryChallan[]
 }
 
 enum ProcessIO {
@@ -4977,23 +4978,15 @@ model Item {
 }
 
 model ItemBarcode {
-  id              Int            @id @default(autoincrement())
-  ItemPriceList   ItemPriceList? @relation(fields: [itemPriceListId], references: [id], onDelete: Cascade)
+  id              Int             @id @default(autoincrement())
+  ItemPriceList   ItemPriceList?  @relation(fields: [itemPriceListId], references: [id], onDelete: Cascade)
   itemPriceListId Int?
-
-  /// actual scannable code
-  barcode String @unique
-
-  /// REGULAR = normal selling barcode
-  /// CLEARANCE = sticker / alternate barcode used for clearance billing
-  barcodeType ItemBarcodeType @default(REGULAR)
-
-  /// optional operational metadata
-  active          Boolean? @default(true)
+  barcode         String          @unique
+  barcodeType     ItemBarcodeType @default(REGULAR)
+  active          Boolean?        @default(true)
   clearanceReason String?
-
-  createdAt DateTime? @default(now())
-  updatedAt DateTime? @updatedAt
+  createdAt       DateTime?       @default(now())
+  updatedAt       DateTime?       @updatedAt
 
   @@index([itemPriceListId, barcodeType])
 }
@@ -5491,45 +5484,56 @@ model Pos {
   roundOff            String?
   taxAmount           String?
   isExchange          Boolean?      @default(false)
+  bilStatus           String?
   OriginalBill        SalesReturn[] @relation("OriginalBill")
   ExchangeNewBill     SalesReturn[] @relation("ExchangeNewBill")
-  PosItems            PosItems[]
-  PosPayments         PosPayments[]
+  PosItems            PosItems[]    @relation("Bill")
+  ReturnBillItems     PosItems[]    @relation("ReturnBill")
+  PosPayments         PosPayments[] @relation("Bill")
+  ReturnBillPayments  PosPayments[] @relation("ReturnBill")
 }
 
 model PosItems {
-  id            Int                @id @default(autoincrement())
-  Pos           Pos?               @relation(fields: [PosId], references: [id], onDelete: Cascade)
-  PosId         Int?
-  Item          Item?              @relation(fields: [itemId], references: [id])
-  itemId        Int?
-  Size          Size?              @relation(fields: [sizeId], references: [id])
-  sizeId        Int?
-  Color         Color?             @relation(fields: [colorId], references: [id])
-  colorId       Int?
-  Uom           UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId         Int?
-  Hsn           Hsn?               @relation(fields: [hsnId], references: [id])
-  hsnId         Int?
-  qty           String?
-  price         String?
-  discountType  String?
-  discountValue String?
-  taxPercent    String?
-  taxMethod     String?
-  priceType     String?
-  Employee      Employee?          @relation(fields: [salesPersonId], references: [id])
-  salesPersonId Int?
+  id             Int                @id @default(autoincrement())
+  Pos            Pos?               @relation("Bill", fields: [PosId], references: [id], onDelete: Cascade)
+  PosId          Int?
+  Item           Item?              @relation(fields: [itemId], references: [id])
+  itemId         Int?
+  Size           Size?              @relation(fields: [sizeId], references: [id])
+  sizeId         Int?
+  Color          Color?             @relation(fields: [colorId], references: [id])
+  colorId        Int?
+  Uom            UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId          Int?
+  Hsn            Hsn?               @relation(fields: [hsnId], references: [id])
+  hsnId          Int?
+  qty            String?
+  price          String?
+  discountType   String?
+  discountValue  String?
+  taxPercent     String?
+  taxMethod      String?
+  priceType      String?
+  Employee       Employee?          @relation(fields: [salesPersonId], references: [id])
+  salesPersonId  Int?
+  isReturn       Boolean?           @default(false)
+  retunBill      Pos?               @relation("ReturnBill", fields: [retunBillId], references: [id], onDelete: Cascade)
+  retunBillId    Int?
+  originalItem   PosItems?          @relation("ReturnItem", fields: [originalItemId], references: [id])
+  originalItemId Int?
+  ReturnItems    PosItems[]         @relation("ReturnItem")
 }
 
 model PosPayments {
   id             Int     @id @default(autoincrement())
-  Pos            Pos?    @relation(fields: [PosId], references: [id], onDelete: Cascade)
+  Pos            Pos?    @relation("Bill", fields: [PosId], references: [id], onDelete: Cascade)
   PosId          Int?
   amount         String?
   paymentMode    String?
   reference_no   String?
   transaction_id String?
+  RetunBill      Pos?    @relation("ReturnBill", fields: [retunBillId], references: [id], onDelete: Cascade)
+  retunBillId    Int?
 }
 
 model Collections {
@@ -5618,17 +5622,20 @@ model OfferTier {
 }
 
 model DeliveryChallan {
-  id          Int       @id @default(autoincrement())
-  docId       String?
-  date        DateTime? @default(now())
-  branchId    Int?
-  customerId  Int?
-  createdAt   DateTime? @default(now())
-  updatedAt   DateTime?
-  createdById Int?
-  updatedById Int?
-  description String?
-
+  id                   Int                    @id @default(autoincrement())
+  docId                String?
+  date                 DateTime?              @default(now())
+  branchId             Int?
+  customerId           Int?
+  createdAt            DateTime?              @default(now())
+  updatedAt            DateTime?
+  createdById          Int?
+  updatedById          Int?
+  description          String?
+  challanType          String?
+  platform             String?
+  Location             Location?              @relation(fields: [storeId], references: [id])
+  storeId              Int?
   Branch               Branch?                @relation(fields: [branchId], references: [id])
   Party                Party?                 @relation(fields: [customerId], references: [id])
   createdBy            User?                  @relation("CreatedBy", fields: [createdById], references: [id])
@@ -5660,33 +5667,39 @@ model DeliveryChallanItems {
 }
 
 model ExpenseCategory {
-  id        Int       @id @default(autoincrement())
-  name      String
-  createdAt DateTime? @default(now())
-  updatedAt DateTime? @updatedAt
-  Expenses  Expense[]
+  id                Int                 @id @default(autoincrement())
+  name              String
+  createdAt         DateTime?           @default(now())
+  updatedAt         DateTime?           @updatedAt
+  active            Boolean?            @default(false)
+  ExpenseEntryItems ExpenseEntryItems[]
 }
 
 model Expense {
-  id                Int              @id @default(autoincrement())
+  id                Int                 @id @default(autoincrement())
   docId             String?
   date              DateTime?
-  Branch            Branch?          @relation(fields: [branchId], references: [id])
+  Branch            Branch?             @relation(fields: [branchId], references: [id])
   branchId          Int?
+  salesReturnId     Int?
+  SalesReturn       SalesReturn?        @relation(fields: [salesReturnId], references: [id])
+  createdAt         DateTime?           @default(now())
+  updatedAt         DateTime?           @updatedAt
+  createdBy         User?               @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         User?               @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  ExpenseEntryItems ExpenseEntryItems[]
+}
+
+model ExpenseEntryItems {
+  id                Int              @id @default(autoincrement())
+  expenseId         Int?
+  Expense           Expense?         @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  description       String?
   ExpenseCategory   ExpenseCategory? @relation(fields: [expenseCategoryId], references: [id])
   expenseCategoryId Int?
   amount            String?
-  description       String?
   paymentMethod     String?
   referenceNo       String?
-
-  salesReturnId Int?
-  SalesReturn   SalesReturn? @relation(fields: [salesReturnId], references: [id])
-
-  createdAt   DateTime? @default(now())
-  updatedAt   DateTime? @updatedAt
-  createdBy   User?     @relation("createdBy", fields: [createdById], references: [id])
-  createdById Int?
-  updatedBy   User?     @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById Int?
 }

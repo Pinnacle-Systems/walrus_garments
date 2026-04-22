@@ -62,9 +62,7 @@ const CommonFormFooter = ({
   rightActions = null,
   remarksPlaceholder = "Additional notes...",
   termsPlaceholder = "Select or type Terms & Conditions...",
-  saveCloseButtonRef,
-  showTerms = true,
-  showRemarks = true
+  saveCloseButtonRef
 }) => {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -72,36 +70,16 @@ const CommonFormFooter = ({
   const templateOptionsRefs = React.useRef([]);
 
   const resolvedTotalsRows =
-    Array.isArray(totalsRows)
+    totalsRows && totalsRows.length > 0
       ? totalsRows
       : defaultTotalsRows({ totalQty, subtotal, taxAmount, netAmount });
   const leftSummaryRows = resolvedTotalsRows.filter((row) => resolveSummaryColumn(row) === "left");
   const rightSummaryRows = resolvedTotalsRows.filter((row) => resolveSummaryColumn(row) === "right");
 
   const showTemplateControl = showTermSelect && !readOnly;
-
-  // Calculate dynamic column spans based on visibility
-  let termsSpan = 4;
-  let remarksSpan = 2;
-  let totalsSpan = 12;
-
-  if (showTerms && showRemarks) {
-    termsSpan = 4;
-    remarksSpan = 2;
-    totalsSpan = 6;
-  } else if (showTerms) {
-    termsSpan = 8;
-    totalsSpan = 4;
-  } else if (showRemarks) {
-    remarksSpan = 4;
-    totalsSpan = 8;
-  } else {
-    totalsSpan = 12;
-  }
-
-  const termsColumnClassName = `md:col-span-${termsSpan}`;
-  const remarksColumnClassName = `md:col-span-${remarksSpan}`;
-  const totalsColumnClassName = `md:col-span-${totalsSpan}`;
+  const termsColumnClassName = "md:col-span-4";
+  const remarksColumnClassName = "md:col-span-2";
+  const totalsColumnClassName = "md:col-span-6";
   const visibleChargeOptions = chargeOptions.filter((option) => {
     if (!option) {
       return false;
@@ -334,68 +312,58 @@ const CommonFormFooter = ({
       </Modal>
 
       <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
-        {showTerms && (
-          <div className={`flex h-full flex-col rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${termsColumnClassName}`}>
-            <div className="flex h-full flex-col gap-1">
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <h2 className="text-[12px] font-bold text-slate-700">Terms & Conditions</h2>
-                {showTemplateControl ? (
-                  <button
-                    ref={saveCloseButtonRef}
-                    onKeyDown={(e) => {
-                      if (e.key == "Enter") {
-                        e.preventDefault();
-                        setIsTemplateModalOpen(true);
-                      }
-                    }}
-                    type="button"
-                    className="shrink-0 text-[10px] font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
-                    onClick={() => setIsTemplateModalOpen(true)}
-                  >
-                    Apply template
-                  </button>
-                ) : null}
-              </div>
-              <textarea
-                ref={termsTextareaRef}
-                disabled={readOnly}
-                className="min-h-[3.5rem] flex-1 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-                value={terms || ""}
-                onChange={(e) => setTerms(e.target.value)}
-                placeholder={termsPlaceholder}
-              />
+        <div className={`flex h-full flex-col rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${termsColumnClassName}`}>
+          <div className="flex h-full flex-col gap-1">
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <h2 className="text-[12px] font-bold text-slate-700">Terms & Conditions</h2>
+              {showTemplateControl ? (
+                <button
+                  ref={saveCloseButtonRef}
+                  onKeyDown={(e) => {
+                    if (e.key == "Enter") {
+                      e.preventDefault();
+                      setIsTemplateModalOpen(true);
+                    }
+                  }}
+                  type="button"
+                  className="shrink-0 text-[10px] font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                  onClick={() => setIsTemplateModalOpen(true)}
+                >
+                  Apply template
+                </button>
+              ) : null}
             </div>
-          </div>
-        )}
-
-        {showRemarks && (
-          <div className={`flex h-full flex-col rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${remarksColumnClassName}`}>
-            <h2 className="mb-1 text-[12px] font-bold text-slate-700">Remarks</h2>
             <textarea
-              readOnly={readOnly}
-              value={remarks || ""}
-              onChange={(e) => setRemarks(e.target.value)}
+              ref={termsTextareaRef}
+              disabled={readOnly}
               className="min-h-[3.5rem] flex-1 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-              placeholder={remarksPlaceholder}
+              value={terms || ""}
+              onChange={(e) => setTerms(e.target.value)}
+              placeholder={termsPlaceholder}
             />
           </div>
-        )}
+        </div>
 
-        <div className={totalsColumnClassName}>
-          <div className={`grid gap-2 ${leftSummaryRows.length > 0 || visibleChargeOptions.length > 0 || (extraTotalsContent && extraTotalsContentColumn === "left") ? (rightSummaryRows.length > 0 || (extraTotalsContent && extraTotalsContentColumn === "right") ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1") : "grid-cols-1"}`}>
-            {(leftSummaryRows.length > 0 || visibleChargeOptions.length > 0 || (extraTotalsContent && extraTotalsContentColumn === "left")) && (
-              <div className="rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                {renderSummaryRows(leftSummaryRows)}
-                {renderChargeOptions()}
-                {extraTotalsContent && extraTotalsContentColumn === "left" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
-              </div>
-            )}
-            {(rightSummaryRows.length > 0 || (extraTotalsContent && extraTotalsContentColumn === "right")) && (
-              <div className="rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                {renderSummaryRows(rightSummaryRows)}
-                {extraTotalsContent && extraTotalsContentColumn === "right" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
-              </div>
-            )}
+        <div className={`flex h-full flex-col rounded-md border border-slate-200 bg-white p-1.5 shadow-sm ${remarksColumnClassName}`}>
+          <h2 className="mb-1 text-[12px] font-bold text-slate-700">Remarks</h2>
+          <textarea
+            readOnly={readOnly}
+            value={remarks || ""}
+            onChange={(e) => setRemarks(e.target.value)}
+            className="min-h-[3.5rem] flex-1 w-full overflow-auto rounded-md border border-slate-300 px-2 py-1.5 text-[11px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+            placeholder={remarksPlaceholder}
+          />
+        </div>
+
+        <div className={`grid grid-cols-1 gap-2 md:grid-cols-2 ${totalsColumnClassName}`}>
+          <div className="rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            {renderSummaryRows(leftSummaryRows)}
+            {renderChargeOptions()}
+            {extraTotalsContent && extraTotalsContentColumn === "left" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
+          </div>
+          <div className="rounded-md border border-slate-200 bg-white px-3 py-2 shadow-sm">
+            {renderSummaryRows(rightSummaryRows)}
+            {extraTotalsContent && extraTotalsContentColumn === "right" ? <div className="pt-0.5">{extraTotalsContent}</div> : null}
           </div>
         </div>
       </div>

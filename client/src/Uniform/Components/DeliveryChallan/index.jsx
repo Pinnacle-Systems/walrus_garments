@@ -15,11 +15,12 @@ import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterS
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import DeliveryChallanForm from './DeliveryChallanForm';
-import DeliveryChallanReport from './DeliveryChallanReport';
 import { useDeleteSalesInvoiceMutation } from '../../../redux/uniformService/salesInvoiceServices';
 import { useGetsaleOrderByIdQuery } from '../../../redux/uniformService/saleOrderServices';
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
+import DeliveryChallanReport from './DeliveryChallanReport';
+import { useDeleteDeliveryChallanMutation } from '../../../redux/services/DeliveryChallanService';
 
 
 
@@ -83,7 +84,7 @@ const DeliveryChallan = () => {
     const { data: supplierList } = useGetPartyQuery({ params: { ...params } });
 
 
-    const [removeData] = useDeleteSalesInvoiceMutation();
+    const [removeData] = useDeleteDeliveryChallanMutation();
     const [invalidateTagsDispatch] = useInvalidateTags();
 
 

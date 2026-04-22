@@ -457,25 +457,14 @@ const QuotationItems = ({
 
                                         className={`${compactHeaderCellClassName} w-16`}
                                     >
-                                        {/* <div className="flex flex-col items-center gap-1.5 py-1 leading-none">
-                                            <span className="uppercase ">Price</span>
-                                            <select
-                                                className="w-full text-[10px] bg-white border border-slate-200 rounded px-1 py-1 outline-none focus:ring-1 focus:ring-indigo-400 font-bold text-indigo-700 cursor-pointer shadow-sm mx-auto max-w-[120px]"
-                                                value={taxMethod}
-                                                onChange={(e) => setTaxMethod(e.target.value)}
-                                            // disabled={readOnly}
-                                            >
-                                                <option value="WithoutTax">Without Tax</option>
-                                                <option value="WithTax">With Tax</option>
-                                            </select>
-                                        </div> */}
+
                                         Price
                                     </th>
                                     <th
 
-                                        className={`${compactHeaderCellClassName} w-16`}
+                                        className={`${compactHeaderCellClassName} w-20`}
                                     >
-                                        Price Type
+                                        Barcode  Type
                                     </th>
                                     <th
 
@@ -527,6 +516,10 @@ const QuotationItems = ({
                                 {(quoteItems ? quoteItems : [])?.map((row, index) => {
 
                                     const { subTotal, taxTotal, total } = getLineTotals(row, taxMethod);
+                                    const selectedItemData = itemList?.data?.find(i => i.id === row.itemId);
+                                    const isLegacy = row.itemId ? selectedItemData?.isLegacy : true;
+                                    const priceList = selectedItemData?.ItemPriceList || [];
+                                    const availableBarcodes = selectedItemData?.ItemPriceList?.[0]?.ItemBarcodes || [];
 
 
                                     if (row?.itemId) {
@@ -608,25 +601,7 @@ const QuotationItems = ({
 
                                             {showColor && (
                                                 <td className={compactFocusCellClassName}>
-                                                    {/* <select
-                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                                    className={compactSelectClassName} value={row.colorId}
-                                                    onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
-                                                    onBlur={(e) => {
-                                                        handleInputChange((e.target.value), index, "colorId")
-                                                    }
-                                                    }
-                                                    disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
 
-                                                >
-                                                    <option hidden>
-                                                    </option>
-                                                    {getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((blend) =>
-                                                        <option value={blend.id} key={blend.id}>
-                                                            {blend?.name}
-                                                        </option>
-                                                    )}
-                                                </select> */}
 
                                                     <SearchableTableCellSelect
                                                         value={row.colorId}
@@ -741,12 +716,36 @@ const QuotationItems = ({
 
 
                                             </td>
-                                            <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
+                                            {/* <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
                                                 row.priceType === "offerPrice" ? "bg-indigo-100 text-indigo-800 border border-indigo-200" : row.priceType === "SalesPrice" ? "bg-blue-100 text-blue-800 border border-blue-200"
                                                     : ""
                                                 }`}>
                                                 {row.priceType}
 
+                                            </td> */}
+
+                                            <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none`}>
+
+                                                <select
+                                                    disabled={readOnly || !row.itemId}
+                                                    className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 shadow-none outline-none focus:bg-transparent focus:outline-none"
+                                                    value={row.barcodeType}
+                                                    onChange={(e) => updateRow(idx, "barcodeType", e.target.value)}
+                                                // disabled={}
+                                                >
+                                                    {availableBarcodes.length > 0 ? (
+                                                        availableBarcodes.map((b) => (
+                                                            <option key={b.barcodeType} value={b.barcodeType}>
+                                                                {b.barcode}
+                                                            </option>
+                                                        ))
+                                                    ) : (
+                                                        <>
+                                                            <option value="REGULAR">REGULAR</option>
+                                                            <option value="CLEARANCE">CLEARANCE</option>
+                                                        </>
+                                                    )}
+                                                </select>
                                             </td>
 
                                             <td className={`${compactFocusCellClassName} w-40 text-right`}>

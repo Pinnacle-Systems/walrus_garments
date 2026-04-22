@@ -381,7 +381,7 @@ const OffersPromotions = () => {
                             <TextInputNew1 ref={nameRef} name="Offer Name" value={name} setValue={setName} readOnly={readOnly} required />
                             <TextInputNew1 name="Code" value={code} setValue={setCode} readOnly={readOnly} required />
                             <DropdownInputNew name="Offer Type" options={OFFER_TYPES} value={benefitType} setValue={setBenefitType} readOnly={readOnly} />
-                            <TextInputNew1 name="Priority" type="number" value={priority} setValue={setPriority} readOnly={readOnly} />
+                            {/* <TextInputNew1 name="Priority" type="number" value={priority} setValue={setPriority} readOnly={readOnly} /> */}
                         </div>
                     </div>
 
@@ -391,7 +391,10 @@ const OffersPromotions = () => {
                             <TextInputNew1 name="Starts From" type="date" value={validFrom} setValue={setValidFrom} readOnly={readOnly} required />
                             <div className="space-y-1">
                                 <TextInputNew1 name="Ends At" type="date" value={validTo} setValue={setValidTo} readOnly={readOnly || noEndDate} disabled={noEndDate} />
-                                <label className="flex items-center gap-2 cursor-pointer mt-1 pl-1">
+
+                            </div>
+                            <div>
+                                <label className="flex items-center gap-2 cursor-pointer mt-4 pl-1">
                                     <input type="checkbox" checked={noEndDate} onChange={(e) => setNoEndDate(e.target.checked)} disabled={readOnly} className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Running Forever</span>
                                 </label>
@@ -399,9 +402,9 @@ const OffersPromotions = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm mt-auto">
+                    <div className="bg-white p-2 rounded-md border border-gray-200 h-full shadow-sm mt-auto">
                         <h3 className="font-bold text-gray-800 mb-1.5 text-[10px] uppercase tracking-wider opacity-60">Status</h3>
-                        <ToggleButton name="Is Active" value={status === 'Active'} setActive={(v) => setStatus(v ? 'Active' : 'Inactive')} readOnly={readOnly} />
+                        <ToggleButton value={status === 'Active'} setActive={(v) => setStatus(v ? 'Active' : 'Inactive')} readOnly={readOnly} />
 
                     </div>
                 </div>
@@ -592,7 +595,7 @@ const OffersPromotions = () => {
 
                 {/* COL 3: REWARD & CONFLICTS (3 Units) */}
                 <div className="lg:col-span-3 flex flex-col h-full min-h-0 space-y-2 overflow-hidden">
-                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[58vh]">
+                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[80vh]">
                         <div className="flex justify-between items-center mb-1.5">
                             <h3 className="font-bold text-gray-800 text-[11px] uppercase tracking-wider opacity-60">Reward Benefit</h3>
                             {!readOnly && (
@@ -628,7 +631,7 @@ const OffersPromotions = () => {
                                         <TextInputNew1 name="Discount %" type="number" value={benefitPercentage} setValue={setBenefitPercentage} readOnly={readOnly} />
                                         <TextInputNew1 name="Max Cap (₹)" type="number" value={benefitMaxDiscount} setValue={setBenefitMaxDiscount} readOnly={readOnly} />
                                     </div>
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <label className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Applicable On</label>
                                         <div className="flex flex-col gap-1.5">
                                             {['Each line', 'Entire document', 'Cheapest item'].map(opt => (
@@ -638,13 +641,13 @@ const OffersPromotions = () => {
                                                 </button>
                                             ))}
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             )}
                             {benefitType === 'Fixed' && (
                                 <div className="space-y-2 overflow-y-auto">
                                     <TextInputNew1 name="Flat Amount Off (₹)" type="number" value={benefitAmount} setValue={setBenefitAmount} readOnly={readOnly} />
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <label className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Applicable On</label>
                                         <div className="grid grid-cols-1 gap-1.5">
                                             {['Entire document', 'Each line'].map(opt => (
@@ -654,7 +657,7 @@ const OffersPromotions = () => {
                                                 </button>
                                             ))}
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             )}
                             {['Volume', 'Override'].includes(benefitType) && (
