@@ -21,13 +21,20 @@ export function validateLegacyPriceRowShape(itemPriceList = []) {
         throw Error("Legacy items cannot store size or color pricing rows.");
     }
 
-    const normalizedBarcode = normalizeLegacyBarcode(legacyRow?.barcode);
-    if (!normalizedBarcode) {
+    const barcodeFromRow = normalizeLegacyBarcode(legacyRow?.barcode);
+    const barcodesFromItems = (legacyRow?.ItemBarcodes || [])
+        .map(b => normalizeLegacyBarcode(b.barcode))
+        .filter(Boolean);
+
+    const firstBarcode = barcodeFromRow || barcodesFromItems[0];
+
+    if (!firstBarcode) {
         throw Error("Legacy items require a barcode on the single price row.");
     }
 
     return {
-        normalizedBarcode,
+        normalizedBarcode: firstBarcode,
+        allBarcodes: [...new Set([barcodeFromRow, ...barcodesFromItems].filter(Boolean))],
         legacyRow,
     };
 }
@@ -36,19 +43,28 @@ function getOpeningStockRowBarcode(item = {}) {
     return item?.barcode_no ? String(item.barcode_no).trim() : item?.barcode ? String(item.barcode).trim() : "";
 }
 
-export function resolveOpeningStockLegacyItems(stockItems = [], items = []) {
+export function resolveOpeningStockLegacyItems(stockItems = [], items = [], options = {}) {
+    const { storeName } = options;
+    const isDiscountSection = storeName === "DISCOUNT SECTION";
+
     const itemMap = new Map(items.map((item) => [item.id, item]));
     const barcodeMap = new Map();
 
     items.forEach((item) => {
-        const normalizedBarcode = normalizeLegacyBarcode(item?.ItemPriceList?.[0]?.barcode);
-        if (!normalizedBarcode) {
-            return;
-        }
+        // Look at all barcodes associated with the single legacy variant row
+        const barcodes = item?.ItemPriceList?.[0]?.ItemBarcodes || [];
+        barcodes.forEach(b => {
+            // We resolve by any active barcode to identify the item, 
+            // refined validation happens in the next step.
+            if (b.active === false) return;
 
-        const existingItems = barcodeMap.get(normalizedBarcode) || [];
-        existingItems.push(item);
-        barcodeMap.set(normalizedBarcode, existingItems);
+            const normalizedBarcode = normalizeLegacyBarcode(b.barcode);
+            if (!normalizedBarcode) return;
+
+            const existingItems = barcodeMap.get(normalizedBarcode) || [];
+            existingItems.push(item);
+            barcodeMap.set(normalizedBarcode, existingItems);
+        });
     });
 
     return stockItems.map((item, index) => {
@@ -78,7 +94,12 @@ export function resolveOpeningStockLegacyItems(stockItems = [], items = []) {
     });
 }
 
-export function validateResolvedOpeningStockLegacyItems(stockItems = [], itemMap = new Map()) {
+export function validateResolvedOpeningStockLegacyItems(stockItems = [], itemMap = new Map(), options = {}) {
+    const { storeName } = options;
+    const isDiscountSection = storeName === "DISCOUNT SECTION";
+    const targetType = isDiscountSection ? "CLEARANCE" : "REGULAR";
+    const forbiddenType = isDiscountSection ? "REGULAR" : "CLEARANCE";
+
     stockItems.forEach((item, index) => {
         const itemId = item?.itemId ? parseInt(item.itemId) : undefined;
         if (!itemId) {
@@ -108,14 +129,24 @@ export function validateResolvedOpeningStockLegacyItems(stockItems = [], itemMap
         }
 
         const rowBarcode = getOpeningStockRowBarcode(item);
-        const legacyBarcode = legacyPriceRow?.barcode ? String(legacyPriceRow.barcode).trim() : "";
-
         if (!rowBarcode) {
             throw Error(`Opening stock row ${index + 1} must include a barcode.`);
         }
 
-        if (!legacyBarcode || legacyBarcode !== rowBarcode) {
-            throw Error(`Opening stock row ${index + 1} barcode does not match legacy item ${existingItem.name}.`);
+        const barcodeRecords = (legacyPriceRow?.ItemBarcodes || []);
+        const targetBarcode = barcodeRecords.find(b => b.barcodeType === targetType && String(b.barcode).trim() === rowBarcode);
+        const forbiddenBarcode = barcodeRecords.find(b => b.barcodeType === forbiddenType && String(b.barcode).trim() === rowBarcode);
+
+        if (forbiddenBarcode) {
+            const typeLabel = isDiscountSection ? "Regular" : "Clearance";
+            const targetLabel = isDiscountSection ? "Clearance" : "Regular";
+            throw Error(`Opening stock row ${index + 1} barcode ${rowBarcode} is a ${typeLabel} barcode for item ${existingItem.name}. Cannot use it as a ${targetLabel} barcode.`);
+        }
+
+        // Note: Global uniqueness and auto-creation of missing target-type barcodes 
+        // are handled in the service layer before this validation is called.
+        if (!targetBarcode) {
+            throw Error(`Opening stock row ${index + 1} barcode ${rowBarcode} does not match the item's existing ${targetType} barcodes. The system should have created it if it were valid.`);
         }
     });
 }
@@ -162,7 +193,7 @@ export function buildBarcodeSnapshotMatches(records = []) {
         snapshot.stockQty += record.qty || 0;
     });
 
-    console.log(Array.from(snapshotMap.values()), "snapshotMap")
+    // console.log(Array.from(snapshotMap.values()), "snapshotMap")
     // return Array.from(snapshotMap.values());
     return Array.from(snapshotMap.values()).filter(
         (item) => item.stockQty > 0

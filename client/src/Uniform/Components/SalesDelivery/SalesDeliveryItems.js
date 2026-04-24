@@ -257,9 +257,9 @@ const SalesDeliveryItems = ({
                                     <th className={`${compactHeaderCellClassName} w-12`}>UOM</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Quantity</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Price</th>
-                                    <th className={`${compactHeaderCellClassName} w-16`}>Price Type</th>
-                                    <th className={`${compactHeaderCellClassName} w-16`}>Discount Type</th>
-                                    <th className={`${compactHeaderCellClassName} w-16`}>Discount</th>
+                                    {/* <th className={`${compactHeaderCellClassName} w-16`}>Price Type</th> */}
+                                    {/* <th className={`${compactHeaderCellClassName} w-16`}>Discount Type</th>
+                                    <th className={`${compactHeaderCellClassName} w-16`}>Discount</th> */}
                                     <th className={`${compactHeaderCellClassName} w-20`}>Tax Type</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Tax %</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Net Amount</th>
@@ -385,7 +385,6 @@ const SalesDeliveryItems = ({
                                                 />
                                             </td>
 
-                                            {/* Price */}
                                             <td className={`${compactFocusCellClassName} w-40 text-right relative`}>
                                                 <input
                                                     onKeyDown={e => {
@@ -403,14 +402,13 @@ const SalesDeliveryItems = ({
                                             </td>
 
                                             {/* Price Type Badge */}
-                                            <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
+                                            {/* <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
                                                 row.priceType === "offerPrice" ? "bg-indigo-100 text-indigo-800 border border-indigo-200" :
                                                     row.priceType === "SalesPrice" ? "bg-blue-100 text-blue-800 border border-blue-200" : ""}`}>
                                                 {row.priceType}
-                                            </td>
+                                            </td> */}
 
-                                            {/* Discount Type */}
-                                            <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                                            {/* <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                                 <select
                                                     className={compactDropdownClassName}
                                                     value={row.discountType}
@@ -423,7 +421,6 @@ const SalesDeliveryItems = ({
                                                 </select>
                                             </td>
 
-                                            {/* Discount Value */}
                                             <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                                 <input
                                                     onKeyDown={e => {
@@ -438,7 +435,8 @@ const SalesDeliveryItems = ({
                                                     onChange={e => handleInputChange(e.target.value, index, "discountValue")}
                                                     onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "discountValue")}
                                                 />
-                                            </td>
+                                            </td> 
+                                            */}
 
                                             {/* Tax Method */}
                                             <td className={compactFocusCellClassName}>

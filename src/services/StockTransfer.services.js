@@ -459,23 +459,28 @@ async function createLocationTransferStock(
     fromStoreId,
     toStoreId,
     item,
-    transactionId
+    transactionId,
+    isDiscountSection
 ) {
+    const regularBarcode = item?.barcode ? String(item.barcode) : null;
+    const targetBarcode = (isDiscountSection && item?.clearanceBarcode)
+        ? String(item.clearanceBarcode)
+        : regularBarcode;
+
     const baseData = {
         transactionId: transactionId ? Number(transactionId) : null,
         itemId: item?.itemId ? Number(item.itemId) : null,
         sizeId: item?.sizeId ? Number(item.sizeId) : null,
         colorId: item?.colorId ? Number(item.colorId) : null,
         uomId: item?.uomId ? Number(item.uomId) : null,
-        barcode: item?.barcode ? String(item.barcode) : null,
         branchId: branchId ? Number(branchId) : null,
-        price: item?.discountPrice ? String(item?.discountPrice) : undefined,
         transactionId: transactionId ? transactionId : null,
         ...pickStockRuntimeFieldValues(item),
     };
 
     const fromStockData = {
         ...baseData,
+        barcode: regularBarcode,
         inOrOut: "FromLocationTransferItems",
         storeId: fromStoreId ? Number(fromStoreId) : null,
         price: item?.price ? Number(item.price) : 0,
@@ -484,6 +489,7 @@ async function createLocationTransferStock(
 
     const toStockData = {
         ...baseData,
+        barcode: targetBarcode,
         inOrOut: "ToLocationTransferItems",
         storeId: toStoreId ? Number(toStoreId) : null,
         price:
@@ -511,8 +517,49 @@ async function createStocktransferItems(
 ) {
 
     if (stockItems?.length) {
+        const toLocation = await tx.location.findUnique({ where: { id: parseInt(toLocationId) } });
+        const isDiscountSection = toLocation?.storeName === "DISCOUNT SECTION";
+
         const results = await Promise.all(
             stockItems.map(async (item) => {
+                // Determine the correct barcode for the StockTransfer record
+                let transferItemBarcode = item?.barcode ? String(item?.barcode) : undefined;
+
+                if (isDiscountSection && item.clearanceBarcode) {
+                    const itemRecord = await tx.item.findUnique({ where: { id: parseInt(item.itemId) } });
+                    const isLegacy = itemRecord?.isLegacy;
+
+                    const priceListEntry = await tx.itemPriceList.findFirst({
+                        where: {
+                            itemId: parseInt(item.itemId),
+                            sizeId: isLegacy ? null : (item.sizeId ? parseInt(item.sizeId) : null),
+                            colorId: isLegacy ? null : (item.colorId ? parseInt(item.colorId) : null),
+                        }
+                    });
+
+                    if (priceListEntry) {
+                        const existingBarcode = await tx.itemBarcode.findFirst({
+                            where: {
+                                itemPriceListId: priceListEntry.id,
+                                barcode: String(item.clearanceBarcode).trim(),
+                                active: true
+                            }
+                        });
+
+                        if (!existingBarcode) {
+                            await tx.itemBarcode.create({
+                                data: {
+                                    itemPriceListId: priceListEntry.id,
+                                    barcode: String(item.clearanceBarcode).trim(),
+                                    barcodeType: "CLEARANCE",
+                                    active: true
+                                }
+                            });
+                        }
+                        // Use clearance barcode for the transfer record when destination is discount
+                        transferItemBarcode = String(item.clearanceBarcode).trim();
+                    }
+                }
 
                 const created = await tx.FromLocationTransferItems.create({
                     data: {
@@ -522,15 +569,14 @@ async function createStocktransferItems(
                         colorId: item?.colorId ? parseInt(item.colorId) : undefined,
                         transferQty: item?.transferQty ? parseFloat(item.transferQty) : undefined,
                         stockQty: item?.orderDetailsId ? parseFloat(item.stockQty) : undefined,
-                        barcode: item?.barcode ? String(item?.barcode) : undefined,
+                        barcode: transferItemBarcode,
                         discountPrice: item?.discountPrice ? String(item?.discountPrice) : undefined,
 
                     },
                 });
 
 
-                await createLocationTransferStock(tx, branchId, fromLocationId, toLocationId, item, created.id)
-
+                await createLocationTransferStock(tx, branchId, fromLocationId, toLocationId, item, created.id, isDiscountSection)
 
                 return created;
             })
@@ -538,11 +584,12 @@ async function createStocktransferItems(
 
     }
 
-
-
-
-
 }
+
+
+
+
+
 
 
 
@@ -563,50 +610,46 @@ async function create(req) {
 
     let data;
     await prisma.$transaction(async (tx) => {
-        // Validation for DISCOUNT SECTION
+        // Validation for DISCOUNT SECTION (Offer Check)
         const toLocation = await tx.location.findUnique({ where: { id: parseInt(toLocationId) } });
         if (toLocation?.storeName === "DISCOUNT SECTION") {
             for (const item of stockItems) {
                 if (!item.itemId) continue;
 
-                // 1. Check stock in From Location (must match transferQty)
-                const currentStock = await tx.stock.aggregate({
+                // Check for active clearance offer (Item, Collection or Global)
+                const itemCollections = await tx.collectionItems.findMany({
+                    where: { itemId: parseInt(item.itemId) },
+                    select: { collectionId: true }
+                });
+                const collectionIds = itemCollections.map(c => c.collectionId).filter(Boolean);
+
+                const offerCount = await tx.offer.count({
                     where: {
-                        itemId: parseInt(item.itemId),
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        storeId: parseInt(fromLocationId),
-                        ...buildStockRuntimeFieldWhere(item)
-                    },
-                    _sum: { qty: true }
+                        active: true,
+                        applyToClearance: true,
+                        OR: [
+                            { scopeMode: 'Global' },
+                            {
+                                OfferScope: {
+                                    some: {
+                                        OR: [
+                                            { type: { in: ['item', 'Item'] }, refId: parseInt(item.itemId) },
+                                            { type: { in: ['collection', 'Collection'] }, refId: { in: collectionIds } }
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
+                    }
                 });
 
-                const availableQty = parseFloat(currentStock._sum.qty || 0);
-                const transferQty = parseFloat(item.transferQty || 0);
-
-                if (availableQty.toFixed(3) !== transferQty.toFixed(3)) {
-                    throw new Error(`Item ID ${item.itemId} must be transferred fully (${availableQty}) to DISCOUNT SECTION.`);
-                }
-
-                // 2. Check stock in OTHER locations (must be 0)
-                const otherStock = await tx.stock.aggregate({
-                    where: {
-                        itemId: parseInt(item.itemId),
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        storeId: { not: parseInt(fromLocationId) },
-                        ...buildStockRuntimeFieldWhere(item)
-                    },
-                    _sum: { qty: true }
-                });
-
-                console.log(otherStock, "otherStock")
-
-                if (parseFloat(otherStock._sum.qty || 0) > 0) {
-                    throw new Error(`Item ID ${item.itemId} has stock (${parseFloat(otherStock._sum.qty).toFixed(3)}) in other locations. Clear that stock first.`);
+                if (offerCount === 0) {
+                    const itemObj = await tx.item.findUnique({ where: { id: parseInt(item.itemId) }, select: { name: true } });
+                    throw new Error(`Item "${itemObj?.name || item.itemId}" does not have an active clearance offer. Cannot transfer to DISCOUNT SECTION.`);
                 }
             }
         }
+
 
         data = await tx.StockTransfer.create({
             data: {
@@ -740,6 +783,38 @@ const update = async (id, body) => {
         if (toLocation?.storeName === "DISCOUNT SECTION") {
             for (const item of stockItems) {
                 if (!item.itemId) continue;
+
+                // Check for active clearance offer (Item, Collection or Global)
+                const itemCollections = await tx.collectionItems.findMany({
+                    where: { itemId: parseInt(item.itemId) },
+                    select: { collectionId: true }
+                });
+                const collectionIds = itemCollections.map(c => c.collectionId).filter(Boolean);
+
+                const offerCount = await tx.offer.count({
+                    where: {
+                        active: true,
+                        applyToClearance: true,
+                        OR: [
+                            { scopeMode: 'Global' },
+                            {
+                                OfferScope: {
+                                    some: {
+                                        OR: [
+                                            { type: { in: ['item', 'Item'] }, refId: parseInt(item.itemId) },
+                                            { type: { in: ['collection', 'Collection'] }, refId: { in: collectionIds } }
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                });
+
+                if (offerCount === 0) {
+                    const itemObj = await tx.item.findUnique({ where: { id: parseInt(item.itemId) }, select: { name: true } });
+                    throw new Error(`Item "${itemObj?.name || item.itemId}" does not have an active clearance offer. Cannot transfer to DISCOUNT SECTION.`);
+                }
 
                 // 1. Check stock in From Location
                 const currentStock = await tx.stock.aggregate({

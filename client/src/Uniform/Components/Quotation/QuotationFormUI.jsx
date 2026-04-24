@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInput } from "../../../Inputs";
@@ -21,13 +21,16 @@ import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintForm
 import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintFormat";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import CommonFormFooter from "../ReusableComponents/CommonFormFooter";
-import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTemplateService";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
+import { useGetoffersPromotionsQuery } from "../../../redux/uniformService/Offer&PromotionsService";
+import ItemOfferModal from "../PointOfSale/components/ItemOfferModal";
+import { calculateCartWithOffers, getPotentialOffers } from "../../../Utils/offerEngine";
+import { useGetcollectionsQuery } from "../../../redux/uniformService/CollectionsService";
 
 
 
@@ -65,6 +68,9 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const [printOpen, setPrintOpen] = useState(false);
   const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
   const [isHeaderOpen, setIsHeaderOpen] = useState(true);
+  const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
+  const [showItemOfferModal, setShowItemOfferModal] = useState(false);
+  const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
 
 
 
@@ -108,10 +114,13 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: hsnList } = useGetHsnMasterQuery({ params });
   const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
-  const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
   const { data: itemControlPanel } = useGetItemControlPanelMasterQuery({ params });
+  const { data: offersData } = useGetoffersPromotionsQuery({ params: { ...params, active: true } });
+  const activeOffers = offersData?.data || [];
 
-
+  const { data: collectionsData } = useGetcollectionsQuery({
+    params: { branchId, userId, finYearId, active: true }
+  })
   const {
     data: singleData,
     isFetching: isSingleFetching,
@@ -176,6 +185,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       setMinimumAdvancePayment("");
       setIsMinimumAdvanceManuallyEdited(false);
     }
+    setSelectedOffersByRow(data?.selectedOffersByRow || {});
 
   }, [id]);
 
@@ -212,7 +222,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
     shippingChargeEnabled,
     shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
-    taxMethod
+    taxMethod,
+    selectedOffersByRow
   }
 
   console.log(data, "data")
@@ -366,13 +377,18 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     }
   }
 
+  const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, quoteItems || []), [activeOffers, quoteItems]);
+  const { cartWithOffers: quoteItemsWithOffers } = useMemo(() => calculateCartWithOffers(quoteItems || [], selectedOffersByRow, potentialOffers, activeOffers), [quoteItems, selectedOffersByRow, potentialOffers, activeOffers]);
+
+  const totalOfferDiscount = quoteItemsWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
+
   function getTotalQty() {
-    let qty = quoteItems?.reduce((acc, curr) => { return acc + parseFloat(curr?.qty ? curr?.qty : 0) }, 0)
+    let qty = quoteItemsWithOffers?.reduce((acc, curr) => { return acc + parseFloat(curr?.qty ? curr?.qty : 0) }, 0)
     return parseFloat(qty || 0).toFixed(3)
   }
   const calculateTotals = () => {
     return (
-      quoteItems?.reduce(
+      quoteItemsWithOffers?.reduce(
         (acc, curr) => {
           const price = parseFloat(curr.price || 0);
           const qty = parseFloat(curr.qty || 0);
@@ -560,6 +576,13 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           label: "Tax Amount",
           value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
+        },
+        {
+          key: "promoDiscount",
+          label: "Promo Discount",
+          value: `Rs.${parseFloat(totalOfferDiscount || 0).toFixed(2)}`,
+          summaryColumn: "right",
+          className: "text-emerald-600 font-bold"
         },
         ...chargeRows,
         {
@@ -762,6 +785,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
               />
               <div className="col-span-3">
                 <TextAreaNew
+                  rows={1}
                   name="Address"
                   placeholder="Address"
                   value={
@@ -794,16 +818,31 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             taxMethod={taxMethod}
             setTaxMethod={setTaxMethod}
             isHeaderOpen={isHeaderOpen}
-            itemPriceList={itemPriceList}
-            priceTemplateList={priceTemplateList}
             itemControlPanel={itemControlPanel}
             handlers={handlers}
             movedToNextSaveNewRef={movedToNextSaveNewRef}
+            activeOffers={activeOffers}
+            selectedOffersByRow={selectedOffersByRow}
+            setSelectedOffersByRow={setSelectedOffersByRow}
+            setSelectedItemForOffers={setSelectedItemForOffers}
+            setShowItemOfferModal={setShowItemOfferModal}
           />
         </div>
       </TransactionEntryShell>
 
-
+      <ItemOfferModal
+        isOpen={showItemOfferModal}
+        onClose={() => setShowItemOfferModal(false)}
+        selectedItemForOffers={selectedItemForOffers}
+        getItemApplicableOffers={(item) => {
+          if (!item || !activeOffers.length) return [];
+          const { getItemApplicableOffers } = require("../../../Utils/offerEngine");
+          return getItemApplicableOffers(item, quoteItems, activeOffers, collectionsData);
+        }}
+        selectedOffersByRow={selectedOffersByRow}
+        setSelectedOffersByRow={setSelectedOffersByRow}
+        Swal={Swal}
+      />
     </>
   );
 }

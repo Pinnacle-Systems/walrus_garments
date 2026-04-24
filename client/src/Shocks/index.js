@@ -24,3 +24,4 @@ export { default as PriceTemplateMaster } from "./PriceTemplateMaster";
 export { default as SubCategoryMaster } from "./SubCategoryMaster";
 export { default as OffersPromtions } from "./OffersPromotions";
 export { default as CollectionsMaster } from "./CollectionsMaster";
+export { default as ExpenseMaster } from "./ExpenseMaster";

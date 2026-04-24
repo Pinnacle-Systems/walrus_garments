@@ -113,7 +113,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                             <div className="flex gap-2">
 
 
-                                <div>
+                                {/* <div>
 
                                     <button
                                         type="button"
@@ -123,7 +123,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                     >
                                         Cancel
                                     </button>
-                                </div>
+                                </div> */}
                                 <div className="flex gap-2">
                                     <button
                                         type="button"

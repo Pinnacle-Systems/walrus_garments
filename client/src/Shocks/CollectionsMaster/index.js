@@ -75,7 +75,7 @@ export default function CollectionsMaster({ onSuccess, onClose, editId, deleteId
             // Sync selected items from the backend
             if (data?.CollectionItems) {
                 const formatted = data.CollectionItems.map(ci => ({
-                    label: ci.Item?.name,
+                    label: ci.item?.name,
                     value: ci.itemId
                 }));
                 setItemTypeList(formatted);

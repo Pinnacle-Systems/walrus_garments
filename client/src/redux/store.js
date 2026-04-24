@@ -65,7 +65,10 @@ import {
   pointOfSalesApi,
   SubCategoryMasterApi,
   offersPromotionsApi,
-  collectionsApi
+  collectionsApi,
+  salesReportApi,
+  ExpenseMasterApi,
+  ExpenseEntryApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -218,8 +221,10 @@ const commonReducers = {
   SubCategoryMaster: SubCategoryMasterApi.reducer,
   offersPromotions: offersPromotionsApi.reducer,
   collections: collectionsApi.reducer,
-  deliveryChallan: DeliveryChallanApi.reducer,
-
+  DeliveryChallan: DeliveryChallanApi.reducer,
+  salesReport: salesReportApi.reducer,
+  ExpenseMaster: ExpenseMasterApi.reducer,
+  ExpenseEntry: ExpenseEntryApi.reducer,
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -347,7 +352,10 @@ pointOfSalesApi.middleware,
 SubCategoryMasterApi.middleware,
 offersPromotionsApi.middleware,
 collectionsApi.middleware,
-DeliveryChallanApi.middleware
+DeliveryChallanApi.middleware,
+salesReportApi.middleware,
+ExpenseMasterApi.middleware,
+ExpenseEntryApi.middleware
 ];
 
 

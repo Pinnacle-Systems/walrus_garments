@@ -9,8 +9,6 @@ router.get('/', get);
 
 router.get('/:id', getOne);
 
-router.get('/search/:searchKey', getSearch);
-
 router.put('/:id', update);
 
 router.delete('/:id', remove);

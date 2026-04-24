@@ -129,4 +129,7 @@ export const SUB_CATEGORY_API = "subCategory"
 export const OFFERS_PROMOTIONS = "offersPromotions"
 export const COLLECTIONS_API = "collections"
 export const DELIVERY_CHALLAN_API = "deliveryChallan"
+export const SALES_REPORT_API = "salesReport"
+export const EXPENSE_MASTER = "expense"
+export const EXPENSE_ENTRY = "expenseEntry"
 

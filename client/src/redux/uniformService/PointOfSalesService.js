@@ -74,15 +74,25 @@ const pointOfSalesApi = createApi({
             }),
             invalidatesTags: ["pointOfSales"],
         }),
+        checkReferenceNumber: builder.query({
+            query: (refNo) => ({
+                url: `${POINT_OF_SALES}/check-ref`,
+                method: "GET",
+                params: { refNo }
+            })
+        }),
     }),
 });
 
 export const {
     useGetPointOfSalesQuery,
+    useLazyGetPointOfSalesQuery,
     useGetPointOfSalesByIdQuery,
+    useLazyGetPointOfSalesByIdQuery,
     useAddPointOfSalesMutation,
     useUpdatePointOfSalesMutation,
     useDeletePointOfSalesMutation,
+    useLazyCheckReferenceNumberQuery
 } = pointOfSalesApi;
 
 export default pointOfSalesApi;

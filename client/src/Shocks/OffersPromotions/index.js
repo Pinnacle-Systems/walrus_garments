@@ -6,7 +6,7 @@ import { useGetItemCategoryQuery } from "../../redux/uniformService/ItemCategory
 import { useGetcollectionsQuery } from "../../redux/uniformService/CollectionsService";
 import secureLocalStorage from "react-secure-storage";
 import Swal from 'sweetalert2';
-import { Check, X, Trash2, Globe, Package, FolderTree, Power, Settings, Eye, Info, Sparkles } from "lucide-react";
+import { Check, X, Trash2, Globe, Package, FolderTree, Power, Settings, Eye, Info, Sparkles, Layers } from "lucide-react";
 import {
     TextInputNew1,
     DropdownInputNew,
@@ -17,8 +17,10 @@ import {
 import Modal from "../../UiComponents/Modal";
 import MasterPageLayout from "../../Basic/components/MasterPageLayout";
 import { useFormKeyboardNavigation } from '../../CustomHooks/useFormKeyboardNavigation';
+import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
 
-// --- Constants ---
+
+
 const OFFER_TYPES = [
     { show: 'Percentage Discount', value: 'Percentage' },
     { show: 'Fixed Amount Off', value: 'Fixed' },
@@ -35,6 +37,7 @@ const SCOPE_OPTIONS = [
 const CONDITION_FIELDS = [
     { show: 'Min Total Qty', value: 'Minimum Quantity' },
     { show: 'Cart Value', value: 'Cart Value' },
+    { show: 'Apply to Clearance Items', value: 'Apply to Clearance Items' },
     // { show: 'Size Qty', value: 'Specific Size Quantity' },
     // { show: 'Equal Ratio', value: 'Equal Ratio' }
 ];
@@ -78,6 +81,9 @@ const OffersPromotions = () => {
     const [benefitTiers, setBenefitTiers] = useState([]);
     const [stacking, setStacking] = useState("Best Of");
     const [conditionLogic, setConditionLogic] = useState("AND");
+    const [applyToLogic, setApplyToLogic] = useState("AND"); // Placeholder if needed
+    const [applyToRegular, setApplyToRegular] = useState(true);
+    const [applyToClearance, setApplyToClearance] = useState(false);
 
     const [showSelectionModal, setShowSelectionModal] = useState(false);
     const [selectionSearch, setSelectionSearch] = useState("");
@@ -86,6 +92,10 @@ const OffersPromotions = () => {
 
     const { refs, handlers } = useFormKeyboardNavigation();
     const { firstInputRef: nameRef, saveCloseButtonRef } = refs;
+
+
+    const [dispatchInvalidate] = useInvalidateTags();
+
 
     const params = {
         companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
@@ -158,6 +168,8 @@ const OffersPromotions = () => {
             setBenefitMaxDiscount(data.maxDiscountValue || 0);
             setBenefitApplyOn(data.applyOn || "Each line");
             setBenefitTiers(data.OfferTier?.length > 0 ? data.OfferTier : (data.tiers ? (typeof data.tiers === 'string' ? JSON.parse(data.tiers) : data.tiers) : []));
+            setApplyToRegular(data.applyToRegular !== undefined ? Boolean(data.applyToRegular) : true);
+            setApplyToClearance(Boolean(data.applyToClearance));
         } else {
             setName("");
             setCode("");
@@ -178,6 +190,8 @@ const OffersPromotions = () => {
             setBenefitTiers([]);
             setStacking("Best Of");
             setConditionLogic("AND");
+            setApplyToRegular(true);
+            setApplyToClearance(false);
         }
     }, [id, itemOptions, collectionOptions, sizeOptions]);
 
@@ -204,6 +218,8 @@ const OffersPromotions = () => {
         maxDiscountValue: benefitMaxDiscount,
         applyOn: benefitApplyOn,
         active: status === 'Active',
+        applyToRegular,
+        applyToClearance,
         id,
         tiers: JSON.stringify(benefitTiers || []),
         selectionIds: JSON.stringify(scopeSelection || [])
@@ -219,7 +235,7 @@ const OffersPromotions = () => {
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId(returnData.data.id);
+            dispatchInvalidate();
             await Swal.fire({
                 title: text + " Successfully",
                 icon: "success",
@@ -371,7 +387,7 @@ const OffersPromotions = () => {
                             <TextInputNew1 ref={nameRef} name="Offer Name" value={name} setValue={setName} readOnly={readOnly} required />
                             <TextInputNew1 name="Code" value={code} setValue={setCode} readOnly={readOnly} required />
                             <DropdownInputNew name="Offer Type" options={OFFER_TYPES} value={benefitType} setValue={setBenefitType} readOnly={readOnly} />
-                            <TextInputNew1 name="Priority" type="number" value={priority} setValue={setPriority} readOnly={readOnly} />
+                            {/* <TextInputNew1 name="Priority" type="number" value={priority} setValue={setPriority} readOnly={readOnly} /> */}
                         </div>
                     </div>
 
@@ -381,7 +397,10 @@ const OffersPromotions = () => {
                             <TextInputNew1 name="Starts From" type="date" value={validFrom} setValue={setValidFrom} readOnly={readOnly} required />
                             <div className="space-y-1">
                                 <TextInputNew1 name="Ends At" type="date" value={validTo} setValue={setValidTo} readOnly={readOnly || noEndDate} disabled={noEndDate} />
-                                <label className="flex items-center gap-2 cursor-pointer mt-1 pl-1">
+
+                            </div>
+                            <div>
+                                <label className="flex items-center gap-2 cursor-pointer mt-4 pl-1">
                                     <input type="checkbox" checked={noEndDate} onChange={(e) => setNoEndDate(e.target.checked)} disabled={readOnly} className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Running Forever</span>
                                 </label>
@@ -389,14 +408,15 @@ const OffersPromotions = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm mt-auto">
+                    <div className="bg-white p-2 rounded-md border border-gray-200 h-full shadow-sm mt-auto">
                         <h3 className="font-bold text-gray-800 mb-1.5 text-[10px] uppercase tracking-wider opacity-60">Status</h3>
-                        <ToggleButton name="Is Active" value={status === 'Active'} setActive={(v) => setStatus(v ? 'Active' : 'Inactive')} readOnly={readOnly} />
+                        <ToggleButton value={status === 'Active'} setActive={(v) => setStatus(v ? 'Active' : 'Inactive')} readOnly={readOnly} />
+
                     </div>
                 </div>
 
                 {/* COL 2: SCOPE & RULES (6 Units) - Table Structure */}
-                <div className="lg:col-span-6 flex flex-col h-full space-y-2">
+                <div className="lg:col-span-6 flex flex-col h-full min-h-0 space-y-2">
                     <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm flex flex-col">
                         <h3 className="font-bold text-gray-800 mb-2 text-[10px] uppercase tracking-wider opacity-60">Targeting Strategy</h3>
                         <table className="w-full text-[10px] border-collapse">
@@ -414,8 +434,50 @@ const OffersPromotions = () => {
                                         </div>
                                     </td>
                                 </tr>
+                                <tr className="border-b border-gray-50">
+                                    <td className="py-2 px-1 font-bold text-gray-400 uppercase w-20 text-[9px]">Item Scope</td>
+                                    <td className="py-2 px-1">
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[
+                                                { id: 'Regular', label: 'Regular Stock', icon: Package },
+                                                { id: 'Clearance', label: 'Clearance Stock', icon: Sparkles },
+                                                { id: 'Both', label: 'Both', icon: Layers }
+                                            ].map(opt => {
+                                                const isActive = opt.id === 'Both' ? (applyToRegular && applyToClearance) :
+                                                    opt.id === 'Regular' ? (applyToRegular && !applyToClearance) :
+                                                        (!applyToRegular && applyToClearance);
+
+                                                return (
+                                                    <div
+                                                        key={opt.id}
+                                                        onClick={() => {
+                                                            if (!readOnly) {
+                                                                if (opt.id === 'Regular') { setApplyToRegular(true); setApplyToClearance(false); }
+                                                                else if (opt.id === 'Clearance') { setApplyToRegular(false); setApplyToClearance(true); }
+                                                                else { setApplyToRegular(true); setApplyToClearance(true); }
+                                                            }
+                                                        }}
+                                                        className={`p-1 rounded border-2 text-center cursor-pointer transition-all ${isActive ? 'border-indigo-600 bg-indigo-50 shadow-sm text-indigo-700' : 'border-gray-50 bg-gray-50 hover:bg-white'}`}
+                                                    >
+                                                        <div className="flex justify-center mb-0.5">
+                                                            {opt.id === 'Both' ? (
+                                                                <div className="flex -space-x-1">
+                                                                    <Package size={11} />
+                                                                    <Sparkles size={11} className="text-yellow-500" />
+                                                                </div>
+                                                            ) : (
+                                                                <opt.icon size={11} className={opt.id === 'Clearance' ? 'text-yellow-500' : ''} />
+                                                            )}
+                                                        </div>
+                                                        <div className="text-[9px] font-bold uppercase">{opt.label}</div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </td>
+                                </tr>
                                 {scope !== 'Global' && (
-                                    <tr>
+                                    <tr className="border-b border-gray-50">
                                         <td className="py-3 px-1 font-bold text-gray-400 uppercase align-top text-[9px]">Scope Target</td>
                                         <td className="py-2 px-1">
                                             <button
@@ -429,11 +491,13 @@ const OffersPromotions = () => {
                                         </td>
                                     </tr>
                                 )}
+
+
                             </tbody>
                         </table>
                     </div>
 
-                    <div className="bg-white rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[35vh] lg:max-h-none">
+                    <div className="bg-white rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[58vh]">
                         <div className="p-2 border-b bg-gray-50 flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <h3 className="font-bold text-gray-800 text-[11px] uppercase tracking-wider opacity-60">Eligibility Rules</h3>
@@ -475,7 +539,7 @@ const OffersPromotions = () => {
                                             <td className="p-2 text-center text-gray-400 font-bold">{idx + 1}</td>
                                             <td className="p-1">
                                                 <div className="w-full overflow-hidden">
-                                                    <DropdownInputNew labelHidden={true} options={CONDITION_FIELDS} value={cond.field} setValue={(v) => updateCondition(idx, 'field', v)} readOnly={readOnly} />
+                                                    <DropdownInputNew labelHidden={true} options={applyToClearance ? CONDITION_FIELDS : CONDITION_FIELDS.filter(f => f.value !== 'Apply to Clearance Items')} value={cond.field} setValue={(v) => updateCondition(idx, 'field', v)} readOnly={readOnly} />
                                                 </div>
                                             </td>
                                             <td className="p-1 text-center">
@@ -536,17 +600,34 @@ const OffersPromotions = () => {
                 </div>
 
                 {/* COL 3: REWARD & CONFLICTS (3 Units) */}
-                <div className="lg:col-span-3 flex flex-col h-full space-y-2 overflow-hidden">
-                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[35vh] lg:max-h-none">
+                <div className="lg:col-span-3 flex flex-col h-full min-h-0 space-y-2 overflow-hidden">
+                    <div className="bg-white p-2 rounded-md border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden min-h-0 max-h-[80vh]">
                         <div className="flex justify-between items-center mb-1.5">
                             <h3 className="font-bold text-gray-800 text-[11px] uppercase tracking-wider opacity-60">Reward Benefit</h3>
-                            {['Volume', 'Override'].includes(benefitType) && !readOnly && (
-                                <button
-                                    onClick={() => setBenefitTiers([...benefitTiers, { minQty: 1, type: 'Percentage', value: 0 }])}
-                                    className="text-[11px] font-bold text-blue-600 hover:underline uppercase"
-                                >
-                                    + Add Tier
-                                </button>
+                            {!readOnly && (
+                                <div className="flex items-center gap-2">
+                                    {['Percentage', 'Fixed'].includes(benefitType) && (
+                                        <div className="flex bg-gray-200 p-0.5 rounded-md scale-90 origin-right">
+                                            {[{ l: '%', v: 'Percentage' }, { l: 'Flat', v: 'Fixed' }].map(t => (
+                                                <button
+                                                    key={t.v}
+                                                    onClick={() => setBenefitType(t.v)}
+                                                    className={`px-3 py-0.5 text-[10px] font-bold uppercase rounded transition-all ${benefitType === t.v ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                                >
+                                                    {t.l}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {['Volume', 'Override'].includes(benefitType) && (
+                                        <button
+                                            onClick={() => setBenefitTiers([...benefitTiers, { minQty: 1, type: 'Percentage', value: 0 }])}
+                                            className="text-[11px] font-bold text-blue-600 hover:underline uppercase"
+                                        >
+                                            + Add Tier
+                                        </button>
+                                    )}
+                                </div>
                             )}
                         </div>
                         <div className="flex-1 bg-gray-50/50 rounded-lg p-2 border border-gray-100 flex flex-col overflow-hidden">
@@ -556,7 +637,7 @@ const OffersPromotions = () => {
                                         <TextInputNew1 name="Discount %" type="number" value={benefitPercentage} setValue={setBenefitPercentage} readOnly={readOnly} />
                                         <TextInputNew1 name="Max Cap (₹)" type="number" value={benefitMaxDiscount} setValue={setBenefitMaxDiscount} readOnly={readOnly} />
                                     </div>
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <label className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Applicable On</label>
                                         <div className="flex flex-col gap-1.5">
                                             {['Each line', 'Entire document', 'Cheapest item'].map(opt => (
@@ -566,13 +647,13 @@ const OffersPromotions = () => {
                                                 </button>
                                             ))}
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             )}
                             {benefitType === 'Fixed' && (
                                 <div className="space-y-2 overflow-y-auto">
                                     <TextInputNew1 name="Flat Amount Off (₹)" type="number" value={benefitAmount} setValue={setBenefitAmount} readOnly={readOnly} />
-                                    <div className="space-y-2">
+                                    {/* <div className="space-y-2">
                                         <label className="text-[12px] font-bold text-gray-400 uppercase tracking-wider">Applicable On</label>
                                         <div className="grid grid-cols-1 gap-1.5">
                                             {['Entire document', 'Each line'].map(opt => (
@@ -582,7 +663,7 @@ const OffersPromotions = () => {
                                                 </button>
                                             ))}
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             )}
                             {['Volume', 'Override'].includes(benefitType) && (
@@ -590,15 +671,20 @@ const OffersPromotions = () => {
                                     <div className="flex-1 overflow-auto bg-white rounded border border-gray-100 shadow-inner mb-1">
                                         <table className="w-full text-left text-[10px]">
                                             <thead className="text-gray-400 uppercase font-bold text-[9px] tracking-widest border-b border-gray-50 sticky top-0 bg-white z-10">
-                                                <tr><th className="p-1.5">Min Qty</th><th className="p-1.5">Reward</th><th className="p-1.5 text-right">Value</th></tr>
+                                                <tr className="bg-gray-50">
+                                                    <th className="p-0.5 border border-gray-200">Min Qty</th>
+                                                    <th className="p-0.5 border border-gray-200">Reward Type</th>
+                                                    <th className="p-0.5 border border-gray-200 text-right">Value</th>
+                                                    {!readOnly && <th className="p-0.5 border border-gray-200 w-6"></th>}
+                                                </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-50">
                                                 {(benefitTiers || []).map((tier, idx) => (
                                                     <tr key={idx} className="hover:bg-blue-50/50">
-                                                        <td className="p-1.5 font-bold"><input type="number" value={tier.minQty} onChange={(e) => updateTier(idx, 'minQty', e.target.value)} className="w-10 bg-transparent focus:ring-0 text-gray-700 text-[9px]" /></td>
-                                                        <td className="p-1.5">
-                                                            <div className="flex bg-gray-100 p-0.5 rounded w-fit">
-                                                                {[{ l: '%', v: 'Percentage' }, { l: '₹', v: 'Fixed' }].map(t => (
+                                                        <td className="p-0.5 border border-gray-200 font-bold"><input type="number" value={tier.minQty} onChange={(e) => updateTier(idx, 'minQty', e.target.value)} className="w-10 bg-transparent focus:ring-0 text-gray-700 text-[9px]" /></td>
+                                                        <td className="p-0.5 border border-gray-200 text-center">
+                                                            <div className="flex bg-gray-100 p-0.5 rounded w-fit mx-auto">
+                                                                {[{ l: '%', v: 'Percentage' }, { l: 'Flat', v: 'Fixed' }].map(t => (
                                                                     <button
                                                                         key={t.v}
                                                                         onClick={() => !readOnly && updateTier(idx, 'type', t.v)}
@@ -609,7 +695,17 @@ const OffersPromotions = () => {
                                                                 ))}
                                                             </div>
                                                         </td>
-                                                        <td className="p-1.5 text-right font-bold text-indigo-700 text-[9px]"><input type="number" value={tier.value} onChange={(e) => updateTier(idx, 'value', e.target.value)} className="w-12 bg-transparent text-right focus:ring-0 text-[9px]" /></td>
+                                                        <td className="p-0.5 border border-gray-200 text-right font-bold text-indigo-700 text-[9px]"><input type="number" value={tier.value} onChange={(e) => updateTier(idx, 'value', e.target.value)} className="w-12 bg-transparent text-right focus:ring-0 text-[9px]" /></td>
+                                                        {!readOnly && (
+                                                            <td className="p-0.5 border border-gray-200 text-center">
+                                                                <button
+                                                                    onClick={() => setBenefitTiers(benefitTiers.filter((_, i) => i !== idx))}
+                                                                    className="text-red-300 hover:text-red-500 transition-colors"
+                                                                >
+                                                                    <Trash2 size={12} />
+                                                                </button>
+                                                            </td>
+                                                        )}
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -680,7 +776,6 @@ const OffersPromotions = () => {
                         </div>
 
                         <div className="flex-1 overflow-hidden p-4 grid grid-cols-12 gap-4">
-                            {/* LEFT: SEARCH & SELECT */}
                             <div className="col-span-12 lg:col-span-7 flex flex-col bg-white rounded-lg border shadow-sm overflow-hidden">
                                 <div className="p-3 border-b bg-gray-50">
                                     <input

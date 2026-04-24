@@ -127,5 +127,8 @@ export { default as subCategory } from "./SubCategory.route.js"
 export { default as offersPromotions } from "./offersPromotions.route.js"
 export { default as collections } from "./collections.route.js"
 export { default as deliveryChallan } from "./deliveryChallan.route.js"
+export { default as salesReport } from "./salesReport.route.js"
+export { default as expense } from "./expense.route.js"
+export { default as expenseEntry } from "./expenseEntry.route.js"
 
 

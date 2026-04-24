@@ -48,7 +48,7 @@ const TransactionEntryShell = ({
             )}
             {isNew && (
               <button className="flex items-center gap-1 rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800"
-              onClick={clearWorkspace}
+                onClick={clearWorkspace}
               >
                 <FaFileAlt className="h-3 w-3" />
                 New

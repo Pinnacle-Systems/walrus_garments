@@ -21,6 +21,8 @@ import { useGetLocationMasterQuery } from "../../../redux/uniformService/Locatio
 import { useGetUomQuery } from "../../../redux/services/UomMasterService";
 import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetoffersPromotionsQuery } from "../../../redux/uniformService/Offer&PromotionsService";
+import { useGetcollectionsQuery } from "../../../redux/uniformService/CollectionsService";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import Modal from "../../../UiComponents/Modal";
 import BarCodePrintFormat from "./BarcodePrintFormat";
@@ -60,6 +62,8 @@ const StockTransferForm = ({
     const { data: sizeList } = useGetSizeMasterQuery({ params });
     const { data: locationData } = useGetLocationMasterQuery({ params: { ...params } });
     const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
+    const { data: offersData } = useGetoffersPromotionsQuery({ params: { active: true } });
+    const { data: collectionsData } = useGetcollectionsQuery({ params: { active: true } });
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
 
@@ -326,7 +330,50 @@ const StockTransferForm = ({
     };
 
     const saveData = (nextProcess) => {
-        console.log(data, "data")
+
+
+        if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
+            const selectedItems = stockItems?.filter(i => i.itemId);
+            for (const item of selectedItems) {
+                const hasClearanceOffer = offersData?.data?.some(offer => {
+                    if (!offer.applyToClearance) return false;
+                    if (offer.scopeMode === 'Global') return true;
+
+                    return offer.OfferScope?.some(scope => {
+                        const type = String(scope.type).toLowerCase();
+                        if (type === 'item' && scope.refId === parseInt(item.itemId)) return true;
+                        if (type === 'collection') {
+                            const collection = collectionsData?.data?.find(c => c.id === scope.refId);
+                            return collection?.CollectionItems?.some(ci => ci.itemId === parseInt(item.itemId));
+                        }
+                        return false;
+                    });
+                });
+
+                if (!hasClearanceOffer) {
+                    const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
+                    Swal.fire({
+                        title: "Offer Required",
+                        text: `Item "${itemObj?.name || item.itemId}" does not have an active clearance offer.`,
+                        icon: "error"
+                    });
+                    return;
+                }
+            }
+
+            // const hasMismatch = selectedItems?.some(i =>
+            //     parseFloat(i.stockQty || 0).toFixed(3) !== parseFloat(i.transferQty || 0).toFixed(3)
+            // );
+            // if (hasMismatch) {
+            //     Swal.fire({
+            //         title: "Validation Error",
+            //         text: "For DISCOUNT SECTION, Stock Quantity and Transfer Quantity must match exactly for all items.",
+            //         icon: "error",
+            //     });
+            //     return;
+            // }
+        }
+
         if (!validateData(data)) {
             Swal.fire({
                 title: "Please fill all required fields...!",
@@ -337,7 +384,6 @@ const StockTransferForm = ({
         }
         let mandatoryFields = ["transferQty"];
         mandatoryFields.push(...stockDrivenFields.map((field) => field.key));
-
         if (!isGridDatasValid((data?.stockItems)?.filter(i => i.itemId), false, mandatoryFields)) {
             Swal.fire({
                 title: "Please fill Transfer Qty  ",
@@ -346,19 +392,21 @@ const StockTransferForm = ({
             return;
         }
 
-        if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
-            const hasMismatch = stockItems?.filter(i => i.itemId)?.some(i => 
-                parseFloat(i.stockQty || 0).toFixed(3) !== parseFloat(i.transferQty || 0).toFixed(3)
-            );
-            if (hasMismatch) {
-                Swal.fire({
-                    title: "Validation Error",
-                    text: "For DISCOUNT SECTION, Stock Quantity and Transfer Quantity must match exactly for all items.",
-                    icon: "error",
-                });
-                return;
-            }
-        }
+
+
+        // if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
+        //     const hasMismatch = stockItems?.filter(i => i.itemId)?.some(i => 
+        //         parseFloat(i.stockQty || 0).toFixed(3) !== parseFloat(i.transferQty || 0).toFixed(3)
+        //     );
+        //     if (hasMismatch) {
+        //         Swal.fire({
+        //             title: "Validation Error",
+        //             text: "For DISCOUNT SECTION, Stock Quantity and Transfer Quantity must match exactly for all items.",
+        //             icon: "error",
+        //         });
+        //         return;
+        //     }
+        // }
 
 
 
@@ -406,6 +454,10 @@ const StockTransferForm = ({
                     sizeList={sizeList}
                     itemList={itemList}
                     itemPriceList={itemPriceList}
+                    toLocationId={toLocationId}
+                    locationData={locationData}
+                    offersData={offersData}
+                    collectionsData={collectionsData}
                 />
             </Modal>
             <Modal
@@ -473,7 +525,7 @@ const StockTransferForm = ({
                                             required={true}
                                             readOnly={id || readOnly}
                                             clear={true}
-                                            disabled={id}
+                                            disabled={id || toLocationId}
                                         />
                                     </div>
 
@@ -495,7 +547,7 @@ const StockTransferForm = ({
                                             setValue={setDeliveryChallanNo}
                                             readOnly={readOnly}
                                             required={true}
-                                        // disabled={childRecord.current > 0}
+                                            disabled={id}
                                         />
                                     </div>
 
@@ -519,8 +571,9 @@ const StockTransferForm = ({
                                         <button
                                             className="1 px-2 py-0.5 mt-6 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
                                             onClick={() => setOrderToGeneral(true)}
+                                            disabled={id}
                                         >
-                                            Fill Stock
+                                            Available Stock
                                         </button>
                                     </div>
 
@@ -549,6 +602,9 @@ const StockTransferForm = ({
                             searchColor={searchColor} setSearchColor={setSearchColor}
                             searchSize={searchSize} setSearchSize={setSearchSize}
                             stockDrivenFields={stockDrivenFields} readOnly={readOnly}
+                            itemPriceList={itemPriceList?.data}
+                            offersData={offersData?.data}
+                            collectionsData={collectionsData?.data}
                         />
                     </div>
                     <div className="flex flex-col md:flex-row gap-2 justify-between flex-none bg-white p-2 rounded-md border border-slate-200 shadow-sm">
@@ -584,27 +640,59 @@ const StockTransferForm = ({
                             <button className="bg-slate-600 text-white px-4 py-1.5 rounded-md hover:bg-slate-700 flex items-center text-sm shadow-sm transition-all active:scale-95"
                                 onClick={() => {
                                     const selectedItems = stockItems?.filter(i => i.itemId && i.transferQty);
-                                    if (selectedItems?.length > 0) {
-                                        if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
-                                            const hasMismatch = selectedItems.some(i => 
-                                                parseFloat(i.stockQty || 0).toFixed(3) !== parseFloat(i.transferQty || 0).toFixed(3)
-                                            );
-                                            if (hasMismatch) {
-                                                Swal.fire({
-                                                    title: "Validation Error",
-                                                    text: "Cannot generate barcodes: Stock Quantity and Transfer Quantity must match exactly for all items in DISCOUNT SECTION.",
-                                                    icon: "error",
-                                                });
-                                                return;
-                                            }
-                                        }
-                                        setBarcodePrintOpen(true)
-                                    } else {
+
+                                    if (!selectedItems?.length) {
                                         Swal.fire({
                                             icon: "error",
                                             text: "Please select at least one item and enter Transfer Quantity to print barcode",
-                                        })
+                                        });
+                                        return;
                                     }
+
+                                    const isDiscountSection = findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION";
+
+                                    if (!isDiscountSection) return;
+
+                                    // 1️⃣ Clearance barcode check
+                                    const hasMissingClearanceBarcode = selectedItems.some(item => !item.clearanceBarcode);
+                                    if (hasMissingClearanceBarcode) {
+                                        Swal.fire({
+                                            icon: "error",
+                                            text: "Please generate clearance barcode for all items before printing",
+                                        });
+                                        return;
+                                    }
+
+                                    // 2️⃣ Clearance offer check
+                                    for (const item of selectedItems) {
+                                        const hasClearanceOffer = offersData?.data?.some(offer => {
+                                            if (!offer.applyToClearance) return false;
+                                            if (offer.scopeMode === 'Global') return true;
+
+                                            return offer.OfferScope?.some(scope => {
+                                                const type = String(scope.type).toLowerCase();
+                                                if (type === 'item' && scope.refId === parseInt(item.itemId)) return true;
+                                                if (type === 'collection') {
+                                                    const collection = collectionsData?.data?.find(c => c.id === scope.refId);
+                                                    return collection?.CollectionItems?.some(ci => ci.itemId === parseInt(item.itemId));
+                                                }
+                                                return false;
+                                            });
+                                        });
+
+                                        if (!hasClearanceOffer) {
+                                            const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
+                                            Swal.fire({
+                                                title: "Offer Required",
+                                                text: `Item "${itemObj?.name || item.itemId}" does not have an active clearance offer.`,
+                                                icon: "error"
+                                            });
+                                            return;
+                                        }
+                                    }
+
+                                    // 3️⃣ All checks passed — proceed with barcode generation
+                                    // your print / navigation logic here
                                 }}
                                 disabled={findFromList(toLocationId, locationData?.data, "storeName") != "DISCOUNT SECTION"}
                             >

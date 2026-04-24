@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
@@ -32,6 +32,8 @@ import TransactionLineItemsSection, {
 } from "../ReusableComponents/TransactionLineItemsSection";
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 import { ItemMaster } from "../../../Shocks";
+import { Gift } from "lucide-react";
+import { calculateCartWithOffers, getPotentialOffers } from "../../../Utils/offerEngine";
 
 const QuotationItems = ({
     id,
@@ -53,11 +55,15 @@ const QuotationItems = ({
     taxMethod,
     setTaxMethod,
     isHeaderOpen,
-    itemPriceList,
-    priceTemplateList,
     itemControlPanel,
     handlers,
-    movedToNextSaveNewRef
+    movedToNextSaveNewRef,
+    activeOffers = [],
+    selectedOffersByRow = {},
+    setSelectedOffersByRow,
+    setSelectedItemForOffers,
+    setShowItemOfferModal,
+    itemPriceList
 }) => {
     const compactHeaderCellClassName = transactionTableHeaderCellClassName;
     const compactCellClassName = transactionTableCellClassName;
@@ -82,28 +88,6 @@ const QuotationItems = ({
         return Boolean(row.itemId);
     };
 
-    const getPriceFromTemplate = (itemId, qty) => {
-        if (!priceTemplateList?.data || !itemId || !qty) return null;
-        const numericQty = parseFloat(qty);
-
-        // Find template for this item
-        const template = priceTemplateList?.data?.find(t => String(t.itemId) === String(itemId));
-        if (!template?.PriceTemplateDetails) return null;
-
-        // Find match in details
-        const detail = template.PriceTemplateDetails.find(d => {
-            const min = parseFloat(d.minQty || 0);
-            const maxVal = d.maxQty;
-            const isInfinite = typeof maxVal === 'string' && maxVal.includes('& Above');
-
-            if (isInfinite) return numericQty >= min;
-
-            const max = parseFloat(maxVal || 0);
-            return numericQty >= min && numericQty <= max;
-        });
-
-        return detail || null;
-    };
 
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(quoteItems);
@@ -118,7 +102,6 @@ const QuotationItems = ({
                 if (!itemUsesColor(catalogItems, catalogPriceRows, selectedItem.id)) {
                     newBlend[index]["colorId"] = "";
                 }
-                // Auto-fill tax based on the new HSN ID
                 const selectedHsn = hsnList?.data?.find(hsn => parseInt(hsn.id) === parseInt(selectedItem.hsnId));
                 newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
                 newBlend[index]["taxMethod"] = newBlend[index]["taxMethod"] || "Inclusive";
@@ -128,64 +111,66 @@ const QuotationItems = ({
         }
 
         if (field === "hsnId") {
-            // Auto-fill tax based on manually changed HSN ID
             const selectedHsn = hsnList?.data?.find(hsn => parseInt(hsn.id) === parseInt(value));
             newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
         }
 
-        if (field === "itemId" || field === "sizeId" || field === "colorId" || field === "qty") {
+        if (field === "itemId" || field === "sizeId" || field === "colorId" || field === "qty" || field === "barcodeType") {
             const currentItem = field === "itemId" ? value : newBlend[index].itemId;
             const currentSize = field === "sizeId" ? value : newBlend[index].sizeId;
             const currentColor = field === "colorId" ? value : newBlend[index].colorId;
             const currentQty = field === "qty" ? value : newBlend[index].qty;
+            const currentBarcodeType = field === "barcodeType" ? value : (newBlend[index].barcodeType || "REGULAR");
             const isLegacySelection = isLegacyCatalogItem(catalogItems, currentItem);
             const requiresSize = itemUsesSize(catalogItems, catalogPriceRows, currentItem);
             const requiresColor = itemUsesColor(catalogItems, catalogPriceRows, currentItem);
 
-            if (currentItem) {
-                // 1. Check for Bulk Tier Offer
-                const templateDetail = getPriceFromTemplate(currentItem, currentQty);
-                if (templateDetail) {
-                    newBlend[index]["price"] = templateDetail.price;
-                    newBlend[index]["priceType"] = "BulkOfferPrice";
-                } else if (!requiresSize || currentSize || isLegacySelection) {
-                    // 2. Standard Price Master Logic
-                    const foundPrice = resolveSellablePriceRow(
-                        catalogItems,
-                        catalogPriceRows,
-                        currentItem,
-                        currentSize,
-                        requiresColor ? currentColor : ""
-                    );
-                    if (foundPrice) {
-                        const numericQty = parseFloat(currentQty || 0);
-                        if (numericQty > 6 && foundPrice.offerPrice) {
-                            // 2a. Qty > 6 applies standard Offer Price
-                            newBlend[index]["price"] = foundPrice.offerPrice;
-                            newBlend[index]["priceType"] = "offerPrice";
-                        } else {
-                            // 3. Default Sales Price
-                            newBlend[index]["price"] = foundPrice.salesPrice;
-                            newBlend[index]["priceType"] = "SalesPrice";
-                        }
-                    } else {
-                        newBlend[index]["priceType"] = null;
-                    }
+            const selectedItem = catalogItems?.find((i) => i.id === currentItem);
+
+            if (selectedItem) {
+                if (selectedItem.isLegacy) {
+                    newBlend[index].barcode = selectedItem.ItemPriceList?.[0]?.ItemBarcodes?.find(b => b.barcodeType === currentBarcodeType)?.barcode ||
+                        selectedItem.ItemPriceList?.[0]?.barcode ||
+                        selectedItem.barcode || "";
                 } else {
-                    newBlend[index]["priceType"] = null;
+                    const priceEntry = selectedItem.ItemPriceList?.find(
+                        p => String(p.sizeId) === String(currentSize) && String(p.colorId) === String(currentColor)
+                    );
+                    newBlend[index].barcode = priceEntry?.ItemBarcodes?.find(b => b.barcodeType === currentBarcodeType)?.barcode || "";
                 }
+            } else {
+                newBlend[index].barcode = "";
+            }
+
+            if (!requiresSize || currentSize || isLegacySelection) {
+                const foundPrice = resolveSellablePriceRow(
+                    catalogItems,
+                    catalogPriceRows,
+                    currentItem,
+                    currentSize,
+                    requiresColor ? currentColor : ""
+                );
+
+                console.log(foundPrice, "foundPrice")
+
+                if (foundPrice) {
+                    // newBlend[index]["price"] = foundPrice.salesPrice;
+                    newBlend[index]["price"] = foundPrice.salesPrice;
+                    // newBlend[index]["priceType"] = "SalesPrice";
+                } else {
+                    // newBlend[index]["priceType"] = null;
+                    newBlend[index]["price"] = 0;
+                }
+            } else {
+                newBlend[index]["priceType"] = null;
             }
         }
-
-        // if (field === "price") {
-        //     newBlend[index]["priceSource"] = "MANUAL";
-        // }
 
         newBlend[index][field] = value;
         setQuoteItems(newBlend);
     };
 
-    console.log(quoteItems, "poItems",);
+    console.log(quoteItems, "quoteItems",);
 
 
     useEffect(() => {
@@ -207,7 +192,9 @@ const QuotationItems = ({
                     weightPerBag: "0.00",
                     id: '',
                     poItemsId: "",
-                    taxMethod: ""
+                    taxMethod: "",
+                    barcode: "",
+                    barcodeType: "REGULAR"
                 };
             });
             return [...prev, ...newArray];
@@ -226,7 +213,9 @@ const QuotationItems = ({
             discountValue: "0.00",
             id: '',
             poItemsId: "",
-            taxMethod: ""
+            taxMethod: "",
+            barcode: "",
+            barcodeType: "REGULAR"
         };
         setQuoteItems([...quoteItems, newRow]);
     };
@@ -236,10 +225,11 @@ const QuotationItems = ({
         );
     };
     const handleDeleteAllRows = () => {
-        setQuoteItems((prevRows) => {
-            if (prevRows.length <= 1) return prevRows;
-            return [prevRows[0]];
-        });
+        // setQuoteItems((prevRows) => {
+        //     if (prevRows.length <= 1) return prevRows;
+        //     return [prevRows[0]];
+        // });
+        setQuoteItems([])
     };
     const activeTab = useSelector((state) =>
         state.openTabs.tabs.find((tab) => tab.active).name
@@ -367,6 +357,9 @@ const QuotationItems = ({
         };
     };
 
+    const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, quoteItems), [activeOffers, quoteItems]);
+    const { cartWithOffers: quoteItemsWithOffers } = useMemo(() => calculateCartWithOffers(quoteItems, selectedOffersByRow, potentialOffers, activeOffers), [quoteItems, selectedOffersByRow, potentialOffers, activeOffers]);
+
 
     const itemOptions = (id ? itemList?.data : itemList?.data?.filter(i => i.active) || [])?.map((item) => ({
         value: item.id,
@@ -457,27 +450,24 @@ const QuotationItems = ({
 
                                         className={`${compactHeaderCellClassName} w-16`}
                                     >
-                                        {/* <div className="flex flex-col items-center gap-1.5 py-1 leading-none">
-                                            <span className="uppercase ">Price</span>
-                                            <select
-                                                className="w-full text-[10px] bg-white border border-slate-200 rounded px-1 py-1 outline-none focus:ring-1 focus:ring-indigo-400 font-bold text-indigo-700 cursor-pointer shadow-sm mx-auto max-w-[120px]"
-                                                value={taxMethod}
-                                                onChange={(e) => setTaxMethod(e.target.value)}
-                                            // disabled={readOnly}
-                                            >
-                                                <option value="WithoutTax">Without Tax</option>
-                                                <option value="WithTax">With Tax</option>
-                                            </select>
-                                        </div> */}
+
                                         Price
                                     </th>
                                     <th
 
-                                        className={`${compactHeaderCellClassName} w-16`}
+                                        className={`${compactHeaderCellClassName} w-24`}
                                     >
-                                        Price Type
+                                        Barcode  Type
                                     </th>
                                     <th
+
+                                        className={`${compactHeaderCellClassName} w-7`}
+                                    >
+
+                                        Offer
+                                    </th>
+
+                                    {/* <th
 
                                         className={`${compactHeaderCellClassName} w-16`}
                                     >
@@ -488,7 +478,7 @@ const QuotationItems = ({
                                         className={`${compactHeaderCellClassName} w-16`}
                                     >
                                         Discount
-                                    </th>
+                                    </th> */}
                                     <th
 
                                         className={`${compactHeaderCellClassName} w-20`}
@@ -497,7 +487,7 @@ const QuotationItems = ({
                                     </th>
                                     <th
 
-                                        className={`${compactHeaderCellClassName} w-16`}
+                                        className={`${compactHeaderCellClassName} w-10`}
                                     >
                                         Tax
                                     </th>
@@ -524,17 +514,25 @@ const QuotationItems = ({
 
                             <tbody>
 
-                                {(quoteItems ? quoteItems : [])?.map((row, index) => {
+                                {(quoteItemsWithOffers ? quoteItemsWithOffers : [])?.map((row, index) => {
 
                                     const { subTotal, taxTotal, total } = getLineTotals(row, taxMethod);
+                                    const selectedItemData = itemList?.data?.find(i => i.id === row.itemId);
+                                    const isLegacy = row.itemId ? selectedItemData?.isLegacy : true;
+                                    const priceList = selectedItemData?.ItemPriceList || [];
+                                    const currentPriceEntry = isLegacy
+                                        ? priceList[0]
+                                        : priceList.find(p => String(p.sizeId) === String(row.sizeId) && String(p.colorId) === String(row.colorId));
+
+                                    const availableBarcodes = currentPriceEntry?.ItemBarcodes || [];
 
 
-                                    if (row?.itemId) {
-                                        console.log(row, "row", taxMethod)
-                                        console.log(subTotal, taxTotal, total, "subTotal, taxTotal, total");
+                                    // if (row?.itemId) {
+                                    //     console.log(row, "row", taxMethod)
+                                    //     console.log(subTotal, taxTotal, total, "subTotal, taxTotal, total");
 
 
-                                    }
+                                    // }
 
 
                                     return (
@@ -608,25 +606,7 @@ const QuotationItems = ({
 
                                             {showColor && (
                                                 <td className={compactFocusCellClassName}>
-                                                    {/* <select
-                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "colorId") } }}
-                                                    className={compactSelectClassName} value={row.colorId}
-                                                    onChange={(e) => handleInputChange(e.target.value, index, "colorId")}
-                                                    onBlur={(e) => {
-                                                        handleInputChange((e.target.value), index, "colorId")
-                                                    }
-                                                    }
-                                                    disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
 
-                                                >
-                                                    <option hidden>
-                                                    </option>
-                                                    {getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((blend) =>
-                                                        <option value={blend.id} key={blend.id}>
-                                                            {blend?.name}
-                                                        </option>
-                                                    )}
-                                                </select> */}
 
                                                     <SearchableTableCellSelect
                                                         value={row.colorId}
@@ -663,25 +643,7 @@ const QuotationItems = ({
 
 
                                             <td className={`${compactFocusCellClassName} w-40`}>
-                                                {/* <select
-                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "uomId") } }}
-                                                    className={compactSelectClassName} value={row.uomId} onChange={(e) => handleInputChange(e.target.value, index, "uomId")}
-                                                    onBlur={(e) => {
-                                                        handleInputChange((e.target.value), index, "uomId")
-                                                    }
-                                                    }
-                                                    disabled={readOnly || !isUomReady(row)}
 
-                                                >
-
-                                                    <option hidden>
-                                                    </option>
-                                                    {(id ? uomList?.data : uomList?.data?.filter(item => item.active))?.map((blend) =>
-                                                        <option value={blend.id} key={blend.id}>
-                                                            {blend.name}
-                                                        </option>
-                                                    )}
-                                                </select> */}
                                                 <SearchableTableCellSelect
                                                     value={row.uomId}
                                                     options={uomOptions}
@@ -733,33 +695,52 @@ const QuotationItems = ({
                                                     }
                                                     onBlur={(e) => {
                                                         handleInputChange(parseFloat(e.target.value).toFixed(3), index, "price");
+                                                    }}
+                                                />{console.log(row.price, "row.price")}
 
-                                                    }
-                                                    }
-
-                                                />
 
 
                                             </td>
-                                            <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
-                                                row.priceType === "offerPrice" ? "bg-indigo-100 text-indigo-800 border border-indigo-200" : row.priceType === "SalesPrice" ? "bg-blue-100 text-blue-800 border border-blue-200"
-                                                    : ""
-                                                }`}>
-                                                {row.priceType}
 
-                                            </td>
 
-                                            <td className={`${compactFocusCellClassName} w-40 text-right`}>
-                                                {/* <select
-                                                    className={compactDropdownClassName}
-                                                    value={row.discountType}
-                                                    onChange={(e) => handleInputChange(e.target.value, index, "discountType")}
-                                                // disabled={readOnly}
+                                            <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none`}>
+
+                                                <select
+                                                    className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 shadow-none outline-none focus:bg-transparent focus:outline-none"
+                                                    value={row.barcodeType || "REGULAR"}
+                                                    onChange={(e) => handleInputChange(e.target.value, index, "barcodeType")}
                                                 >
-                                                    <option value=""></option>
-                                                    <option value="Flat">Flat</option>
-                                                    <option value="Percentage">Percentage</option>
-                                                </select> */}
+                                                    {availableBarcodes.length > 0 ? (
+                                                        availableBarcodes.map((b) => (
+                                                            <option key={b.barcodeType} value={b.barcodeType}>
+                                                                {b.barcodeType}
+                                                            </option>
+                                                        ))
+                                                    ) : (
+                                                        <>
+                                                            {/* <option value="REGULAR">REGULAR</option>
+                                                            <option value="CLEARANCE">CLEARANCE</option> */}
+                                                        </>
+                                                    )}
+                                                </select>
+                                            </td>
+                                            <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none relative`}>
+                                                {!readOnly && row.itemId && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedItemForOffers(row);
+                                                            setShowItemOfferModal(true);
+                                                        }}
+                                                        title="View Item Offers"
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded transition-all flex items-center justify-center border border-indigo-100 hover:border-indigo-600 shrink-0 z-10"
+                                                    >
+                                                        <Gift size={12} fill="currentColor" />
+                                                    </button>
+                                                )}
+                                            </td>
+                                            {/* <td className={`${compactFocusCellClassName} w-40 text-right`}>
+
                                                 <SearchableTableCellSelect
                                                     value={row.discountType}
                                                     options={discountTypeOptions}
@@ -793,7 +774,7 @@ const QuotationItems = ({
 
                                                 />
 
-                                            </td>
+                                            </td> */}
 
                                             {/* 
                                             <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
@@ -889,7 +870,7 @@ const QuotationItems = ({
                             <div
                                 style={{
                                     position: "absolute",
-                                    top: `${contextMenu.mouseY - 180}px`,
+                                    top: `${contextMenu.mouseY - 240}px`,
                                     left: `${contextMenu.mouseX - 38}px`,
 
                                     // background: "gray",

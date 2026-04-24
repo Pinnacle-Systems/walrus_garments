@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove } from '../services/pointOfSales.services.js';
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, checkReferenceNumber as _checkRef } from '../services/pointOfSales.services.js';
 
 async function get(req, res, next) {
     try {
@@ -83,11 +83,21 @@ async function remove(req, res, next) {
     }
 }
 
+async function checkReferenceNumber(req, res, next) {
+    try {
+        res.json(await _checkRef(req));
+    } catch (err) {
+        console.error(`Error`, err.message);
+        res.json({ statusCode: 1, message: err.message });
+    }
+}
+
 export {
     get,
     getOne,
     getSearch,
     create,
     update,
-    remove
+    remove,
+    checkReferenceNumber
 };

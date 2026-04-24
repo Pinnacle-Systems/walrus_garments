@@ -90,10 +90,20 @@ const useInvalidateTags = () => {
         {
             type: `ItemCategoryMaster/invalidateTags`,
             payload: ["ItemCategoryMaster"],
-        }, {
+        },
+        {
             type: `SubCategoryMaster/invalidateTags`,
             payload: ["SubCategoryMaster"],
         },
+        {
+            type: `collections/invalidateTags`,
+            payload: ["collections"],
+        },
+        {
+            type: `offersPromotions/invalidateTags`,
+            payload: ["offersPromotions"],
+        },
+
 
 
 

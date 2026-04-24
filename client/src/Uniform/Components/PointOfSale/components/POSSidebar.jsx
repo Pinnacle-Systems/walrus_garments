@@ -20,8 +20,13 @@ const POSSidebar = ({
     cart,
     handlePayNow,
     printData,
-    setPrintData
+    setPrintData,
+    returnTotal = 0,
+    purchaseTotal = 0,
+    selectedReportSaleId
 }) => {
+    const isRefund = total < 0;
+
     return (
         <aside className="w-[340px] border-l border-slate-200 bg-white flex flex-col shadow-2xl relative z-10 overflow-hidden h-full">
             <div className="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
@@ -46,7 +51,8 @@ const POSSidebar = ({
                                 placeholder="Mobile (10 Digits)"
                                 value={guestMobile}
                                 onChange={(e) => handleCustomerMobileChange(e.target.value)}
-                                className="w-full pl-16 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] transition-all font-mono"
+                                disabled={selectedReportSaleId}
+                                className="w-full pl-16 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] transition-all font-mono disabled:opacity-50"
                             />
                         </div>
 
@@ -59,7 +65,8 @@ const POSSidebar = ({
                                 placeholder="Customer Name"
                                 value={guestName}
                                 onChange={(e) => setGuestName(e.target.value)}
-                                className="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] transition-all uppercase placeholder:normal-case"
+                                disabled={selectedReportSaleId}
+                                className="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] transition-all uppercase placeholder:normal-case disabled:opacity-50"
                             />
                         </div>
                     </div>
@@ -71,9 +78,23 @@ const POSSidebar = ({
                         <ShoppingCart size={12} /> Sale Summary
                     </h3>
                     <div className="space-y-2">
+                        {/* Exchange/Return Breakdown */}
+                        {returnTotal !== 0 && (
+                            <div className="space-y-1 mb-2 pb-2 border-b border-dashed border-slate-100">
+                                <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                                    <span className="text-[11px] uppercase tracking-wider text-slate-400">New Purchase</span>
+                                    <span>₹{purchaseTotal.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs font-bold text-rose-500">
+                                    <span className="text-[11px] uppercase tracking-wider">Return Amount</span>
+                                    <span>-₹{Math.abs(returnTotal).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
-                            <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                             <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
+                             <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         {totalOfferDiscount > 0 && (
                             <div className="space-y-1">
@@ -101,7 +122,8 @@ const POSSidebar = ({
                                     type="number"
                                     value={discount}
                                     onChange={(e) => setDiscount(Number(e.target.value))}
-                                    className="w-16 bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-right outline-none text-emerald-600 focus:border-emerald-500 transition-colors"
+                                    disabled={selectedReportSaleId}
+                                    className="w-16 bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-right outline-none text-emerald-600 focus:border-emerald-500 transition-colors disabled:opacity-50"
                                     onFocus={(e) => e.target.select()}
                                 />
                             </div>
@@ -124,9 +146,11 @@ const POSSidebar = ({
                             <span className="text-[11px] uppercase tracking-wider text-slate-400">Round Off</span>
                             <span>₹{roundOff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
-                        <div className="flex justify-between items-center font-black text-lg text-indigo-700 pt-2.5 border-t border-slate-200 mt-2">
-                            <span className="text-[12px] uppercase tracking-widest text-indigo-400">Net Amount</span>
-                            <span>₹{total.toLocaleString()}</span>
+                        <div className={`flex justify-between items-center font-black text-lg pt-2.5 border-t border-slate-200 mt-2 ${isRefund ? 'text-rose-600' : 'text-indigo-700'}`}>
+                             <span className={`text-[12px] uppercase tracking-widest ${isRefund ? 'text-rose-400' : 'text-indigo-400'}`}>
+                                 {isRefund ? 'Refund Amount' : 'Net Payable'}
+                             </span>
+                             <span>₹{Math.abs(total).toLocaleString()}</span>
                         </div>
                     </div>
                 </div>
@@ -136,12 +160,12 @@ const POSSidebar = ({
             {/* Footer: Action Checkout */}
             <div className="p-3 bg-white border-t border-slate-100 space-y-2">
                 <button
-                    disabled={isProcessing || cart.length === 0}
+                    disabled={isProcessing || cart.length === 0 || selectedReportSaleId}
                     onClick={() => handlePayNow()}
-                    className={`w-full py-2 rounded-xl flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-xl ${cart.length === 0 || isProcessing ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] shadow-indigo-100'}`}
+                    className={`w-full py-2 rounded-xl flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-xl ${ (cart.length === 0 || isProcessing || selectedReportSaleId) ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : (isRefund ? 'bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.98] shadow-rose-100' : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] shadow-indigo-100')}`}
                 >
                     <CreditCard size={18} />
-                    <span>Pay Now [F8]</span>
+                    <span>{selectedReportSaleId ? "Report View" : (isRefund ? 'Process Refund [F8]' : 'Pay Now [F8]') }</span>
                 </button>
                 {printData && (
                     <div className="bg-amber-50 p-2 rounded-xl border border-amber-100 flex items-center justify-between animate-in slide-in-from-bottom-2">
@@ -153,5 +177,6 @@ const POSSidebar = ({
         </aside>
     );
 };
+
 
 export default POSSidebar;

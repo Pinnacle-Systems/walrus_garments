@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
 import { toast } from "react-toastify";
@@ -27,6 +27,10 @@ import {
     itemUsesSize,
     resolveSellablePriceRow,
 } from "../../../Utils/salesCatalogRules";
+import { Gift } from "lucide-react";
+import { calculateCartWithOffers, getPotentialOffers } from "../../../Utils/offerEngine";
+import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
+import { ItemMaster } from "../../../Shocks";
 
 const SaleOrderItems = ({
     id,
@@ -49,7 +53,13 @@ const SaleOrderItems = ({
     setTaxMethod,
     isHeaderOpen,
     itemPriceList,
-    priceTemplateList
+    activeOffers = [],
+    selectedOffersByRow = {},
+    setSelectedOffersByRow,
+    setSelectedItemForOffers,
+    setShowItemOfferModal,
+    handlers,
+    movedToNextSaveNewRef
 }) => {
     const compactHeaderCellClassName = transactionTableHeaderCellClassName;
     const compactCellClassName = transactionTableCellClassName;
@@ -64,26 +74,13 @@ const SaleOrderItems = ({
     const catalogPriceRows = itemPriceList?.data || [];
     const { showSize, showColor } = getCatalogColumnVisibility(catalogItems, catalogPriceRows);
 
-    const getPriceFromTemplate = (itemId, qty) => {
-        if (!priceTemplateList?.data || !itemId || !qty) return null;
-        const numericQty = parseFloat(qty);
-        const template = priceTemplateList?.data?.find(t => String(t.itemId) === String(itemId));
-        if (!template?.PriceTemplateDetails) return null;
-        const detail = template.PriceTemplateDetails.find(d => {
-            const min = parseFloat(d.minQty || 0);
-            const maxVal = d.maxQty;
-            const isInfinite = typeof maxVal === 'string' && maxVal.includes('& Above');
-            if (isInfinite) return numericQty >= min;
-            const max = parseFloat(maxVal || 0);
-            return numericQty >= min && numericQty <= max;
-        });
-        return detail || null;
-    };
+    const findSelectedItem = (itemId) => catalogItems.find((item) => String(item.id) === String(itemId));
+
 
     const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(saleOrderItems);
         if (field === "itemId") {
-            const selectedItem = catalogItems?.find(item => String(item.id) === String(value));
+            const selectedItem = findSelectedItem(value);
             if (selectedItem) {
                 newBlend[index]["sectionId"] = selectedItem.sectionId;
                 newBlend[index]["hsnId"] = selectedItem.hsnId;
@@ -106,43 +103,51 @@ const SaleOrderItems = ({
             newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
         }
 
-        if (field === "itemId" || field === "sizeId" || field === "colorId" || field === "qty") {
+        if (field === "itemId" || field === "sizeId" || field === "colorId" || field === "qty" || field === "barcodeType") {
             const currentItem = field === "itemId" ? value : newBlend[index].itemId;
             const currentSize = field === "sizeId" ? value : newBlend[index].sizeId;
             const currentColor = field === "colorId" ? value : newBlend[index].colorId;
             const currentQty = field === "qty" ? value : newBlend[index].qty;
+            const currentBarcodeType = field === "barcodeType" ? value : (newBlend[index].barcodeType || "REGULAR");
             const isLegacySelection = isLegacyCatalogItem(catalogItems, currentItem);
             const requiresSize = itemUsesSize(catalogItems, catalogPriceRows, currentItem);
             const requiresColor = itemUsesColor(catalogItems, catalogPriceRows, currentItem);
 
-            if (currentItem) {
-                const templateDetail = getPriceFromTemplate(currentItem, currentQty);
-                if (templateDetail) {
-                    newBlend[index]["price"] = templateDetail.price;
-                    newBlend[index]["priceType"] = "BulkOfferPrice";
-                } else if (!requiresSize || currentSize || isLegacySelection) {
-                    const foundPrice = resolveSellablePriceRow(
-                        catalogItems,
-                        catalogPriceRows,
-                        currentItem,
-                        currentSize,
-                        requiresColor ? currentColor : ""
-                    );
-                    if (foundPrice) {
-                        const numericQty = parseFloat(currentQty || 0);
-                        if (numericQty > 6 && foundPrice.offerPrice) {
-                            newBlend[index]["price"] = foundPrice.offerPrice;
-                            newBlend[index]["priceType"] = "offerPrice";
-                        } else {
-                            newBlend[index]["price"] = foundPrice.salesPrice;
-                            newBlend[index]["priceType"] = "SalesPrice";
-                        }
-                    } else {
-                        newBlend[index]["priceType"] = null;
-                    }
+            const selectedItem = catalogItems?.find((i) => i.id === currentItem);
+
+            if (selectedItem) {
+                if (selectedItem.isLegacy) {
+                    newBlend[index].barcode = selectedItem.ItemPriceList?.[0]?.ItemBarcodes?.find(b => b.barcodeType === currentBarcodeType)?.barcode ||
+                        selectedItem.ItemPriceList?.[0]?.barcode ||
+                        selectedItem.barcode || "";
                 } else {
+                    const priceEntry = selectedItem.ItemPriceList?.find(
+                        p => String(p.sizeId) === String(currentSize) && String(p.colorId) === String(currentColor)
+                    );
+                    newBlend[index].barcode = priceEntry?.ItemBarcodes?.find(b => b.barcodeType === currentBarcodeType)?.barcode || "";
+                }
+            } else {
+                newBlend[index].barcode = "";
+            }
+
+            if (!requiresSize || currentSize || isLegacySelection) {
+                const foundPrice = resolveSellablePriceRow(
+                    catalogItems,
+                    catalogPriceRows,
+                    currentItem,
+                    currentSize,
+                    requiresColor ? currentColor : ""
+                );
+
+                if (foundPrice) {
+                    newBlend[index]["price"] = foundPrice.salesPrice;
+                    newBlend[index]["priceType"] = "SalesPrice";
+                } else {
+                    newBlend[index]["price"] = 0;
                     newBlend[index]["priceType"] = null;
                 }
+            } else {
+                newBlend[index]["priceType"] = null;
             }
         }
 
@@ -168,17 +173,31 @@ const SaleOrderItems = ({
                 weightPerBag: "0.00",
                 id: '',
                 poItemsId: "",
-                taxMethod: ""
+                taxMethod: "",
+                barcode: "",
+                barcodeType: "REGULAR"
             }));
             return [...prev, ...newArray];
         });
     }, [transType, setSaleOrderItems, saleOrderItems, isHeaderOpen]);
 
     const addNewRow = () => {
-        setSaleOrderItems([...saleOrderItems, {
-            itemId: "", qty: "", tax: "0", colorId: "", uomId: "",
-            price: "", discountTypes: "", discountValue: "0.00", id: '', poItemsId: "", taxMethod: ""
-        }]);
+        const newRow = {
+            itemId: "",
+            qty: "",
+            tax: "0",
+            colorId: "",
+            uomId: "",
+            price: "",
+            discountTypes: "",
+            discountValue: "0.00",
+            id: '',
+            poItemsId: "",
+            taxMethod: "",
+            barcode: "",
+            barcodeType: "REGULAR"
+        };
+        setSaleOrderItems([...saleOrderItems, newRow]);
     };
 
     const handleDeleteRow = (id) => {
@@ -237,6 +256,30 @@ const SaleOrderItems = ({
         return { subTotal, taxTotal, total: subTotal + taxTotal };
     };
 
+    const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, saleOrderItems || []), [activeOffers, saleOrderItems]);
+    const { cartWithOffers: saleOrderItemsWithOffers } = useMemo(() => calculateCartWithOffers(saleOrderItems || [], selectedOffersByRow, potentialOffers, activeOffers), [saleOrderItems, selectedOffersByRow, potentialOffers, activeOffers]);
+
+    const itemOptions = (id ? itemList?.data : itemList?.data?.filter(i => i.active) || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
+    const hsnOptions = (id ? hsnList?.data : hsnList?.data?.filter(i => i.active) || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
+    const uomOptions = (id ? uomList?.data : uomList?.data?.filter(i => i.active) || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
+    const discountTypeOptions = [
+        { value: "", label: "" },
+        { value: "Flat", label: "Flat" },
+        { value: "Percentage", label: "Percentage" },
+    ];
+
     return (
         <>
             <fieldset className="h-full min-h-0">
@@ -256,9 +299,10 @@ const SaleOrderItems = ({
                                     <th className={`${compactHeaderCellClassName} w-12`}>UOM</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Quantity</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Price</th>
-                                    <th className={`${compactHeaderCellClassName} w-16`}>Price Type</th>
-                                    <th className={`${compactHeaderCellClassName} w-16`}>Discount Type</th>
-                                    <th className={`${compactHeaderCellClassName} w-16`}>Discount</th>
+                                    <th className={`${compactHeaderCellClassName} w-7`}>Offer</th>
+                                    <th className={`${compactHeaderCellClassName} w-20`}>Barcode Type</th>
+                                    {/* <th className={`${compactHeaderCellClassName} w-16`}>Discount Type</th>
+                                    <th className={`${compactHeaderCellClassName} w-16`}>Discount</th> */}
                                     <th className={`${compactHeaderCellClassName} w-20`}>Tax Type</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Tax %</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Net Amount</th>
@@ -266,8 +310,17 @@ const SaleOrderItems = ({
                                 </tr>
                             </thead>
                             <tbody>
-                                {(saleOrderItems || []).map((row, index) => {
+                                {(saleOrderItemsWithOffers || []).map((row, index) => {
                                     const { subTotal, taxTotal, total } = getLineTotals(row);
+                                    const selectedItemData = itemList?.data?.find(i => i.id === row.itemId);
+                                    const isLegacy = row.itemId ? selectedItemData?.isLegacy : true;
+                                    const priceList = selectedItemData?.ItemPriceList || [];
+                                    const currentPriceEntry = isLegacy
+                                        ? priceList[0]
+                                        : priceList.find(p => String(p.sizeId) === String(row.sizeId) && String(p.colorId) === String(row.colorId));
+
+                                    const availableBarcodes = currentPriceEntry?.ItemBarcodes || [];
+
                                     return (
                                         <tr
                                             key={index}
@@ -277,97 +330,80 @@ const SaleOrderItems = ({
                                         >
                                             <td className={transactionTableIndexCellClassName}>{index + 1}</td>
 
-                                            {/* Item */}
                                             <td className={compactFocusCellClassName}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "itemId"); }}
-                                                    tabIndex="0" disabled={readOnly}
-                                                    className={compactSelectClassName}
+                                                <SearchableTableCellSelect
                                                     value={row.itemId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "itemId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "itemId")}
-                                                >
-                                                    <option></option>
-                                                    {itemList?.data?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                    ))}
-                                                </select>
+                                                    options={itemOptions}
+                                                    disabled={readOnly}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
+                                                    addNewModalWidth="w-[90%] h-[95%]"
+                                                    childComponent={ItemMaster}
+                                                    addNewLabel="+ Add New Item"
+                                                    handlers={handlers}
+                                                    movedToNextSaveNewRef={movedToNextSaveNewRef}
+                                                />
                                             </td>
 
-                                            {/* Size */}
                                             {showSize && (
                                                 <td className={compactFocusCellClassName}>
-                                                    <select
-                                                        onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "sizeId"); }}
-                                                        tabIndex="0"
-                                                        className={compactSelectClassName}
+                                                    <SearchableTableCellSelect
                                                         value={row.sizeId}
-                                                        onChange={e => handleInputChange(e.target.value, index, "sizeId")}
-                                                        onBlur={e => handleInputChange(e.target.value, index, "sizeId")}
-                                                        disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
-                                                    >
-                                                        <option></option>
-                                                        {getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map(blend => (
-                                                            <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                        ))}
-                                                    </select>
+                                                        options={
+                                                            id ?
+                                                                sizeList?.data?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                })) :
+                                                                getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                }))}
+
+                                                        disabled={readOnly || !isSizeReady(row)}
+                                                        onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
+                                                    />
                                                 </td>
                                             )}
 
-                                            {/* Color */}
                                             {showColor && (
                                                 <td className={compactFocusCellClassName}>
-                                                    <select
-                                                        onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "colorId"); }}
-                                                        className={compactSelectClassName}
+                                                    <SearchableTableCellSelect
                                                         value={row.colorId}
-                                                        onChange={e => handleInputChange(e.target.value, index, "colorId")}
-                                                        onBlur={e => handleInputChange(e.target.value, index, "colorId")}
-                                                        disabled={readOnly || !isColorReady(row) || isLegacyRow(row)}
-                                                    >
-                                                        <option hidden></option>
-                                                        {getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map(blend => (
-                                                            <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                        ))}
-                                                    </select>
+                                                        options={
+                                                            id ?
+                                                                colorList?.data?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                })) :
+                                                                getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId)?.map((item) => ({
+                                                                    value: item.id,
+                                                                    label: item?.name || "",
+                                                                }))}
+
+                                                        disabled={readOnly || !isColorReady(row)}
+                                                        onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
+                                                    />
                                                 </td>
                                             )}
 
-                                            {/* HSN */}
                                             <td className={compactFocusCellClassName}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "hsnId"); }}
-                                                    className={compactSelectClassName}
+                                                <SearchableTableCellSelect
                                                     value={row.hsnId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "hsnId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "hsnId")}
+                                                    options={hsnOptions}
                                                     disabled={readOnly || !row.itemId}
-                                                >
-                                                    <option hidden></option>
-                                                    {hsnList?.data?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "hsnId")}
+                                                />
                                             </td>
 
-                                            {/* UOM */}
                                             <td className={`${compactFocusCellClassName} w-40`}>
-                                                <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "uomId"); }}
-                                                    className={compactSelectClassName}
+                                                <SearchableTableCellSelect
                                                     value={row.uomId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "uomId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "uomId")}
+                                                    options={uomOptions}
                                                     disabled={readOnly || !isUomReady(row)}
-                                                >
-                                                    <option hidden></option>
-                                                    {(id ? uomList?.data : uomList?.data?.filter(item => item.active))?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend.name}</option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "uomId")}
+                                                />
                                             </td>
 
-                                            {/* Qty */}
                                             <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                                 <input
                                                     onKeyDown={e => {
@@ -384,7 +420,6 @@ const SaleOrderItems = ({
                                                 />
                                             </td>
 
-                                            {/* Price */}
                                             <td className={`${compactFocusCellClassName} w-40 text-right relative`}>
                                                 <input
                                                     onKeyDown={e => {
@@ -395,33 +430,57 @@ const SaleOrderItems = ({
                                                     className={compactNumberInputClassName}
                                                     onFocus={e => e.target.select()}
                                                     value={(!row.price) ? 0 : row.price}
-                                                    disabled={readOnly || !row.qty}
                                                     onChange={e => handleInputChange(e.target.value, index, "price")}
                                                     onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "price")}
                                                 />
                                             </td>
 
-                                            {/* Price Type Badge */}
-                                            <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
-                                                row.priceType === "offerPrice" ? "bg-indigo-100 text-indigo-800 border border-indigo-200" :
-                                                    row.priceType === "SalesPrice" ? "bg-blue-100 text-blue-800 border border-blue-200" : ""}`}>
-                                                {row.priceType}
+                                            <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none relative text-center`}>
+                                                {!readOnly && row.itemId && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedItemForOffers(row);
+                                                            setShowItemOfferModal(true);
+                                                        }}
+                                                        title="View Item Offers"
+                                                        className="p-1 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded transition-all inline-flex items-center justify-center border border-indigo-100 hover:border-indigo-600 shrink-0 z-10"
+                                                    >
+                                                        <Gift size={12} fill="currentColor" />
+                                                    </button>
+                                                )}
                                             </td>
 
-                                            {/* Discount Type */}
-                                            <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                                            <td className={`${compactCellClassName} px-1 text-[10px]`}>
                                                 <select
-                                                    className={compactDropdownClassName}
-                                                    value={row.discountType}
-                                                    onChange={e => handleInputChange(e.target.value, index, "discountType")}
+                                                    className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 shadow-none outline-none focus:bg-transparent focus:outline-none"
+                                                    value={row.barcodeType || "REGULAR"}
+                                                    onChange={(e) => handleInputChange(e.target.value, index, "barcodeType")}
                                                 >
-                                                    <option value=""></option>
-                                                    <option value="Flat">Flat</option>
-                                                    <option value="Percentage">Percentage</option>
+                                                    {availableBarcodes.length > 0 ? (
+                                                        availableBarcodes.map((b) => (
+                                                            <option key={b.barcodeType} value={b.barcodeType}>
+                                                                {b.barcodeType}
+                                                            </option>
+                                                        ))
+                                                    ) : (
+                                                        <>
+                                                            {/* <option value="REGULAR">REGULAR</option>
+                                                            <option value="CLEARANCE">CLEARANCE</option> */}
+                                                        </>
+                                                    )}
                                                 </select>
                                             </td>
 
-                                            {/* Discount Value */}
+                                            {/* <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                                                <SearchableTableCellSelect
+                                                    value={row.discountType}
+                                                    options={discountTypeOptions}
+                                                    disabled={readOnly}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "discountType")}
+                                                />
+                                            </td>
+
                                             <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                                 <input
                                                     onKeyDown={e => {
@@ -436,9 +495,8 @@ const SaleOrderItems = ({
                                                     onChange={e => handleInputChange(e.target.value, index, "discountValue")}
                                                     onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "discountValue")}
                                                 />
-                                            </td>
+                                            </td> */}
 
-                                            {/* Tax Method */}
                                             <td className={compactFocusCellClassName}>
                                                 <select
                                                     className={compactDropdownClassName}
@@ -451,7 +509,6 @@ const SaleOrderItems = ({
                                                 </select>
                                             </td>
 
-                                            {/* Tax % */}
                                             <td className={`${compactCellClassName} w-40 text-right`}>
                                                 <input
                                                     min="0" type="number"
@@ -464,22 +521,19 @@ const SaleOrderItems = ({
                                                 />
                                             </td>
 
-                                            {/* Net Amount */}
                                             <td className={`${compactCellClassName} w-40 text-right`}>
                                                 {total.toFixed(2)}
                                             </td>
 
-                                            {/* Add Row on Enter */}
                                             <td className="w-16 px-1 py-1 text-center">
                                                 <button
-                                                    onClick={() => addNewRow(index)}
+                                                    onClick={() => addNewRow()}
                                                     onKeyDown={(e) => {
                                                         if (e.key === "Enter") {
                                                             e.preventDefault();
                                                             if (index === saleOrderItems.length - 1) {
-                                                                addNewRow(index);
+                                                                addNewRow();
                                                             }
-
                                                         }
                                                     }}
                                                     className="h-full w-full rounded-none bg-blue-50 py-0"
@@ -497,7 +551,7 @@ const SaleOrderItems = ({
                             <div
                                 style={{
                                     position: "absolute",
-                                    top: `${contextMenu.mouseY - 50}px`,
+                                    top: `${contextMenu.mouseY - 240}px`,
                                     left: `${contextMenu.mouseX - 30}px`,
                                     boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
                                     padding: "8px", borderRadius: "4px", zIndex: 1000,

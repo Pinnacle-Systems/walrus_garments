@@ -9,7 +9,9 @@ async function get(req) {
             // branchId: branchId ? parseInt(branchId) : undefined,
             // active: active ? Boolean(active === 'true') : undefined,
         },
-
+        include: {
+            CollectionItems: true
+        }
     });
 
     return { statusCode: 0, data };

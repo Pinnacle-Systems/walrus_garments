@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ScanBarcode, Gift, Trash2 } from 'lucide-react';
+import { ScanBarcode, Gift, Trash2, RefreshCw, ShoppingCart, Eye } from 'lucide-react';
 
 const POSCartTable = ({
     isBarcodeLoading,
@@ -13,8 +13,12 @@ const POSCartTable = ({
     handleRowSalesPersonChange,
     updateRate,
     removeFromCart,
-    qtyInputRefs
+    onViewStock,
+    qtyInputRefs,
+    selectedReportSaleId
 }) => {
+
+    console.log(cart, "cart")
     return (
         <main className="flex-1 min-w-0 bg-white flex flex-col relative">
             {/* Barcode Search Loader Overlay */}
@@ -58,7 +62,7 @@ const POSCartTable = ({
                     </thead>
                     <tbody>
                         {cart.map((item, index) => {
-                            const cartKey = `${item.id}-${item.sizeId}-${item.colorId}`;
+                            const cartKey = `${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}`;
                             const rowTotal = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
                             const isActiveRow = index === activeRowIndex;
                             return (
@@ -72,7 +76,13 @@ const POSCartTable = ({
                                         <div className="text-[12px] font-black text-slate-800 uppercase leading-tight truncate max-w-[280px]">{item?.Item?.name}</div>
                                         <div className="flex flex-wrap items-center gap-1 mt-1">
                                             <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{item.barcode}</span>
-                                            {parseFloat(item.salesPrice) > parseFloat(item.price) && (
+                                            {item.isReturn && (
+                                                <span className="bg-red-600 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5">
+                                                    <RefreshCw size={10} className="text-red-200" />
+                                                    RETURN
+                                                </span>
+                                            )}
+                                            {parseFloat(item.salesPrice) > parseFloat(item.price) && !item.isReturn && (
                                                 <span className="text-[10px] font-bold text-slate-300 line-through">₹{parseFloat(item.salesPrice).toLocaleString()}</span>
                                             )}
                                             {item.priceType === 'offerPrice' && (
@@ -86,10 +96,25 @@ const POSCartTable = ({
                                     <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Color?.name || '-'}</td>
                                     <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Size?.name || '-'}</td>
                                     <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.Item?.Uom?.name || item?.Uom?.name || item?.uom || '-'}</td>
-                                    <td className="px-2 py-1 text-center text-[10px] text-slate-500 font-black border-r border-slate-200 uppercase">{item?.stockQty || '-'}</td>
+                                    <td className="px-2 py-1 text-center border-r border-slate-200">
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <span className="text-[10px] font-black text-slate-500 uppercase">{item?.stockQty || '0'}</span>
+                                            {!item.isReturn && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onViewStock(item); }}
+                                                    className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-all"
+                                                    title="View Store-wise Stock"
+                                                >
+                                                    <Eye size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="px-2 py-0.5 border-r border-slate-200">
                                         <div className="flex items-center gap-1 justify-center">
-                                            <button onClick={() => updateQuantity(item.id, -1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">-</button>
+                                            <button 
+                                                disabled={selectedReportSaleId}
+                                                onClick={() => updateQuantity(item.id, -1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">-</button>
                                             <input
                                                 ref={ref => qtyInputRefs.current[cartKey] = ref}
                                                 type="number"
@@ -97,9 +122,13 @@ const POSCartTable = ({
                                                 onChange={(e) => updateQuantity(item.id, e.target.value, item.sizeId, item.colorId, true)}
                                                 className="w-10 text-center bg-transparent text-[11px] font-black focus:outline-none"
                                                 onFocus={(e) => { e.target.select(); setActiveRowIndex(index); }}
+                                                disabled={selectedReportSaleId}
                                             />
-                                            <button onClick={() => updateQuantity(item.id, 1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">+</button>
+                                            <button 
+                                                disabled={selectedReportSaleId}
+                                                onClick={() => updateQuantity(item.id, 1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">+</button>
                                             <button
+                                                disabled={selectedReportSaleId}
                                                 onClick={(e) => { e.stopPropagation(); handleShowItemOffers(item); }}
                                                 title="View Item Offers"
                                                 className="p-1 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded transition-all flex items-center justify-center border border-indigo-100 hover:border-indigo-600 shrink-0"
@@ -109,7 +138,7 @@ const POSCartTable = ({
                                         </div>
                                     </td>
                                     <td className="px-2 py-0.5 border-r border-slate-200 text-center">
-                                        <select
+                                        {/* <select
                                             value={item.salesPersonId || ""}
                                             onChange={(e) => handleRowSalesPersonChange(index, e.target.value)}
                                             className="w-full bg-transparent text-[10px] font-black text-slate-700 outline-none border-none focus:ring-0 cursor-pointer text-center p-0"
@@ -118,8 +147,8 @@ const POSCartTable = ({
                                             {employees.map(emp => (
                                                 <option key={emp.id} value={emp.id}>{emp.name}</option>
                                             ))}
-                                        </select>
-                                        <div className="text-[8px] font-bold text-slate-400 mt-0.5">
+                                        </select> */}
+                                        <div className="text-[12px] font-bold text-slate-400 mt-0.5">
                                             {item.salesPersonBarcode || ""}
                                         </div>
                                     </td>
@@ -130,13 +159,16 @@ const POSCartTable = ({
                                             onChange={(e) => updateRate(item.id, e.target.value, item.sizeId, item.colorId)}
                                             className={`w-full py-0.5 text-right bg-transparent border-transparent hover:border-slate-200 focus:bg-white focus:border-indigo-400 rounded transition-all font-black text-sm outline-none ${item.priceType === 'offerPrice' ? 'text-emerald-600' : 'text-slate-800'}`}
                                             onFocus={(e) => e.target.select()}
+                                            disabled={selectedReportSaleId}
                                         />
                                     </td>
                                     <td className="px-2 py-1 text-right border-r border-slate-200 bg-slate-50/50 font-serif">
                                         <span className="text-[12px] font-black text-indigo-700">₹{rowTotal.toLocaleString()}</span>
                                     </td>
                                     <td className="px-2 py-1 text-center bg-slate-50/50">
-                                        <button onClick={(e) => { e.stopPropagation(); removeFromCart(cartKey); }} className="p-1.5 text-slate-300 hover:text-red-500 transition-all rounded-lg hover:bg-red-50"><Trash2 size={14} /></button>
+                                        <button
+                                            disabled={selectedReportSaleId}
+                                            onClick={(e) => { e.stopPropagation(); removeFromCart(cartKey); }} className="p-1.5 text-slate-300 hover:text-red-500 transition-all rounded-lg hover:bg-red-50"><Trash2 size={14} /></button>
                                     </td>
                                 </tr>
                             );

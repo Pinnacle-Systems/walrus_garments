@@ -1,15 +1,16 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch, create, update, remove } from '../controllers/pointOfSales.controller.js';
+import { get, getOne, getSearch, create, update, remove, checkReferenceNumber } from '../controllers/pointOfSales.controller.js';
 
 
 router.post('/', create);
 
 router.get('/', get);
 
+router.get('/check-ref', checkReferenceNumber);
+
 router.get('/:id', getOne);
 
-router.get('/search/:searchKey', getSearch);
 
 router.put('/:id', update);
 

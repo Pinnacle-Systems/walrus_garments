@@ -20,7 +20,7 @@ export const normalizeLocalItemForPos = (item, branchId, storeId) => {
         uomId: null,
         branchId,
         storeId,
-        barcode: defaultPriceRow?.barcode || "",
+        barcode: defaultPriceRow?.ItemBarcodes?.find(b => b.barcodeType === "REGULAR")?.barcode || defaultPriceRow?.ItemBarcodes?.[0]?.barcode || "",
         itemName: item?.name || "",
         itemCode: item?.code || "",
         salesPrice: defaultPriceRow?.salesPrice || item?.salesPrice || 0,

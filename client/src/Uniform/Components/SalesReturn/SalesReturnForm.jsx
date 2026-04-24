@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
-import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
+import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput, TextInputNew } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
@@ -13,8 +13,7 @@ import { HiOutlineRefresh, HiX } from "react-icons/hi";
 import { useAddDirectInwardOrReturnMutation, useGetDirectInwardOrReturnByIdQuery, useUpdateDirectInwardOrReturnMutation } from "../../../redux/uniformService/DirectInwardOrReturnServices";
 import moment from "moment";
 import Swal from "sweetalert2";
-import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
-import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import { useAddSalesDeliveryMutation, useGetSalesDeliveryByIdQuery, useGetSalesDeliveryQuery, useUpdateSalesDeliveryMutation } from "../../../redux/uniformService/salesDeliveryServices";
 import Modal from "../../../UiComponents/Modal";
@@ -23,14 +22,29 @@ import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintForm
 import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintFormat";
 import SalesReturnItems from "./SalesReturnItems";
 import { useAddSalesReturnMutation, useGetSalesReturnByIdQuery, useGetSalesReturnQuery, useUpdateSalesReturnMutation } from "../../../redux/uniformService/salesReturnServices";
+import { useGetPointOfSalesByIdQuery, useGetPointOfSalesQuery, useLazyCheckReferenceNumberQuery } from "../../../redux/uniformService/PointOfSalesService";
+import { useGetoffersPromotionsQuery } from "../../../redux/uniformService/Offer&PromotionsService";
+import { useGetEmployeeQuery } from "../../../redux/services/EmployeeMasterService";
+import { useLazyGetUnifiedStockByBarcodeQuery } from "../../../redux/services/StockService";
+import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
+import PosSalesReturnItems from "./PosSalesReturnItems";
+import PosItemsSelection from "./posItemsSelection";
+import SalesPersonModal from "../PointOfSale/components/SalesPersonModal";
+import PaymentModal from "../PointOfSale/components/PaymentModal";
+import BarcodeResolutionModal from "../PointOfSale/components/BarcodeResolutionModal";
+import { findDefaultPriceRow, normalizeLocalItemForPos } from "../PointOfSale/utils/posHelpers";
+import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
+import ItemOfferModal from "../PointOfSale/components/ItemOfferModal";
 
 
 
 const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setDeliveryItems, deliveryItems,
-  yarnList, colorList, uomList, hsnList, setSalesDeliveryId, salesDeliveryId, termsData
+  yarnList, colorList, uomList, hsnList, setSalesDeliveryId, salesDeliveryId, termsData,
+  returnType, setReturnType, posId, setPosId,
+  exchangeItems, setExchangeItems
 
 
 }) => {
@@ -87,14 +101,33 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     useGetSalesDeliveryQuery({ params: { ...params } });
 
   const { data: singleSalesDeliveryData } =
-    useGetSalesDeliveryByIdQuery(salesDeliveryId, { skip: !salesDeliveryId });
+    useGetSalesDeliveryByIdQuery(salesDeliveryId, { skip: !salesDeliveryId || returnType !== "Bulk Sales" });
 
+
+  const { data: singlePosData } =
+    useGetPointOfSalesByIdQuery(posId, { skip: !posId || returnType !== "Pos" });
+
+  const { data: posData } = useGetPointOfSalesQuery({ params: { ...params } });
+
+
+  const { data: locationsData } = useGetLocationMasterQuery({ params: { branchId, companyId } });
+  const locations = locationsData?.data || [];
+
+  useEffect(() => {
+    if (locations.length > 0 && !storeId) {
+      const retailLoc = locations.find(l => l.storeName?.toLowerCase().includes('retail'));
+      if (retailLoc) {
+        setStoreId(retailLoc.id);
+      }
+    }
+  }, [locations, storeId, setStoreId]);
 
   const { data: supplierDetails } =
     useGetPartyByIdQuery(customerId, { skip: !customerId });
 
   const salesItemParams = { ...params, active: true };
   const { data: itemList } = useGetItemMasterQuery({ params: salesItemParams });
+  const { data: ItemPriceListData } = useGetItemPriceListQuery({ params: { branchId, userId, finYearId } });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
 
 
@@ -114,6 +147,8 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     }
   }, [id]);
 
+
+
   const [addData] = useAddSalesReturnMutation();
   const [updateData] = useUpdateSalesReturnMutation();
 
@@ -123,11 +158,284 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   const inwardTyperef = useRef(null);
 
 
+  const [showSalesPersonModal, setShowSalesPersonModal] = useState(false);
+  const [salesPersonBarcode, setSalesPersonBarcode] = useState('');
+  const [exchangeSearchQuery, setExchangeSearchQuery] = useState('');
+  const salesPersonScannerRef = useRef(null);
+  const exchangeScannerRef = useRef(null);
+
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paidCash, setPaidCash] = useState(0);
+  const [paidUPI, setPaidUPI] = useState(0);
+  const [paidCard, setPaidCard] = useState(0);
+  const [paidOnline, setPaidOnline] = useState(0);
+  const [upiRefNo, setUpiRefNo] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
+
+  const [activeRowIndex, setActiveRowIndex] = useState(0);
+  const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
+  const [showItemOfferModal, setShowItemOfferModal] = useState(false);
+  const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
+
+  const [barcodeResolution, setBarcodeResolution] = useState({ open: false, matches: [], resolve: null });
+
+  const resolveBarcodeMatch = (matches = []) => {
+    return new Promise((resolve) => {
+      setBarcodeResolution({
+        open: true,
+        matches: matches.map(m => ({
+          ...m,
+          item_name: m.item_name || m?.Item?.name || "Item",
+          size: m.size || m?.Size?.name || "-",
+          color: m.color || m?.Color?.name || "-",
+          location: m.location || "-",
+          stockQty: m.stockQty || 0,
+          storeId: m.storeId || m.locationId
+        })),
+        resolve
+      });
+    });
+  };
+
+  const { data: employeeData } = useGetEmployeeQuery({
+    params: { branchId, userId, companyId, finYearId }
+  });
+  const employees = employeeData?.data || [];
+
+  const [getStockByBarcode, { isLoading: isBarcodeLoading }] = useLazyGetUnifiedStockByBarcodeQuery();
+
+  const { data: offersData } = useGetoffersPromotionsQuery({ params: { branchId, active: true } });
+  const activeOffers = offersData?.data || [];
+
+  const potentialOffers = useMemo(() => {
+    if (!exchangeItems.length || !activeOffers.length) return [];
+    const potential = [];
+    activeOffers.forEach(off => {
+      const inScopeItems = (exchangeItems || []).filter(item => {
+        if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+        if (off.scopeMode === 'Global') return true;
+        if (off.scopeMode === 'Item' || off.scopeMode === 'Collection') return off.OfferScope?.some(s => s.refId === (item.itemId || item.id));
+        return false;
+      });
+      if (!inScopeItems.length) return;
+      const scopeQty = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
+      const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.salesPrice || i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
+      const rules = off.OfferRule?.[0]?.conditions?.rules || [];
+      const results = rules.map(rule => {
+        const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
+        if (rule.operator === '>=') return target >= parseFloat(rule.value);
+        if (rule.operator === '<=') return target <= parseFloat(rule.value);
+        if (rule.operator === '==') return target === parseFloat(rule.value);
+        return true;
+      });
+      const isValid = off.OfferRule?.[0]?.logic === 'OR' ? results.some(r => r) : results.every(r => r);
+      if (!isValid && rules.length > 0) return;
+      let discountValue = 0;
+      if (off.discountType === 'Percentage') {
+        discountValue = (scopeValue * (off.discountValue || 0)) / 100;
+        if (off.maxDiscountValue && discountValue > off.maxDiscountValue) discountValue = off.maxDiscountValue;
+      } else if (off.discountType === 'Fixed') {
+        discountValue = off.discountValue || 0;
+      } else if (['Volume', 'Override'].includes(off.discountType)) {
+        const sortedTiers = [...(off.OfferTier || [])].sort((a, b) => b.minQty - a.minQty);
+        const tier = sortedTiers.find(t => scopeQty >= t.minQty);
+        if (tier) {
+          if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
+          else if (off.discountType === 'Override') discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
+          else discountValue = tier.value;
+        }
+      }
+      if (discountValue > 0) potential.push({ ...off, calculatedDiscount: discountValue, inScopeItems });
+    });
+    return potential;
+  }, [exchangeItems, activeOffers]);
+
+  const { cartWithOffers, appliedOffers } = useMemo(() => {
+
+    if (!exchangeItems.length) return { cartWithOffers: [], appliedOffers: [] };
+    const appliedSet = new Set();
+    const computed = exchangeItems.map(item => {
+      const cartKey = `${item.id}-${item.sizeId}-${item.colorId}`;
+      const rowOfferId = selectedOffersByRow[cartKey];
+
+      if (!rowOfferId) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
+      const selectedOffer = potentialOffers.find(o => o.id === rowOfferId) || activeOffers.find(o => o.id === rowOfferId);
+      if (!selectedOffer) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
+      appliedSet.add(selectedOffer);
+      let currentItemPrice = item.salesPrice !== undefined ? parseFloat(item.salesPrice) : parseFloat(item.price);
+      if (selectedOffer.discountType === 'Percentage') currentItemPrice *= (1 - parseFloat(selectedOffer.discountValue || 0) / 100);
+      else if (selectedOffer.discountType === 'Fixed') currentItemPrice = Math.max(0, currentItemPrice - ((selectedOffer.discountValue || 0) / (parseFloat(item.qty) || 1)));
+      else if (['Override', 'Volume'].includes(selectedOffer.discountType)) {
+        const tier = [...(selectedOffer.OfferTier || [])].sort((a, b) => b.minQty - a.minQty).find(t => parseFloat(item.qty) >= t.minQty);
+        if (tier) {
+          if (tier.type === 'Fixed') currentItemPrice = tier.value;
+          else currentItemPrice *= (1 - parseFloat(tier.value || 0) / 100);
+        }
+      }
+      return { ...item, priceType: 'offerPrice', price: Math.max(0, currentItemPrice), appliedOfferName: selectedOffer.name };
+    });
+    return { cartWithOffers: computed, appliedOffers: Array.from(appliedSet) };
+  }, [exchangeItems, selectedOffersByRow, potentialOffers, activeOffers]);
+
+  const totalOfferDiscount = cartWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ?
+    sum + Math.max(0, (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
+
+  const handleShowItemOffers = (item) => { setSelectedItemForOffers(item); setShowItemOfferModal(true); };
+
+  const getItemApplicableOffers = (item) => {
+    if (!item || !activeOffers.length) return [];
+    return activeOffers.filter(off => {
+      if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+      let isInScope = off.scopeMode === 'Global' || (off.scopeMode === 'Item' && off.OfferScope?.some(s => s.refId === item.itemId)) || (off.scopeMode === 'Collection' && off.OfferScope?.some(s => s.refId === item.itemId));
+      if (!isInScope) return false;
+      const inScopeItems = cartWithOffers.filter(cit => {
+        if (cit.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+        return off.scopeMode === 'Global' || (off.scopeMode === 'Item' && off.OfferScope?.some(s => s.refId === cit.itemId)) || (off.scopeMode === 'Collection' && off.OfferScope?.some(s => s.refId === cit.itemId));
+      });
+      const scopeQty = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
+      const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
+      const rules = off.OfferRule?.[0]?.conditions?.rules || [];
+      const results = rules.map(rule => {
+        const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
+        if (rule.operator === '>=') return target >= parseFloat(rule.value);
+        if (rule.operator === '<=') return target <= parseFloat(rule.value);
+        if (rule.operator === '==') return target === parseFloat(rule.value);
+        return true;
+      });
+      const isValid = off.OfferRule?.[0]?.logic === 'OR' ? results.some(r => r) : results.every(r => r);
+      return isValid || rules.length === 0;
+    });
+  };
+
+  const handleExchangeScan = async (e) => {
+    if (e.key === 'Enter') {
+      const barcode = exchangeSearchQuery.trim();
+      if (!barcode) return;
+      try {
+        const response = await getStockByBarcode({ params: { barcode, branchId } }).unwrap();
+        const resolvedData = response?.needsResolution ? await resolveBarcodeMatch(response.matches || []) : response?.data;
+        if (response?.needsResolution && !resolvedData) return;
+        if (response.statusCode === 0 && resolvedData) {
+          if (Array.isArray(resolvedData)) resolvedData.forEach(item => addToExchange({ ...item }));
+          else addToExchange({ ...resolvedData });
+          setExchangeSearchQuery('');
+          return;
+        }
+      } catch (error) { console.error("Barcode search failed", error); }
+
+      // Fallback to local item search
+      const items = itemList?.data || [];
+      const retailStoreId = storeId || branchId; // Fallback to provided storeId
+      const localItem = items.find(i =>
+        i.name?.toLowerCase() === barcode.toLowerCase() ||
+        i.code?.toLowerCase() === barcode.toLowerCase() ||
+        i.ItemPriceList?.some(row => row.ItemBarcodes?.some(b => b.barcode === barcode))
+      );
+      if (!localItem) { Swal.fire({ title: "Warning", text: "Barcode not found", icon: "warning" }); return; }
+      const normItem = normalizeLocalItemForPos(localItem, branchId, retailStoreId);
+      if (!normItem?.barcode) { Swal.fire({ title: "Warning", text: "Item missing barcode", icon: "warning" }); return; }
+      try {
+        const localRes = await getStockByBarcode({ params: { barcode: normItem.barcode, branchId } }).unwrap();
+        const resLocalData = localRes?.needsResolution ? await resolveBarcodeMatch(localRes.matches || []) : localRes?.data;
+        if (localRes.statusCode === 0 && resLocalData) {
+          if (Array.isArray(resLocalData)) resLocalData.forEach(item => addToExchange({ ...item }));
+          else addToExchange({ ...resLocalData });
+          setExchangeSearchQuery('');
+          return;
+        }
+      } catch (error) { console.error("Local lookup failed", error); }
+      Swal.fire({ title: "Warning", text: "Product out of stock", icon: "warning" });
+    }
+  };
+
+  const addToExchange = (product) => {
+    if ((parseFloat(product.stockQty) || 0) <= 0) {
+      Swal.fire({ title: "Error", text: "Out of stock!", icon: "error" });
+      return;
+    }
+
+    // Resolve price from ItemPriceListData to ensure we use master price, not stock-specific price
+    const itemMaster = itemList?.data?.find(i => i.id === product.itemId);
+    const isLegacy = itemMaster?.isLegacy;
+
+    const masterPriceEntry = ItemPriceListData?.data?.find(p => {
+      if (isLegacy) {
+        return p.itemId === product.itemId;
+      }
+      return (
+        p.itemId === product.itemId &&
+        p.sizeId === product.sizeId &&
+        p.colorId === product.colorId
+      );
+    });
+
+    console.log(masterPriceEntry, "masterPriceEntry");
+    const resolvedPrice = masterPriceEntry ? parseFloat(masterPriceEntry.salesPrice || masterPriceEntry.price) : (parseFloat(product.salesPrice) || parseFloat(product.price) || 0);
+
+    setExchangeItems(prev => {
+      const existing = prev.find(item => item.itemId === product.itemId && item.sizeId === product.sizeId && item.colorId === product.colorId);
+      if (existing) {
+        return prev.map(item =>
+          (item.itemId === product.itemId && item.sizeId === product.sizeId && item.colorId === product.colorId)
+            ? { ...item, qty: Math.min(parseFloat(item.stockQty), parseFloat(item.qty) + 1) }
+            : item
+        );
+      }
+      return [...prev, {
+        ...product,
+        qty: 1,
+        id: product.id || product.itemId,
+        barcode: product.barcode,
+        itemName: product.itemName || product.item_name,
+        price: resolvedPrice,
+        salesPrice: resolvedPrice,
+        sourceStoreId: product.storeId || storeId || branchId,
+        salesPersonId: null,
+        salesPersonName: null,
+        salesPersonCode: null,
+      }];
+    });
+    setShowSalesPersonModal(true);
+    setTimeout(() => salesPersonScannerRef.current?.focus(), 500);
+  };
+
+  const handleSalesPersonScan = (barcode) => {
+    if (!barcode) return;
+    const employee = employees.find(e => e.employeeId === barcode || e.regNo === barcode);
+    setExchangeItems(prev => prev.map(item => !item.salesPersonId ? {
+      ...item,
+      salesPersonId: employee?.id || null,
+      salesPersonName: employee?.name || "Unknown",
+      salesPersonCode: employee?.employeeId || employee?.regNo || null
+    } : item));
+    setShowSalesPersonModal(false);
+    setSalesPersonBarcode('');
+    setTimeout(() => exchangeScannerRef.current?.focus(), 100);
+  };
+
+  const returnTotal = deliveryItems.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
+  const exchangeTotal = cartWithOffers.reduce((sum, item) => sum + (parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
+  const posNetAmount = Math.round(exchangeTotal - returnTotal);
+
+  const handlePayNow = () => {
+    if (returnType === "Pos" && posNetAmount > 0) {
+      setShowPaymentModal(true);
+    } else {
+      saveData("close");
+    }
+  };
+
   useEffect(() => {
     if (inwardTyperef.current && !id) {
       inwardTyperef.current.focus();
     }
   }, []);
+
+  useEffect(() => {
+    if (returnType === "Pos" && !showSalesPersonModal && !showPaymentModal) {
+      setTimeout(() => exchangeScannerRef.current?.focus(), 500);
+    }
+  }, [returnType, showSalesPersonModal, showPaymentModal]);
 
 
   const syncFormWithDb = useCallback((data) => {
@@ -158,6 +466,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
     setRemarks(data?.remarks ? data?.remarks : "")
     setTerms(data?.terms ? data?.terms : "")
+    setReturnType(data?.returnType ? data?.returnType : "Bulk Sales")
     const nextPackingCharge = formatChargeValue(data?.packingCharge);
     const nextShippingCharge = formatChargeValue(data?.shippingCharge);
     setPackingCharge(nextPackingCharge);
@@ -192,6 +501,8 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     remarks,
     specialInstructions,
     vehicleNo,
+    posId,
+    returnType,
     finYearId,
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
@@ -210,40 +521,30 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
 
 
+  useEffect(() => {
+    if (returnType === "Pos" && posId) {
+      const selectedPos = posData?.data?.filter(p => p.id == posId)?.[0];
+      if (selectedPos?.customerId) {
+        setCustomerId(selectedPos.customerId);
+      }
+      console.log(posData?.data, 'returnType', posId, selectedPos)
 
-
-  // const validateData = (data) => {
-  //   let mandatoryFields = ["uomId", "colorId", "price"];
-  //   let lotMandatoryFields = ["qty"]
-  //   if (transType === "GreyYarn" || transType === "DyedYarn") {
-  //     mandatoryFields = [...mandatoryFields, "yarnId"]
-  //     lotMandatoryFields = [...lotMandatoryFields, "noOfBags", "weightPerBag"]
-  //   } else if (transType === "GreyFabric" || transType === "DyedFabric") {
-  //     mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
-  //     lotMandatoryFields = [...lotMandatoryFields, "noOfRolls"]
-  //   } else if (transType === "Accessory") {
-  //     mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
-  //   }
+    }
+  }, [posId, returnType, posData]);
 
 
 
 
-  //   return data.poType && data.supplierId && data.dcDate && data.payTermId && data.dcNo
-  //     &&
-  //     (
-  //       (data.poType === "Accessory")
-  //         ?
-  //         isGridDatasValid(data.directInwardReturnItems, false, [...mandatoryFields, "qty"])
-  //         :
-  //         data.directInwardReturnItems.every(item => item?.inwardLotDetails && isGridDatasValid(item?.inwardLotDetails, false, lotMandatoryFields))
-  //     )
-  //     && isGridDatasValid(data.directInwardReturnItems, false, mandatoryFields)
-  //     && data.directInwardReturnItems.length !== 0
+  useEffect(() => {
+    if (returnType === "Bulk Sales" && salesDeliveryId) {
+      const selectedSd = salesDeliveryData?.data?.find(sd => sd.id === salesDeliveryId);
+      if (selectedSd?.customerId) {
+        setCustomerId(selectedSd.customerId);
+      }
+    }
+  }, [salesDeliveryId, returnType, salesDeliveryData]);
 
-
-
-
-
+  console.log(posId, "customerId", customerId);
 
   const validateData = (data) => {
 
@@ -329,16 +630,16 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       ? [...mandatoryFields, "sizeId", "colorId"]
       : mandatoryFields;
 
-    if (!validateData(data)) {
+    // if (!validateData(data)) {
 
 
-      Swal.fire({
-        title: "Please fill all required fields...!",
-        icon: "success",
+    //   Swal.fire({
+    //     title: "Please fill all required fields...!",
+    //     icon: "success",
 
-      });
-      return
-    }
+    //   });
+    //   return
+    // }
     if (!isGridDatasValid(salesRows, false, finalMandatoryFields)) {
       Swal.fire({
         title: "Please fill all Delivery Items Mandatory fields...!",
@@ -346,6 +647,11 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       });
       return;
     }
+    if (returnType === "Pos" && posNetAmount > 0 && (paidCash + paidUPI + paidCard + paidOnline) < posNetAmount) {
+      setShowPaymentModal(true);
+      return;
+    }
+
     if (!window.confirm("Are you sure save the details ...?")) {
       return
     }
@@ -354,15 +660,30 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     }
 
 
-    else if (id && nextProcess == "draft") {
+    const posPayments = [
+      ...(paidCash > 0 ? [{ amount: String(paidCash), paymentMode: 'Cash' }] : []),
+      ...(paidUPI > 0 ? [{ amount: String(paidUPI), paymentMode: 'UPI', reference_no: upiRefNo }] : []),
+      ...(paidCard > 0 ? [{ amount: String(paidCard), paymentMode: 'Card' }] : []),
+      ...(paidOnline > 0 ? [{ amount: String(paidOnline), paymentMode: 'Online' }] : []),
+    ];
 
-      handleSubmitCustom(updateData, data = { ...data, draftSave: true }, "Updated", nextProcess);
+    const finalData = {
+      ...data,
+      returnType,
+      exchangeItems: returnType === "Pos" ? exchangeItems : [],
+      posPayments: returnType === "Pos" ? posPayments : [],
+      netAmount: returnType === "Pos" ? posNetAmount : adjustedNetAmount,
+      receivedAmount: paidCash + paidUPI + paidCard + paidOnline,
+      originalPosId: posId // Mapping posId prop to originalPosId field
+    };
+
+    if (id && nextProcess == "draft") {
+      handleSubmitCustom(updateData, { ...finalData, draftSave: true }, "Updated", nextProcess);
     }
     else if (id) {
-
-      handleSubmitCustom(updateData, data, "Updated", nextProcess);
+      handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added", nextProcess);
+      handleSubmitCustom(addData, finalData, "Added", nextProcess);
     }
   }
 
@@ -389,7 +710,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   const { subtotal, taxAmount, netAmount } = calculateTotals();
   const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
   const adjustedNetAmount = netAmount + extraCharges;
-  const chargeRows = [
+  const chargeRows = returnType === "Pos" ? [] : [
     ...(packingChargeEnabled
       ? [{
         key: "packingCharge",
@@ -478,6 +799,57 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     setTerm(value);
   };
 
+  const handleFillItems = (selectedItems) => {
+    const newItems = selectedItems.map(item => {
+      const masterItem = itemList?.data?.find(i => i.id === item.itemId);
+      return {
+        ...item,
+        itemName: item.itemName || masterItem?.name,
+        itemCode: item.itemCode || masterItem?.code,
+        sizeName: item.sizeName || findFromList(item.sizeId, sizeList?.data, "name"),
+        colorName: item.colorName || findFromList(item.colorId, colorList?.data, "name"),
+        uomName: item.uomName || findFromList(item.uomId, uomList?.data, "name"),
+        qty: item.qty,
+        price: item.price || item.salesPrice,
+        tax: item.tax || masterItem?.Hsn?.tax || 0,
+      }
+    });
+    setDeliveryItems(newItems);
+    setInwardItemSelection(false);
+  }
+
+  const handleDiscard = () => {
+    Swal.fire({
+      title: "Clear Form?",
+      text: "This will remove all items and reset the current entry.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#6366f1",
+      cancelButtonColor: "#f43f5e",
+      confirmButtonText: "Yes, Clear All",
+      cancelButtonText: "Cancel",
+      background: "#ffffff",
+      borderRadius: "16px",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setDeliveryItems([]);
+        setExchangeItems([]);
+        setCustomerId(null);
+        setPosId(null);
+        setSalesDeliveryId(null);
+        setRemarks("");
+        setTerms("");
+        setTerm("");
+        setPackingChargeEnabled(false);
+        setPackingCharge("");
+        setShippingChargeEnabled(false);
+        setShippingCharge("");
+        if (onNew) onNew();
+        toast.success("Form cleared successfully");
+      }
+    });
+  };
+
   const footerContent = (
     <CommonFormFooter
       remarks={remarks}
@@ -488,12 +860,14 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       showTermSelect
       termValue={term}
       onTermChange={handleTermTemplateChange}
+      showTerms={returnType !== "Pos"}
+      showRemarks={returnType !== "Pos"}
       termOptions={((id ? termsData?.data : termsData?.data?.filter((item) => item?.active)) || []).map((blend) => ({
         value: blend.id,
         label: blend?.name,
         templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
-      chargeOptions={[
+      chargeOptions={returnType === "Pos" ? [] : [
         {
           key: "packingChargeToggle",
           label: "Packing",
@@ -521,7 +895,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
           },
         },
       ]}
-      totalsRows={[
+      totalsRows={returnType === "Pos" ? [] : [
         {
           key: "totalQty",
           label: "Total Quantity",
@@ -550,16 +924,21 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
         },
       ]}
       leftActions={
-        <>
-          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-            <FiSave className="w-4 h-4 mr-2" />
-            Save & New
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDiscard}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-red-200 text-red-600 rounded-lg text-[11px] font-bold hover:bg-red-50 transition-all shadow-sm active:scale-95"
+          >
+            <HiOutlineRefresh className="w-3.5 h-3.5" />
+            Clear All
           </button>
-          <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-            <HiOutlineRefresh className="w-4 h-4 mr-2" />
-            Save & Close
+          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm font-medium transition-all shadow-sm active:scale-95">
+            <FiSave className="mr-1.5" /> Save & New
           </button>
-        </>
+          <button onClick={() => saveData("close")} className="bg-indigo-700 text-white px-4 py-1.5 rounded-md hover:bg-indigo-800 flex items-center text-sm font-medium transition-all shadow-sm active:scale-95">
+            <FiSave className="mr-1.5" /> Save & Close
+          </button>
+        </div>
       }
       rightActions={
         <>
@@ -622,6 +1001,69 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
         </PDFViewer>
       </Modal>
 
+      <Modal
+        isOpen={inwardItemSelection}
+        onClose={() => setInwardItemSelection(false)}
+        title={returnType === "Pos" ? "Select Items from POS Bill" : "Select Items from Delivery Challan"}
+        widthClass="w-[85vw] h-[85vh]"
+      >
+        <PosItemsSelection
+          returnType={returnType}
+          singlePosData={singlePosData}
+          singleSalesDeliveryData={singleSalesDeliveryData}
+          handleFillItems={handleFillItems}
+          setInwardItemSelection={setInwardItemSelection}
+          itemList={itemList}
+          colorList={colorList}
+          sizeList={sizeList}
+          findFromList={findFromList}
+        />
+      </Modal>
+
+      <SalesPersonModal
+        isOpen={showSalesPersonModal}
+        onClose={() => setShowSalesPersonModal(false)}
+        salesPersonScannerRef={salesPersonScannerRef}
+        salesPersonBarcode={salesPersonBarcode}
+        setSalesPersonBarcode={setSalesPersonBarcode}
+        handleSalesPersonScan={handleSalesPersonScan}
+        employees={employees}
+      />
+
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        total={posNetAmount}
+        paidCash={paidCash}
+        setPaidCash={setPaidCash}
+        paidUPI={paidUPI}
+        setPaidUPI={setPaidUPI}
+        paidCard={paidCard}
+        setPaidCard={setPaidCard}
+        paidOnline={paidOnline}
+        setPaidOnline={setPaidOnline}
+        upiRefNo={upiRefNo}
+        setUpiRefNo={setUpiRefNo}
+        handleCheckout={() => saveData("close")}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+      />
+
+      <ItemOfferModal
+        isOpen={showItemOfferModal}
+        onClose={() => setShowItemOfferModal(false)}
+        selectedItemForOffers={selectedItemForOffers}
+        getItemApplicableOffers={getItemApplicableOffers}
+        selectedOffersByRow={selectedOffersByRow}
+        setSelectedOffersByRow={setSelectedOffersByRow}
+        Swal={Swal}
+      />
+
+      <BarcodeResolutionModal
+        barcodeResolution={barcodeResolution}
+        setBarcodeResolution={setBarcodeResolution}
+      />
+
       <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
         <PDFViewer style={{ width: "100%", height: "90vh" }}>
           <ThermalSalesPrintFormat
@@ -655,14 +1097,40 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
             <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2">
               <ReusableInput label="Sales Return No" readOnly value={docId} />
               <ReusableInput label="Sales Return Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+
             </TransactionHeaderSection>
 
             <TransactionHeaderSection title="Customer Details" className="col-span-3 overflow-visible" bodyClassName="grid-cols-8 gap-1 overflow-visible">
+              {/* <div className="col-span-1">
+                <DropdownInput
+                  name="Return Type"
+                  options={[
+                    { show: "Bulk Sales", value: "Bulk Sales" },
+                    { show: "Pos", value: "Pos" },
+                  ]}
+                  value={returnType}
+                  setValue={setReturnType}
+                  required={true}
+                  readOnly={readOnly}
+                />
+              </div> */}
 
+
+              <div className="col-span-1">
+                <DropdownInput name="Sales Order No"
+                  options={
+                    returnType === "Pos"
+                      ? dropDownListObject(posData?.data, "docId", "id")
+                      : dropDownListObject(salesDeliveryData?.data, "docId", "id")
+                  }
+                  value={returnType === "Pos" ? posId : salesDeliveryId}
+                  setValue={returnType === "Pos" ? setPosId : setSalesDeliveryId}
+                  required={true} readOnly={id || readOnly} />
+              </div>
               <div className="col-span-3 overflow-visible">
 
 
-                <ReusableSearchableInput
+                {/* <ReusableSearchableInput
                   label="Customer Name"
                   component="PartyMaster"
                   placeholder="Search Customer Name..."
@@ -671,35 +1139,19 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
                   searchTerm={customerId}
                   show={"isClient"}
                   required={true}
-                  disabled={id}
+                  disabled={true}
+                /> */}
+                <TextInputNew
+                  name="Customer Name"
+                  value={findFromList(customerId, supplierList?.data, "name")}
+                  setValue={setCustomerId}
+                  required={true}
+                  readOnly={true}
                 />
-              </div>
-              <TextInput
-                name={"Phone Number"}
-                value={
-                  supplierDetails?.data?.contactPersonNumber ||
-                  findFromList(customerId, supplierList?.data, "contactPersonNumber")
-                }
-                disabled={true}
-                required
-              />
-              <div className="col-span-3">
-                <TextAreaNew
-                  name="Address"
-                  placeholder="Address"
-                  rows={1}
-                  value={
-                    supplierDetails?.data?.address ||
-                    findFromList(customerId, supplierList?.data, "address")
-                  }
-                  disabled
-                />
-              </div>
-              <div className="col-span-1">
-                <DropdownInput name="Sales Order No"
-                  options={dropDownListObject(id ? salesDeliveryData?.data : salesDeliveryData?.data?.filter(i => i.customerId == customerId), "docId", "id")}
-                  value={salesDeliveryId} setValue={setSalesDeliveryId} required={true} readOnly={id || readOnly} />
-              </div>
+
+              </div>{console.log(findFromList(customerId, supplierList?.data, "name"), "customerName", customerId, supplierList?.data)}
+
+
             </TransactionHeaderSection>
 
 
@@ -709,11 +1161,45 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       >
         <div className="min-h-0 flex-1 overflow-hidden">
           <fieldset className="h-full min-h-0">
-            <SalesReturnItems
-              deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
-              handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
-              itemList={itemList} sizeList={sizeList}
-            />
+
+            {returnType === "Pos" ? (
+              <PosSalesReturnItems
+                deliveryItems={deliveryItems}
+                setDeliveryItems={setDeliveryItems}
+                exchangeItems={exchangeItems}
+                setExchangeItems={setExchangeItems}
+                itemList={itemList}
+                sizeList={sizeList}
+                colorList={colorList}
+                locations={locations}
+                uomList={uomList}
+                readOnly={readOnly}
+                handleRightClick={handleRightClick}
+                contextMenu={contextMenu}
+                handleCloseContextMenu={handleCloseContextMenu}
+                setInwardItemSelection={setInwardItemSelection}
+                exchangeSearchQuery={exchangeSearchQuery}
+                setExchangeSearchQuery={setExchangeSearchQuery}
+                handleExchangeScan={handleExchangeScan}
+                exchangeScannerRef={exchangeScannerRef}
+                returnTotal={returnTotal}
+                handlePayNow={handlePayNow}
+                // Offer Props
+                handleShowItemOffers={handleShowItemOffers}
+                selectedOffersByRow={selectedOffersByRow}
+                cartWithOffers={cartWithOffers}
+                employees={employees}
+                // Stock Location Resolution
+                getStockByBarcode={getStockByBarcode}
+                resolveBarcodeMatch={resolveBarcodeMatch}
+              />
+            ) : (
+              <SalesReturnItems
+                deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
+                handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
+                itemList={itemList} sizeList={sizeList}
+              />
+            )}
           </fieldset>
         </div>
       </TransactionEntryShell>

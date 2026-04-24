@@ -85,6 +85,17 @@ const SearchableTableCellSelect = ({
   const commitSelection = (nextValue) => {
     onChange(nextValue);
     closeDropdown();
+    // Automatically move to the next field after selection
+    setTimeout(() => {
+      const allFocusable = Array.from(document.querySelectorAll('input:not([disabled]), select:not([disabled]), button:not([disabled])'));
+      // Filter out elements inside our own dropdown (except the input itself)
+      const externalFocusable = allFocusable.filter(el => !containerRef.current.contains(el) || el === inputRef.current);
+
+      const index = externalFocusable.indexOf(inputRef.current);
+      if (index > -1 && index < externalFocusable.length - 1) {
+        externalFocusable[index + 1].focus();
+      }
+    }, 0);
   };
 
   const handleAddNewSuccess = (newValue) => {
@@ -132,14 +143,30 @@ const SearchableTableCellSelect = ({
         value={displayValue}
         placeholder={placeholder}
         disabled={disabled}
-        className={`h-full w-full border-0 bg-transparent py-0   text-[11px] shadow-none outline-none focus:bg-transparent focus:outline-none ${align === "right" ? "text-right" : "text-left"
+        className={`h-full w-full border-0 bg-transparent py-0   text-[11px] shadow-none outline-none focus:bg-transparent focus:outline-none tx-table-input ${align === "right" ? "text-right" : "text-left"
           }`}
         onFocus={(event) => {
           if (disabled) return;
-          setIsOpen(true);
-          setIsSearching(false);
-          setSearch("");
+          if (!isOpen) {
+            setIsOpen(true);
+            setIsSearching(false);
+            setSearch("");
+          }
           requestAnimationFrame(() => event.target.select());
+        }}
+        onMouseDown={(event) => {
+          if (disabled) return;
+          if (isOpen) {
+            event.preventDefault();
+            event.stopPropagation();
+            closeDropdown();
+          } else if (document.activeElement === event.target) {
+            event.preventDefault();
+            event.stopPropagation();
+            setIsOpen(true);
+            setIsSearching(false);
+            setSearch("");
+          }
         }}
         onChange={(event) => {
           setIsOpen(true);
@@ -174,9 +201,6 @@ const SearchableTableCellSelect = ({
             if (highlightedIndex >= 0 && highlightedIndex <= maxIdx) {
               event.preventDefault();
               commitSelection(filteredOptions[highlightedIndex].value);
-              if (handlers?.handleTabKeyDown) {
-                handlers.handleTabKeyDown(event);
-              }
               return;
             }
             console.log(isOpen, isSearching, search.trim() === "", "isOpen, isSearching, search.trim()")
@@ -280,13 +304,12 @@ const SearchableTableCellSelect = ({
                 ref={handlers?.secondInputRef}
                 key={option.value}
                 type="button"
-                className={`block w-full border-b border-slate-100 px-2 py-1 text-left text-[11px] transition-colors ${
-                  index === highlightedIndex
+                className={`block w-full border-b border-slate-100 px-2 py-1 text-left text-[11px] transition-colors ${index === highlightedIndex
                     ? "bg-blue-600 text-white"
                     : String(option.value) === String(value)
-                    ? "bg-blue-50 font-medium text-blue-600"
-                    : "text-slate-700 hover:bg-slate-50"
-                }`}
+                      ? "bg-blue-50 font-medium text-blue-600"
+                      : "text-slate-700 hover:bg-slate-50"
+                  }`}
                 onMouseDown={(event) => {
                   event.preventDefault();
                   commitSelection(option.value);

@@ -380,3 +380,15 @@ export const platformList = [
     { show: "IndiaMART ", value: "INDIAMART" },
     { show: "Other", value: "OTHER" },
 ]
+
+export const challanTypeList = [
+    { show: "DC OUTWARD", value: "DcOutward" },
+    { show: "DC INWARD", value: "DcInward" },
+]
+
+
+export const TransactionType = [
+    { show: "SALE", value: "SALE" },
+    { show: "EXCHNAGE", value: "EXCHNAGE" },
+    { show: "REFUND", value: "REFUND" },
+]

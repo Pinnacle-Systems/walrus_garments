@@ -21,6 +21,10 @@ const BarCodePrintFormat = ({
   sizeList,
   itemList,
   itemPriceList,
+  toLocationId,
+  locationData,
+  offersData,
+  collectionsData,
   labelConfig = {
     labelWidth: 45, // mm
     labelHeight: 30, // mm
@@ -48,15 +52,51 @@ const BarCodePrintFormat = ({
           : parseInt(p.sizeId) === parseInt(item.sizeId) &&
           parseInt(p.colorId) === parseInt(item.colorId))
     );
-    console.log(itemObj, "itemPriceList", itemPriceList)
+    const isDiscountSection = findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION";
+    const getOfferPrice = () => {
+      if (!isDiscountSection) return priceObj?.salesPrice || 0;
+
+      const salesPrice = parseFloat(priceObj?.salesPrice || 0);
+      const applicableOffer = offersData?.data?.find(offer => {
+        if (!offer.applyToClearance) return false;
+        if (offer.scopeMode === 'Global') return true;
+
+        return offer.OfferScope?.some(scope => {
+          const type = String(scope.type).toLowerCase();
+          if (type === 'item' && parseInt(scope.refId) === parseInt(item.itemId)) return true;
+          if (type === 'collection') {
+            const collection = collectionsData?.data?.find(c => parseInt(c.id) === parseInt(scope.refId));
+            return collection?.CollectionItems?.some(ci => parseInt(ci.itemId) === parseInt(item.itemId));
+          }
+          return false;
+        });
+      });
+
+      if (applicableOffer) {
+        if (applicableOffer.discountType === 'Percentage') {
+          return salesPrice * (1 - (applicableOffer.discountValue || 0) / 100);
+        } else if (applicableOffer.discountType === 'Fixed') {
+          return Math.max(0, salesPrice - (applicableOffer.discountValue || 0));
+        } else if (['Override', 'Volume'].includes(applicableOffer.discountType)) {
+          const tier = applicableOffer.OfferTier?.[0];
+          if (tier) {
+            if (tier.type === 'Fixed') return tier.value;
+            return salesPrice * (1 - (tier.value || 0) / 100);
+          }
+        }
+      }
+      return salesPrice;
+    };
+
+    const resolvedPrice = getOfferPrice();
 
 
     return Array.from({ length: parseInt(item?.transferQty || 0) }, () => ({
-      barCode: item.barCode,
+      barCode: isDiscountSection ? item.clearanceBarcode : (item.barcode || item.barCode),
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: findFromList(item.itemId, itemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
-      price: priceObj?.salesPrice || 0,
+      price: resolvedPrice || 0,
     }));
   });
 

@@ -31,8 +31,8 @@ import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
 
 
 const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
-  dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setDeliveryItems, deliveryItems, 
-  yarnList, colorList, uomList, hsnList, convertSaleOrderId, linkedSaleOrder, invalidateTagsDispatch , termsData, dispatch, totalReceivedAmount = 0, remainingPaymentCapacity = 0
+  dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setDeliveryItems, deliveryItems,
+  yarnList, colorList, uomList, hsnList, convertSaleOrderId, linkedSaleOrder, invalidateTagsDispatch, termsData, dispatch, totalReceivedAmount = 0, remainingPaymentCapacity = 0
 
 
 
@@ -199,7 +199,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     branchId,
     customerId,
     terms,
-    saleOrderId : convertSaleOrderId || singleData?.data?.saleOrderId,
+    saleOrderId: convertSaleOrderId || singleData?.data?.saleOrderId,
     packingChargeEnabled,
     packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
     shippingChargeEnabled,
@@ -408,37 +408,37 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const chargeRows = [
     ...(packingChargeEnabled
       ? [{
-          key: "packingCharge",
-          label: "Packing Charge",
-          summaryColumn: "right",
-          renderValue: () => (
-            <input
-              type="number"
-              value={packingCharge}
-              onChange={(event) => setPackingCharge(event.target.value)}
-              onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
-              readOnly={readOnly}
-              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
-            />
-          ),
-        }]
+        key: "packingCharge",
+        label: "Packing Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={packingCharge}
+            onChange={(event) => setPackingCharge(event.target.value)}
+            onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
       : []),
     ...(shippingChargeEnabled
       ? [{
-          key: "shippingCharge",
-          label: "Shipping Charge",
-          summaryColumn: "right",
-          renderValue: () => (
-            <input
-              type="number"
-              value={shippingCharge}
-              onChange={(event) => setShippingCharge(event.target.value)}
-              onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
-              readOnly={readOnly}
-              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
-            />
-          ),
-        }]
+        key: "shippingCharge",
+        label: "Shipping Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={shippingCharge}
+            onChange={(event) => setShippingCharge(event.target.value)}
+            onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
       : []),
   ];
   function isSupplierOutside() {
@@ -675,53 +675,54 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
 
-                <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-12 gap-2">
-                    <div className="col-span-4">
-                      <ReusableInput label="Sales Delivery No" readOnly value={docId} />
-                    </div>
-                    <div className="col-span-4">
-                      <ReusableInput label="Sales Delivery Date" value={date} type="date" required readOnly disabled />
-                    </div>
-                    <div className="col-span-4">
-                      <ReusableInput label="Linked Sale Order" readOnly value={linkedSaleOrderDocId || ""} />
-                    </div>
-                </TransactionHeaderSection>
+            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-12 gap-2">
+              <div className="col-span-4">
+                <ReusableInput label="Sales Delivery No" readOnly value={docId} />
+              </div>
+              <div className="col-span-4">
+                <ReusableInput label="Sales Delivery Date" value={date} type="date" required readOnly disabled />
+              </div>
+              <div className="col-span-4">
+                <ReusableInput label="Linked Sale Order" readOnly value={linkedSaleOrderDocId || ""} />
+              </div>
+            </TransactionHeaderSection>
 
-                <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
-                    <div className="col-span-3 overflow-visible">
-                      <ReusableSearchableInput
-                        label="Customer Name"
-                        component="PartyMaster"
-                        placeholder="Search Customer Name..."
-                        optionList={supplierList?.data}
-                        setSearchTerm={(value) => { setCustomerId(value) }}
-                        searchTerm={customerId}
-                        show={"isClient"}
-                        required={true}
-                        disabled={id}
-                      />
-                    </div>
-                    <TextInput
-                      name="Phone Number"
-                      value={
-                        supplierDetails?.data?.contactPersonNumber ||
-                        findFromList(customerId, supplierList?.data, "contactPersonNumber")
-                      }
-                      disabled
-                      required
-                    />
-                    <div className="col-span-3">
-                      <TextAreaNew
-                        name="Address"
-                        placeholder="Address"
-                        value={
-                          supplierDetails?.data?.address ||
-                          findFromList(customerId, supplierList?.data, "address")
-                        }
-                        disabled
-                      />
-                    </div>
-                </TransactionHeaderSection>
+            <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
+              <div className="col-span-3 overflow-visible">
+                <ReusableSearchableInput
+                  label="Customer Name"
+                  component="PartyMaster"
+                  placeholder="Search Customer Name..."
+                  optionList={supplierList?.data}
+                  setSearchTerm={(value) => { setCustomerId(value) }}
+                  searchTerm={customerId}
+                  show={"isClient"}
+                  required={true}
+                  disabled={id}
+                />
+              </div>
+              <TextInput
+                name="Phone Number"
+                value={
+                  supplierDetails?.data?.contactPersonNumber ||
+                  findFromList(customerId, supplierList?.data, "contactPersonNumber")
+                }
+                disabled
+                required
+              />
+              <div className="col-span-3">
+                <TextAreaNew
+                  name="Address"
+                  rows={1}
+                  placeholder="Address"
+                  value={
+                    supplierDetails?.data?.address ||
+                    findFromList(customerId, supplierList?.data, "address")
+                  }
+                  disabled
+                />
+              </div>
+            </TransactionHeaderSection>
 
           </div>
         )}

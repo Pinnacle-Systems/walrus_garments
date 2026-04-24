@@ -247,14 +247,15 @@ async function get(req) {
             "sizeId",
             "colorId",
             "uomId",
-            'price',
-            'sectionId',
+            "barcode",
             ...STOCK_RUNTIME_FIELD_KEYS,
         ],
         _sum: {
             qty: true,
         },
     })
+
+    console.log(data, "data")
     data = data.filter(item => (item._sum.qty > 0));
 
 
@@ -358,19 +359,7 @@ async function getSearch(req) {
     const { companyId, active } = req.query
     const { searchKey } = req.params
     const data = await prisma.stock.findMany({
-        where: {
-            country: {
-                companyId: companyId ? parseInt(companyId) : undefined,
-            },
-            active: active ? Boolean(active) : undefined,
-            OR: [
-                {
-                    aliasName: {
-                        contains: searchKey,
-                    },
-                }
-            ],
-        }
+
     })
     return { statusCode: 0, data: data };
 }
@@ -419,8 +408,12 @@ export async function createOpeningStock(body) {
                             ? {
                                 ItemPriceList: {
                                     some: {
-                                        barcode: {
-                                            in: rowBarcodes,
+                                        ItemBarcodes: {
+                                            some: {
+                                                barcode: {
+                                                    in: rowBarcodes,
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -429,15 +422,99 @@ export async function createOpeningStock(body) {
                     ].filter(Boolean)
                 },
                 include: {
-                    ItemPriceList: true,
+                    ItemPriceList: {
+                        include: {
+                            ItemBarcodes: true
+                        }
+                    },
                 }
             })
             : [];
 
-        const resolvedStockItems = resolveOpeningStockLegacyItems(stockItems, items);
-        const itemMap = new Map(items.map((item) => [item.id, item]));
+        const store = await tx.location.findUnique({
+            where: { id: parseInt(storeId) },
+            select: { storeName: true }
+        });
+        const storeName = store?.storeName;
+        const isDiscountSection = storeName === "DISCOUNT SECTION";
+        const targetType = isDiscountSection ? "CLEARANCE" : "REGULAR";
 
-        validateResolvedOpeningStockLegacyItems(resolvedStockItems, itemMap);
+        let resolvedStockItems = resolveOpeningStockLegacyItems(stockItems, items, { storeName });
+
+        // Investigation and Creation Loop
+        for (const stockItem of resolvedStockItems) {
+            const itemId = stockItem?.itemId ? parseInt(stockItem.itemId) : undefined;
+            if (!itemId) continue;
+
+            const existingItem = items.find(i => i.id === itemId);
+            if (!existingItem) continue;
+
+            const rowBarcode = (stockItem?.barcode_no ? String(stockItem.barcode_no).trim() : stockItem?.barcode ? String(stockItem.barcode).trim() : "");
+            if (!rowBarcode) continue;
+
+            const variantBarcodes = (existingItem.ItemPriceList?.[0]?.ItemBarcodes || []);
+            const targetBarcode = variantBarcodes.find(b => b.barcodeType === targetType && String(b.barcode).trim() === rowBarcode);
+
+            // If it's already a target-type barcode for this item, we are good.
+            if (targetBarcode) continue;
+
+            // Otherwise, we need to investigate.
+            const conflictingRecord = await tx.itemBarcode.findFirst({
+                where: { barcode: rowBarcode },
+                include: { ItemPriceList: { include: { item: true } } }
+            });
+
+            if (conflictingRecord) {
+                const conflictingPriceList = conflictingRecord?.ItemPriceList;
+                const conflictingItemId = conflictingPriceList?.itemId;
+
+                if (conflictingItemId && conflictingItemId !== itemId) {
+                    throw Error(`Barcode ${rowBarcode} is already associated with item ${conflictingPriceList?.item?.name}.`);
+                }
+
+                if (conflictingItemId === itemId) {
+                    const forbiddenType = isDiscountSection ? "REGULAR" : "CLEARANCE";
+                    if (conflictingRecord.barcodeType === forbiddenType) {
+                        const typeLabel = isDiscountSection ? "Regular" : "Clearance";
+                        const targetLabel = isDiscountSection ? "Clearance" : "Regular";
+                        throw Error(`Barcode ${rowBarcode} is already a ${typeLabel} barcode for item ${existingItem.name}. Cannot use it as a ${targetLabel} barcode.`);
+                    }
+                }
+            } else {
+                // Completely new barcode - create it as the targetType for this item's legacy variant.
+                const priceListId = existingItem.ItemPriceList?.[0]?.id;
+                if (priceListId) {
+                    await tx.itemBarcode.create({
+                        data: {
+                            itemPriceListId: priceListId,
+                            barcode: rowBarcode,
+                            barcodeType: targetType,
+                            active: true
+                        }
+                    });
+                }
+            }
+        }
+
+        // Re-fetch items to ensure they contain the newly created barcodes for validation
+        const refreshedItems = uniqueItemIds.length > 0 || rowBarcodes.length > 0
+            ? await tx.item.findMany({
+                where: {
+                    id: { in: Array.from(new Set([...uniqueItemIds, ...resolvedStockItems.map(si => si.itemId).filter(Boolean)])) }
+                },
+                include: {
+                    ItemPriceList: {
+                        include: {
+                            ItemBarcodes: true
+                        }
+                    },
+                }
+            })
+            : [];
+
+        const itemMap = new Map(refreshedItems.map((item) => [item.id, item]));
+
+        validateResolvedOpeningStockLegacyItems(resolvedStockItems, itemMap, { storeName });
 
         const formattedData = resolvedStockItems.map((item) => ({
             inOrOut: "OpeningStock",
@@ -910,30 +987,108 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
     const normalizedBranchId = branchId ? Number(branchId) : undefined;
     const normalizedStoreId = storeId ? Number(storeId) : undefined;
 
+    console.log("normalizedBarcode:", normalizedBarcode);
+    console.log("normalizedBranchId:", normalizedBranchId);
+
+    // const stockRecords = await prisma.stock.findMany({
+    //     where: {
+    //         OR: [
+    //             { barcode: normalizedBarcode },
+    //             {
+    //                 Item: {
+    //                     ItemPriceList: {
+    //                         some: {              // ← LIST RELATION = use "some"
+    //                             ItemBarcodes: {
+    //                                 some: {     // ← LIST RELATION = use "some"
+    //                                     barcode: normalizedBarcode,
+    //                                     active: true
+    //                                 }
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         ],
+    //         branchId: normalizedBranchId,
+    //         // storeId: normalizedStoreId,
+    //     },
+    //     include: {
+    //         Item: {
+    //             include: {
+    //                 Hsn: true,
+    //                 ItemPriceList: {
+    //                     include: {
+    //                         ItemBarcodes: true
+    //                     }
+    //                 }
+    //             }
+    //         },
+    //         Size: true,
+    //         Color: true,
+    //         Uom: true,
+    //         Store: true,
+
+    //     }
+    // });
     const stockRecords = await prisma.stock.findMany({
+        // where: {
+        //     OR: [
+        //         { barcode: normalizedBarcode },
+        //         {
+        //             Item: {
+        //                 ItemPriceList: {
+        //                     some: {
+        //                         ItemBarcodes: {
+        //                             some: {
+        //                                 barcode: normalizedBarcode,
+        //                                 active: true
+        //                             }
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     ],
+        //     branchId: normalizedBranchId,
+        // },
         where: {
             barcode: normalizedBarcode,
             branchId: normalizedBranchId,
-            storeId: normalizedStoreId,
         },
         include: {
             Item: {
-                include: { Hsn: true }
+                include: {
+                    Hsn: true,
+                    ItemPriceList: {
+                        include: {
+                            ItemBarcodes: true
+                        }
+                    }
+                }
             },
             Size: true,
             Color: true,
             Uom: true,
-            Store: true
+            Store: true,
         }
     });
-
-    console.log("stockRecords", stockRecords?.length)
+    console.log("stockRecords count:", stockRecords.length);
+    console.log("stockRecords barcodes:", stockRecords.map(r => ({ id: r.id, barcode: r.barcode, storeId: r.storeId })));
+    console.log(stockRecords, "stockRecords")
 
     if (!stockRecords.length) {
         return { statusCode: 1, message: "No stock found for this barcode" };
     }
 
     const matches = buildBarcodeSnapshotMatches(stockRecords);
+
+    // Attach barcodeType from the matched barcode
+    const matchedBarcodeRecord = stockRecords.flatMap(r => r.ItemPriceList?.ItemBarcodes || [])
+        .find(b => b.barcode === normalizedBarcode);
+
+    matches.forEach(m => {
+        m.barcodeType = matchedBarcodeRecord ? matchedBarcodeRecord.barcodeType : "REGULAR";
+    });
 
     if (matches.length > 1) {
         return {
@@ -951,6 +1106,7 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
         data: first
     };
 }
+
 
 
 

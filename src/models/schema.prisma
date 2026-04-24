@@ -175,6 +175,8 @@ model Branch {
   Payment                                Payment[]
   Pos                                    Pos[]
   Offer                                  Offer[]
+  DeliveryChallan                        DeliveryChallan[]
+  expenses                               Expense[]
 }
 
 model UserOnBranch {
@@ -323,6 +325,10 @@ model User {
   PaymentUpdateBy                     Payment[]                    @relation(name: "updatedBy")
   PosCreatedBy                        Pos[]                        @relation(name: "createdBy")
   PosUpdateBy                         Pos[]                        @relation(name: "updatedBy")
+  DeliveryChallanCreatedBy            DeliveryChallan[]            @relation(name: "CreatedBy")
+  DeliveryChallanUpdateBy             DeliveryChallan[]            @relation(name: "UpdatedBy")
+  ExpenseCreatedBy                    Expense[]                    @relation(name: "createdBy")
+  ExpenseUpdateBy                     Expense[]                    @relation(name: "updatedBy")
 }
 
 model Employee {
@@ -649,7 +655,8 @@ model Party {
   SalesReturn              SalesReturn[]
   Payment                  Payment[]
 
-  children Party[] @relation("Parent")
+  children         Party[]           @relation("Parent")
+  deliveryChallans DeliveryChallan[]
 }
 
 model PartyBranch {
@@ -812,6 +819,7 @@ model Hsn {
   SalesReturnItems     SalesReturnItems[]
   PriceTemplateDetails PriceTemplateDetails[]
   PosItems             PosItems[]
+  DeliveryChallanItems DeliveryChallanItems[]
 }
 
 model YarnBlend {
@@ -1136,6 +1144,7 @@ model Color {
   SalesInvoiceItems                  SalesInvoiceItems[]
   SalesReturnItems                   SalesReturnItems[]
   PosItems                           PosItems[]
+  DeliveryChallanItems               DeliveryChallanItems[]
 }
 
 model UnitOfMeasurement {
@@ -1189,6 +1198,7 @@ model UnitOfMeasurement {
   SalesInvoiceItems                         SalesInvoiceItems[]
   SalesReturnItems                          SalesReturnItems[]
   PosItems                                  PosItems[]
+  DeliveryChallanItems                      DeliveryChallanItems[]
 }
 
 enum DeliveryType {
@@ -1875,6 +1885,7 @@ model Size {
   SalesInvoiceItems                         SalesInvoiceItems[]
   SalesReturnItems                          SalesReturnItems[]
   PosItems                                  PosItems[]
+  DeliveryChallanItems                      DeliveryChallanItems[]
 }
 
 model SocksMaterial {
@@ -2046,6 +2057,7 @@ model Location {
   ToLocation                         StockTransfer[]                      @relation(name: "toLocation")
   MinimumStockQty                    MinimumStockQty[]
   StockAdjustment                    StockAdjustment[]
+  DeliveryChallan                    DeliveryChallan[]
 }
 
 enum ProcessIO {
@@ -4962,6 +4974,26 @@ model Item {
   SalesReturnItems                   SalesReturnItems[]
   PosItems                           PosItems[]
   CollectionItems                    CollectionItems[]
+  DeliveryChallanItems               DeliveryChallanItems[]
+}
+
+model ItemBarcode {
+  id              Int             @id @default(autoincrement())
+  ItemPriceList   ItemPriceList?  @relation(fields: [itemPriceListId], references: [id], onDelete: Cascade)
+  itemPriceListId Int?
+  barcode         String          @unique
+  barcodeType     ItemBarcodeType @default(REGULAR)
+  active          Boolean?        @default(true)
+  clearanceReason String?
+  createdAt       DateTime?       @default(now())
+  updatedAt       DateTime?       @updatedAt
+
+  @@index([itemPriceListId, barcodeType])
+}
+
+enum ItemBarcodeType {
+  REGULAR
+  CLEARANCE
 }
 
 model ItemPriceList {
@@ -4976,7 +5008,7 @@ model ItemPriceList {
   salesPrice      String?
   offerPrice      String?
   sku             String?
-  barcode         String?
+  ItemBarcodes    ItemBarcode[]
   MinimumStockQty MinimumStockQty[]
 }
 
@@ -5331,8 +5363,15 @@ model SalesReturn {
   shippingChargeEnabled Boolean?           @default(false)
   shippingCharge        String?
   salesDeliveryId       Int?
+  returnType            String?
+  posId                 Int?
+  Pos                   Pos?               @relation("OriginalBill", fields: [posId], references: [id])
+  exchangePosId         Int?
+  ExchangePos           Pos?               @relation("ExchangeNewBill", fields: [exchangePosId], references: [id])
+  refundType            String?
   SalesDelivery         SalesDelivery?     @relation(fields: [salesDeliveryId], references: [id])
   SalesReturnItems      SalesReturnItems[]
+  Expense               Expense[]
 }
 
 model SalesReturnItems {
@@ -5416,58 +5455,85 @@ model Payment {
 }
 
 model Pos {
-  id          Int           @id @default(autoincrement())
-  docId       String?
-  date        DateTime?
-  Branch      Branch?       @relation(fields: [branchId], references: [id])
-  branchId    Int?
-  Party       Party?        @relation(fields: [customerId], references: [id])
-  customerId  Int?
-  createdAt   DateTime?     @default(now())
-  updatedAt   DateTime?     @updatedAt
-  createdBy   User?         @relation("createdBy", fields: [createdById], references: [id])
-  createdById Int?
-  updatedBy   User?         @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById Int?
-  description String?
-  PosItems    PosItems[]
-  PosPayments PosPayments[]
+  id                  Int           @id @default(autoincrement())
+  docId               String?
+  date                DateTime?
+  Branch              Branch?       @relation(fields: [branchId], references: [id])
+  branchId            Int?
+  Party               Party?        @relation(fields: [customerId], references: [id])
+  customerId          Int?
+  createdAt           DateTime?     @default(now())
+  updatedAt           DateTime?     @updatedAt
+  createdBy           User?         @relation("createdBy", fields: [createdById], references: [id])
+  createdById         Int?
+  updatedBy           User?         @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById         Int?
+  balanceReturn       String?
+  description         String?
+  discountType        String?
+  discountValue       String?
+  manualDiscount      String?
+  netAmount           String?
+  paidCard            String?
+  paidCash            String?
+  paidOnline          String?
+  paidUPI             String?
+  paymentMethod       String?
+  promotionalDiscount String?
+  receivedAmount      String?
+  roundOff            String?
+  taxAmount           String?
+  isExchange          Boolean?      @default(false)
+  bilStatus           String?
+  OriginalBill        SalesReturn[] @relation("OriginalBill")
+  ExchangeNewBill     SalesReturn[] @relation("ExchangeNewBill")
+  PosItems            PosItems[]    @relation("Bill")
+  ReturnBillItems     PosItems[]    @relation("ReturnBill")
+  PosPayments         PosPayments[] @relation("Bill")
+  ReturnBillPayments  PosPayments[] @relation("ReturnBill")
 }
 
 model PosItems {
-  id            Int                @id @default(autoincrement())
-  Pos           Pos?               @relation(fields: [PosId], references: [id], onDelete: Cascade)
-  PosId         Int?
-  Item          Item?              @relation(fields: [itemId], references: [id])
-  itemId        Int?
-  Size          Size?              @relation(fields: [sizeId], references: [id])
-  sizeId        Int?
-  Color         Color?             @relation(fields: [colorId], references: [id])
-  colorId       Int?
-  Uom           UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId         Int?
-  Hsn           Hsn?               @relation(fields: [hsnId], references: [id])
-  hsnId         Int?
-  qty           String?
-  price         String?
-  discountType  String?
-  discountValue String?
-  taxPercent    String?
-  taxMethod     String?
-  priceType     String?
-  Employee      Employee?          @relation(fields: [salesPersonId], references: [id])
-  salesPersonId Int?
+  id             Int                @id @default(autoincrement())
+  Pos            Pos?               @relation("Bill", fields: [PosId], references: [id], onDelete: Cascade)
+  PosId          Int?
+  Item           Item?              @relation(fields: [itemId], references: [id])
+  itemId         Int?
+  Size           Size?              @relation(fields: [sizeId], references: [id])
+  sizeId         Int?
+  Color          Color?             @relation(fields: [colorId], references: [id])
+  colorId        Int?
+  Uom            UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId          Int?
+  Hsn            Hsn?               @relation(fields: [hsnId], references: [id])
+  hsnId          Int?
+  qty            String?
+  price          String?
+  discountType   String?
+  discountValue  String?
+  taxPercent     String?
+  taxMethod      String?
+  priceType      String?
+  Employee       Employee?          @relation(fields: [salesPersonId], references: [id])
+  salesPersonId  Int?
+  isReturn       Boolean?           @default(false)
+  retunBill      Pos?               @relation("ReturnBill", fields: [retunBillId], references: [id], onDelete: Cascade)
+  retunBillId    Int?
+  originalItem   PosItems?          @relation("ReturnItem", fields: [originalItemId], references: [id])
+  originalItemId Int?
+  ReturnItems    PosItems[]         @relation("ReturnItem")
 }
 
 model PosPayments {
   id             Int     @id @default(autoincrement())
-  Pos            Pos?    @relation(fields: [PosId], references: [id], onDelete: Cascade)
+  Pos            Pos?    @relation("Bill", fields: [PosId], references: [id], onDelete: Cascade)
   PosId          Int?
   amount         String?
+  paymentMode    String?
   reference_no   String?
-  card_type      String?
-  bank_name      String?
   transaction_id String?
+  RetunBill      Pos?    @relation("ReturnBill", fields: [retunBillId], references: [id], onDelete: Cascade)
+  retunBillId    Int?
 }
 
 model Collections {
@@ -5513,11 +5579,13 @@ model Offer {
 
   stacking String?
 
+  applyToClearance Boolean? @default(false)
+  applyToRegular   Boolean? @default(false)
   discountType     String? // Percentage, Flat, FreeItem
-  discountValue    Float?  @default(0)
-  maxDiscountValue Float?  @default(0)
+  discountValue    Float?   @default(0)
+  maxDiscountValue Float?   @default(0)
   freeItemId       Int?
-  freeItemQty      Float?  @default(1)
+  freeItemQty      Float?   @default(1)
 
   createdAt  DateTime?    @default(now())
   updatedAt  DateTime?    @updatedAt
@@ -5551,4 +5619,87 @@ model OfferTier {
   minQty  Float?
   type    String
   value   Float?
+}
+
+model DeliveryChallan {
+  id                   Int                    @id @default(autoincrement())
+  docId                String?
+  date                 DateTime?              @default(now())
+  branchId             Int?
+  customerId           Int?
+  createdAt            DateTime?              @default(now())
+  updatedAt            DateTime?
+  createdById          Int?
+  updatedById          Int?
+  description          String?
+  challanType          String?
+  platform             String?
+  Location             Location?              @relation(fields: [storeId], references: [id])
+  storeId              Int?
+  Branch               Branch?                @relation(fields: [branchId], references: [id])
+  Party                Party?                 @relation(fields: [customerId], references: [id])
+  createdBy            User?                  @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedBy            User?                  @relation("UpdatedBy", fields: [updatedById], references: [id])
+  DeliveryChallanItems DeliveryChallanItems[]
+}
+
+model DeliveryChallanItems {
+  id                Int     @id @default(autoincrement())
+  deliveryChallanId Int?
+  itemId            Int?
+  sizeId            Int?
+  colorId           Int?
+  uomId             Int?
+  hsnId             Int?
+  qty               String?
+  price             String?
+  discountType      String?
+  discountValue     String?
+  taxMethod         String?
+  taxType           String?
+
+  DeliveryChallan   DeliveryChallan?   @relation(fields: [deliveryChallanId], references: [id], onDelete: Cascade)
+  Item              Item?              @relation(fields: [itemId], references: [id])
+  Size              Size?              @relation(fields: [sizeId], references: [id])
+  Color             Color?             @relation(fields: [colorId], references: [id])
+  UnitOfMeasurement UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  Hsn               Hsn?               @relation(fields: [hsnId], references: [id])
+}
+
+model ExpenseCategory {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  createdAt         DateTime?           @default(now())
+  updatedAt         DateTime?           @updatedAt
+  active            Boolean?            @default(false)
+  ExpenseEntryItems ExpenseEntryItems[]
+}
+
+model Expense {
+  id                Int                 @id @default(autoincrement())
+  docId             String?
+  date              DateTime?
+  Branch            Branch?             @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  salesReturnId     Int?
+  SalesReturn       SalesReturn?        @relation(fields: [salesReturnId], references: [id])
+  createdAt         DateTime?           @default(now())
+  updatedAt         DateTime?           @updatedAt
+  createdBy         User?               @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int?
+  updatedBy         User?               @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  ExpenseEntryItems ExpenseEntryItems[]
+}
+
+model ExpenseEntryItems {
+  id                Int              @id @default(autoincrement())
+  expenseId         Int?
+  Expense           Expense?         @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  description       String?
+  ExpenseCategory   ExpenseCategory? @relation(fields: [expenseCategoryId], references: [id])
+  expenseCategoryId Int?
+  amount            String?
+  paymentMethod     String?
+  referenceNo       String?
 }

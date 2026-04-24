@@ -342,6 +342,8 @@ async function create(body) {
                     createMany: saleOrderItems?.length > 0 ? {
                         data: saleOrderItems?.filter(temp => temp.itemId).map((temp) => {
                             let newItem = {}
+
+
                             newItem["itemId"] = temp["itemId"] ? parseInt(temp["itemId"]) : null;
                             newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : null;
                             newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
@@ -353,6 +355,7 @@ async function create(body) {
                             newItem["discountType"] = temp["discountType"];
                             newItem["discountValue"] = temp["discountValue"] || "";
                             newItem["taxPercent"] = temp["taxPercent"];
+                            newItem["taxMethod"] = temp["taxMethod"];
 
                             return newItem
                         })
@@ -437,6 +440,7 @@ async function update(id, body) {
                         discountType: item["discountType"] ? item["discountType"] : "",
                         discountValue: item["discountValue"] ? item["discountValue"] : "",
                         taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
+                        taxMethod: item["taxMethod"] ? item["taxMethod"] : "",
                     }
                 });
             } else {
@@ -454,7 +458,10 @@ async function update(id, body) {
                         discountType: item["discountType"] ? item["discountType"] : "",
                         discountValue: item["discountValue"] ? item["discountValue"] : "",
                         taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
+                        taxMethod: item["taxMethod"] ? item["taxMethod"] : "",
+
                     }
+
                 });
             }
         }

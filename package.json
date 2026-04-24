@@ -10,6 +10,7 @@
     "migrate": "npx prisma migrate dev --schema ./src/models/schema.prisma",
     "migrate:deploy": "npx prisma migrate deploy --schema ./src/models/schema.prisma",
     "prisma:generate": "npx prisma generate --schema ./src/models/schema.prisma",
+    "db:pull": "npx prisma db pull --schema ./src/models/schema.prisma",
     "studio": "npx prisma studio --schema ./src/models/schema.prisma",
     "start": "node --max-old-space-size=4096 server.js",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
