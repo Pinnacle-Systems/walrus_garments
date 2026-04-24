@@ -397,19 +397,12 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
         findFromList(customerId, supplierList?.data, "address");
 
 
+    const totalAmount = expenseItems?.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0) || 0;
+
     const summaryItems = [
-        { label: "No", value: docId },
-        { label: "Date", value: date },
-        { label: "Sale Order", value: saleOrderDocId },
-        {
-            label: "Customer",
-            value:
-                supplierDetails?.data?.name ||
-                findFromList(customerId, supplierList?.data, "name") ||
-                findFromList(customerId, supplierList?.data, "aliasName"),
-        },
-        { label: "Phone", value: customerPhone },
-        { label: "Address", value: customerAddress },
+        { label: "Entry No", value: docId },
+        { label: "Entry Date", value: date },
+        { label: "Total Amount", value: `Rs. ${totalAmount.toFixed(2)}`, emphasized: true },
     ];
 
     const handleTermTemplateChange = (value) => {
@@ -588,7 +581,7 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                 </PDFViewer>
             </Modal>
             <TransactionEntryShell
-                title="Delivery Challan"
+                title="Expense Entry"
                 onClose={onClose}
                 headerOpen={isHeaderOpen}
                 setHeaderOpen={setIsHeaderOpen}

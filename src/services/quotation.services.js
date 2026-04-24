@@ -188,9 +188,9 @@ async function create(body) {
 
                             newItem["discountType"] = temp["discountType"];
                             newItem["discountValue"] = String(temp["discountValue"] || "");
+                            newItem["taxMethod"] = String(temp["taxMethod"]);
                             newItem["taxPercent"] = String(temp["taxPercent"]);
                             newItem["priceType"] = String(temp["priceType"]);
-                            // newItem["taxMethod"] = String(temp["taxMethod"]);
 
                             return newItem
                         })
@@ -346,6 +346,14 @@ async function update(id, body) {
                         hsnId: item.hsnId ? parseInt(item.hsnId) : null,
                         qty: item.qty ? item.qty.toString() : "0",
                         price: item.price ? item.price.toString() : "0",
+                        taxMethod: item?.taxMethod ? item.taxMethod : "",
+                        taxPercent: item?.taxPercent ? item.taxPercent : "",
+
+
+                        // barcodeType: item?.barcodeType ? item.barcodeType : "",
+                        // priceType: item?.priceType ? item.priceType : "",
+                        // discountType: item?.discountType ? item.discountType : "",
+                        // discountValue: item?.discountValue ? item.discountValue : "",
                     }
                 });
             } else {
@@ -359,6 +367,14 @@ async function update(id, body) {
                         hsnId: item.hsnId ? parseInt(item.hsnId) : null,
                         qty: item.qty ? item.qty.toString() : "0",
                         price: item.price ? item.price.toString() : "0",
+                        taxMethod: item?.taxMethod ? item.taxMethod : "",
+                        taxPercent: item?.taxPercent ? item.taxPercent : "",
+
+
+                        // barcodeType: item?.barcodeType ? item.barcodeType : "",
+                        // priceType: item?.priceType ? item.priceType : "",
+                        // discountType: item?.discountType ? item.discountType : "",
+                        // discountValue: item?.discountValue ? item.discountValue : "",
                     }
                 });
             }

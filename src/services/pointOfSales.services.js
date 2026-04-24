@@ -107,7 +107,8 @@ async function getOne(id) {
                     Color: true,
                     Size: true,
                     ReturnItems: true,
-                    Uom: true
+                    Uom: true,
+                    Employee: true
                 }
             },
             Party: {

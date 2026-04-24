@@ -17,8 +17,10 @@ import {
 import Modal from "../../UiComponents/Modal";
 import MasterPageLayout from "../../Basic/components/MasterPageLayout";
 import { useFormKeyboardNavigation } from '../../CustomHooks/useFormKeyboardNavigation';
+import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
 
-// --- Constants ---
+
+
 const OFFER_TYPES = [
     { show: 'Percentage Discount', value: 'Percentage' },
     { show: 'Fixed Amount Off', value: 'Fixed' },
@@ -90,6 +92,10 @@ const OffersPromotions = () => {
 
     const { refs, handlers } = useFormKeyboardNavigation();
     const { firstInputRef: nameRef, saveCloseButtonRef } = refs;
+
+
+    const [dispatchInvalidate] = useInvalidateTags();
+
 
     const params = {
         companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
@@ -229,7 +235,7 @@ const OffersPromotions = () => {
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
         try {
             let returnData = await callback(data).unwrap();
-            setId(returnData.data.id);
+            dispatchInvalidate();
             await Swal.fire({
                 title: text + " Successfully",
                 icon: "success",
@@ -770,7 +776,6 @@ const OffersPromotions = () => {
                         </div>
 
                         <div className="flex-1 overflow-hidden p-4 grid grid-cols-12 gap-4">
-                            {/* LEFT: SEARCH & SELECT */}
                             <div className="col-span-12 lg:col-span-7 flex flex-col bg-white rounded-lg border shadow-sm overflow-hidden">
                                 <div className="p-3 border-b bg-gray-50">
                                     <input

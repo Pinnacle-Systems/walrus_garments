@@ -66,7 +66,7 @@ async function create(body) {
         applyOn, tiers,
         itemSelection, minQty, minBillAmount, comboItems,
         couponCode, usageLimit, perCustomerLimit,
-        freeItemId, freeItemQty, branchId
+        freeItemId, freeItemQty, applyToClearance, applyToRegular
     } = await body
 
     const rawSelection = selectionIds || scopeSelection;
@@ -78,7 +78,8 @@ async function create(body) {
             code,
             offerType,
             active,
-            applyToClearance: body.applyToClearance === true,
+            applyToClearance: applyToClearance ? Boolean(applyToClearance) : false,
+            applyToRegular: applyToRegular ? Boolean(applyToRegular) : false,
             priority: priority ? parseInt(priority) : 0,
             startTime,
             endTime,
@@ -141,7 +142,7 @@ async function update(id, body) {
         applyOn, tiers,
         itemSelection, minQty, minBillAmount, comboItems,
         couponCode, usageLimit, perCustomerLimit,
-        freeItemId, freeItemQty, branchId
+        freeItemId, freeItemQty, branchId, applyToClearance, applyToRegular
     } = await body
 
     const dataFound = await prisma.offer.findUnique({
@@ -159,7 +160,8 @@ async function update(id, body) {
             code,
             // offerType: offerType ? String(offerType) : undefined,
             active,
-            applyToClearance: body.applyToClearance === true,
+            applyToClearance: applyToClearance ? Boolean(applyToClearance) : false,
+            applyToRegular: applyToRegular ? Boolean(applyToRegular) : false,
             priority: priority ? parseInt(priority) : undefined,
             startTime,
             endTime,

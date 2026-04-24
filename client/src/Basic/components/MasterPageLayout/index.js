@@ -7,7 +7,7 @@ const MasterPageLayout = ({
   onKeyDown,
   children,
   className = "",
-  titleClassName = "text-2xl font-bold text-gray-800",
+  titleClassName = "text-lg font-bold text-gray-800",
   headerActions = null,
 }) => {
   const pageContainerRef = useRef(null);
@@ -64,7 +64,7 @@ const MasterPageLayout = ({
       style={availableViewportHeight ? { height: `${availableViewportHeight}px` } : undefined}
     >
       <div className="flex w-full shrink-0 items-center justify-between bg-white p-1">
-        <h5 className={titleClassName}>{title}</h5>
+        <h2 className={titleClassName}>{title}</h2>
         {headerActions ? (
           <div className="flex items-center gap-4">{headerActions}</div>
         ) : (

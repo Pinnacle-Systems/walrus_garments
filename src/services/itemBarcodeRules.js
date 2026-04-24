@@ -4,18 +4,31 @@ export function collectNormalizedItemBarcodes(itemPriceList = []) {
     return itemPriceList.reduce((entries, row, rowIndex) => {
         const barcodes = row?.ItemBarcodes || [];
 
-        barcodes.forEach((b, bIndex) => {
-            const normalizedBarcode = normalizeLegacyBarcode(b?.barcode);
-            if (!normalizedBarcode) return;
+        if (barcodes.length > 0) {
+            barcodes.forEach((b, bIndex) => {
+                const normalizedBarcode = normalizeLegacyBarcode(b?.barcode);
+                if (!normalizedBarcode) return;
 
-            entries.push({
-                barcode: normalizedBarcode,
-                rowIndex,
-                bIndex,
-                id: b?.id ? parseInt(b.id) : undefined,
-                barcodeType: b?.barcodeType || "REGULAR"
+                entries.push({
+                    barcode: normalizedBarcode,
+                    rowIndex,
+                    bIndex,
+                    id: b?.id ? parseInt(b.id) : undefined,
+                    barcodeType: b?.barcodeType || "REGULAR"
+                });
             });
-        });
+        } else {
+            const normalizedBarcode = normalizeLegacyBarcode(row?.barcode);
+            if (normalizedBarcode) {
+                entries.push({
+                    barcode: normalizedBarcode,
+                    rowIndex,
+                    bIndex: 0,
+                    id: undefined,
+                    barcodeType: row?.barcodeType || "REGULAR"
+                });
+            }
+        }
 
         return entries;
     }, []);

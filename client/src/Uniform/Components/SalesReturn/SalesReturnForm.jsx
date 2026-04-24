@@ -1101,7 +1101,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
             </TransactionHeaderSection>
 
             <TransactionHeaderSection title="Customer Details" className="col-span-3 overflow-visible" bodyClassName="grid-cols-8 gap-1 overflow-visible">
-              <div className="col-span-1">
+              {/* <div className="col-span-1">
                 <DropdownInput
                   name="Return Type"
                   options={[
@@ -1113,7 +1113,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
                   required={true}
                   readOnly={readOnly}
                 />
-              </div>
+              </div> */}
 
 
               <div className="col-span-1">

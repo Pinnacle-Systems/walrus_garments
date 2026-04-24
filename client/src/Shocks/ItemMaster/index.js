@@ -24,7 +24,7 @@ import HsnMaster from "../../Basic/components/HsnMaster";
 import ItemCategroyMaster from "../ItemCategroyMaster";
 import SectionMaster from "../SectionMaster";
 import LocationStockEditor, { createEmptyLocationThreshold, getConfiguredLocationAlertCount, validateLocationThresholdRows } from "./LocationStockEditor";
-import ItemBarcodeEditor, { coerceLegacyBarcode, getBarcodeSummary } from "./ItemBarcodeEditor";
+import { coerceLegacyBarcode } from "./ItemBarcodeEditor";
 import { shouldDisableLinkedRecordField } from "./legacyEditPermissions";
 import { useGetSubCategoryQuery } from "../../redux/uniformService/SubCategoryMasterService";
 import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavigation";
@@ -1139,20 +1139,24 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                       <div className="col-span-8 min-h-0">
                         <div className="grid grid-cols-9 items-start gap-4">
                           <div className="col-span-2">
-                            <label className="block text-xs font-bold text-gray-600 mb-1">
-                              Barcodes <span className="text-red-500">*</span>
-                            </label>
-                            <ItemBarcodeEditor
-                              barcodes={itemPriceList?.[0]?.ItemBarcodes || []}
-                              onChange={(newBarcodes) => {
+                            <TextInputNew1
+                              name="Barcode"
+                              value={itemPriceList?.[0]?.ItemBarcodes?.[0]?.barcode || ""}
+                              setValue={(val) => {
+                                const formattedBarcode = val.toUpperCase();
                                 setItemPriceList(prev => {
                                   const updated = structuredClone(prev);
                                   if (!updated[0]) return prev;
-                                  updated[0].ItemBarcodes = newBarcodes;
+                                  if (!updated[0].ItemBarcodes || updated[0].ItemBarcodes.length === 0) {
+                                    updated[0].ItemBarcodes = [{ barcode: formattedBarcode, barcodeType: "REGULAR", active: true }];
+                                  } else {
+                                    updated[0].ItemBarcodes[0].barcode = formattedBarcode;
+                                  }
                                   return updated;
                                 });
                               }}
                               readOnly={readOnly || (id ? disableLinkedRecordField : false)}
+                              required={true}
                             />
                           </div>
                           <div className="col-span-2">
@@ -1199,7 +1203,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                               required={true}
                             />
                           </div>
-                          <div className="col-span-1">
+                          {/* <div className="col-span-1">
                             <TextInputNew1
                               name="Offer Price"
                               value={offerPrice}
@@ -1207,7 +1211,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                               readOnly={readOnly}
                               disabled={id ? disableLinkedRecordField : false}
                             />
-                          </div>
+                          </div> */}
                           {/* <div className="col-span-3 col-start-7 max-w-[230px]">
                             <button
                               type="button"
@@ -1390,20 +1394,23 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                     </td>
                                   )}
                                   <td className="border border-gray-200 w-20 px-1 py-1 text-center">
-                                    <ItemBarcodeEditor
-                                      barcodes={item?.ItemBarcodes || []}
-                                      onChange={(newBarcodes) => {
+                                    <input
+                                      type="text"
+                                      className="text-center rounded w-full px-1 py-1 text-xs border-none focus:ring-0 uppercase"
+                                      value={item?.ItemBarcodes?.[0]?.barcode || ""}
+                                      disabled={readOnly || isLegacyItem}
+                                      onChange={e => {
+                                        const val = e.target.value.toUpperCase();
                                         setItemPriceList(prev => {
                                           const updated = structuredClone(prev);
-                                          updated[index].ItemBarcodes = newBarcodes;
+                                          if (!updated[index].ItemBarcodes || updated[index].ItemBarcodes.length === 0) {
+                                            updated[index].ItemBarcodes = [{ barcode: val, barcodeType: "REGULAR", active: true }];
+                                          } else {
+                                            updated[index].ItemBarcodes[0].barcode = val;
+                                          }
                                           return updated;
                                         });
                                       }}
-                                      readOnly={readOnly || isLegacyItem}
-                                      label={[
-                                        findFromList(item?.sizeId, sizeData?.data, "name"),
-                                        findFromList(item?.colorId, colorData?.data, "name")
-                                      ].filter(Boolean).join(" / ")}
                                     />
                                   </td>
                                   <td className="border border-gray-200 w-36 px-1 py-1 text-left text-xs">
@@ -1902,7 +1909,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                     required={true}
                                   />
                                 </div>
-                                <div className="col-span-2">
+                                {/* <div className="col-span-2">
                                   <TextInputNew1
                                     name="Offer Price"
                                     value={offerPrice}
@@ -1910,7 +1917,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                     readOnly={readOnly}
                                     disabled={childRecord > 0}
                                   />
-                                </div>
+                                </div> */}
                                 <div className="col-span-3 mt-5">
                                   <button
                                     type="button"

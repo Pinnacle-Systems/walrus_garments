@@ -6,7 +6,7 @@ import axios from "axios";
 
 export default function TransferItems({ item, index, handleRightClickFromOrder, readOnly, handleInputChangeFromOrder,
     itemList, sizeList, colorList, fromLocationId, id, locationData, toLocationId, stockDrivenFields = [],
-    itemPriceList = []
+    itemPriceList = [], offersData = [], collectionsData = []
 }) {
 
 
@@ -42,7 +42,53 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
     const totalBranchStock = branchStockData?.data?.[0]?._sum?.qty || 0;
     const hasOtherLocationStock = parseFloat(totalBranchStock) > parseFloat(item?.stockQty || 0);
 
-    console.log(itemPriceList, "itemPriceList")
+    const isDiscountSection = findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION";
+    const getOfferPrice = () => {
+        if (!isDiscountSection) return null;
+
+        const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
+        const priceObj = (itemPriceList?.data || itemPriceList || [])?.find(p =>
+            parseInt(p.itemId) === parseInt(item.itemId) &&
+            (itemObj?.isLegacy ? true : (
+                parseInt(p.sizeId) === parseInt(item.sizeId) &&
+                parseInt(p.colorId) === parseInt(item.colorId)
+            ))
+        );
+
+        const salesPrice = parseFloat(priceObj?.salesPrice || 0);
+
+        const applicableOffer = (offersData?.data || offersData || [])?.find(offer => {
+            if (!offer.applyToClearance) return false;
+            if (offer.scopeMode === 'Global') return true;
+
+            return offer.OfferScope?.some(scope => {
+                const type = String(scope.type).toLowerCase();
+                if (type === 'item' && parseInt(scope.refId) === parseInt(item.itemId)) return true;
+                if (type === 'collection') {
+                    const collection = (collectionsData?.data || collectionsData || [])?.find(c => parseInt(c.id) === parseInt(scope.refId));
+                    return collection?.CollectionItems?.some(ci => parseInt(ci.itemId) === parseInt(item.itemId));
+                }
+                return false;
+            });
+        });
+
+        if (applicableOffer) {
+            if (applicableOffer.discountType === 'Percentage') {
+                return salesPrice * (1 - (applicableOffer.discountValue || 0) / 100);
+            } else if (applicableOffer.discountType === 'Fixed') {
+                return Math.max(0, salesPrice - (applicableOffer.discountValue || 0));
+            } else if (['Override', 'Volume'].includes(applicableOffer.discountType)) {
+                const tier = applicableOffer.OfferTier?.[0];
+                if (tier) {
+                    if (tier.type === 'Fixed') return tier.value;
+                    return salesPrice * (1 - (tier.value || 0) / 100);
+                }
+            }
+        }
+        return salesPrice;
+    };
+
+    const resolvedOfferPrice = getOfferPrice();
 
 
 
@@ -132,38 +178,11 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                     </div>
                 </td>
 
-                {/* {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
-                    <td className="w-48 border border-gray-300 text-[11px]  px-2">
-                        <input
-                            className=" h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={parseFloat(item?.discountPrice || "")}
-
-
-
-
-                            onKeyDown={(e) => {
-                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-                            }}
-                            onFocus={(e) => e.target.select()}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                if (!val) {
-                                    handleInputChangeFromOrder(0, index, "discountPrice");
-                                    return
-                                }
-                                handleInputChangeFromOrder(val, index, "discountPrice", item);
-
-
-                            }}
-
-
-                            placeHolder="0.000"
-                        />
+                {isDiscountSection && (
+                    <td className="w-16 border border-gray-300 text-[11px] text-right px-2">
+                        {resolvedOfferPrice ? resolvedOfferPrice.toFixed(2) : "0.00"}
                     </td>
-                )} */}
+                )}
 
 
 

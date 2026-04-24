@@ -93,13 +93,7 @@ async function getSearch(req) {
 
 
 async function create(body) {
-    const {
-
-        expenseEntryItems,
-        finYearId,
-        branchId,
-
-    } = await body
+    const { expenseEntryItems, finYearId, branchId } = await body
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -109,13 +103,14 @@ async function create(body) {
         {
             data: {
                 docId: docId,
+                branchId: branchId ? parseInt(branchId) : null,
                 ExpenseEntryItems: {
                     createMany: expenseEntryItems?.length > 0 ? {
                         data: expenseEntryItems?.map((temp) => {
                             let newItem = {}
                             newItem["expenseCategoryId"] = temp["expenseCategoryId"] ? parseInt(temp["expenseCategoryId"]) : null;
                             newItem["description"] = temp["description"] ? String(temp["description"]) : null;
-                            newItem["amount"] = temp["amount"] ? temp["amount"].toString() : "0";
+                            newItem["amount"] = temp["amount"] ? temp["amount"].toString() : null;
                             newItem["referenceNo"] = temp["referenceNo"] ? String(temp["referenceNo"]) : null;
                             return newItem
                         })

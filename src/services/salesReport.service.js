@@ -12,14 +12,15 @@ async function getSalesReport(query) {
 
         const commonWhere = {
             branchId: branchId ? parseInt(branchId) : undefined,
-            createdAt: {
-                gte: from,
-                lte: to
-            }
+            // createdAt: {
+            //     gte: from,
+            //     lte: to
+            // }
         };
 
         let posSales = [];
         let bulkSales = [];
+        let expenses = [];
 
         if (saleType === 'ALL' || saleType === 'POS') {
             posSales = await prisma.pos.findMany({
@@ -42,6 +43,18 @@ async function getSalesReport(query) {
                 orderBy: { createdAt: 'desc' }
             });
         }
+
+        if (saleType === 'ALL' || saleType === 'EXPENSE') {
+            expenses = await prisma.Expense.findMany({
+                where: commonWhere,
+                include: {
+                    ExpenseEntryItems: true
+                },
+                // orderBy: { createdAt: 'desc' }
+            });
+        }
+
+        console.log(expenses, "expenses")
 
         // Format POS Sales
         const formattedPos = posSales.map(sale => {
@@ -108,7 +121,25 @@ async function getSalesReport(query) {
             };
         });
 
-        const allSales = [...formattedPos, ...formattedBulk].sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Format Expenses
+        const formattedExpenses = expenses.map(expense => {
+            const totalAmount = (expense.ExpenseEntryItems || []).reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+
+            return {
+                id: `expense-${expense.id}`,
+                date: expense.date || expense.createdAt,
+                docId: expense.docId,
+                customerName: 'Expense',
+                type: 'Expense',
+                cash: 0, // We could potentially extract payment method from items if needed
+                upi: 0,
+                card: 0,
+                online: 0,
+                totalAmount: totalAmount
+            };
+        });
+
+        const allSales = [...formattedPos, ...formattedBulk, ...formattedExpenses].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         return { statusCode: 0, data: allSales };
     } catch (error) {

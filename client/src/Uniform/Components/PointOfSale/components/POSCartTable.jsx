@@ -14,7 +14,8 @@ const POSCartTable = ({
     updateRate,
     removeFromCart,
     onViewStock,
-    qtyInputRefs
+    qtyInputRefs,
+    selectedReportSaleId
 }) => {
 
     console.log(cart, "cart")
@@ -61,7 +62,7 @@ const POSCartTable = ({
                     </thead>
                     <tbody>
                         {cart.map((item, index) => {
-                            const cartKey = `${item.id}-${item.sizeId}-${item.colorId}-${!!item.isReturn}`;
+                            const cartKey = `${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}`;
                             const rowTotal = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
                             const isActiveRow = index === activeRowIndex;
                             return (
@@ -111,7 +112,9 @@ const POSCartTable = ({
                                     </td>
                                     <td className="px-2 py-0.5 border-r border-slate-200">
                                         <div className="flex items-center gap-1 justify-center">
-                                            <button onClick={() => updateQuantity(item.id, -1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">-</button>
+                                            <button 
+                                                disabled={selectedReportSaleId}
+                                                onClick={() => updateQuantity(item.id, -1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">-</button>
                                             <input
                                                 ref={ref => qtyInputRefs.current[cartKey] = ref}
                                                 type="number"
@@ -119,9 +122,13 @@ const POSCartTable = ({
                                                 onChange={(e) => updateQuantity(item.id, e.target.value, item.sizeId, item.colorId, true)}
                                                 className="w-10 text-center bg-transparent text-[11px] font-black focus:outline-none"
                                                 onFocus={(e) => { e.target.select(); setActiveRowIndex(index); }}
+                                                disabled={selectedReportSaleId}
                                             />
-                                            <button onClick={() => updateQuantity(item.id, 1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">+</button>
+                                            <button 
+                                                disabled={selectedReportSaleId}
+                                                onClick={() => updateQuantity(item.id, 1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">+</button>
                                             <button
+                                                disabled={selectedReportSaleId}
                                                 onClick={(e) => { e.stopPropagation(); handleShowItemOffers(item); }}
                                                 title="View Item Offers"
                                                 className="p-1 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded transition-all flex items-center justify-center border border-indigo-100 hover:border-indigo-600 shrink-0"
@@ -152,13 +159,16 @@ const POSCartTable = ({
                                             onChange={(e) => updateRate(item.id, e.target.value, item.sizeId, item.colorId)}
                                             className={`w-full py-0.5 text-right bg-transparent border-transparent hover:border-slate-200 focus:bg-white focus:border-indigo-400 rounded transition-all font-black text-sm outline-none ${item.priceType === 'offerPrice' ? 'text-emerald-600' : 'text-slate-800'}`}
                                             onFocus={(e) => e.target.select()}
+                                            disabled={selectedReportSaleId}
                                         />
                                     </td>
                                     <td className="px-2 py-1 text-right border-r border-slate-200 bg-slate-50/50 font-serif">
                                         <span className="text-[12px] font-black text-indigo-700">₹{rowTotal.toLocaleString()}</span>
                                     </td>
                                     <td className="px-2 py-1 text-center bg-slate-50/50">
-                                        <button onClick={(e) => { e.stopPropagation(); removeFromCart(cartKey); }} className="p-1.5 text-slate-300 hover:text-red-500 transition-all rounded-lg hover:bg-red-50"><Trash2 size={14} /></button>
+                                        <button
+                                            disabled={selectedReportSaleId}
+                                            onClick={(e) => { e.stopPropagation(); removeFromCart(cartKey); }} className="p-1.5 text-slate-300 hover:text-red-500 transition-all rounded-lg hover:bg-red-50"><Trash2 size={14} /></button>
                                     </td>
                                 </tr>
                             );

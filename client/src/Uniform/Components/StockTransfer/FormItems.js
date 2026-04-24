@@ -19,7 +19,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
     yarnList, setRequirementId, stockItems, setStockItems, setTempOrderItems, tempOrderItems, tempStockItems, setTempStockItems,
     toOrderId, fromOrderId, orderData, fromLocationId, locationData, sizeList, itemList, uomList, toLocationId,
     orderToGeneral, setOrderToGeneral, searchColor, setSearchColor, searchItem, setSearchItem, searchSize, setSearchSize
-    , stockDrivenFields = [], itemPriceList = []
+    , stockDrivenFields = [], itemPriceList = [], offersData = [], collectionsData = []
 
 }) => {
 
@@ -176,10 +176,10 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                     <th key={field.key} className="w-32 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">{field.label}</th>
                                 ))}
                                 <th className="w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Stock Qty (Pcs)</th>
-                                {/* {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
+                                {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
 
                                     <th className="w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Discount Price</th>
-                                )} */}
+                                )}
                                 <th className="w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Transfer Qty (Pcs)<span className="text-red-500">*</span></th>
 
                             </tr>
@@ -195,12 +195,14 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                 stockItems={stockItems} toLocationId={toLocationId} locationData={locationData}
                                 stockDrivenFields={stockDrivenFields} id={id}
                                 itemPriceList={itemPriceList}
+                                offersData={offersData}
+                                collectionsData={collectionsData}
                             />)}
                         </tbody>
                         <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300 font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
                             <tr>
                                 <td
-                                    colSpan={5 + stockDrivenFields.length}
+                                    colSpan={findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" ? 6 + stockDrivenFields.length : 5 + stockDrivenFields.length}
                                     className="bg-gray-300 px-1 py-1 text-right text-[12px]"
                                 >
                                 </td>

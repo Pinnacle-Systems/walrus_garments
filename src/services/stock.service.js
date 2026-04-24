@@ -987,27 +987,73 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
     const normalizedBranchId = branchId ? Number(branchId) : undefined;
     const normalizedStoreId = storeId ? Number(storeId) : undefined;
 
+    console.log("normalizedBarcode:", normalizedBarcode);
+    console.log("normalizedBranchId:", normalizedBranchId);
+
+    // const stockRecords = await prisma.stock.findMany({
+    //     where: {
+    //         OR: [
+    //             { barcode: normalizedBarcode },
+    //             {
+    //                 Item: {
+    //                     ItemPriceList: {
+    //                         some: {              // ← LIST RELATION = use "some"
+    //                             ItemBarcodes: {
+    //                                 some: {     // ← LIST RELATION = use "some"
+    //                                     barcode: normalizedBarcode,
+    //                                     active: true
+    //                                 }
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         ],
+    //         branchId: normalizedBranchId,
+    //         // storeId: normalizedStoreId,
+    //     },
+    //     include: {
+    //         Item: {
+    //             include: {
+    //                 Hsn: true,
+    //                 ItemPriceList: {
+    //                     include: {
+    //                         ItemBarcodes: true
+    //                     }
+    //                 }
+    //             }
+    //         },
+    //         Size: true,
+    //         Color: true,
+    //         Uom: true,
+    //         Store: true,
+
+    //     }
+    // });
     const stockRecords = await prisma.stock.findMany({
+        // where: {
+        //     OR: [
+        //         { barcode: normalizedBarcode },
+        //         {
+        //             Item: {
+        //                 ItemPriceList: {
+        //                     some: {
+        //                         ItemBarcodes: {
+        //                             some: {
+        //                                 barcode: normalizedBarcode,
+        //                                 active: true
+        //                             }
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     ],
+        //     branchId: normalizedBranchId,
+        // },
         where: {
-            OR: [
-                { barcode: normalizedBarcode },
-                {
-                    Item: {
-                        ItemPriceList: {
-                            some: {              // ← LIST RELATION = use "some"
-                                ItemBarcodes: {
-                                    some: {     // ← LIST RELATION = use "some"
-                                        barcode: normalizedBarcode,
-                                        active: true
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            ],
+            barcode: normalizedBarcode,
             branchId: normalizedBranchId,
-            storeId: normalizedStoreId,
         },
         include: {
             Item: {
@@ -1024,11 +1070,11 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
             Color: true,
             Uom: true,
             Store: true,
-
         }
     });
-
-    console.log("stockRecords", stockRecords?.length)
+    console.log("stockRecords count:", stockRecords.length);
+    console.log("stockRecords barcodes:", stockRecords.map(r => ({ id: r.id, barcode: r.barcode, storeId: r.storeId })));
+    console.log(stockRecords, "stockRecords")
 
     if (!stockRecords.length) {
         return { statusCode: 1, message: "No stock found for this barcode" };

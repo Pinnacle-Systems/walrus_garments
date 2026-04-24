@@ -43,6 +43,10 @@ import {
 } from "./openingStockSchema";
 import SearchableTableCellSelectWithValue from "../ReusableComponents/SearchableTableCellSelectWithValue";
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+
+
+
 
 const OPENING_STOCK_CREATION_SOURCE = "OPENING_STOCK";
 
@@ -198,6 +202,8 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     }
   }, [branchId]);
 
+
+
   const itemQueryParams = React.useMemo(() => ({ ...params, active: true }), [params]);
   const { data: itemList } = useGetItemMasterQuery({ params: itemQueryParams });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
@@ -213,6 +219,15 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
   const [addSize] = useAddSizeMasterMutation();
   const [addColor] = useAddColorMasterMutation();
   const [addUom] = useAddUnitOfMeasurementMasterMutation();
+
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef,
+    movedToNextSaveNewRef,
+    saveNewButtonRef,
+    saveCloseButtonRef,
+  } = refs;
 
   const branchOptions = branchList?.data?.map((branch) => ({ value: branch.id, label: branch.branchName })) || [];
   const locationOptions = locationList?.data?.map((location) => ({ value: location.id, label: location.storeName })) || [];
@@ -1140,6 +1155,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
           value={selectedLocationId}
           setValue={setSelectedLocationId}
           required
+          ref={firstInputRef}
         />
       </TransactionHeaderSection>
 
@@ -1279,7 +1295,9 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
   //   });
   // }, [setStockItems, stockItems]);
 
-
+  React.useEffect(() => {
+    focusFirstInput();
+  }, [focusFirstInput]);
 
   return (
     <>

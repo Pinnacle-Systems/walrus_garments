@@ -21,13 +21,20 @@ export function validateLegacyPriceRowShape(itemPriceList = []) {
         throw Error("Legacy items cannot store size or color pricing rows.");
     }
 
-    const normalizedBarcode = normalizeLegacyBarcode(legacyRow?.barcode);
-    if (!normalizedBarcode) {
+    const barcodeFromRow = normalizeLegacyBarcode(legacyRow?.barcode);
+    const barcodesFromItems = (legacyRow?.ItemBarcodes || [])
+        .map(b => normalizeLegacyBarcode(b.barcode))
+        .filter(Boolean);
+
+    const firstBarcode = barcodeFromRow || barcodesFromItems[0];
+
+    if (!firstBarcode) {
         throw Error("Legacy items require a barcode on the single price row.");
     }
 
     return {
-        normalizedBarcode,
+        normalizedBarcode: firstBarcode,
+        allBarcodes: [...new Set([barcodeFromRow, ...barcodesFromItems].filter(Boolean))],
         legacyRow,
     };
 }
@@ -186,7 +193,7 @@ export function buildBarcodeSnapshotMatches(records = []) {
         snapshot.stockQty += record.qty || 0;
     });
 
-    console.log(Array.from(snapshotMap.values()), "snapshotMap")
+    // console.log(Array.from(snapshotMap.values()), "snapshotMap")
     // return Array.from(snapshotMap.values());
     return Array.from(snapshotMap.values()).filter(
         (item) => item.stockQty > 0

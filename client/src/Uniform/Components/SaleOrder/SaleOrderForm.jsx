@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
-import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
+import { DateInput, DropdownInput, ReusableSearchableInput, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetPartyByIdQuery } from "../../../redux/services/PartyMasterService";
@@ -22,16 +22,20 @@ import ThermalSalesPrintFormat from "../ReusableComponents/ThermalSalesPrintForm
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
 import CommonFormFooter from "../ReusableComponents/CommonFormFooter";
 import { push } from "../../../redux/features/opentabs";
-import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTemplateService";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
+import { useGetoffersPromotionsQuery } from "../../../redux/uniformService/Offer&PromotionsService";
+import ItemOfferModal from "../PointOfSale/components/ItemOfferModal";
+import { calculateCartWithOffers, getPotentialOffers } from "../../../Utils/offerEngine";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import { useGetcollectionsQuery } from "../../../redux/uniformService/CollectionsService";
 
 
 
 const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setSaleOrderItems, saleOrderItems,
-  yarnList, colorList, uomList, quoteId, sourceQuotationDocId, sourceQuotationAdvanceReceived = 0, sourceQuotationPackingChargeEnabled = false, sourceQuotationPackingCharge = "", sourceQuotationShippingChargeEnabled = false, sourceQuotationShippingCharge = "", termsData ,invalidateTagsDispatch ,dispatch
+  yarnList, colorList, uomList, quoteId, sourceQuotationDocId, sourceQuotationAdvanceReceived = 0, sourceQuotationPackingChargeEnabled = false, sourceQuotationPackingCharge = "", sourceQuotationShippingChargeEnabled = false, sourceQuotationShippingCharge = "", termsData, invalidateTagsDispatch, dispatch
 
 
 }) => {
@@ -59,6 +63,9 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [term, setTerm] = useState("")
   const [taxMethod, setTaxMethod] = useState("WithoutTax")
   const [isHeaderOpen, setIsHeaderOpen] = useState(true);
+  const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
+  const [showItemOfferModal, setShowItemOfferModal] = useState(false);
+  const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
 
   const { branchId, companyId, userId, finYearId } = getCommonParams()
   const params = {
@@ -83,8 +90,12 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: hsnList } = useGetHsnMasterQuery({ params });
   const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
-  const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
+  const { data: offersData } = useGetoffersPromotionsQuery({ params: { ...params, active: true } });
+  const activeOffers = offersData?.data || [];
 
+  const { data: collectionsData } = useGetcollectionsQuery({
+    params: { branchId, userId, finYearId, active: true }
+  })
 
   const {
     data: singleData,
@@ -104,6 +115,15 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [updateData] = useUpdatesaleOrderMutation();
 
 
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef,
+    secondInputRef,
+    movedToNextSaveNewRef,
+    saveNewButtonRef,
+    saveCloseButtonRef,
+  } = refs;
 
 
   const inwardTyperef = useRef(null);
@@ -173,6 +193,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     setShippingCharge(nextShippingCharge);
     setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
     setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
+    setSelectedOffersByRow(data?.selectedOffersByRow || {});
   }, [id]);
 
   useEffect(() => {
@@ -208,6 +229,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
     shippingChargeEnabled,
     shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
+    selectedOffersByRow
   }
 
 
@@ -255,7 +277,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             title: `${text || 'Saved'} Successfully`,
 
           });
-            invalidateTagsDispatch()
+          invalidateTagsDispatch()
 
           if (nextProcess == "new") {
             syncFormWithDb(undefined);
@@ -319,13 +341,18 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   }
 
 
+  const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, saleOrderItems || []), [activeOffers, saleOrderItems]);
+  const { cartWithOffers: saleOrderItemsWithOffers } = useMemo(() => calculateCartWithOffers(saleOrderItems || [], selectedOffersByRow, potentialOffers, activeOffers), [saleOrderItems, selectedOffersByRow, potentialOffers, activeOffers]);
+
+  const totalOfferDiscount = saleOrderItemsWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
+
   function getTotalQty() {
-    let qty = saleOrderItems?.reduce((acc, curr) => { return acc + parseFloat(curr?.qty ? curr?.qty : 0) }, 0)
+    let qty = saleOrderItemsWithOffers?.reduce((acc, curr) => { return acc + parseFloat(curr?.qty ? curr?.qty : 0) }, 0)
     return parseFloat(qty || 0).toFixed(3)
   }
   const calculateTotals = () => {
     return (
-      saleOrderItems?.reduce(
+      saleOrderItemsWithOffers?.reduce(
         (acc, curr) => {
           const price = parseFloat(curr.price || 0);
           const qty = parseFloat(curr.qty || 0);
@@ -383,37 +410,37 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const chargeRows = [
     ...(packingChargeEnabled
       ? [{
-          key: "packingCharge",
-          label: "Packing Charge",
-          summaryColumn: "right",
-          renderValue: () => (
-            <input
-              type="number"
-              value={packingCharge}
-              onChange={(event) => setPackingCharge(event.target.value)}
-              onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
-              readOnly={readOnly}
-              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
-            />
-          ),
-        }]
+        key: "packingCharge",
+        label: "Packing Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={packingCharge}
+            onChange={(event) => setPackingCharge(event.target.value)}
+            onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
       : []),
     ...(shippingChargeEnabled
       ? [{
-          key: "shippingCharge",
-          label: "Shipping Charge",
-          summaryColumn: "right",
-          renderValue: () => (
-            <input
-              type="number"
-              value={shippingCharge}
-              onChange={(event) => setShippingCharge(event.target.value)}
-              onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
-              readOnly={readOnly}
-              className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
-            />
-          ),
-        }]
+        key: "shippingCharge",
+        label: "Shipping Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={shippingCharge}
+            onChange={(event) => setShippingCharge(event.target.value)}
+            onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
       : []),
   ];
   function isSupplierOutside() {
@@ -527,6 +554,13 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
           value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
         },
+        {
+          key: "promoDiscount",
+          label: "Promo Discount",
+          value: `Rs.${parseFloat(totalOfferDiscount || 0).toFixed(2)}`,
+          summaryColumn: "right",
+          className: "text-emerald-600 font-bold"
+        },
         ...chargeRows,
         {
           key: "netAmount",
@@ -537,13 +571,13 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         },
         ...(shouldShowAdvanceReceived
           ? [
-              {
-                key: "advanceReceived",
-                label: "Advance Received",
-                value: `Rs.${parseFloat(advanceReceivedAmount || 0).toFixed(2)}`,
-                summaryColumn: "left",
-              },
-            ]
+            {
+              key: "advanceReceived",
+              label: "Advance Received",
+              value: `Rs.${parseFloat(advanceReceivedAmount || 0).toFixed(2)}`,
+              summaryColumn: "left",
+            },
+          ]
           : []),
       ]}
       leftActions={
@@ -653,23 +687,23 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
 
-                <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName={`${estimateDocId ? "grid-cols-12" : "grid-cols-2"}`}>
-                    <div className={estimateDocId ? "col-span-4" : ""}>
-                      <ReusableInput label="Sale Order No" readOnly value={docId} />
-                    </div>
-                    <div className={estimateDocId ? "col-span-4" : ""}>
-                      <ReusableInput label="Sale Order Date" value={date} type="date" required readOnly disabled />
-                    </div>
-                    {estimateDocId && (
-                      <div className="col-span-4">
-                        <ReusableInput label="Estimate No" readOnly value={estimateDocId} />
-                      </div>
-                    )}
-                </TransactionHeaderSection>
+            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName={`${estimateDocId ? "grid-cols-12" : "grid-cols-2"}`}>
+              <div className={estimateDocId ? "col-span-4" : ""}>
+                <ReusableInput label="Sale Order No" readOnly value={docId} />
+              </div>
+              <div className={estimateDocId ? "col-span-4" : ""}>
+                <ReusableInput label="Sale Order Date" value={date} type="date" required readOnly disabled />
+              </div>
+              {estimateDocId && (
+                <div className="col-span-4">
+                  <ReusableInput label="Estimate No" readOnly value={estimateDocId} />
+                </div>
+              )}
+            </TransactionHeaderSection>
 
-                <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
-                    <div className="col-span-3 overflow-visible">
-                      <ReusableSearchableInput
+            <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
+              <div className="col-span-3 overflow-visible">
+                {/* <ReusableSearchableInput
                         label="Customer Name"
                         component="PartyMaster"
                         placeholder="Search Customer Name..."
@@ -679,18 +713,32 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
                         show={"isClient"}
                         required={true}
                         disabled={id}
-                      />
-                    </div>
-                    <TextInput name="Phone Number" value={customerPhone} disabled required />
-                    <div className="col-span-3">
-                      <TextAreaNew
-                        name="Address"
-                        placeholder="Address"
-                        value={customerAddress}
-                        disabled
-                      />
-                    </div>
-                </TransactionHeaderSection>
+                      /> */}
+                <ReusableSearchableInputNewCustomerwithBranches
+                  label="Customer Name"
+                  component="PartyMaster"
+                  placeholder="Search Customer Name..."
+                  optionList={supplierList?.data}
+                  setSearchTerm={(value) => { setCustomerId(value) }}
+                  searchTerm={customerId}
+                  show={"isClient"}
+                  required={true}
+                  disabled={id}
+                  ref={firstInputRef}
+                  nextRef={secondInputRef}
+                />
+              </div>
+              <TextInput name="Phone Number" value={customerPhone} disabled required />
+              <div className="col-span-3">
+                <TextAreaNew
+                  rows={1}
+                  name="Address"
+                  placeholder="Address"
+                  value={customerAddress}
+                  disabled
+                />
+              </div>
+            </TransactionHeaderSection>
 
           </div>
         )}
@@ -715,13 +763,29 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
               setTaxMethod={setTaxMethod}
               isHeaderOpen={isHeaderOpen}
               itemPriceList={itemPriceList}
-              priceTemplateList={priceTemplateList}
+              activeOffers={activeOffers}
+              selectedOffersByRow={selectedOffersByRow}
+              setSelectedOffersByRow={setSelectedOffersByRow}
+              setSelectedItemForOffers={setSelectedItemForOffers}
+              setShowItemOfferModal={setShowItemOfferModal}
             />
           </fieldset>
         </div>
       </TransactionEntryShell>
 
-
+      <ItemOfferModal
+        isOpen={showItemOfferModal}
+        onClose={() => setShowItemOfferModal(false)}
+        selectedItemForOffers={selectedItemForOffers}
+        getItemApplicableOffers={(item) => {
+          if (!item || !activeOffers.length) return [];
+          const { getItemApplicableOffers } = require("../../../Utils/offerEngine");
+          return getItemApplicableOffers(item, saleOrderItems, activeOffers, collectionsData);
+        }}
+        selectedOffersByRow={selectedOffersByRow}
+        setSelectedOffersByRow={setSelectedOffersByRow}
+        Swal={Swal}
+      />
     </>
   );
 }

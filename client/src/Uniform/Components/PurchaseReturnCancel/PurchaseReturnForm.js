@@ -368,7 +368,7 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
                     />
                 </div>
 
-                <TextInput
+                <TextInputNew1
                     name="Delivery Person"
                     value={specialInstructions}
                     setValue={setSpecialInstructions}

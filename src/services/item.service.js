@@ -92,34 +92,9 @@ async function validateLegacyItemPayload({
         throw Error("Legacy items can only be created from Opening Stock.");
     }
 
-    const { normalizedBarcode } = validateLegacyPriceRowShape(itemPriceList);
-
-    const conflictingBarcodeRow = await prisma.itemBarcode.findFirst({
-        where: {
-            barcode: normalizedBarcode,
-            ItemPriceList: {
-                item: {
-                    id: itemId ? { not: parseInt(itemId) } : undefined,
-                }
-            }
-        },
-        include: {
-            ItemPriceList: {
-                include: {
-                    item: {
-                        select: {
-                            id: true,
-                            name: true,
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    if (conflictingBarcodeRow?.ItemPriceList?.item && conflictingBarcodeRow.ItemPriceList.item.name !== itemName) {
-        throw Error(`Legacy barcode ${normalizedBarcode} is already associated with item ${conflictingBarcodeRow.ItemPriceList.item.name}.`);
-    }
+    // Now uses the updated shape validator which returns all barcodes if needed,
+    // although we rely on ensureUniqueItemBarcodes for the clash detection.
+    validateLegacyPriceRowShape(itemPriceList);
 }
 
 async function ensureUniqueItemBarcodes({ itemId, itemPriceList = [] }) {
@@ -682,14 +657,22 @@ async function updateItemPriceList(tx, itemPriceList, item) {
                     colorId: parseIntOrUndefined(priceItem?.colorId),
                     salesPrice: normalizePriceString(priceItem?.salesPrice),
                     sku: priceItem?.sku ? priceItem?.sku : undefined,
-                    ItemBarcodes: {
-                        create: priceItem?.ItemBarcodes?.map(b => ({
-                            barcode: normalizeLegacyBarcode(b.barcode),
-                            barcodeType: b.barcodeType || "REGULAR",
-                            clearanceReason: b.clearanceReason || null,
-                            active: true
-                        })) || []
-                    }
+                    ItemBarcodes: priceItem?.ItemBarcodes?.length > 0
+                        ? {
+                            create: priceItem.ItemBarcodes.map(b => ({
+                                barcode: normalizeLegacyBarcode(b.barcode),
+                                barcodeType: b.barcodeType || "REGULAR",
+                                clearanceReason: b.clearanceReason || null,
+                                active: true
+                            }))
+                        }
+                        : {
+                            create: priceItem?.barcode ? [{
+                                barcode: normalizeLegacyBarcode(priceItem.barcode),
+                                barcodeType: priceItem.barcodeType || "REGULAR",
+                                active: true
+                            }] : []
+                        }
                 }
             });
 

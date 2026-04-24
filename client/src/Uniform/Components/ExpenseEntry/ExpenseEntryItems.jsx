@@ -1,35 +1,42 @@
 import { useEffect } from "react";
-import { DropdownInputNew, TextInput } from "../../../Inputs";
-import TransactionLineItemsSection, { standardTransactionPlaceholderRowCount, transactionTableCellClassName, transactionTableClassName, transactionTableFocusCellClassName, transactionTableHeadClassName, transactionTableHeaderCellClassName, transactionTableNumberInputClassName, transactionTableSelectInputClassName } from "../ReusableComponents/TransactionLineItemsSection";
-import { HiX } from "react-icons/hi";
+import TransactionLineItemsSection, { standardTransactionPlaceholderRowCount } from "../ReusableComponents/TransactionLineItemsSection";
 
 const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, readOnly }) => {
 
-    const compactHeaderCellClassName = transactionTableHeaderCellClassName;
-    const compactCellClassName = transactionTableCellClassName;
-    const compactFocusCellClassName = transactionTableFocusCellClassName;
-    const compactSelectClassName = transactionTableSelectInputClassName;
-    const compactNumberInputClassName = transactionTableNumberInputClassName;
-    const compactDropdownClassName = "h-full w-full max-w-none rounded-none border-0 bg-transparent px-1 py-0 text-[10px] shadow-none outline-none focus:bg-transparent focus:outline-none";
-
+    const compactHeaderCellClassName = "bg-gray-300 px-1 py-0.5 text-center font-bold text-[10px] text-slate-700 border-r border-b border-gray-300";
+    const compactCellClassName = "border-r border-b border-gray-300 p-0 text-[10px]";
+    const compactFocusCellClassName = `${compactCellClassName} focus-within:bg-blue-50`;
+    const compactSelectClassName = "h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-left outline-none focus:outline-none text-[10px]";
+    const compactNumberInputClassName = "h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right outline-none focus:outline-none text-[10px]";
 
     const handleInputChange = (value, index, field) => {
-        const newBlend = structuredClone(expenseItems);
-        newBlend[index][field] = value;
-        setExpenseItems(newBlend);
+        const newItems = [...expenseItems];
+        newItems[index][field] = value;
+        setExpenseItems(newItems);
     };
 
-
-
-
-
+    const addNewRow = () => {
+        setExpenseItems([
+            ...expenseItems,
+            {
+                expenseCategoryId: "",
+                description: "",
+                amount: "",
+                id: '',
+                poItemsId: "",
+                taxMethod: ""
+            }
+        ]);
+    };
 
     useEffect(() => {
         const length = standardTransactionPlaceholderRowCount;
         if (expenseItems?.length >= length) return;
         setExpenseItems((prev) => {
-            let newArray = Array.from({ length: length - prev.length }, () => ({
-                expenseType: "",
+            const currentLen = prev?.length || 0;
+            if (currentLen >= length) return prev;
+            let newArray = Array.from({ length: length - currentLen }, () => ({
+                expenseCategoryId: "",
                 description: "",
                 amount: "",
                 id: '',
@@ -40,93 +47,87 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
         });
     }, [setExpenseItems, expenseItems]);
 
+    const totalAmount = expenseItems?.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0) || 0;
 
     return (
-        <>
-            <fieldset className="h-full min-h-0">
-                <TransactionLineItemsSection
-                    panelClassName="h-full min-h-0"
-                    contentClassName="min-h-0 overflow-hidden rounded-md border border-slate-200 !py-0"
-                >
-                    <div className="h-full w-[70vw] overflow-x-auto overflow-y-auto">
-                        <table className={transactionTableClassName}>
-                            <thead className={transactionTableHeadClassName}>
-                                <tr>
-                                    <th className={`${compactHeaderCellClassName} w-4`}>S.No</th>
-                                    <th className={`${compactHeaderCellClassName} w-20`}>Expense Type</th>
-                                    <th className={`${compactHeaderCellClassName} w-52`}>Description</th>
-                                    <th className={`${compactHeaderCellClassName} w-12`}>Amount</th>
-
-
-                                    <th className={`${compactHeaderCellClassName} w-2`}></th>
+        <fieldset className="h-full min-h-0">
+            <TransactionLineItemsSection
+                panelClassName="h-full min-h-0 !border-0 !shadow-none"
+                contentClassName="min-h-0 overflow-hidden !py-0"
+            >
+                <div className="h-full w-full overflow-auto border border-gray-300">
+                    <table className="w-full border-collapse table-fixed bg-white">
+                        <thead className="sticky top-0 z-20 bg-gray-100">
+                            <tr className="h-[22px]">
+                                <th className={compactHeaderCellClassName} style={{ width: '40px' }}>S.No</th>
+                                <th className={compactHeaderCellClassName} style={{ width: '220px' }}>Expense Type *</th>
+                                <th className={compactHeaderCellClassName}>Description</th>
+                                <th className={compactHeaderCellClassName} style={{ width: '120px' }}>Amount *</th>
+                                <th className={compactHeaderCellClassName} style={{ width: '30px', borderRight: 0 }}></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {expenseItems?.map((row, index) => (
+                                <tr key={index} className={`h-[22px] ${index % 2 === 1 ? "bg-white" : "bg-gray-100"}`}>
+                                    <td className={`${compactCellClassName} text-center`}>{index + 1}</td>
+                                    <td className={compactCellClassName}>
+                                        <select
+                                            disabled={readOnly}
+                                            className={compactSelectClassName}
+                                            value={row.expenseCategoryId}
+                                            onChange={e => handleInputChange(e.target.value, index, "expenseCategoryId")}
+                                        >
+                                            <option value=""></option>
+                                            {expenseTypeList?.data?.map(exp => (
+                                                <option value={exp.id} key={exp.id}>{exp.name}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td className={compactFocusCellClassName}>
+                                        <input
+                                            type="text"
+                                            className={compactSelectClassName}
+                                            value={row.description || ""}
+                                            onChange={e => handleInputChange(e.target.value, index, "description")}
+                                            readOnly={readOnly}
+                                        />
+                                    </td>
+                                    <td className={compactCellClassName}>
+                                        <input
+                                            type="number"
+                                            className={compactNumberInputClassName}
+                                            value={row.amount || ""}
+                                            onChange={e => handleInputChange(e.target.value, index, "amount")}
+                                            onFocus={e => e.target.select()}
+                                            readOnly={readOnly}
+                                        />
+                                    </td>
+                                    <td className={`${compactCellClassName} text-center`} style={{ borderRight: 0 }}>
+                                        <button
+                                            onClick={addNewRow}
+                                            className="w-full h-full text-blue-600 font-bold hover:bg-blue-100/50"
+                                            disabled={readOnly}
+                                        >
+                                            +
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {expenseItems?.map((row, index) => (
-                                    <tr key={index}>
-                                        <td className={`${compactCellClassName} text-center`}>{index + 1}</td>
-                                        <td className={`${compactCellClassName}`}>
-                                            <select
-                                                onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "expenseType"); }}
-                                                tabIndex="0" disabled={readOnly}
-                                                className={compactSelectClassName}
-                                                value={row.expenseCategoryId}
-                                                onChange={e => handleInputChange(e.target.value, index, "expenseCategoryId")}
-                                                onBlur={e => handleInputChange(e.target.value, index, "expenseCategoryId")}
-                                            >
-                                                <option></option>
-                                                {expenseTypeList?.data?.map(blend => (
-                                                    <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                        <td className={`${compactFocusCellClassName}`}>
-                                            <textarea
-                                                className={compactNumberInputClassName}
-                                                onFocus={e => e.target.select()}
-                                                value={row.description}
-                                                onChange={e => handleInputChange(e.target.value, index, "description")}
-                                                onBlur={e => handleInputChange((e.target.value), index, "description")}
-                                            />
-                                        </td>
-                                        <td className={`${compactCellClassName}`}>
-                                            <input
-                                                min="0" type="number"
-                                                className={compactNumberInputClassName}
-                                                onFocus={e => e.target.select()}
-                                                value={row.amount}
-                                                onChange={e => handleInputChange(e.target.value, index, "amount")}
-                                                onBlur={e => handleInputChange(parseFloat(e.target.value)
-                                                    , index, "amount")}
-                                            />
-                                        </td>
-                                        <td className={`${compactFocusCellClassName} text-center`}>
-                                            <button
-                                                onClick={() => addNewRow(index)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter") {
-                                                        e.preventDefault();
-                                                        if (index === saleOrderItems.length - 1) {
-                                                            addNewRow(index);
-                                                        }
+                            ))}
+                        </tbody>
+                        <tfoot className="sticky bottom-0 z-20">
+                            <tr className="h-[22px] bg-gray-300">
+                                <td colSpan="3" className="border-r border-gray-300 px-2 py-0 text-right font-bold text-[10px] text-slate-700">Total:</td>
+                                <td className="border-r border-gray-300 px-1 py-0 text-right font-bold text-[10px] text-slate-800">
+                                    {totalAmount.toFixed(2)}
+                                </td>
+                                <td className="p-0"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </TransactionLineItemsSection>
+        </fieldset>
+    );
+};
 
-                                                    }
-                                                }}
-                                                className="h-full w-full rounded-none bg-blue-50 py-0"
-                                            >
-                                                +
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-
-                    </div>
-                </TransactionLineItemsSection>
-            </fieldset>
-        </>
-    )
-}
-export default ExpenseEntryItems
+export default ExpenseEntryItems;

@@ -148,7 +148,7 @@ const PageSearch = ({ pageList }) => {
         <div className='relative z-10 flex flex-col text-black' ref={inputRef}>
 
             {/* Input */}
-            <div className='relative mr-3 flex h-9 items-center rounded-full border bg-white text-[12px]'>
+            <div className='relative mr-3 flex h-7 items-center rounded-full border bg-white text-[12px]'>
                 <input
                     className='h-full w-60 rounded-full bg-transparent px-3 pr-9 text-[12px] leading-none outline-none'
                     placeholder='Global Search...'

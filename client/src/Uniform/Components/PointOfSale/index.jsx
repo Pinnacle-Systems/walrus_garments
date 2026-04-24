@@ -39,6 +39,7 @@ import PaymentModal from './components/PaymentModal';
 import ReceiptViewerModal from './components/ReceiptViewerModal';
 import StockLocationModal from './components/StockLocationModal';
 import PosReportsNew from './PosReportsNew';
+import { useGetcollectionsQuery } from '../../../redux/uniformService/CollectionsService';
 
 
 const PointOfSale = () => {
@@ -184,7 +185,7 @@ const PointOfSale = () => {
                 return;
             }
             if (e.key === 'F3') { e.preventDefault(); discountRef.current?.focus(); discountRef.current?.select(); return; }
-            if (e.key === 'F4') {
+            if (e.key === 'F4' && !selectedReportSaleId) {
                 e.preventDefault();
                 if (cart.length > 0) {
                     Swal.fire({
@@ -209,11 +210,11 @@ const PointOfSale = () => {
             if (!isTyping) {
                 if (e.key === 'ArrowDown') { e.preventDefault(); setActiveRowIndex(prev => Math.min(prev + 1, cart.length - 1)); return; }
                 if (e.key === 'ArrowUp') { e.preventDefault(); setActiveRowIndex(prev => Math.max(prev - 1, 0)); return; }
-                if (e.key === 'Delete' && cart.length > 0) {
+                if (e.key === 'Delete' && cart.length > 0 && !selectedReportSaleId) {
                     e.preventDefault();
                     const idx = Math.min(activeRowIndex, cart.length - 1);
                     const item = cart[idx];
-                    removeFromCart(`${item.id}-${item.sizeId}-${item.colorId}`);
+                    removeFromCart(`${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}`);
                     setActiveRowIndex(prev => Math.max(prev - 1, 0));
                     return;
                 }
@@ -226,6 +227,9 @@ const PointOfSale = () => {
     // Offers & Promotions Logic
     const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
     const { data: offersData } = useGetoffersPromotionsQuery({
+        params: { branchId, userId, finYearId, active: true }
+    });
+    const { data: collectionsData } = useGetcollectionsQuery({
         params: { branchId, userId, finYearId, active: true }
     });
     const activeOffers = offersData?.data || [];
@@ -313,31 +317,134 @@ const PointOfSale = () => {
 
     const handleShowItemOffers = (item) => { setSelectedItemForOffers(item); setShowItemOfferModal(true); };
 
+    // const getItemApplicableOffers = (item) => {
+    //     if (!item || !activeOffers.length) return [];
+
+    //     return activeOffers.filter(off => {
+    //         // ✅ CLEARANCE Check
+    //         if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+
+    //         // ✅ REGULAR Check
+    //         if (item.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
+
+    //         const targetId = item.itemId || item.id;
+    //         let isInScope = off.scopeMode === 'Global' ||
+    //             ((off.scopeMode === 'Item' || off.scopeMode === 'Collection') &&
+    //                 off.OfferScope?.some(s => String(s.refId) === String(targetId)));
+
+    //         if (!isInScope) return false;
+
+    //         const inScopeItems = cartWithOffers.filter(cit => {
+    //             // ✅ CLEARANCE Check
+    //             if (cit.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+    //             // ✅ REGULAR Check
+    //             if (cit.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
+
+    //             const citId = cit.itemId || cit.id;
+    //             return off.scopeMode === 'Global' ||
+    //                 ((off.scopeMode === 'Item' || off.scopeMode === 'Collection') &&
+    //                     off.OfferScope?.some(s => String(s.refId) === String(citId)));
+    //         });
+
+    //         const scopeQty = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
+    //         const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
+
+    //         const rules = off.OfferRule?.[0]?.conditions?.rules || [];
+    //         const results = rules.map(rule => {
+    //             const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
+    //             if (rule.operator === '>=') return target >= parseFloat(rule.value);
+    //             if (rule.operator === '<=') return target <= parseFloat(rule.value);
+    //             if (rule.operator === '==') return target === parseFloat(rule.value);
     const getItemApplicableOffers = (item) => {
         if (!item || !activeOffers.length) return [];
-        return activeOffers.filter(off => {
-            if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
-            let isInScope = off.scopeMode === 'Global' || (off.scopeMode === 'Item' && off.OfferScope?.some(s => s.refId === item.itemId)) || (off.scopeMode === 'Collection' && off.OfferScope?.some(s => s.refId === item.itemId));
-            if (!isInScope) return false;
+
+        return activeOffers.map(off => {
+            if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return null;
+            if (item.barcodeType === 'REGULAR' && !off.applyToRegular) return null;
+
+            const targetId = item.itemId;
+
+            // ✅ SCOPE CHECK
+            let isInScope = false;
+            if (off.scopeMode === 'Global') {
+                isInScope = true;
+            } else if (off.scopeMode === 'Item') {
+                isInScope = off.OfferScope?.some(s =>
+                    String(s.refId) === String(targetId)
+                );
+            } else if (off.scopeMode === 'Collection') {
+                isInScope = off.OfferScope?.some(scope => {
+                    if (scope.type !== 'Collection') return false;
+                    const matchedCollection = collectionsData?.data?.find(col =>
+                        String(col.id) === String(scope.refId)
+                    );
+                    if (!matchedCollection) return false;
+                    return matchedCollection?.CollectionItems?.some(ci =>
+                        String(ci.itemId) === String(targetId)
+                    );
+                });
+            }
+
+            if (!isInScope) return null;
+
             const inScopeItems = cartWithOffers.filter(cit => {
                 if (cit.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
-                return off.scopeMode === 'Global' || (off.scopeMode === 'Item' && off.OfferScope?.some(s => s.refId === cit.itemId)) || (off.scopeMode === 'Collection' && off.OfferScope?.some(s => s.refId === cit.itemId));
+                if (cit.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
+                const citId = cit.itemId
+                if (off.scopeMode === 'Global') {
+                    return true;
+                } else if (off.scopeMode === 'Item') {
+                    return off.OfferScope?.some(s =>
+                        String(s.refId) === String(citId)
+                    );
+                } else if (off.scopeMode === 'Collection') {
+                    return off.OfferScope?.some(scope => {
+                        if (scope.type !== 'Collection') return false;
+                        const matchedCollection = collectionsData?.data?.find(col =>
+                            String(col.id) === String(scope.refId)
+                        );
+                        if (!matchedCollection) return false;
+                        return matchedCollection.CollectionItems?.some(ci =>
+                            String(ci.itemId) === String(citId)
+                        );
+                    });
+                }
+                return false;
             });
-            const scopeQty = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
-            const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
+
+            // ✅ AGGREGATE SCOPE METRICS
+            const scopeQty = inScopeItems.reduce((sum, i) =>
+                sum + (parseFloat(i.qty) || 0), 0
+            );
+
+            const scopeValue = inScopeItems.reduce((sum, i) =>
+                sum + ((parseFloat(i.price) || 0) * (parseFloat(i.qty) || 0)), 0
+            );
+
+            // ✅ EVALUATE OFFER RULES
             const rules = off.OfferRule?.[0]?.conditions?.rules || [];
             const results = rules.map(rule => {
-                const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
+                const target =
+                    rule.field === 'Minimum Quantity' ? scopeQty :
+                        rule.field === 'Cart Value' ? scopeValue : 0;
                 if (rule.operator === '>=') return target >= parseFloat(rule.value);
                 if (rule.operator === '<=') return target <= parseFloat(rule.value);
                 if (rule.operator === '==') return target === parseFloat(rule.value);
                 return true;
             });
-            return off.OfferRule?.[0]?.logic === 'OR' ? results.some(r => r) : results.every(r => r);
-        });
+
+            // ✅ AND / OR LOGIC
+            const isMatched = off.OfferRule?.[0]?.logic === 'OR'
+                ? results.some(r => r)
+                : results.every(r => r);
+
+            if (isMatched) {
+                return { ...off, _metrics: { scopeQty, scopeValue } };
+            }
+            return null;
+        }).filter(Boolean);
     };
 
-    // Data Fetching
     const { data: itemsData } = useGetItemMasterQuery({ params: { branchId, userId, finYearId, active: true } });
     const { data: ItemPriceListData } = useGetItemPriceListQuery({ params: { branchId, userId, finYearId } });
     const { data: customerData } = useGetPartyQuery({ params: { branchId, userId, finYearId } });
@@ -347,7 +454,6 @@ const PointOfSale = () => {
     const [getStockByBarcode, { isLoading: isBarcodeLoading }] = useLazyGetUnifiedStockByBarcodeQuery();
     const [fetchRecentSales, { data: posData, isFetching: isRecentSalesFetching }] = useLazyGetPointOfSalesQuery();
 
-    // Single Query Sync States
     const [selectedReportSaleId, setSelectedReportSaleId] = useState(null);
     const { data: fetchedSaleResponse, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetPointOfSalesByIdQuery(selectedReportSaleId, { skip: !selectedReportSaleId });
 
@@ -384,6 +490,7 @@ const PointOfSale = () => {
                 qty: parseFloat(item.qty),
                 taxPercent: masterItem?.Hsn?.tax || 5,
                 salesPersonId: item.salesPersonId,
+                salesPersonBarcode: item?.Employee?.employeeId,
                 // salesPersonName: employee?.name,
                 stockQty: 0,
                 sourceStoreId: retailStoreId
@@ -483,6 +590,7 @@ const PointOfSale = () => {
 
     const handleScan = async (e) => {
         if (e.key === 'Enter') {
+            if (selectedReportSaleId) return;
             const barcode = searchQuery.trim();
             if (!barcode) return;
             try {
@@ -518,17 +626,16 @@ const PointOfSale = () => {
         }
     };
 
-    // Cart Actions
+
     const addToCart = (product) => {
-
-
-        console.log(product, "product")
-
 
         const itemId = product.itemId || product.id;
         const sizeId = product.sizeId || 0;
         const colorId = product.colorId || 0;
         const uomId = product.uomId || product.Item?.uomId || 0;
+        const barcode = product.barcode || "";
+
+        console.log(ItemPriceListData?.data?.flatMap(item => item.ItemBarcodes)?.filter(i => i.barcode === barcode), "ItemPriceListData")
 
         console.log("DEBUG: addToCart Search Target:", { itemId, sizeId, colorId, uomId, isReturn: !!product.isReturn });
 
@@ -538,6 +645,7 @@ const PointOfSale = () => {
                 const isSizeMatch = (item.sizeId || 0) == (sizeId || 0);
                 const isColorMatch = (item.colorId || 0) == (colorId || 0);
                 const isUomMatch = (item.uomId || 0) == (uomId || 0);
+                const isBarcodeMatch = (item.barcode || "") == (barcode || "");
                 const isReturnMatch = !!item.isReturn === !!product.isReturn;
 
 
@@ -547,7 +655,7 @@ const PointOfSale = () => {
                     console.log(`   - Checking Row ${i}: ID Match! Size: ${isSizeMatch}, Color: ${isColorMatch}, Uom: ${isUomMatch}`);
                 }
 
-                return isIdMatch && isSizeMatch && isColorMatch && isUomMatch && isReturnMatch;
+                return isIdMatch && isSizeMatch && isColorMatch && isUomMatch && isBarcodeMatch && isReturnMatch;
             });
 
             console.log(existingIndex, "existingIndex")
@@ -603,6 +711,7 @@ const PointOfSale = () => {
             const variantHit = itemPrices.find(p => p.sizeId === product.sizeId && p.colorId === product.colorId);
             const lookupPrice = variantHit?.salesPrice || itemPrices.find(p => !p.sizeId && !p.colorId)?.salesPrice || itemPrices[0]?.salesPrice || 0;
             const masterItem = product?.Item || items.find(i => i.id === itemId);
+            const barcodeDetails = ItemPriceListData?.data?.flatMap(item => item.ItemBarcodes)?.filter(i => i.barcode === barcode)?.[0]
 
             const stockDetails = [{
                 storeId: product.storeId || product.locationId || retailStoreId,
@@ -626,7 +735,8 @@ const PointOfSale = () => {
                 stockQty: totalStock,
                 stockDetails,
                 fulfillments: initialFulfillments,
-                sourceStoreId: retailStoreId // Default for non-clubbed awareness
+                sourceStoreId: retailStoreId,
+                barcodeType: barcodeDetails?.barcodeType,
             }];
         });
         setShowSalesPersonModal(true);
@@ -656,7 +766,7 @@ const PointOfSale = () => {
 
 
 
-    const removeFromCart = (cartKey) => setCart(prev => prev.filter(item => `${item.id}-${item.sizeId}-${item.colorId}` !== cartKey));
+    const removeFromCart = (cartKey) => setCart(prev => prev.filter(item => `${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}` !== cartKey));
 
     const updateQuantity = (id, value, sizeId, colorId, isDirect = false) => {
         setCart(prev => prev.map(item => {
@@ -905,6 +1015,7 @@ const PointOfSale = () => {
                         transactionType={transactionType}
                         setTransactionType={setTransactionType}
                         setShowReturnExchnageModal={setShowReturnExchnageModal}
+                        selectedReportSaleId={selectedReportSaleId}
                     />
 
                     <div className="flex-1 flex overflow-hidden">
@@ -921,6 +1032,7 @@ const PointOfSale = () => {
                             updateRate={updateRate}
                             removeFromCart={removeFromCart}
                             qtyInputRefs={qtyInputRefs}
+                            selectedReportSaleId={selectedReportSaleId}
                         />
 
                         <POSSidebar
@@ -945,6 +1057,7 @@ const PointOfSale = () => {
                             setPrintData={setPrintData}
                             returnTotal={returnTotal}
                             purchaseTotal={purchaseTotalBeforeOffer}
+                            selectedReportSaleId={selectedReportSaleId}
                         />
                     </div>
 
