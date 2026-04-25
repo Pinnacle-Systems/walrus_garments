@@ -80,13 +80,13 @@ const PosItemsSelection = ({
                     >
                         Done
                     </button>
-                    <button
+                    {/* <button
                         type="button"
                         onClick={() => setInwardItemSelection(false)}
                         className="px-4 py-1 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white rounded text-xs font-semibold transition-colors"
                     >
                         Cancel
-                    </button>
+                    </button> */}
                 </div>
             </div>
 
@@ -107,7 +107,7 @@ const PosItemsSelection = ({
                                 <th className="border border-gray-300 p-1 w-12 text-xs font-bold text-center">S No</th>
                                 <th className="border border-gray-300 p-1 w-24 text-center">
                                     <div className="flex flex-col items-center">
-                                        <span className="text-[10px] font-bold">POS Bill No</span>
+                                        <span className="text-[10px] font-bold">{returnType === "Pos" ? "POS Bill No" : "Sale Bill No"}</span>
                                         <input type="text" className="w-full h-5 text-[10px] border border-gray-300 rounded px-1 focus:outline-none focus:ring-1 focus:ring-indigo-400" placeholder="Search" />
                                     </div>
                                 </th>
@@ -120,10 +120,10 @@ const PosItemsSelection = ({
                                 <th className="border border-gray-300 p-1 text-center">
                                     <div className="flex flex-col items-center">
                                         <span className="text-[10px] font-bold">Item</span>
-                                        <input 
-                                            type="text" 
-                                            className="w-full h-5 text-[10px] border border-gray-300 rounded px-1 focus:outline-none focus:ring-1 focus:ring-indigo-400" 
-                                            placeholder="Search" 
+                                        <input
+                                            type="text"
+                                            className="w-full h-5 text-[10px] border border-gray-300 rounded px-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                                            placeholder="Search"
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                         />

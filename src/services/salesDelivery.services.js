@@ -156,7 +156,6 @@ async function getOne(id) {
                 select: {
                     id: true,
                     docId: true,
-                    date: true,
                     createdAt: true,
                 }
             }
@@ -431,146 +430,146 @@ async function update(id, body) {
 
     try {
         await prisma.$transaction(async (tx) => {
-        // Delete removed items
-        if (removedItemIds.length > 0) {
-            await tx.salesDeliveryItems.deleteMany({
+            // Delete removed items
+            if (removedItemIds.length > 0) {
+                await tx.salesDeliveryItems.deleteMany({
+                    where: {
+                        id: { in: removedItemIds }
+                    }
+                });
+            }
+
+            await tx.salesDeliveryFulfillmentAllocation.deleteMany({
                 where: {
-                    id: { in: removedItemIds }
+                    salesDeliveryId: parseInt(id)
                 }
             });
-        }
 
-        await tx.salesDeliveryFulfillmentAllocation.deleteMany({
-            where: {
-                salesDeliveryId: parseInt(id)
-            }
-        });
-
-        await tx.stock.deleteMany({
-            where: {
-                transactionId: parseInt(id),
-                inOrOut: "SalesDelivery"
-            }
-        });
-
-        // Update main record
-        salesDeliveryData = await tx.SalesDelivery.update({
-            where: {
-                id: parseInt(id)
-            },
-            data: {
-                customerId: customerId ? parseInt(customerId) : undefined,
-
-                branchId: branchId ? parseInt(branchId) : undefined,
-                saleOrderId: saleOrderId ? parseInt(saleOrderId) : dataFound?.saleOrderId,
-                packingChargeEnabled: Boolean(packingChargeEnabled),
-                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
-                shippingChargeEnabled: Boolean(shippingChargeEnabled),
-                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
-            },
-        })
-
-        const persistedDeliveryItems = [];
-
-        for (const item of (deliveryItems || []).filter(i => i.itemId)) {
-            if (item.id) {
-                const savedItem = await tx.salesDeliveryItems.update({
-                    where: { id: parseInt(item.id) },
-                    data: {
-                        saleOrderItemId: item.saleOrderItemId ? parseInt(item.saleOrderItemId) : null,
-                        itemId: item.itemId ? parseInt(item.itemId) : null,
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        uomId: item.uomId ? parseInt(item.uomId) : null,
-                        hsnId: item.hsnId ? parseInt(item.hsnId) : null,
-                        qty: item.qty ? item.qty.toString() : "0",
-                        price: item.price ? item.price.toString() : "0",
-                        discountType: item.discountType || null,
-                        discountValue: item.discountValue || null,
-                        taxPercent: item.taxPercent || null,
-                        taxMethod: item.taxMethod || null,
-                        priceType: item.priceType || null,
-                    }
-                });
-                persistedDeliveryItems.push({
-                    ...savedItem,
-                    barcode: item?.barcode || null,
-                    fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
-                });
-            } else {
-                const savedItem = await tx.salesDeliveryItems.create({
-                    data: {
-                        salesDeliveryId: salesDeliveryData.id,
-                        saleOrderItemId: item.saleOrderItemId ? parseInt(item.saleOrderItemId) : null,
-                        itemId: item.itemId ? parseInt(item.itemId) : null,
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        uomId: item.uomId ? parseInt(item.uomId) : null,
-                        hsnId: item.hsnId ? parseInt(item.hsnId) : null,
-                        qty: item.qty ? item.qty.toString() : "0",
-                        price: item.price ? item.price.toString() : "0",
-                        discountType: item.discountType || null,
-                        discountValue: item.discountValue || null,
-                        taxPercent: item.taxPercent || null,
-                        taxMethod: item.taxMethod || null,
-                        priceType: item.priceType || null,
-                    }
-                });
-                persistedDeliveryItems.push({
-                    ...savedItem,
-                    barcode: item?.barcode || null,
-                    fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
-                });
-            }
-        }
-
-        const saleOrder = saleOrderId ? await tx.saleorder.findUnique({
-            where: { id: parseInt(saleOrderId) },
-            include: {
-                SaleOrderItems: true,
-            }
-        }) : null;
-
-        const resolution = await resolveHybridFulfillmentLines(tx, persistedDeliveryItems, {
-            saleOrderItems: saleOrder?.SaleOrderItems,
-            storeId,
-            branchId,
-        });
-        const resolutionError = getHybridFulfillmentResolutionError(resolution);
-        if (resolutionError) {
-            throw resolutionError;
-        }
-
-        const allocations = extractResolvedAllocations(resolution);
-        const allocationValidationMessage = await validateFulfillmentAllocations(tx, allocations);
-        if (allocationValidationMessage) {
-            throw new Error(allocationValidationMessage);
-        }
-
-        if (allocations.length > 0) {
-            await tx.salesDeliveryFulfillmentAllocation.createMany({
-                data: allocations.map((allocation) => ({
-                    salesDeliveryId: parseInt(id),
-                    salesDeliveryItemId: allocation.salesDeliveryItemId,
-                    saleOrderItemId: allocation.saleOrderItemId,
-                    itemId: allocation.itemId,
-                    sizeId: allocation.sizeId,
-                    colorId: allocation.colorId,
-                    uomId: allocation.uomId,
-                    storeId: allocation.storeId,
-                    branchId: allocation.branchId,
-                    barcode: allocation.barcode,
-                    allocatedQty: allocation.allocatedQty,
-                }))
+            await tx.stock.deleteMany({
+                where: {
+                    transactionId: parseInt(id),
+                    inOrOut: "SalesDelivery"
+                }
             });
 
-            await tx.stock.createMany({
-                data: buildStockOutEntries(allocations, {
-                    transactionId: id,
-                    inOrOut: "SalesDelivery",
-                })
+            // Update main record
+            salesDeliveryData = await tx.SalesDelivery.update({
+                where: {
+                    id: parseInt(id)
+                },
+                data: {
+                    customerId: customerId ? parseInt(customerId) : undefined,
+
+                    branchId: branchId ? parseInt(branchId) : undefined,
+                    saleOrderId: saleOrderId ? parseInt(saleOrderId) : dataFound?.saleOrderId,
+                    packingChargeEnabled: Boolean(packingChargeEnabled),
+                    packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                    shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                    shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
+                },
+            })
+
+            const persistedDeliveryItems = [];
+
+            for (const item of (deliveryItems || []).filter(i => i.itemId)) {
+                if (item.id) {
+                    const savedItem = await tx.salesDeliveryItems.update({
+                        where: { id: parseInt(item.id) },
+                        data: {
+                            saleOrderItemId: item.saleOrderItemId ? parseInt(item.saleOrderItemId) : null,
+                            itemId: item.itemId ? parseInt(item.itemId) : null,
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                            uomId: item.uomId ? parseInt(item.uomId) : null,
+                            hsnId: item.hsnId ? parseInt(item.hsnId) : null,
+                            qty: item.qty ? item.qty.toString() : "0",
+                            price: item.price ? item.price.toString() : "0",
+                            discountType: item.discountType || null,
+                            discountValue: item.discountValue || null,
+                            taxPercent: item.taxPercent || null,
+                            taxMethod: item.taxMethod || null,
+                            priceType: item.priceType || null,
+                        }
+                    });
+                    persistedDeliveryItems.push({
+                        ...savedItem,
+                        barcode: item?.barcode || null,
+                        fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
+                    });
+                } else {
+                    const savedItem = await tx.salesDeliveryItems.create({
+                        data: {
+                            salesDeliveryId: salesDeliveryData.id,
+                            saleOrderItemId: item.saleOrderItemId ? parseInt(item.saleOrderItemId) : null,
+                            itemId: item.itemId ? parseInt(item.itemId) : null,
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                            uomId: item.uomId ? parseInt(item.uomId) : null,
+                            hsnId: item.hsnId ? parseInt(item.hsnId) : null,
+                            qty: item.qty ? item.qty.toString() : "0",
+                            price: item.price ? item.price.toString() : "0",
+                            discountType: item.discountType || null,
+                            discountValue: item.discountValue || null,
+                            taxPercent: item.taxPercent || null,
+                            taxMethod: item.taxMethod || null,
+                            priceType: item.priceType || null,
+                        }
+                    });
+                    persistedDeliveryItems.push({
+                        ...savedItem,
+                        barcode: item?.barcode || null,
+                        fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
+                    });
+                }
+            }
+
+            const saleOrder = saleOrderId ? await tx.saleorder.findUnique({
+                where: { id: parseInt(saleOrderId) },
+                include: {
+                    SaleOrderItems: true,
+                }
+            }) : null;
+
+            const resolution = await resolveHybridFulfillmentLines(tx, persistedDeliveryItems, {
+                saleOrderItems: saleOrder?.SaleOrderItems,
+                storeId,
+                branchId,
             });
-        }
+            const resolutionError = getHybridFulfillmentResolutionError(resolution);
+            if (resolutionError) {
+                throw resolutionError;
+            }
+
+            const allocations = extractResolvedAllocations(resolution);
+            const allocationValidationMessage = await validateFulfillmentAllocations(tx, allocations);
+            if (allocationValidationMessage) {
+                throw new Error(allocationValidationMessage);
+            }
+
+            if (allocations.length > 0) {
+                await tx.salesDeliveryFulfillmentAllocation.createMany({
+                    data: allocations.map((allocation) => ({
+                        salesDeliveryId: parseInt(id),
+                        salesDeliveryItemId: allocation.salesDeliveryItemId,
+                        saleOrderItemId: allocation.saleOrderItemId,
+                        itemId: allocation.itemId,
+                        sizeId: allocation.sizeId,
+                        colorId: allocation.colorId,
+                        uomId: allocation.uomId,
+                        storeId: allocation.storeId,
+                        branchId: allocation.branchId,
+                        barcode: allocation.barcode,
+                        allocatedQty: allocation.allocatedQty,
+                    }))
+                });
+
+                await tx.stock.createMany({
+                    data: buildStockOutEntries(allocations, {
+                        transactionId: id,
+                        inOrOut: "SalesDelivery",
+                    })
+                });
+            }
         });
         return { statusCode: 0, data: salesDeliveryData };
     } catch (error) {
