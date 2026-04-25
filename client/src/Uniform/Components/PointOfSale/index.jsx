@@ -286,7 +286,7 @@ const PointOfSale = () => {
         if (!cart.length) return { cartWithOffers: [], appliedOffers: [] };
         const appliedSet = new Set();
         const computed = cart.map(item => {
-            const cartKey = `${item.id}-${item.sizeId}-${item.colorId}`;
+            const cartKey = `${item.itemId}-${item.sizeId}-${item.colorId}-${item.barcodeType}`;
             const rowOfferId = selectedOffersByRow[cartKey];
             if (!rowOfferId) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
 

@@ -46,10 +46,10 @@ const ItemOfferModal = ({
                                         <th className="px-4 py-3 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 w-[20%]">Benefit / Reward</th>
                                         <th className="px-4 py-3 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 text-center w-[10%]">Action</th>
                                     </tr>
-                                </thead>
+                                </thead>{console.log(getItemApplicableOffers(selectedItemForOffers), "availableOffers")}
                                 <tbody className="divide-y divide-slate-100">
                                     {getItemApplicableOffers(selectedItemForOffers).map((off, idx) => {
-                                        const activeItemKey = selectedItemForOffers ? `${selectedItemForOffers.id || selectedItemForOffers.itemId}-${selectedItemForOffers.sizeId}-${selectedItemForOffers.colorId}-${selectedItemForOffers.barcodeType}` : null;
+                                        const activeItemKey = selectedItemForOffers ? `${selectedItemForOffers.itemId}-${selectedItemForOffers.sizeId}-${selectedItemForOffers.colorId}-${selectedItemForOffers.barcodeType}` : null;
                                         const isOfferSelected = activeItemKey && selectedOffersByRow[activeItemKey] === off.id;
 
                                         return (
@@ -97,11 +97,11 @@ const ItemOfferModal = ({
                                                             {(() => {
                                                                 if (off.discountType === 'Percentage') return `${off.discountValue}% DISCOUNT`;
                                                                 if (off.discountType === 'Fixed') return `FLAT ₹${off.discountValue} OFF`;
-                                                                
+
                                                                 // For Volume / Override, check the matched tier if metrics available
                                                                 const tier = off.OfferTier ? [...off.OfferTier].sort((a, b) => b.minQty - a.minQty)
                                                                     .find(t => (off._metrics?.scopeQty || 0) >= t.minQty) : null;
-                                                                
+
                                                                 const displayTier = tier || off.OfferTier?.[0];
 
                                                                 if (off.discountType === 'Override') {
