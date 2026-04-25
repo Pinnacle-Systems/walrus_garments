@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import { useSelector, useDispatch } from 'react-redux';
+import { push } from '../../../redux/features/opentabs';
 import { getCommonParams, getDateFromDateTime } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import { useGetPartyQuery } from '../../../redux/services/PartyMasterService';
@@ -64,8 +65,9 @@ const SalesDelivery = () => {
             setStoreId(saleOrderData.storeId || "");
             setReadOnly(false);
             setShowManufacturer(true);
+            dispatch(push({ name: "SALES DELIVERY", projectId: null }));
         }
-    }, [saleOrderToConvertData, convertSaleOrderId]);
+    }, [saleOrderToConvertData, convertSaleOrderId, dispatch]);
 
     const params = {
         branchId, userId, finYearId
@@ -106,6 +108,10 @@ const SalesDelivery = () => {
         setId(orderId)
         setShowManufacturer(true)
         setReadOnly(false);
+    };
+
+    const handleConvertToReturn = (dataObj) => {
+        dispatch(push({ name: "SALES RETURN", projectId: dataObj.id }));
     };
 
     const handleDelete = async (id, childRecord) => {
@@ -180,6 +186,7 @@ const SalesDelivery = () => {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            onConvertToReturn={handleConvertToReturn}
                         />
                     </div>
 

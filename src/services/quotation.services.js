@@ -4,7 +4,67 @@ import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 
+function parseAmount(value) {
+    const parsed = parseFloat(value || 0);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
 
+function calculateQuotationNetAmount(quotationItems = [], quotation = {}) {
+    const lineNetAmount = (quotationItems || []).reduce((acc, curr) => {
+        const price = parseAmount(curr?.price);
+        const qty = parseAmount(curr?.qty);
+        const taxPercent = parseAmount(curr?.taxPercent);
+        const taxMethod = curr?.taxMethod || "Inclusive";
+        const discountType = curr?.discountType;
+        const discountValue = parseAmount(curr?.discountValue);
+
+        const gross = price * qty;
+        let discountedAmount = gross;
+
+        if (discountType === "Percentage") {
+            discountedAmount = gross - (gross * discountValue) / 100;
+        } else if (discountType === "Flat") {
+            discountedAmount = gross - discountValue;
+        }
+
+        discountedAmount = Math.max(0, discountedAmount);
+
+        if (taxMethod === "Inclusive" && taxPercent > 0) {
+            return acc + discountedAmount;
+        }
+
+        return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+    }, 0);
+
+    const packingAmount = quotation?.packingChargeEnabled ? parseAmount(quotation?.packingCharge) : 0;
+    const shippingAmount = quotation?.shippingChargeEnabled ? parseAmount(quotation?.shippingCharge) : 0;
+
+    return Math.round((lineNetAmount + packingAmount + shippingAmount) * 100) / 100;
+}
+
+function enrichQuotationConversionState(quotation, paymentData = []) {
+    const paidAmount = Math.round((paymentData || []).reduce(
+        (acc, curr) => acc + parseAmount(curr?.paidAmount),
+        0
+    ) * 100) / 100;
+    const minimumAdvanceAmount = parseAmount(quotation?.minimumAdvancePayment);
+    const requiredAdvanceAmount = minimumAdvanceAmount > 0
+        ? minimumAdvanceAmount
+        : Math.round(calculateQuotationNetAmount(quotation?.QuotationItems, quotation) * 0.25 * 100) / 100;
+    const saleOrderExists = (quotation?.Saleorder || []).length > 0;
+    const quotationStatus = saleOrderExists
+        ? "Order Taken"
+        : (paidAmount < requiredAdvanceAmount ? "Pending Advance" : "Ready for Order");
+
+    return {
+        ...quotation,
+        paymentData,
+        paidAmount,
+        requiredAdvanceAmount,
+        quotationStatus,
+        canConvertToSaleOrder: !saleOrderExists && paidAmount >= requiredAdvanceAmount,
+    };
+}
 
 
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
@@ -90,10 +150,7 @@ async function get(req) {
                 },
             });
 
-            return {
-                ...item,
-                paymentData, // ✅ attach per item
-            };
+            return enrichQuotationConversionState(item, paymentData);
         })
     );
 
@@ -108,11 +165,23 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            QuotationItems: true
+            QuotationItems: true,
+            Saleorder: {
+                select: {
+                    id: true,
+                    docId: true,
+                }
+            }
         }
     })
     if (!data) return NoRecordFound("size");
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+    const paymentData = await prisma.payment.findMany({
+        where: {
+            transactionType: "QUOTATION",
+            transactionId: data.id,
+        },
+    });
+    return { statusCode: 0, data: { ...enrichQuotationConversionState(data, paymentData), childRecord } };
 }
 
 async function getSearch(req) {

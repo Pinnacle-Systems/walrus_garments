@@ -278,42 +278,36 @@ const PurchaseInwardFormReport = ({
                     <div className="">S No</div>
                   </th>
 
-                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-40">
+                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
                     <div>Inward No</div>
 
                   </th>
-                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-40">
+                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
                     <div>Inward Date</div>
 
                   </th>
 
 
-                  <th className="w-1/2  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                  <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
 
                   </th>
-                  <th className="w-20  px-3   font-bold text-[13px] text-gray-900  text-center "
-                    rowSpan={2}
-
-                  >
+                  <th className="w-36  px-3   font-bold text-[13px] text-gray-900  text-center ">
                     <div>Status</div>
 
                   </th>
-                  <th className="w-14   px-3  font-bold text-[13px]  text-gray-900  text-center "
-                    rowSpan={2}
-
-                  >
+                  <th className="w-40   px-3  font-bold text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
 
                   </th>
 
                 </tr>
                 <tr className="">
-                  <th className=" px-1  font-medium text-[13px] justify-end  text-gray-900  text-center  w-12">
+                  <th className=" px-1  font-bold text-[13px] justify-end  text-gray-900  text-center  w-12">
                     <div className="h-3"></div>
                   </th>
 
-                  <th className=" px-1 font-medium text-[13px] border  text-gray-900  text-center w-32">
+                  <th className=" px-1 font-bold text-[13px] border  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -324,7 +318,7 @@ const PurchaseInwardFormReport = ({
                       }}
                     />
                   </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
+                  <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -336,7 +330,7 @@ const PurchaseInwardFormReport = ({
                     />
                   </th>
 
-                  {/* <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
+                  {/* <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -347,7 +341,7 @@ const PurchaseInwardFormReport = ({
                       }}
                     />
                   </th> */}
-                  <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-96  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -358,12 +352,12 @@ const PurchaseInwardFormReport = ({
                       }}
                     />
                   </th>
-                  {/* <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-36  px-1  font-bold text-[13px]  text-gray-900  text-center ">
 
                   </th>
-                  <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-40  px-1  font-bold text-[13px]  text-gray-900  text-center ">
 
-                  </th> */}
+                  </th>
 
                 </tr>
               </thead>
@@ -389,31 +383,31 @@ const PurchaseInwardFormReport = ({
                           }`}
                       // onClick={() => onClick(dataObj.id)}
                       >
-                        <td className="text-center " >
+                        <td className="py-1.5 text-center " >
                           {index + 1}
                         </td>
 
-                        <td className=" text-left">{dataObj.docId} </td>
+                        <td className="py-1.5 text-left">{dataObj.docId} </td>
 
 
-                        <td className=" text-left">
+                        <td className="py-1.5 text-left">
                           {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                         </td>
 
 
-                        <td className=" text-left">
+                        <td className="py-1.5 text-left">
                           {`${dataObj?.supplier?.name}${dataObj?.supplier?.BranchType?.name
                             ? ` / ${dataObj?.supplier?.BranchType?.name}`
                             : ""
                             }${dataObj?.supplier?.City?.name ? ` / ${dataObj?.supplier?.City?.name}` : ""}`}
                         </td>
-                        <td className=" text-left">
+                        <td className="py-1.5 text-center">
                           <StatusBadge status={dataObj?.status} />
                         </td>
 
                         {rowActions && (
-                          <td className="px-2 py-1">
-                            <div className="flex items-center justify-center">
+                        <td className="px-2 h-8">
+                            <div className="flex items-center justify-end">
                               <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
                                 {/* BILL ENTRY */}
 

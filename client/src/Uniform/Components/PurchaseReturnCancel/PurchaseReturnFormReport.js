@@ -213,19 +213,10 @@ const PurchaseCancelFormReport = ({
                     <div className="">S No</div>
                   </th>
 
-                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-40">
+                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
                     <div>Return No</div>
-                    {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={serachDocNo}
-                                            onChange={(e) => {
-                                                setSerachDocNo(e.target.value);
-                                            }}
-                                        /> */}
                   </th>
-                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-40">
+                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
                     <div>Return Date</div>
                     {/* <input
                                             type="text"
@@ -238,7 +229,7 @@ const PurchaseCancelFormReport = ({
                                         /> */}
                   </th>
 
-                  <th className="w-1/2  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                  <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
                     {/* <input
                                             type="text"
@@ -257,10 +248,7 @@ const PurchaseCancelFormReport = ({
                     <div>Status</div>
 
                   </th> */}
-                  <th className="w-14   px-3  font-bold text-[13px]  text-gray-900  text-center "
-                    rowSpan={2}
-
-                  >
+                  <th className="w-40   px-3  font-bold text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
 
                   </th>
@@ -308,6 +296,9 @@ const PurchaseCancelFormReport = ({
 
 
 
+                  <th className="w-40  px-1  font-bold text-[13px]  text-gray-900  text-center ">
+
+                  </th>
                 </tr>
               </thead>
               {isLoadingIndicator ? (
@@ -333,18 +324,18 @@ const PurchaseCancelFormReport = ({
                         }`}
                     // onClick={() => onClick(dataObj.id)}
                     >
-                      <td className="text-center " >
+                      <td className="py-1.5 text-center " >
                         {index + 1}
                       </td>
 
-                      <td className="py-1 text-left">{dataObj.docId} </td>
+                      <td className="py-1.5 text-left">{dataObj.docId} </td>
 
 
-                      <td className="py-1 text-left">
+                      <td className="py-1.5 text-left">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
 
-                      <td className="py-1 text-left">
+                      <td className="py-1.5 text-left">
                         {`${dataObj?.supplier?.name}${dataObj?.supplier?.BranchType?.name
                           ? ` / ${dataObj?.supplier?.BranchType?.name}`
                           : ""
@@ -353,8 +344,8 @@ const PurchaseCancelFormReport = ({
                       {/* <td className="py-1 text-left">
                       </td> */}
                       {rowActions && (
-                        <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
-                          <div className="flex">
+                        <td className="border-gray-200 px-2 h-8">
+                          <div className="flex items-center justify-end gap-1">
                             {onView && (
                               <button
                                 className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"

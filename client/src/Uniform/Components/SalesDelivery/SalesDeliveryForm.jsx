@@ -19,6 +19,7 @@ import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterS
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import SalesDeliveryItems from "./SalesDeliveryItems";
 import { useAddSalesDeliveryMutation, useGetSalesDeliveryByIdQuery, useUpdateSalesDeliveryMutation } from "../../../redux/uniformService/salesDeliveryServices";
+import { useGetsaleOrderByIdQuery, useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
 import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
 import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintFormat";
@@ -63,6 +64,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
   const [taxMethod, setTaxMethod] = useState("WithoutTax")
   const [isHeaderOpen, setIsHeaderOpen] = useState(true);
+  const [linkedSaleOrderId, setLinkedSaleOrderId] = useState(convertSaleOrderId || "");
 
 
 
@@ -98,6 +100,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const { data: sizeList } = useGetSizeMasterQuery({ params });
   const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
+  const { data: saleOrderList } = useGetsaleOrderQuery({ params });
+  const { data: selectedSaleOrderData } = useGetsaleOrderByIdQuery(linkedSaleOrderId, { skip: !linkedSaleOrderId || id });
 
 
   const {
@@ -108,6 +112,24 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
   const [addData] = useAddSalesDeliveryMutation();
   const [updateData] = useUpdateSalesDeliveryMutation();
+
+  useEffect(() => {
+    if (convertSaleOrderId && String(linkedSaleOrderId || "") !== String(convertSaleOrderId)) {
+      setLinkedSaleOrderId(convertSaleOrderId);
+    }
+  }, [convertSaleOrderId, linkedSaleOrderId]);
+
+  useEffect(() => {
+    if (id || !linkedSaleOrderId || !selectedSaleOrderData?.data) return;
+
+    const saleOrderData = selectedSaleOrderData.data;
+    setCustomerId(saleOrderData.customerId || "");
+    setDeliveryItems(saleOrderData.remainingSaleOrderItems || []);
+    setPackingChargeEnabled(Boolean(saleOrderData?.packingChargeEnabled) || parseChargeAmount(saleOrderData?.packingCharge) > 0);
+    setPackingCharge(saleOrderData?.packingChargeEnabled ? formatChargeValue(saleOrderData?.packingCharge) : "");
+    setShippingChargeEnabled(Boolean(saleOrderData?.shippingChargeEnabled) || parseChargeAmount(saleOrderData?.shippingCharge) > 0);
+    setShippingCharge(saleOrderData?.shippingChargeEnabled ? formatChargeValue(saleOrderData?.shippingCharge) : "");
+  }, [id, linkedSaleOrderId, selectedSaleOrderData, setCustomerId, setDeliveryItems]);
 
 
 
@@ -199,7 +221,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     branchId,
     customerId,
     terms,
-    saleOrderId: convertSaleOrderId || singleData?.data?.saleOrderId,
+    saleOrderId: linkedSaleOrderId || singleData?.data?.saleOrderId,
     packingChargeEnabled,
     packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
     shippingChargeEnabled,
@@ -217,7 +239,9 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
     return false
   }
-  console.log(convertSaleOrderId, "convertSaleOrderId")
+  const effectiveRemainingPaymentCapacity = selectedSaleOrderData?.data?.remainingPaymentCapacity ?? remainingPaymentCapacity;
+  const effectiveTotalReceivedAmount = selectedSaleOrderData?.data?.totalReceivedAmount ?? totalReceivedAmount;
+  console.log(linkedSaleOrderId, "linkedSaleOrderId")
 
 
 
@@ -317,10 +341,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       });
       return;
     }
-    if (convertSaleOrderId && remainingPaymentCapacity < adjustedNetAmount) {
+    if (linkedSaleOrderId && effectiveRemainingPaymentCapacity < adjustedNetAmount) {
       Swal.fire({
         title: "Insufficient Payment",
-        text: `Remaining payment capacity (${parseFloat(remainingPaymentCapacity || 0).toFixed(2)}) must cover the delivery net amount (${parseFloat(adjustedNetAmount || 0).toFixed(2)}).`,
+        text: `Remaining payment capacity (${parseFloat(effectiveRemainingPaymentCapacity || 0).toFixed(2)}) must cover the delivery net amount (${parseFloat(adjustedNetAmount || 0).toFixed(2)}).`,
         icon: "warning",
       });
       return;
@@ -407,7 +431,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const { subtotal, taxAmount, netAmount } = calculateTotals();
   const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
   const adjustedNetAmount = netAmount + extraCharges;
-  const activeLinkedSaleOrder = linkedSaleOrder || singleData?.data?.Saleorder;
+  const activeLinkedSaleOrder = selectedSaleOrderData?.data || linkedSaleOrder || singleData?.data?.Saleorder;
   const linkedSaleOrderDocId = activeLinkedSaleOrder?.docId || "";
   const chargeRows = [
     ...(packingChargeEnabled
@@ -489,14 +513,14 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         supplierDetails?.data?.address ||
         findFromList(customerId, supplierList?.data, "address"),
     },
-    ...(convertSaleOrderId ? [
+    ...(linkedSaleOrderId ? [
       {
         label: "Received Payment",
-        value: `Rs.${parseFloat(totalReceivedAmount || 0).toFixed(2)}`,
+        value: `Rs.${parseFloat(effectiveTotalReceivedAmount || 0).toFixed(2)}`,
       },
       {
         label: "Remaining Capacity",
-        value: `Rs.${parseFloat(remainingPaymentCapacity || 0).toFixed(2)}`,
+        value: `Rs.${parseFloat(effectiveRemainingPaymentCapacity || 0).toFixed(2)}`,
       },
     ] : []),
   ];
@@ -687,7 +711,18 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                 <ReusableInput label="Sales Delivery Date" value={date} type="date" required readOnly disabled />
               </div>
               <div className="col-span-4">
-                <ReusableInput label="Linked Sale Order" readOnly value={linkedSaleOrderDocId || ""} />
+                <DropdownInput
+                  name="Linked Sale Order"
+                  options={dropDownListObject(
+                    id ? saleOrderList?.data : saleOrderList?.data?.filter((item) => item?.canConvertToDelivery || String(item?.id) === String(linkedSaleOrderId)),
+                    "docId",
+                    "id"
+                  )}
+                  value={linkedSaleOrderId}
+                  setValue={setLinkedSaleOrderId}
+                  clear
+                  readOnly={Boolean(id) || readOnly}
+                />
               </div>
             </TransactionHeaderSection>
 
