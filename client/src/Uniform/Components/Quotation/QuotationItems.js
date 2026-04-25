@@ -724,7 +724,7 @@ const QuotationItems = ({
                                                     )}
                                                 </select>
                                             </td>
-                                            <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none relative`}>
+                                            <td className={`${compactCellClassName} px-1 text-[10px] text-center font-bold leading-none relative`}>
                                                 {!readOnly && row.itemId && (
                                                     <button
                                                         onClick={(e) => {
@@ -733,7 +733,7 @@ const QuotationItems = ({
                                                             setShowItemOfferModal(true);
                                                         }}
                                                         title="View Item Offers"
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded transition-all flex items-center justify-center border border-indigo-100 hover:border-indigo-600 shrink-0 z-10"
+                                                        className="absolute right-1/4 top-1/2 -translate-y-1/2 p-1 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded transition-all flex items-center justify-center border border-indigo-100 hover:border-indigo-600 shrink-0 z-10"
                                                     >
                                                         <Gift size={12} fill="currentColor" />
                                                     </button>
