@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaPlus } from "react-icons/fa";
+import { useDispatch, useSelector } from 'react-redux';
+import { push } from '../../../redux/features/opentabs';
 import { findFromList, getCommonParams } from '../../../Utils/helper';
 import { toast } from 'react-toastify';
 import moment from 'moment';
@@ -10,7 +12,7 @@ import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import { useGetYarnMasterQuery } from '../../../redux/uniformService/YarnMasterServices';
 import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMasterService';
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
-import { useDeleteSalesDeliveryMutation } from '../../../redux/uniformService/salesDeliveryServices';
+import { useDeleteSalesDeliveryMutation, useGetSalesDeliveryByIdQuery } from '../../../redux/uniformService/salesDeliveryServices';
 import { useGetHsnMasterQuery } from '../../../redux/services/HsnMasterServices';
 import SalesReturnReport from './SalesReturnReport';
 import SalesReturnForm from './SalesReturnForm';
@@ -46,6 +48,10 @@ const SalesDelivery = () => {
     const [returnType, setReturnType] = useState("Bulk Sales");
     const [posId, setPosId] = useState('')
     const { branchId, userId, companyId, finYearId } = getCommonParams();
+    const dispatch = useDispatch();
+    const openTabsState = useSelector((state) => state.openTabs);
+    const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "SALES RETURN");
+    const convertSalesDeliveryId = currentTab?.projectId;
 
     const params = {
         branchId, userId, finYearId
@@ -72,6 +78,29 @@ const SalesDelivery = () => {
         useGetHsnMasterQuery({ params });
     const { data: termsData } =
         useGetTermsandCondtionsQuery({ params: { ...params } });
+    const { data: deliveryToConvertData } =
+        useGetSalesDeliveryByIdQuery(convertSalesDeliveryId, { skip: !convertSalesDeliveryId });
+
+    const getWarehouseLocationId = () => {
+        const locations = locationData?.data || [];
+        return locations.find((location) => (
+            String(location?.storeName || "").toLowerCase().includes("warehouse")
+        ))?.id || "";
+    };
+
+    useEffect(() => {
+        if (!convertSalesDeliveryId || !deliveryToConvertData?.data) return;
+
+        const deliveryData = deliveryToConvertData.data;
+        setId("");
+        setCustomerId(deliveryData.customerId || "");
+        setSalesDeliveryId(convertSalesDeliveryId);
+        setDeliveryItems(deliveryData.remainingReturnItems || []);
+        setStoreId(getWarehouseLocationId());
+        setReadOnly(false);
+        setShowManufacturer(true);
+        dispatch(push({ name: "SALES RETURN", projectId: null }));
+    }, [convertSalesDeliveryId, deliveryToConvertData, dispatch, locationData]);
 
 
     const handleView = (id) => {
@@ -130,6 +159,8 @@ const SalesDelivery = () => {
         setPartyId('')
         setPosId('')
         setSalesDeliveryId('')
+        setStoreId(getWarehouseLocationId())
+        setDeliveryItems([])
     }
 
     return (

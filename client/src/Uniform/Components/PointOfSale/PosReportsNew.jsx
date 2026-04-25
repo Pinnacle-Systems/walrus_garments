@@ -255,11 +255,11 @@ const PosReportsNew = ({
                         <table>
                             <thead className="bg-gray-200 text-gray-800 ">
                                 <tr className="">
-                                    <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                                    <th className=" px-1 py-1.5  font-bold text-[13px]  text-gray-900  text-center  w-12">
                                         <div className="">S No</div>
                                     </th>
 
-                                    <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
                                         <div>Pos No</div>
                                         {/* <input
                                             type="text"
@@ -271,7 +271,7 @@ const PosReportsNew = ({
                                             }}
                                         /> */}
                                     </th>
-                                    <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
                                         <div>Pos Date</div>
                                         {/* <input
                                             type="text"
@@ -284,23 +284,23 @@ const PosReportsNew = ({
                                         /> */}
                                     </th>
 
-                                    <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                                    <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>Customer</div>
                                     </th>
-                                    {/* <th className="w-36 px-3 font-medium text-[13px] text-gray-900 text-center">
+                                    {/* <th className="w-36 px-3 font-bold text-[13px] text-gray-900 text-center">
                                         <div>Payment Method</div>
                                     </th> */}
-                                    <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                                    <th className="w-14   px-3  font-bold text-[13px]  text-gray-900  text-center ">
                                         <div>Actions</div>
                                     </th>
 
                                 </tr>
                                 <tr className="">
-                                    <th className=" px-1  font-medium text-[13px] justify-end  text-gray-900  text-center  w-12">
+                                    <th className=" px-1  font-bold text-[13px] justify-end  text-gray-900  text-center  w-12">
                                         <div className="h-3"></div>
                                     </th>
 
-                                    <th className=" px-1 font-medium text-[13px] border  text-gray-900  text-center w-32">
+                                    <th className=" px-1 font-bold text-[13px] border  text-gray-900  text-center w-32">
                                         <input
                                             type="text"
                                             className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -311,7 +311,7 @@ const PosReportsNew = ({
                                             }}
                                         />
                                     </th>
-                                    <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
+                                    <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
                                         <input
                                             type="text"
                                             className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -324,7 +324,7 @@ const PosReportsNew = ({
                                     </th>
 
 
-                                    <th className="w-1/2  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                                    <th className="w-1/2  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                                         <input
                                             type="text"
                                             className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -335,8 +335,8 @@ const PosReportsNew = ({
                                             }}
                                         />
                                     </th>
-                                    <th className="w-32 px-1 font-medium text-[13px] text-gray-900 text-center"></th>
-                                    {/* <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th> */}
+                                    <th className="w-32 px-1 font-bold text-[13px] text-gray-900 text-center"></th>
+                                    {/* <th className="w-14  px-1  font-bold text-[13px]  text-gray-900  text-center "></th> */}
 
                                 </tr>
                             </thead>
@@ -367,10 +367,10 @@ const PosReportsNew = ({
                                                 {index + 1}
                                             </td>
 
-                                            <td className="py-1.5 text-center">{dataObj.docId} </td>
+                                            <td className="py-1.5 text-left">{dataObj.docId} </td>
 
 
-                                            <td className="py-1.5 text-center">
+                                            <td className="py-1.5 text-left">
                                                 {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                                             </td>
 

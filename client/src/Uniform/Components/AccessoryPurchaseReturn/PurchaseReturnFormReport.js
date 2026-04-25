@@ -211,11 +211,11 @@ const PurchaseReturnFormReport = ({
             <table className="">
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
-                  <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                  <th className=" px-1 py-1.5  font-bold text-[13px]  text-gray-900  text-center  w-12">
                     <div className="">S No</div>
                   </th>
 
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
                     <div>Doc No</div>
                     {/* <input
                                             type="text"
@@ -227,7 +227,7 @@ const PurchaseReturnFormReport = ({
                                             }}
                                         /> */}
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
                     <div>Doc Date</div>
                     {/* <input
                                             type="text"
@@ -240,7 +240,7 @@ const PurchaseReturnFormReport = ({
                                         /> */}
                   </th>
                 
-                  <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                  <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                     <div>Supplier</div>
                     {/* <input
                                             type="text"
@@ -252,18 +252,18 @@ const PurchaseReturnFormReport = ({
                                             }}
                                         /> */}
                   </th>
-                  <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-40   px-3  font-bold text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
 
                   </th>
 
                 </tr>
                 <tr className="">
-                  <th className=" px-1  font-medium text-[13px] justify-end  text-gray-900  text-center  w-12">
+                  <th className=" px-1  font-bold text-[13px] justify-end  text-gray-900  text-center  w-12">
                     <div className="h-3"></div>
                   </th>
 
-                  <th className=" px-1 font-medium text-[13px] border  text-gray-900  text-center w-32">
+                  <th className=" px-1 font-bold text-[13px] border  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -274,7 +274,7 @@ const PurchaseReturnFormReport = ({
                       }}
                     />
                   </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
+                  <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -286,7 +286,7 @@ const PurchaseReturnFormReport = ({
                     />
                   </th>
         
-                  <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-96  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -298,7 +298,7 @@ const PurchaseReturnFormReport = ({
                     />
                   </th>
 
-                  <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-40  px-1  font-bold text-[13px]  text-gray-900  text-center ">
 
                   </th>
 
@@ -341,8 +341,8 @@ const PurchaseReturnFormReport = ({
 
                       <td className="py-1.5 text-left"> {dataObj?.supplier?.name}</td>
                       {rowActions && (
-                        <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
-                          <div className="flex">
+                        <td className="border-gray-200 px-2 h-8">
+                          <div className="flex items-center justify-end gap-1">
                             {onView && (
                               <button
                                 className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"

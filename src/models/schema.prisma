@@ -2058,6 +2058,7 @@ model Location {
   MinimumStockQty                    MinimumStockQty[]
   StockAdjustment                    StockAdjustment[]
   DeliveryChallan                    DeliveryChallan[]
+  SalesReturn                        SalesReturn[]
 }
 
 enum ProcessIO {
@@ -5097,6 +5098,7 @@ model QuotationItems {
   taxType       String?
   priceType     String?
   taxMethod     String?
+  SaleOrderItems SaleOrderItems[]
 }
 
 model Saleorder {
@@ -5134,6 +5136,8 @@ model SaleOrderItems {
   id                     Int                                  @id @default(autoincrement())
   Saleorder              Saleorder?                           @relation(fields: [saleOrderId], references: [id], onDelete: Cascade)
   saleOrderId            Int?
+  QuotationItems         QuotationItems?                      @relation(fields: [quotationItemId], references: [id])
+  quotationItemId        Int?
   Item                   Item?                                @relation(fields: [itemId], references: [id])
   itemId                 Int?
   Size                   Size?                                @relation(fields: [sizeId], references: [id])
@@ -5264,6 +5268,7 @@ model SalesDeliveryItems {
   taxMethod              String?
   priceType              String?
   FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
+  SalesReturnItems       SalesReturnItems[]
 }
 
 model SalesDeliveryFulfillmentAllocation {
@@ -5362,6 +5367,8 @@ model SalesReturn {
   packingCharge         String?
   shippingChargeEnabled Boolean?           @default(false)
   shippingCharge        String?
+  Store                 Location?          @relation(fields: [storeId], references: [id])
+  storeId               Int?
   salesDeliveryId       Int?
   returnType            String?
   posId                 Int?
@@ -5378,6 +5385,8 @@ model SalesReturnItems {
   id            Int                @id @default(autoincrement())
   SalesReturn   SalesReturn?       @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
   salesReturnId Int?
+  SalesDeliveryItems SalesDeliveryItems? @relation(fields: [salesDeliveryItemId], references: [id])
+  salesDeliveryItemId Int?
   Item          Item?              @relation(fields: [itemId], references: [id])
   itemId        Int?
   Size          Size?              @relation(fields: [sizeId], references: [id])

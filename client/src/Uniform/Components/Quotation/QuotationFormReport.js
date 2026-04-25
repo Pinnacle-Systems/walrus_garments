@@ -10,9 +10,11 @@ import {
 } from "../../../redux/uniformService/PoServices"
 import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 import ReactPaginate from 'react-paginate';
-import { FaChevronLeft, FaChevronRight, FaEllipsisV } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 import { useGetQuotationMasterQuery, useGetQuotationQuery } from '../../../redux/uniformService/quotationServices';
+import { Tooltip } from '@mui/material';
+import { CreditCard, FileText } from 'lucide-react';
 
 
 
@@ -94,7 +96,6 @@ const QuotationPrintFormat = ({
 
   const [totalCount, setTotalCount] = useState(0);
   const [currentPageNumber, setCurrentPageNumber] = useState(1);
-  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
 
 
   const searchFields = {
@@ -115,18 +116,6 @@ const QuotationPrintFormat = ({
     supplier,
     searchMaterial,
   ]);
-
-  useEffect(() => {
-    const handleClickOutside = () => setActiveActionMenuId(null);
-    if (activeActionMenuId) {
-      window.addEventListener('click', handleClickOutside);
-    }
-    return () => window.removeEventListener('click', handleClickOutside);
-  }, [activeActionMenuId]);
-
-
-
-
 
   const { data: allData, isFetching, isLoading } = useGetQuotationQuery({
     params: {
@@ -243,6 +232,19 @@ const QuotationPrintFormat = ({
     );
   };
 
+  const StatusBadge = ({ status }) => {
+    const config = {
+      "Pending Advance": "bg-yellow-100 text-yellow-800 border-yellow-300",
+      "Ready for Order": "bg-indigo-100 text-indigo-800 border-indigo-300",
+      "Order Taken": "bg-green-100 text-green-800 border-green-300",
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium border whitespace-nowrap ${config[status] || "bg-gray-100 text-gray-700 border-gray-300"}`}>
+        {status || "Pending Advance"}
+      </span>
+    );
+  };
+
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
 
@@ -252,12 +254,12 @@ const QuotationPrintFormat = ({
             <table>
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
-                  <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                  <th className=" px-1 py-1.5  font-bold text-[13px]  text-gray-900  text-center  w-12">
                     <div className="">S No</div>
                   </th>
 
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Quotaion No</div>
+                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
+                    <div>Quotation No</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -268,8 +270,8 @@ const QuotationPrintFormat = ({
                                             }}
                                         /> */}
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Quotaion Date</div>
+                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
+                    <div>Quotation Date</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -281,23 +283,23 @@ const QuotationPrintFormat = ({
                                         /> */}
                   </th>
 
-                  <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                  <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                     <div>Customer</div>
                   </th>
-                  <th className="w-36 px-3 font-medium text-[13px] text-gray-900 text-center">
+                  <th className="w-36 px-3 font-bold text-[13px] text-gray-900 text-center">
                     <div>Status</div>
                   </th>
-                  <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-40   px-3  font-bold text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
                   </th>
 
                 </tr>
                 <tr className="">
-                  <th className=" px-1  font-medium text-[13px] justify-end  text-gray-900  text-center  w-12">
+                  <th className=" px-1  font-bold text-[13px] justify-end  text-gray-900  text-center  w-12">
                     <div className="h-3"></div>
                   </th>
 
-                  <th className=" px-1 font-medium text-[13px] border  text-gray-900  text-center w-32">
+                  <th className=" px-1 font-bold text-[13px] border  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -308,7 +310,7 @@ const QuotationPrintFormat = ({
                       }}
                     />
                   </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
+                  <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -331,7 +333,7 @@ const QuotationPrintFormat = ({
                       }}
                     />
                   </th> */}
-                  <th className="w-1/2  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-96  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -342,8 +344,8 @@ const QuotationPrintFormat = ({
                       }}
                     />
                   </th>
-                  <th className="w-32 px-1 font-medium text-[13px] text-gray-900 text-center"></th>
-                  <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center "></th>
+                  <th className="w-36 px-1 font-bold text-[13px] text-gray-900 text-center"></th>
+                  <th className="w-40  px-1  font-bold text-[13px]  text-gray-900  text-center "></th>
 
                 </tr>
               </thead>
@@ -374,10 +376,10 @@ const QuotationPrintFormat = ({
                         {index + 1}
                       </td>
 
-                      <td className="py-1.5 text-center">{dataObj.docId} </td>
+                      <td className="py-1.5 text-left">{dataObj.docId} </td>
 
 
-                      <td className="py-1.5 text-center">
+                      <td className="py-1.5 text-left">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
 
@@ -388,95 +390,91 @@ const QuotationPrintFormat = ({
                           : ""
                           }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`}                         </td>
                       <td className="py-1.5 text-center">
-                        {dataObj?.Saleorder?.length > 0 ? (
-                          <span className="bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-green-200">
-                            Sale Order Taken ({dataObj.Saleorder[0].docId.split('/').pop()})
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-[10px]">Pending</span>
-                        )}
+                        <StatusBadge status={dataObj?.quotationStatus} />
                       </td>
                       {rowActions && (
                         <td className="border-gray-200 px-2 h-8">
-                          <div className="flex items-center justify-end gap-1">
-                            {onView && (
-                              <button
-                                className="text-blue-600 flex items-center px-1 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
-                                onClick={(e) => { e.stopPropagation(); onView(dataObj.id); }}
-                                title="View"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                            )}
-                            {onEdit && !(dataObj?.Saleorder?.length > 0) && (
-                              <button
-                                className="text-green-600 flex items-center px-1 bg-green-50 rounded hover:bg-green-100 transition-colors"
-                                onClick={(e) => { e.stopPropagation(); onEdit(dataObj.id); }}
-                                title="Edit"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                </svg>
-                              </button>
-                            )}
-                            {onDelete && !(dataObj?.Saleorder?.length > 0) && (
-                              <button
-                                className="text-red-800 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
-                                onClick={(e) => { e.stopPropagation(); onDelete(dataObj.id, dataObj?._count); }}
-                                title="Delete"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                            )}
-
-                            <div className="relative">
-                              <button
-                                className="text-gray-600 hover:text-indigo-600 p-1 rounded-full hover:bg-gray-200 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveActionMenuId(activeActionMenuId === dataObj.id ? null : dataObj.id);
-                                }}
-                                title="More Actions"
-                              >
-                                <FaEllipsisV className="h-3.5 w-3.5" />
-                              </button>
-
-                              {activeActionMenuId === dataObj.id && (
-                                <div
-                                  className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden animate-in fade-in zoom-in duration-200"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <div className="py-1">
-                                    {shouldShowAdvanceReceipt(dataObj) ? (
-                                      <button
-                                        className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2"
-                                        onClick={() => {
-                                          onMakePayment && onMakePayment(dataObj);
-                                          setActiveActionMenuId(null);
-                                        }}
-                                      >
-                                        <span className="font-semibold text-lg">💳</span> Advance Receipt
-                                      </button>
-                                    ) : !(dataObj?.Saleorder?.length > 0) ? (
-                                      <button
-                                        className="w-full text-left px-4 py-2 text-sm text-indigo-700 hover:bg-indigo-50 flex items-center gap-2"
-                                        onClick={() => {
-                                          onConvertToSaleOrder && onConvertToSaleOrder(dataObj);
-                                          setActiveActionMenuId(null);
-                                        }}
-                                      >
-                                        <span className="font-semibold text-lg">📦</span> Convert to Sale Order
-                                      </button>
-                                    ) : null}
-
-                                  </div>
-                                </div>
+                          <div className="flex items-center justify-end">
+                            <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
+                              {shouldShowAdvanceReceipt(dataObj) && onMakePayment && (
+                                <Tooltip title="Advance Receipt" arrow>
+                                  <button
+                                    className="p-1.5 rounded-md bg-orange-50 text-orange-600 hover:bg-orange-100 transition"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onMakePayment(dataObj);
+                                    }}
+                                  >
+                                    <CreditCard size={16} />
+                                  </button>
+                                </Tooltip>
                               )}
+                              {onConvertToSaleOrder && (
+                                <Tooltip title={dataObj?.canConvertToSaleOrder ? "Convert to Sale Order" : (dataObj?.quotationStatus || "Conversion blocked")} arrow>
+                                  <span>
+                                    <button
+                                      disabled={!dataObj?.canConvertToSaleOrder}
+                                      className={`p-1.5 rounded-md transition ${dataObj?.canConvertToSaleOrder
+                                        ? "bg-orange-50 text-orange-600 hover:bg-orange-100"
+                                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                        }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (dataObj?.canConvertToSaleOrder) onConvertToSaleOrder(dataObj);
+                                      }}
+                                    >
+                                      <FileText size={16} />
+                                    </button>
+                                  </span>
+                                </Tooltip>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 pl-2">
+                              {onView && (
+                              <Tooltip title="View" arrow>
+                                <span>
+                                  <button
+                                    className="text-blue-600 flex items-center px-1 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
+                                    onClick={(e) => { e.stopPropagation(); onView(dataObj.id); }}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
+                                </span>
+                              </Tooltip>
+                            )}
+                            {onEdit && (
+                              <Tooltip title={dataObj?.Saleorder?.length > 0 ? "Cannot Edit. Child Record Exists" : "Edit"} arrow>
+                                <span>
+                                  <button
+                                    disabled={dataObj?.Saleorder?.length > 0}
+                                    className={`flex items-center px-1 rounded transition-colors ${dataObj?.Saleorder?.length > 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "text-green-600 bg-green-50 hover:bg-green-100"}`}
+                                    onClick={(e) => { e.stopPropagation(); if (!(dataObj?.Saleorder?.length > 0)) onEdit(dataObj.id); }}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                    </svg>
+                                  </button>
+                                </span>
+                              </Tooltip>
+                            )}
+                            {onDelete && (
+                              <Tooltip title={dataObj?.Saleorder?.length > 0 ? "Cannot Delete. Child Record Exists" : "Delete"} arrow>
+                                <span>
+                                  <button
+                                    disabled={dataObj?.Saleorder?.length > 0}
+                                    className={`flex items-center px-1 rounded transition-colors ${dataObj?.Saleorder?.length > 0 ? "bg-red-50 text-red-500 opacity-40 cursor-not-allowed" : "text-red-800 bg-red-50 hover:bg-red-100"}`}
+                                    onClick={(e) => { e.stopPropagation(); if (!(dataObj?.Saleorder?.length > 0)) onDelete(dataObj.id, dataObj?._count); }}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
+                                </span>
+                              </Tooltip>
+                            )}
                             </div>
                           </div>
                         </td>

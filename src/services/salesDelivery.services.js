@@ -19,10 +19,75 @@ function parseAmount(value) {
     return Number.isFinite(parsed) ? parsed : 0;
 }
 
-async function getSaleOrderValidationState(saleOrderId, excludeSalesDeliveryId = null) {
+function roundMoney(value) {
+    return Math.round((parseFloat(value || 0) || 0) * 100) / 100;
+}
+
+function isSameDeliveryReturnLine(deliveryItem, returnItem) {
+    if (returnItem?.salesDeliveryItemId) {
+        return parseInt(returnItem.salesDeliveryItemId) === parseInt(deliveryItem?.id);
+    }
+
+    return String(deliveryItem?.itemId || "") === String(returnItem?.itemId || "")
+        && String(deliveryItem?.sizeId || "") === String(returnItem?.sizeId || "")
+        && String(deliveryItem?.colorId || "") === String(returnItem?.colorId || "")
+        && String(deliveryItem?.uomId || "") === String(returnItem?.uomId || "")
+        && String(deliveryItem?.hsnId || "") === String(returnItem?.hsnId || "");
+}
+
+function buildRemainingReturnItems(salesDeliveryItems = [], salesReturns = [], excludeSalesReturnId = null) {
+    return (salesDeliveryItems || [])
+        .map((deliveryItem) => {
+            const deliveredQty = parseAmount(deliveryItem?.qty);
+            const returnedQty = (salesReturns || []).reduce((returnAcc, salesReturn) => {
+                if (excludeSalesReturnId && parseInt(salesReturn?.id) === parseInt(excludeSalesReturnId)) {
+                    return returnAcc;
+                }
+
+                return returnAcc + (salesReturn?.SalesReturnItems || []).reduce((itemAcc, returnItem) => (
+                    itemAcc + (isSameDeliveryReturnLine(deliveryItem, returnItem) ? parseAmount(returnItem?.qty) : 0)
+                ), 0);
+            }, 0);
+            const remainingQty = Math.max(0, deliveredQty - returnedQty);
+
+            return {
+                ...deliveryItem,
+                salesDeliveryItemId: deliveryItem?.id,
+                deliveredQty: deliveredQty.toFixed(3),
+                returnedQty: returnedQty.toFixed(3),
+                remainingQty: remainingQty.toFixed(3),
+                qty: remainingQty.toFixed(3),
+            };
+        })
+        .filter((deliveryItem) => parseAmount(deliveryItem?.remainingQty) > 0);
+}
+
+function getSalesDeliveryReturnState(salesDelivery, excludeSalesReturnId = null) {
+    const remainingReturnItems = buildRemainingReturnItems(
+        salesDelivery?.SalesDeliveryItems,
+        salesDelivery?.SalesReturn,
+        excludeSalesReturnId
+    );
+    const deliveredQty = (salesDelivery?.SalesDeliveryItems || []).reduce((acc, curr) => acc + parseAmount(curr?.qty), 0);
+    const remainingQty = remainingReturnItems.reduce((acc, curr) => acc + parseAmount(curr?.remainingQty), 0);
+    const returnedQty = Math.max(0, deliveredQty - remainingQty);
+    const returnStatus = returnedQty <= 0.0001
+        ? "Delivered"
+        : (remainingQty > 0.0001 ? "Partially Returned" : "Fully Returned");
+
+    return {
+        remainingReturnItems,
+        returnedQty: returnedQty.toFixed(3),
+        remainingReturnQty: remainingQty.toFixed(3),
+        returnStatus,
+        canConvertToReturn: remainingQty > 0.0001,
+    };
+}
+
+async function getSaleOrderValidationState(saleOrderId, excludeSalesDeliveryId = null, db = prisma) {
     if (!saleOrderId) return null;
 
-    const saleOrder = await prisma.saleorder.findUnique({
+    const saleOrder = await db.saleorder.findUnique({
         where: {
             id: parseInt(saleOrderId),
         },
@@ -44,7 +109,7 @@ async function getSaleOrderValidationState(saleOrderId, excludeSalesDeliveryId =
     if (!saleOrder) return null;
 
     const quotationPaymentData = saleOrder?.Quotation?.id
-        ? await prisma.payment.findMany({
+        ? await db.payment.findMany({
             where: {
                 transactionType: "QUOTATION",
                 transactionId: saleOrder.Quotation.id,
@@ -55,15 +120,15 @@ async function getSaleOrderValidationState(saleOrderId, excludeSalesDeliveryId =
     return {
         saleOrder,
         remainingQtyBySaleOrderItemId: getRemainingQtyBySaleOrderItemId(saleOrder, excludeSalesDeliveryId),
-        totalReceivedAmount: quotationPaymentData.reduce(
+        totalReceivedAmount: roundMoney(quotationPaymentData.reduce(
             (acc, curr) => acc + parseAmount(curr?.paidAmount),
             0
-        ),
-        remainingPaymentCapacity: getRemainingPaymentCapacity(
+        )),
+        remainingPaymentCapacity: roundMoney(getRemainingPaymentCapacity(
             quotationPaymentData.reduce((acc, curr) => acc + parseAmount(curr?.paidAmount), 0),
             saleOrder?.SalesDelivery,
             excludeSalesDeliveryId
-        ),
+        )),
     };
 }
 
@@ -129,17 +194,30 @@ async function get(req) {
                     }
                 },
             },
-            // _count: {
-            //     select: {
-            //         SalesInvoice: true,
-            //     }
-            // }
+            SalesDeliveryItems: true,
+            Saleorder: {
+                select: {
+                    id: true,
+                    docId: true,
+                }
+            },
+            SalesReturn: {
+                include: {
+                    SalesReturnItems: true,
+                }
+            },
         }
     });
 
 
 
-    return { statusCode: 0, data };
+    return {
+        statusCode: 0,
+        data: data.map((salesDelivery) => ({
+            ...salesDelivery,
+            ...getSalesDeliveryReturnState(salesDelivery),
+        }))
+    };
 }
 
 
@@ -152,6 +230,11 @@ async function getOne(id) {
         include: {
             SalesDeliveryItems: true,
             FulfillmentAllocations: true,
+            SalesReturn: {
+                include: {
+                    SalesReturnItems: true,
+                }
+            },
             Saleorder: {
                 select: {
                     id: true,
@@ -162,7 +245,7 @@ async function getOne(id) {
         }
     })
     if (!data) return NoRecordFound("size");
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+    return { statusCode: 0, data: { ...data, ...getSalesDeliveryReturnState(data), childRecord } };
 }
 
 async function getSearch(req) {
@@ -223,6 +306,20 @@ async function create(body) {
     try {
         let data;
         await prisma.$transaction(async (tx) => {
+            const transactionalSaleOrderValidationState = await getSaleOrderValidationState(saleOrderId, null, tx);
+            const transactionalValidationMessage = validateConvertedDelivery({
+                saleOrderValidationState: transactionalSaleOrderValidationState,
+                deliveryItems,
+                packingChargeEnabled,
+                packingCharge,
+                shippingChargeEnabled,
+                shippingCharge,
+            });
+
+            if (transactionalValidationMessage) {
+                throw new Error(transactionalValidationMessage);
+            }
+
             data = await tx.salesDelivery.create({
                 data: {
                     customerId: customerId ? parseInt(customerId) : undefined,
@@ -430,6 +527,20 @@ async function update(id, body) {
 
     try {
         await prisma.$transaction(async (tx) => {
+            const transactionalSaleOrderValidationState = await getSaleOrderValidationState(saleOrderId, id, tx);
+            const transactionalValidationMessage = validateConvertedDelivery({
+                saleOrderValidationState: transactionalSaleOrderValidationState,
+                deliveryItems,
+                packingChargeEnabled,
+                packingCharge,
+                shippingChargeEnabled,
+                shippingCharge,
+            });
+
+            if (transactionalValidationMessage) {
+                throw new Error(transactionalValidationMessage);
+            }
+
             // Delete removed items
             if (removedItemIds.length > 0) {
                 await tx.salesDeliveryItems.deleteMany({

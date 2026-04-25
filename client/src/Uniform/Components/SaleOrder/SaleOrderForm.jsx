@@ -15,6 +15,7 @@ import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../../redux/
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import SaleOrderItems from "./SaleOrderItems";
 import { useAddsaleOrderMutation, useGetsaleOrderByIdQuery, useUpdatesaleOrderMutation } from "../../../redux/uniformService/saleOrderServices";
+import { useGetQuotationByIdQuery, useGetQuotationQuery } from "../../../redux/uniformService/quotationServices";
 import Modal from "../../../UiComponents/Modal";
 import { PDFViewer } from "@react-pdf/renderer";
 import PremiumSalesPrintFormat from "../ReusableComponents/PremiumSalesPrintFormat";
@@ -66,6 +67,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
   const [showItemOfferModal, setShowItemOfferModal] = useState(false);
   const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
+  const [linkedQuoteId, setLinkedQuoteId] = useState(quoteId || "");
 
   const { branchId, companyId, userId, finYearId } = getCommonParams()
   const params = {
@@ -96,13 +98,15 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const { data: collectionsData } = useGetcollectionsQuery({
     params: { branchId, userId, finYearId, active: true }
   })
+  const { data: quotationList } = useGetQuotationQuery({ params });
+  const { data: linkedQuotationData } = useGetQuotationByIdQuery(linkedQuoteId, { skip: !linkedQuoteId || id });
 
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetsaleOrderByIdQuery(id, { skip: !id });
-  const estimateDocId = singleData?.data?.Quotation?.docId || sourceQuotationDocId || "";
+  const estimateDocId = singleData?.data?.Quotation?.docId || sourceQuotationDocId || findFromList(linkedQuoteId, quotationList?.data, "docId") || "";
   const advanceReceivedAmount = id
     ? (singleData?.data?.Quotation?.paymentData || []).reduce(
       (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
@@ -136,14 +140,35 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   }, []);
 
   useEffect(() => {
-    if (!id && !quoteId) {
+    if (!id && !linkedQuoteId) {
       setTerm("");
       setPackingChargeEnabled(false);
       setPackingCharge("");
       setShippingChargeEnabled(false);
       setShippingCharge("");
     }
-  }, [id, quoteId]);
+  }, [id, linkedQuoteId]);
+
+  useEffect(() => {
+    if (quoteId && String(linkedQuoteId || "") !== String(quoteId)) {
+      setLinkedQuoteId(quoteId);
+    }
+  }, [linkedQuoteId, quoteId]);
+
+  useEffect(() => {
+    if (id || !linkedQuotationData?.data || !linkedQuoteId) return;
+
+    const quoteData = linkedQuotationData.data;
+    setCustomerId(quoteData.customerId || "");
+    setSaleOrderItems((quoteData.QuotationItems || []).map((item) => ({
+      ...item,
+      quotationItemId: item.id,
+    })));
+    setPackingChargeEnabled(Boolean(quoteData?.packingChargeEnabled) || parseChargeAmount(quoteData?.packingCharge) > 0);
+    setPackingCharge(quoteData?.packingChargeEnabled ? formatChargeValue(quoteData?.packingCharge) : "");
+    setShippingChargeEnabled(Boolean(quoteData?.shippingChargeEnabled) || parseChargeAmount(quoteData?.shippingCharge) > 0);
+    setShippingCharge(quoteData?.shippingChargeEnabled ? formatChargeValue(quoteData?.shippingCharge) : "");
+  }, [id, linkedQuotationData, linkedQuoteId, setCustomerId, setSaleOrderItems]);
 
   useEffect(() => {
     if (!quoteId || id) {
@@ -172,7 +197,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const syncFormWithDb = useCallback((data) => {
     const today = new Date()
     console.log(quoteId, "convertQuotationId")
-    if (quoteId && !id) return
+    if (linkedQuoteId && !id) return
     if (id) {
       setReadOnly(true);
     } else {
@@ -194,7 +219,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
     setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
     setSelectedOffersByRow(data?.selectedOffersByRow || {});
-  }, [id]);
+  }, [id, linkedQuoteId]);
 
   useEffect(() => {
     if (id) {
@@ -223,7 +248,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     locationId: locationId ? parseInt(locationId) : undefined,
     branchId,
     customerId,
-    quoteId: quoteId || undefined,
+    quoteId: linkedQuoteId || undefined,
     terms,
     packingChargeEnabled,
     packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
@@ -688,17 +713,26 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
 
             <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName={`${estimateDocId ? "grid-cols-12" : "grid-cols-2"}`}>
-              <div className={estimateDocId ? "col-span-4" : ""}>
+              <div className={estimateDocId ? "col-span-3" : ""}>
                 <ReusableInput label="Sale Order No" readOnly value={docId} />
               </div>
-              <div className={estimateDocId ? "col-span-4" : ""}>
+              <div className={estimateDocId ? "col-span-3" : ""}>
                 <ReusableInput label="Sale Order Date" value={date} type="date" required readOnly disabled />
               </div>
-              {estimateDocId && (
-                <div className="col-span-4">
-                  <ReusableInput label="Estimate No" readOnly value={estimateDocId} />
-                </div>
-              )}
+              <div className={estimateDocId ? "col-span-6" : "col-span-2"}>
+                <DropdownInput
+                  name="Estimate No"
+                  options={dropDownListObject(
+                    id ? quotationList?.data : quotationList?.data?.filter((item) => item?.canConvertToSaleOrder || String(item?.id) === String(linkedQuoteId)),
+                    "docId",
+                    "id"
+                  )}
+                  value={linkedQuoteId}
+                  setValue={setLinkedQuoteId}
+                  clear
+                  readOnly={Boolean(id) || readOnly}
+                />
+              </div>
             </TransactionHeaderSection>
 
             <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">

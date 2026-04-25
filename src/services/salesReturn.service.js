@@ -11,6 +11,114 @@ import {
     validateFulfillmentAllocations,
 } from './salesDeliveryConversionRules.js';
 
+function parseAmount(value) {
+    const parsed = parseFloat(value || 0);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function isSameDeliveryReturnLine(deliveryItem, returnItem) {
+    if (returnItem?.salesDeliveryItemId) {
+        return parseInt(returnItem.salesDeliveryItemId) === parseInt(deliveryItem?.id);
+    }
+
+    return String(deliveryItem?.itemId || "") === String(returnItem?.itemId || "")
+        && String(deliveryItem?.sizeId || "") === String(returnItem?.sizeId || "")
+        && String(deliveryItem?.colorId || "") === String(returnItem?.colorId || "")
+        && String(deliveryItem?.uomId || "") === String(returnItem?.uomId || "")
+        && String(deliveryItem?.hsnId || "") === String(returnItem?.hsnId || "");
+}
+
+function buildRemainingReturnQtyByDeliveryItemId(salesDelivery, excludeSalesReturnId = null) {
+    const remainingQtyByDeliveryItemId = new Map();
+
+    for (const deliveryItem of salesDelivery?.SalesDeliveryItems || []) {
+        const deliveredQty = parseAmount(deliveryItem?.qty);
+        const returnedQty = (salesDelivery?.SalesReturn || []).reduce((returnAcc, salesReturn) => {
+            if (excludeSalesReturnId && parseInt(salesReturn?.id) === parseInt(excludeSalesReturnId)) {
+                return returnAcc;
+            }
+
+            return returnAcc + (salesReturn?.SalesReturnItems || []).reduce((itemAcc, returnItem) => (
+                itemAcc + (isSameDeliveryReturnLine(deliveryItem, returnItem) ? parseAmount(returnItem?.qty) : 0)
+            ), 0);
+        }, 0);
+
+        remainingQtyByDeliveryItemId.set(parseInt(deliveryItem.id), Math.max(0, deliveredQty - returnedQty));
+    }
+
+    return remainingQtyByDeliveryItemId;
+}
+
+async function getSalesDeliveryReturnValidationState(tx, salesDeliveryId, excludeSalesReturnId = null) {
+    if (!salesDeliveryId) return null;
+
+    const salesDelivery = await tx.salesDelivery.findUnique({
+        where: {
+            id: parseInt(salesDeliveryId),
+        },
+        include: {
+            SalesDeliveryItems: true,
+            SalesReturn: {
+                include: {
+                    SalesReturnItems: true,
+                }
+            }
+        }
+    });
+
+    if (!salesDelivery) return null;
+
+    return {
+        salesDelivery,
+        remainingQtyByDeliveryItemId: buildRemainingReturnQtyByDeliveryItemId(salesDelivery, excludeSalesReturnId),
+    };
+}
+
+function validateLinkedReturnItems(deliveryItems = [], validationState) {
+    if (!validationState) return null;
+
+    for (const item of (deliveryItems || []).filter(i => i.itemId)) {
+        if (!item?.salesDeliveryItemId) {
+            return "Each converted return line must be tied to a sales delivery line.";
+        }
+
+        const salesDeliveryItemId = parseInt(item.salesDeliveryItemId);
+        const remainingQty = validationState.remainingQtyByDeliveryItemId.get(salesDeliveryItemId);
+        if (remainingQty === undefined) {
+            return "One or more return lines are not part of the selected sales delivery.";
+        }
+
+        if (parseAmount(item?.qty) > remainingQty + 0.0001) {
+            return "One or more return quantities exceed the remaining sales delivery quantity.";
+        }
+    }
+
+    return null;
+}
+
+async function validateReturnStore(tx, storeId, branchId) {
+    if (!storeId) {
+        throw new Error("Return location is required.");
+    }
+
+    const store = await tx.location.findFirst({
+        where: {
+            id: parseInt(storeId),
+            locationId: branchId ? parseInt(branchId) : undefined,
+            active: true,
+        },
+        select: {
+            id: true,
+        }
+    });
+
+    if (!store) {
+        throw new Error("Invalid return location.");
+    }
+
+    return store.id;
+}
+
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
     let lastObject = await prisma.salesReturn.findFirst({
         where: {
@@ -119,6 +227,7 @@ async function getSearch(req) {
 
 function mapSalesReturnItem(item = {}, isExchange = false) {
     return {
+        salesDeliveryItemId: item.salesDeliveryItemId ? parseInt(item.salesDeliveryItemId) : null,
         itemId: item.itemId ? parseInt(item.itemId) : null,
         sizeId: item.sizeId ? parseInt(item.sizeId) : null,
         colorId: item.colorId ? parseInt(item.colorId) : null,
@@ -148,49 +257,11 @@ async function create(body) {
         let newSRDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
 
         const result = await prisma.$transaction(async (tx) => {
-            let effectiveStoreId = storeId ? parseInt(storeId) : null;
-
-            if (!effectiveStoreId) {
-                const warehouse = await tx.location.findFirst({
-                    where: {
-                        // branchId: parseInt(branchId),
-                        storeName: { contains: "WAREHOUSE" },
-                        active: true
-                    },
-                    select: { id: true }
-                });
-                effectiveStoreId = warehouse?.id;
-            }
-
-            if (!effectiveStoreId) {
-                throw new Error("Store (Warehouse) not found for this branch. Please specify a store.");
-            }
-
-            // 1. Stock Validation
-            for (const item of (deliveryItems || []).filter(i => i.itemId)) {
-                const requestedQty = parseFloat(item.qty || 0);
-                if (requestedQty <= 0) continue;
-
-                const stockData = await tx.stock.aggregate({
-                    where: {
-                        itemId: parseInt(item.itemId),
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        uomId: item.uomId ? parseInt(item.uomId) : null,
-                        storeId: effectiveStoreId,
-                        branchId: parseInt(branchId),
-                    },
-                    _sum: { qty: true }
-                });
-
-                const availableQty = parseFloat(stockData._sum.qty || 0);
-                if (availableQty < requestedQty) {
-                    const itemMaster = await tx.item.findUnique({
-                        where: { id: parseInt(item.itemId) },
-                        select: { name: true }
-                    });
-                    throw new Error(`Insufficient stock for item: ${itemMaster?.name || item.itemId}. Available: ${availableQty}, Required: ${requestedQty}`);
-                }
+            const effectiveStoreId = await validateReturnStore(tx, storeId, branchId);
+            const validationState = await getSalesDeliveryReturnValidationState(tx, salesDeliveryId);
+            const validationMessage = validateLinkedReturnItems(deliveryItems, validationState);
+            if (validationMessage) {
+                throw new Error(validationMessage);
             }
 
             // 2. Create Sales Return
@@ -212,7 +283,7 @@ async function create(body) {
                 },
             });
 
-            // 3. Stock Reduction (Minus)
+            // 3. Stock Inward for returned goods
             const stockEntries = (deliveryItems || []).filter(i => i.itemId).map(item => ({
                 itemId: parseInt(item.itemId),
                 sizeId: item.sizeId ? parseInt(item.sizeId) : null,
@@ -220,7 +291,7 @@ async function create(body) {
                 uomId: item.uomId ? parseInt(item.uomId) : null,
                 branchId: parseInt(branchId),
                 storeId: effectiveStoreId,
-                qty: -parseFloat(item.qty || 0), // MINUS stock
+                qty: parseFloat(item.qty || 0),
                 price: parseFloat(item.price || 0),
                 inOrOut: "SalesReturn",
                 transactionId: salesReturn.id,
@@ -250,53 +321,14 @@ async function update(id, body) {
         } = await body;
 
         const result = await prisma.$transaction(async (tx) => {
-            // 1. Cleanup existing stock entries for this return to accurately check available stock
             await tx.stock.deleteMany({ where: { transactionId: parseInt(id), inOrOut: "SalesReturn" } });
             await tx.salesReturnItems.deleteMany({ where: { salesReturnId: parseInt(id) } });
 
-            let effectiveStoreId = storeId ? parseInt(storeId) : null;
-
-            if (!effectiveStoreId) {
-                const warehouse = await tx.store.findFirst({
-                    where: {
-                        branchId: parseInt(branchId),
-                        storeName: { contains: "WAREHOUSE" },
-                        active: true
-                    },
-                    select: { id: true }
-                });
-                effectiveStoreId = warehouse?.id;
-            }
-
-            if (!effectiveStoreId) {
-                throw new Error("Store (Warehouse) not found for this branch. Please specify a store.");
-            }
-
-            // 2. Stock Validation
-            for (const item of (deliveryItems || []).filter(i => i.itemId)) {
-                const requestedQty = parseFloat(item.qty || 0);
-                if (requestedQty <= 0) continue;
-
-                const stockData = await tx.stock.aggregate({
-                    where: {
-                        itemId: parseInt(item.itemId),
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        uomId: item.uomId ? parseInt(item.uomId) : null,
-                        storeId: effectiveStoreId,
-                        branchId: parseInt(branchId),
-                    },
-                    _sum: { qty: true }
-                });
-
-                const availableQty = parseFloat(stockData._sum.qty || 0);
-                if (availableQty < requestedQty) {
-                    const itemMaster = await tx.itemMaster.findUnique({
-                        where: { id: parseInt(item.itemId) },
-                        select: { name: true }
-                    });
-                    throw new Error(`Insufficient stock for item: ${itemMaster?.name || item.itemId}. Available: ${availableQty}, Required: ${requestedQty}`);
-                }
+            const effectiveStoreId = await validateReturnStore(tx, storeId, branchId);
+            const validationState = await getSalesDeliveryReturnValidationState(tx, salesDeliveryId, id);
+            const validationMessage = validateLinkedReturnItems(deliveryItems, validationState);
+            if (validationMessage) {
+                throw new Error(validationMessage);
             }
 
             // 3. Update Header
@@ -318,7 +350,7 @@ async function update(id, body) {
                 },
             });
 
-            // 4. Stock Reduction (Minus)
+            // 4. Stock Inward for returned goods
             const stockEntries = (deliveryItems || []).filter(i => i.itemId).map(item => ({
                 itemId: parseInt(item.itemId),
                 sizeId: item.sizeId ? parseInt(item.sizeId) : null,
@@ -326,7 +358,7 @@ async function update(id, body) {
                 uomId: item.uomId ? parseInt(item.uomId) : null,
                 branchId: parseInt(branchId),
                 storeId: effectiveStoreId,
-                qty: -parseFloat(item.qty || 0), // MINUS stock
+                qty: parseFloat(item.qty || 0),
                 price: parseFloat(item.price || 0),
                 inOrOut: "SalesReturn",
                 transactionId: salesReturn.id,

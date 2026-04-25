@@ -6,6 +6,7 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { useGetQuotationMasterQuery } from '../../../redux/uniformService/quotationServices';
 import { useGetSalesDeliveryQuery } from "../../../redux/uniformService/salesDeliveryServices";
 import { useGetSalesReturnQuery } from "../../../redux/uniformService/salesReturnServices";
+import { Tooltip } from "@mui/material";
 
 
 
@@ -183,12 +184,12 @@ const SalesReturnReport = ({
             <table>
               <thead className="bg-gray-200 text-gray-800 ">
                 <tr className="">
-                  <th className=" px-1 py-1.5  font-medium text-[13px]  text-gray-900  text-center  w-12">
+                  <th className=" px-1 py-1.5  font-bold text-[13px]  text-gray-900  text-center  w-12">
                     <div className="">S No</div>
                   </th>
 
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Sale Return No</div>
+                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
+                    <div>Return No</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -199,8 +200,8 @@ const SalesReturnReport = ({
                                             }}
                                         /> */}
                   </th>
-                  <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
-                    <div>Sale Return Date</div>
+                  <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
+                    <div>Return Date</div>
                     {/* <input
                                             type="text"
                                             className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
@@ -212,7 +213,7 @@ const SalesReturnReport = ({
                                         /> */}
                   </th>
 
-                  <th className="w-96  px-3   font-medium text-[13px] text-gray-900  text-center ">
+                  <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                     <div>Customer</div>
                     {/* <input
                                             type="text"
@@ -224,18 +225,18 @@ const SalesReturnReport = ({
                                             }}
                                         /> */}
                   </th>
-                  <th className="w-14   px-3  font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-40   px-3  font-bold text-[13px]  text-gray-900  text-center ">
                     <div>Actions</div>
 
                   </th>
 
                 </tr>
                 <tr className="">
-                  <th className=" px-1  font-medium text-[13px] justify-end  text-gray-900  text-center  w-12">
+                  <th className=" px-1  font-bold text-[13px] justify-end  text-gray-900  text-center  w-12">
                     <div className="h-3"></div>
                   </th>
 
-                  <th className=" px-1 font-medium text-[13px] border  text-gray-900  text-center w-32">
+                  <th className=" px-1 font-bold text-[13px] border  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -246,7 +247,7 @@ const SalesReturnReport = ({
                       }}
                     />
                   </th>
-                  <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
+                  <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -258,7 +259,7 @@ const SalesReturnReport = ({
                     />
                   </th>
 
-                  {/* <th className="  px-1 font-medium text-[13px]  text-gray-900  text-center w-32">
+                  {/* <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -269,7 +270,7 @@ const SalesReturnReport = ({
                       }}
                     />
                   </th> */}
-                  <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-96  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -281,7 +282,7 @@ const SalesReturnReport = ({
                     />
                   </th>
 
-                  <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
+                  <th className="w-40  px-1  font-bold text-[13px]  text-gray-900  text-center ">
 
                   </th>
 
@@ -314,49 +315,60 @@ const SalesReturnReport = ({
                         {index + 1}
                       </td>
 
-                      <td className="py-1.5 text-center">{dataObj.docId} </td>
+                      <td className="py-1.5 text-left">{dataObj.docId} </td>
 
 
-                      <td className="py-1.5 text-center">
+                      <td className="py-1.5 text-left">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
 
 
                       <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
                       {rowActions && (
-                        <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
-                          <div className="flex">
+                        <td className="border-gray-200 px-2 h-8">
+                          <div className="flex items-center justify-end gap-1">
                             {onView && (
-                              <button
-                                className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                onClick={() => onView(dataObj.id)}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                </svg>
-                              </button>
+                              <Tooltip title="View" arrow>
+                                <span>
+                                  <button
+                                    className="text-blue-600 flex items-center px-1 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
+                                    onClick={(e) => { e.stopPropagation(); onView(dataObj.id); }}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
+                                </span>
+                              </Tooltip>
                             )}
                             {onEdit && (
-                              <button
-                                className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                onClick={() => onEdit(dataObj.id)}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                </svg>
-                              </button>
+                              <Tooltip title="Edit" arrow>
+                                <span>
+                                  <button
+                                    className="text-green-600 flex items-center px-1 bg-green-50 rounded hover:bg-green-100 transition-colors"
+                                    onClick={(e) => { e.stopPropagation(); onEdit(dataObj.id); }}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                    </svg>
+                                  </button>
+                                </span>
+                              </Tooltip>
                             )}
                             {onDelete && (
-                              <button
-                                className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                onClick={() => onDelete(dataObj.id, dataObj?._count)}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                                {/* <span className="text-xs">delete</span> */}
-                              </button>
+                              <Tooltip title="Delete" arrow>
+                                <span>
+                                  <button
+                                    className="text-red-800 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                                    onClick={(e) => { e.stopPropagation(); onDelete(dataObj.id, dataObj?._count); }}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
+                                </span>
+                              </Tooltip>
                             )}
                           </div>
                         </td>

@@ -1284,6 +1284,12 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   const params = {
     branchId, companyId, userId, finYearId
   };
+  const getWarehouseLocationId = useCallback(() => {
+    const locations = locationData?.data || [];
+    return locations.find((location) => (
+      String(location?.storeName || "").toLowerCase().includes("warehouse")
+    ))?.id || "";
+  }, [locationData]);
   const parseChargeAmount = (value) => {
     const parsedValue = parseFloat(value);
     return Number.isFinite(parsedValue) ? parsedValue : 0;
@@ -1327,6 +1333,35 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       setShippingCharge("");
     }
   }, [id]);
+
+  useEffect(() => {
+    if (id) return;
+    const warehouseId = getWarehouseLocationId();
+    if (warehouseId && String(storeId || "") !== String(warehouseId)) {
+      setStoreId(warehouseId);
+    }
+  }, [getWarehouseLocationId, id, setStoreId, storeId]);
+
+  useEffect(() => {
+    if (id || !salesDeliveryId || !singleSalesDeliveryData?.data) return;
+
+    const salesDelivery = singleSalesDeliveryData.data;
+    setCustomerId(salesDelivery?.customerId || "");
+    setDeliveryItems(salesDelivery?.remainingReturnItems || []);
+
+    const warehouseId = getWarehouseLocationId();
+    if (warehouseId) {
+      setStoreId(warehouseId);
+    }
+  }, [
+    getWarehouseLocationId,
+    id,
+    salesDeliveryId,
+    setCustomerId,
+    setDeliveryItems,
+    setStoreId,
+    singleSalesDeliveryData,
+  ]);
 
   const [addData] = useAddSalesReturnMutation();
   const [updateData] = useUpdateSalesReturnMutation();
@@ -1616,6 +1651,14 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
       });
       return
+    }
+    if (!data?.storeId) {
+      Swal.fire({
+        title: "Warehouse return location not found",
+        text: "Please configure an active warehouse location before saving a sales return.",
+        icon: "warning",
+      });
+      return;
     }
     if (!isGridDatasValid(salesRows, false, finalMandatoryFields)) {
       Swal.fire({
@@ -1988,8 +2031,14 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
               </div>
 
               <div className="col-span-1">
-                <DropdownInput name="Sales Order No"
-                  options={dropDownListObject(id ? salesDeliveryData?.data : salesDeliveryData?.data?.filter(i => i.customerId == customerId), "docId", "id")}
+                <DropdownInput name="Sales Delivery No"
+                  options={dropDownListObject(
+                    id
+                      ? salesDeliveryData?.data
+                      : salesDeliveryData?.data?.filter(i => i.customerId == customerId && i?.canConvertToReturn),
+                    "docId",
+                    "id"
+                  )}
                   value={salesDeliveryId} setValue={setSalesDeliveryId} required={true} readOnly={id || readOnly} />
               </div>
 

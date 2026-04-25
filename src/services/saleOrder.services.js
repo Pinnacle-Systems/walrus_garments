@@ -9,6 +9,10 @@ function parseQty(value) {
     return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function roundMoney(value) {
+    return Math.round((parseFloat(value || 0) || 0) * 100) / 100;
+}
+
 function isSameSourceLine(saleOrderItem, deliveryItem) {
     return String(saleOrderItem?.itemId || "") === String(deliveryItem?.itemId || "")
         && String(saleOrderItem?.sizeId || "") === String(deliveryItem?.sizeId || "")
@@ -100,7 +104,7 @@ function calculateDeliveryNetAmount(deliveryItems = [], { packingChargeEnabled, 
     const packingAmount = packingChargeEnabled ? (parseFloat(packingCharge || 0) || 0) : 0;
     const shippingAmount = shippingChargeEnabled ? (parseFloat(shippingCharge || 0) || 0) : 0;
 
-    return lineNetAmount + packingAmount + shippingAmount;
+    return roundMoney(lineNetAmount + packingAmount + shippingAmount);
 }
 
 function getRemainingPaymentCapacityForSaleOrder(saleOrder) {
@@ -110,6 +114,121 @@ function getRemainingPaymentCapacityForSaleOrder(saleOrder) {
     ), 0);
 
     return Math.max(0, totalReceivedAmount - consumedAmount);
+}
+
+function getDeliveredQty(saleOrderItems = [], salesDeliveries = []) {
+    const remainingItems = buildRemainingSaleOrderItems(saleOrderItems, salesDeliveries);
+    const orderedQty = (saleOrderItems || []).reduce((acc, curr) => acc + parseQty(curr?.qty), 0);
+    const remainingQty = (remainingItems || []).reduce((acc, curr) => acc + parseQty(curr?.remainingQty), 0);
+    return {
+        orderedQty,
+        deliveredQty: Math.max(0, orderedQty - remainingQty),
+        remainingQty,
+    };
+}
+
+function getSaleOrderDeliveryState(saleOrder, quotationWithPayments = saleOrder?.Quotation) {
+    const remainingSaleOrderItems = buildRemainingSaleOrderItems(
+        saleOrder?.SaleOrderItems,
+        saleOrder?.SalesDelivery
+    );
+    const qtyState = getDeliveredQty(saleOrder?.SaleOrderItems, saleOrder?.SalesDelivery);
+    const saleOrderWithPayments = { ...saleOrder, Quotation: quotationWithPayments };
+    const totalReceivedAmount = roundMoney(getTotalReceivedAmountForSaleOrder(saleOrderWithPayments));
+    const remainingPaymentCapacity = roundMoney(getRemainingPaymentCapacityForSaleOrder(saleOrderWithPayments));
+    const hasRemainingQty = qtyState.remainingQty > 0.0001;
+    const hasDeliveredQty = qtyState.deliveredQty > 0.0001;
+    const deliveryStatus = !hasRemainingQty
+        ? "Fully Delivered"
+        : (!hasDeliveredQty
+            ? (remainingPaymentCapacity > 0 ? "Ready for Delivery" : "Pending Payment")
+            : "Partially Delivered");
+
+    return {
+        remainingSaleOrderItems,
+        totalReceivedAmount,
+        remainingPaymentCapacity,
+        deliveryStatus,
+        canConvertToDelivery: hasRemainingQty && remainingPaymentCapacity > 0,
+    };
+}
+
+function calculateQuotationNetAmount(quotationItems = [], quotation = {}) {
+    const lineNetAmount = (quotationItems || []).reduce((acc, curr) => {
+        const price = parseQty(curr?.price);
+        const qty = parseQty(curr?.qty);
+        const taxPercent = parseQty(curr?.taxPercent);
+        const taxMethod = curr?.taxMethod || "Inclusive";
+        const discountType = curr?.discountType;
+        const discountValue = parseQty(curr?.discountValue);
+
+        const gross = price * qty;
+        let discountedAmount = gross;
+
+        if (discountType === "Percentage") {
+            discountedAmount = gross - (gross * discountValue) / 100;
+        } else if (discountType === "Flat") {
+            discountedAmount = gross - discountValue;
+        }
+
+        discountedAmount = Math.max(0, discountedAmount);
+
+        if (taxMethod === "Inclusive" && taxPercent > 0) {
+            return acc + discountedAmount;
+        }
+
+        return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+    }, 0);
+
+    const packingAmount = quotation?.packingChargeEnabled ? parseQty(quotation?.packingCharge) : 0;
+    const shippingAmount = quotation?.shippingChargeEnabled ? parseQty(quotation?.shippingCharge) : 0;
+
+    return roundMoney(lineNetAmount + packingAmount + shippingAmount);
+}
+
+async function validateQuotationConversion(quotationId, excludeSaleOrderId = null, db = prisma) {
+    if (!quotationId) return null;
+
+    const quotation = await db.quotation.findUnique({
+        where: {
+            id: parseInt(quotationId),
+        },
+        include: {
+            QuotationItems: true,
+            Saleorder: {
+                select: {
+                    id: true,
+                }
+            }
+        }
+    });
+
+    if (!quotation) return "Quotation not found.";
+
+    const existingSaleOrder = (quotation?.Saleorder || []).find((saleOrder) => (
+        !excludeSaleOrderId || parseInt(saleOrder.id) !== parseInt(excludeSaleOrderId)
+    ));
+
+    if (existingSaleOrder) {
+        return "Sale Order is already created for this estimate.";
+    }
+
+    const paymentData = await db.payment.findMany({
+        where: {
+            transactionType: "QUOTATION",
+            transactionId: parseInt(quotationId),
+        },
+    });
+    const paidAmount = roundMoney(paymentData.reduce((acc, curr) => acc + parseQty(curr?.paidAmount), 0));
+    const requiredAdvanceAmount = parseQty(quotation?.minimumAdvancePayment) > 0
+        ? parseQty(quotation?.minimumAdvancePayment)
+        : roundMoney(calculateQuotationNetAmount(quotation?.QuotationItems, quotation) * 0.25);
+
+    if (paidAmount < requiredAdvanceAmount) {
+        return `Advance payment is insufficient. Required ${requiredAdvanceAmount.toFixed(2)}, received ${paidAmount.toFixed(2)}.`;
+    }
+
+    return null;
 }
 
 
@@ -172,12 +291,19 @@ async function get(req) {
             SaleOrderItems: {
                 select: {
                     id: true,
+                    quotationItemId: true,
                     itemId: true,
                     sizeId: true,
                     colorId: true,
                     uomId: true,
                     hsnId: true,
                     qty: true,
+                }
+            },
+            Quotation: {
+                select: {
+                    id: true,
+                    docId: true,
                 }
             },
             SalesDelivery: {
@@ -209,23 +335,28 @@ async function get(req) {
         }
     });
 
-    const enrichedData = data.map((saleOrder) => {
-        const remainingSaleOrderItems = buildRemainingSaleOrderItems(
-            saleOrder?.SaleOrderItems,
-            saleOrder?.SalesDelivery
-        );
-        const hasSalesDeliveries = (saleOrder?.SalesDelivery || []).length > 0;
-        const deliveryStatus = remainingSaleOrderItems.length === 0
-            ? (hasSalesDeliveries ? "complete" : "pending")
-            : (hasSalesDeliveries ? "partial" : "pending");
+    const enrichedData = await Promise.all(data.map(async (saleOrder) => {
+        let quotationWithPayments = saleOrder?.Quotation;
+        if (saleOrder?.Quotation?.id) {
+            const paymentData = await prisma.payment.findMany({
+                where: {
+                    transactionType: "QUOTATION",
+                    transactionId: saleOrder.Quotation.id,
+                },
+            });
+            quotationWithPayments = {
+                ...saleOrder.Quotation,
+                paymentData,
+            };
+        }
+        const state = getSaleOrderDeliveryState(saleOrder, quotationWithPayments);
 
         return {
             ...saleOrder,
-            remainingSaleOrderItems,
-            canConvertToDelivery: remainingSaleOrderItems.length > 0,
-            deliveryStatus,
+            Quotation: quotationWithPayments,
+            ...state,
         };
-    });
+    }));
 
     return { statusCode: 0, data: enrichedData };
 }
@@ -246,6 +377,12 @@ async function getOne(id) {
                 select: {
                     docId: true,
                     id: true,
+                    minimumAdvancePayment: true,
+                    packingChargeEnabled: true,
+                    packingCharge: true,
+                    shippingChargeEnabled: true,
+                    shippingCharge: true,
+                    QuotationItems: true,
                 }
             }
         }
@@ -267,22 +404,14 @@ async function getOne(id) {
         };
     }
 
-    const remainingSaleOrderItems = buildRemainingSaleOrderItems(
-        data?.SaleOrderItems,
-        data?.SalesDelivery
-    );
-    const totalReceivedAmount = getTotalReceivedAmountForSaleOrder({ ...data, Quotation: quotationWithPayments });
-    const remainingPaymentCapacity = getRemainingPaymentCapacityForSaleOrder({ ...data, Quotation: quotationWithPayments });
+    const state = getSaleOrderDeliveryState(data, quotationWithPayments);
 
     return {
         statusCode: 0,
         data: {
             ...data,
             Quotation: quotationWithPayments,
-            remainingSaleOrderItems,
-            totalReceivedAmount,
-            remainingPaymentCapacity,
-            canConvertToDelivery: remainingSaleOrderItems.length > 0,
+            ...state,
         }
     };
 }
@@ -321,13 +450,24 @@ async function create(body) {
         shippingCharge,
     } = await body
 
+    const quotationValidationMessage = await validateQuotationConversion(quoteId);
+    if (quotationValidationMessage) {
+        return { statusCode: 1, message: quotationValidationMessage };
+    }
+
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+    let data;
+    try {
+        await prisma.$transaction(async (tx) => {
+            const transactionalValidationMessage = await validateQuotationConversion(quoteId, null, tx);
+            if (transactionalValidationMessage) {
+                throw new Error(transactionalValidationMessage);
+            }
 
-    const data = await prisma.saleorder.create(
-        {
-            data: {
+            data = await tx.saleorder.create({
+                data: {
                 customerId: customerId ? parseInt(customerId) : undefined,
                 discountType: discountType || "",
                 discountValue: discountValue || "",
@@ -344,6 +484,7 @@ async function create(body) {
                             let newItem = {}
 
 
+                            newItem["quotationItemId"] = temp["quotationItemId"] ? parseInt(temp["quotationItemId"]) : (quoteId && temp["id"] ? parseInt(temp["id"]) : null);
                             newItem["itemId"] = temp["itemId"] ? parseInt(temp["itemId"]) : null;
                             newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : null;
                             newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
@@ -361,9 +502,12 @@ async function create(body) {
                         })
                     } : undefined
                 }
-            }
-        }
-    )
+                }
+            })
+        })
+    } catch (error) {
+        return { statusCode: 1, message: error.message || "Failed to save Sale Order." };
+    }
     return { statusCode: 0, data };
 }
 
@@ -378,6 +522,7 @@ async function update(id, body) {
         packingCharge,
         shippingChargeEnabled,
         shippingCharge,
+        quoteId,
     } = await body
 
     const dataFound = await prisma.saleorder.findUnique({
@@ -390,13 +535,24 @@ async function update(id, body) {
     })
     if (!dataFound) return NoRecordFound("Sale Order");
 
+    const quotationValidationMessage = await validateQuotationConversion(quoteId || dataFound?.quotationId, id);
+    if (quotationValidationMessage) {
+        return { statusCode: 1, message: quotationValidationMessage };
+    }
+
     let oldItemIds = dataFound?.SaleOrderItems.map(item => parseInt(item.id))
     let currentItemIds = saleOrderItems.filter(i => i?.id)?.map(item => parseInt(item.id))
     let removedItemIds = oldItemIds.filter(id => !currentItemIds.includes(id));
 
     let piData;
 
-    await prisma.$transaction(async (tx) => {
+    try {
+        await prisma.$transaction(async (tx) => {
+        const transactionalValidationMessage = await validateQuotationConversion(quoteId || dataFound?.quotationId, id, tx);
+        if (transactionalValidationMessage) {
+            throw new Error(transactionalValidationMessage);
+        }
+
         // Delete removed items
         if (removedItemIds.length > 0) {
             await tx.saleOrderItems.deleteMany({
@@ -420,6 +576,7 @@ async function update(id, body) {
                 packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
                 shippingChargeEnabled: Boolean(shippingChargeEnabled),
                 shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
+                quotationId: quoteId ? parseInt(quoteId) : dataFound?.quotationId,
             },
         })
 
@@ -430,6 +587,7 @@ async function update(id, body) {
                     where: { id: parseInt(item.id) },
                     data: {
                         itemId: item.itemId ? parseInt(item.itemId) : null,
+                        quotationItemId: item.quotationItemId ? parseInt(item.quotationItemId) : null,
                         sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                         colorId: item.colorId ? parseInt(item.colorId) : null,
                         uomId: item.uomId ? parseInt(item.uomId) : null,
@@ -447,6 +605,7 @@ async function update(id, body) {
                 await tx.saleOrderItems.create({
                     data: {
                         saleOrderId: piData.id,
+                        quotationItemId: item.quotationItemId ? parseInt(item.quotationItemId) : null,
                         itemId: item.itemId ? parseInt(item.itemId) : null,
                         sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                         colorId: item.colorId ? parseInt(item.colorId) : null,
@@ -465,7 +624,10 @@ async function update(id, body) {
                 });
             }
         }
-    })
+        })
+    } catch (error) {
+        return { statusCode: 1, message: error.message || "Failed to update Sale Order." };
+    }
     return { statusCode: 0, data: piData };
 }
 
