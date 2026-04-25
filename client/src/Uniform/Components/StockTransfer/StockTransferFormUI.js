@@ -690,9 +690,7 @@ const StockTransferForm = ({
                                             return;
                                         }
                                     }
-
-                                    // 3️⃣ All checks passed — proceed with barcode generation
-                                    // your print / navigation logic here
+                                    setBarcodePrintOpen(true)
                                 }}
                                 disabled={findFromList(toLocationId, locationData?.data, "storeName") != "DISCOUNT SECTION"}
                             >
