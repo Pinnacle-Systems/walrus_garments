@@ -749,7 +749,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
               isHeaderOpen={isHeaderOpen}
               itemPriceList={itemPriceList}
               priceTemplateList={priceTemplateList}
-              restrictSourceLineEdits={Boolean(convertSaleOrderId && !id)}
+            // restrictSourceLineEdits={Boolean(convertSaleOrderId && !id)}
             />
           </fieldset>
         </div>

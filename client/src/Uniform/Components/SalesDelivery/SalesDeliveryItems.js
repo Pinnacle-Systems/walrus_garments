@@ -150,8 +150,8 @@ const SalesDeliveryItems = ({
     };
 
     useEffect(() => {
-        if (id) return;
-        if (restrictSourceLineEdits) return;
+        // if (id) return;
+        // if (restrictSourceLineEdits) return;
         const length = standardTransactionPlaceholderRowCount;
         if (deliveryItems?.length >= length) return;
         setDeliveryItems((prev) => {
