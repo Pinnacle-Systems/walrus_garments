@@ -262,7 +262,11 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
 
         } else {
-          toast.error(returnData?.message);
+          Swal.fire({
+            icon: 'error',
+            text: returnData?.message,
+
+          });
         }
 
       }
@@ -290,15 +294,15 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     const catalogPriceRows = itemPriceList?.data || [];
 
     if (!validateData(data)) {
-
-
       Swal.fire({
         title: "Please fill all required fields...!",
         icon: "success",
-
       });
       return
     }
+
+
+
     if (!areSalesRowsValid(deliveryRows, catalogItems, catalogPriceRows)) {
       Swal.fire({
         title: "Please fill all Delivery Items Mandatory fields...!",

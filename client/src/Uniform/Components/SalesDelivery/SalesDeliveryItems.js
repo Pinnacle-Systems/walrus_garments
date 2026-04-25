@@ -105,45 +105,45 @@ const SalesDeliveryItems = ({
             newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
         }
 
-        if (field === "itemId" || field === "sizeId" || field === "colorId" || field === "qty") {
-            const currentItem = field === "itemId" ? value : newBlend[index].itemId;
-            const currentSize = field === "sizeId" ? value : newBlend[index].sizeId;
-            const currentColor = field === "colorId" ? value : newBlend[index].colorId;
-            const currentQty = field === "qty" ? value : newBlend[index].qty;
-            const isLegacySelection = isLegacyCatalogItem(catalogItems, currentItem);
-            const requiresSize = itemUsesSize(catalogItems, catalogPriceRows, currentItem);
-            const requiresColor = itemUsesColor(catalogItems, catalogPriceRows, currentItem);
+        // if (field === "itemId" || field === "sizeId" || field === "colorId" || field === "qty") {
+        //     const currentItem = field === "itemId" ? value : newBlend[index].itemId;
+        //     const currentSize = field === "sizeId" ? value : newBlend[index].sizeId;
+        //     const currentColor = field === "colorId" ? value : newBlend[index].colorId;
+        //     const currentQty = field === "qty" ? value : newBlend[index].qty;
+        //     const isLegacySelection = isLegacyCatalogItem(catalogItems, currentItem);
+        //     const requiresSize = itemUsesSize(catalogItems, catalogPriceRows, currentItem);
+        //     const requiresColor = itemUsesColor(catalogItems, catalogPriceRows, currentItem);
 
-            if (currentItem) {
-                const templateDetail = getPriceFromTemplate(currentItem, currentQty);
-                if (templateDetail) {
-                    newBlend[index]["price"] = templateDetail.price;
-                    newBlend[index]["priceType"] = "BulkOfferPrice";
-                } else if (!requiresSize || currentSize || isLegacySelection) {
-                    const foundPrice = resolveSellablePriceRow(
-                        catalogItems,
-                        catalogPriceRows,
-                        currentItem,
-                        currentSize,
-                        requiresColor ? currentColor : ""
-                    );
-                    if (foundPrice) {
-                        const numericQty = parseFloat(currentQty || 0);
-                        if (numericQty > 6 && foundPrice.offerPrice) {
-                            newBlend[index]["price"] = foundPrice.offerPrice;
-                            newBlend[index]["priceType"] = "offerPrice";
-                        } else {
-                            newBlend[index]["price"] = foundPrice.salesPrice;
-                            newBlend[index]["priceType"] = "SalesPrice";
-                        }
-                    } else {
-                        newBlend[index]["priceType"] = null;
-                    }
-                } else {
-                    newBlend[index]["priceType"] = null;
-                }
-            }
-        }
+        //     if (currentItem) {
+        //         const templateDetail = getPriceFromTemplate(currentItem, currentQty);
+        //         if (templateDetail) {
+        //             newBlend[index]["price"] = templateDetail.price;
+        //             newBlend[index]["priceType"] = "BulkOfferPrice";
+        //         } else if (!requiresSize || currentSize || isLegacySelection) {
+        //             const foundPrice = resolveSellablePriceRow(
+        //                 catalogItems,
+        //                 catalogPriceRows,
+        //                 currentItem,
+        //                 currentSize,
+        //                 requiresColor ? currentColor : ""
+        //             );
+        //             if (foundPrice) {
+        //                 const numericQty = parseFloat(currentQty || 0);
+        //                 if (numericQty > 6 && foundPrice.offerPrice) {
+        //                     newBlend[index]["price"] = foundPrice.offerPrice;
+        //                     newBlend[index]["priceType"] = "offerPrice";
+        //                 } else {
+        //                     newBlend[index]["price"] = foundPrice.salesPrice;
+        //                     newBlend[index]["priceType"] = "SalesPrice";
+        //                 }
+        //             } else {
+        //                 newBlend[index]["priceType"] = null;
+        //             }
+        //         } else {
+        //             newBlend[index]["priceType"] = null;
+        //         }
+        //     }
+        // }
 
         newBlend[index][field] = value;
         setDeliveryItems(newBlend);
