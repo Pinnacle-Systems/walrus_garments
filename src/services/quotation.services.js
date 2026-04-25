@@ -179,10 +179,10 @@ async function create(body) {
                         data: quoteItems?.filter(temp => temp.itemId).map((temp) => {
                             let newItem = {}
                             newItem["itemId"] = parseInt(temp["itemId"]);
-                            newItem["sizeId"] = parseInt(temp["sizeId"]);
-                            newItem["colorId"] = parseInt(temp["colorId"]);
-                            newItem["hsnId"] = parseInt(temp["hsnId"]);
-                            newItem["uomId"] = parseInt(temp["uomId"]);
+                            newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : 0;
+                            newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : 0;
+                            newItem["hsnId"] = temp["hsnId"] ? parseInt(temp["hsnId"]) : 0;
+                            newItem["uomId"] = temp["uomId"] ? parseInt(temp["uomId"]) : 0;
                             newItem["qty"] = String(temp["qty"]);
                             newItem["price"] = String(temp["price"]);
 
