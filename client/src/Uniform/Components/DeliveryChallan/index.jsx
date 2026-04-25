@@ -156,6 +156,7 @@ const DeliveryChallan = () => {
         setReadOnly(false);
         setCustomerId("")
         setPartyId('')
+        setDocId("New")
     }
 
     return (
