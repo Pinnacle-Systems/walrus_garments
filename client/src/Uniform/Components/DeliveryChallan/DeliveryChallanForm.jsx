@@ -27,7 +27,7 @@ import { push } from "../../../redux/features/opentabs";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import DeliveryChallanItems from "./DeliveryChallanItems";
-import { useAddDeliveryChallanMutation, useUpdateDeliveryChallanMutation } from "../../../redux/services/DeliveryChallanService";
+import { useAddDeliveryChallanMutation, useGetDeliveryChallanByIdQuery, useUpdateDeliveryChallanMutation } from "../../../redux/services/DeliveryChallanService";
 
 
 
@@ -110,7 +110,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetSalesInvoiceByIdQuery(id, { skip: !id });
+  } = useGetDeliveryChallanByIdQuery(id, { skip: !id });
   const saleOrderDocId = singleData?.data?.Saleorder?.docId || sourceSaleOrderDocId || "";
   const paymentReceivedAmount = id
     ? (singleData?.data?.Saleorder?.Quotation?.paymentData || []).reduce(
@@ -150,42 +150,17 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
 
 
   const syncFormWithDb = useCallback((data) => {
-    console.log(data?.DirectItems, "data?.DirectItems")
-    const today = new Date()
-    if (convertSaleOrderId && !id) return
-    if (id) {
-      setReadOnly(true);
-    } else {
-      setReadOnly(false);
-    }
-    setTransType(data?.poType ? data.poType : "DyedYarn");
-    setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
-    setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setInvoiceItems(data?.SalesInvoiceItems ? data.SalesInvoiceItems : []);
-    if (data?.docId) {
-      setDocId(data?.docId)
-    }
-    if (data?.date) setDate(data?.date);
-    // setTaxTemplateId(data?.taxTemplateId ? data?.taxTemplateId : "");
-    setPayTermId(data?.payTermId ? data?.payTermId : "");
-    setCustomerId(data?.customerId ? data?.customerId : "");
-    setDcDate(data?.dcDate ? moment.utc(data?.dcDate).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setDcNo(data?.dcNo ? data.dcNo : "")
-    setLocationId(data?.branchId ? data?.branchId : "")
-    setStoreId(data?.storeId ? data.storeId : "")
-    setVehicleNo(data?.vehicleNo ? data?.vehicleNo : "")
-    setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
-    setRemarks(data?.remarks ? data?.remarks : "")
-    setTerms(data?.terms ? data?.terms : "")
-    const nextPackingCharge = formatChargeValue(data?.packingCharge);
-    const nextShippingCharge = formatChargeValue(data?.shippingCharge);
-    setPackingCharge(nextPackingCharge);
-    setShippingCharge(nextShippingCharge);
-    setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
-    setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
-    if (data?.branchId) {
-      branchIdFromApi.current = data?.branchId
-    }
+    const today = moment();
+    setChallanType(data?.challanType ? data?.challanType : "")
+    setPlatForm(data?.platform ? data?.platform : "")
+    setDate(
+      data?.date
+        ? moment.utc(data.date).format("YYYY-MM-DD")
+        : moment.utc(today).format("YYYY-MM-DD"),
+    );
+    setInvoiceItems(data?.DeliveryChallanItems ? data?.DeliveryChallanItems : [])
+    setDocId(data?.docId ? data?.docId : "New")
+
   }, [id]);
 
   useEffect(() => {

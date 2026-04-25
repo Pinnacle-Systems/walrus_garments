@@ -314,7 +314,7 @@ const DeliveryChallanItems = ({
                             <thead className={transactionTableHeadClassName}>
                                 <tr>
                                     <th className={`${compactHeaderCellClassName} w-12`}>S.No</th>
-                                    <th className={`${compactHeaderCellClassName} w-52`}>Item</th>
+                                    <th className={`${compactHeaderCellClassName} w-52`}>Item / Sku Code</th>
                                     {showSize && <th className={`${compactHeaderCellClassName} w-16`}>Size</th>}
                                     {showColor && <th className={`${compactHeaderCellClassName} w-32`}>Color</th>}
                                     <th className={`${compactHeaderCellClassName} w-20`}>Hsn</th>
@@ -570,7 +570,7 @@ const DeliveryChallanItems = ({
                             <div
                                 style={{
                                     position: "absolute",
-                                    top: `${contextMenu.mouseY - 50}px`,
+                                    top: `${contextMenu.mouseY - 220}px`,
                                     left: `${contextMenu.mouseX - 30}px`,
                                     boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
                                     padding: "8px", borderRadius: "4px", zIndex: 1000,
