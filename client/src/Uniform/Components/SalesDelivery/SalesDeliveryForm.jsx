@@ -319,8 +319,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
     if (!validateData(data)) {
       Swal.fire({
-        title: "Please fill all required fields...!",
-        icon: "success",
+        title: "Please fill in all required fields.",
+        icon: "warning",
       });
       return
     }
@@ -329,14 +329,14 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
     if (!areSalesRowsValid(deliveryRows, catalogItems, catalogPriceRows)) {
       Swal.fire({
-        title: "Please fill all Delivery Items Mandatory fields...!",
+        title: "Please fill in all mandatory fields for delivery items.",
         icon: "warning",
       });
       return;
     }
     if (!data?.deliveryItems?.length) {
       Swal.fire({
-        title: "Please keep at least one delivery line...!",
+        title: "Please include at least one delivery line.",
         icon: "warning",
       });
       return;
@@ -344,12 +344,12 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     if (linkedSaleOrderId && effectiveRemainingPaymentCapacity < adjustedNetAmount) {
       Swal.fire({
         title: "Insufficient Payment",
-        text: `Remaining payment capacity (${parseFloat(effectiveRemainingPaymentCapacity || 0).toFixed(2)}) must cover the delivery net amount (${parseFloat(adjustedNetAmount || 0).toFixed(2)}).`,
+        text: `Please adjust line items to ensure the new net total is within the payment received (Rs.${parseFloat(effectiveRemainingPaymentCapacity || 0).toFixed(2)}).`,
         icon: "warning",
       });
       return;
     }
-    if (!window.confirm("Are you sure save the details ...?")) {
+    if (!window.confirm("Are you sure you want to save these details?")) {
       return
     }
     if (nextProcess == "draft" && !id) {
