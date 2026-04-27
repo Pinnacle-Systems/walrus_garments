@@ -169,7 +169,7 @@ const Header = ({ profile, setProfile }) => {
                 <Logout setLogout={setLogout} />
             </Modal>
             <div className="flex shrink-0 items-center">
-                <img className="rounded-lg h-5"
+                <img className="h-5"
                     src={logo}
                     alt="" />
             </div>

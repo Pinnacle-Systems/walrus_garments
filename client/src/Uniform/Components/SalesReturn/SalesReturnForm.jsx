@@ -1983,6 +1983,8 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       </Modal>
       <TransactionEntryShell
         title="Sales Return"
+        id={id}
+        readOnly={readOnly}
         onClose={onClose}
         headerOpen={isHeaderOpen}
         setHeaderOpen={setIsHeaderOpen}

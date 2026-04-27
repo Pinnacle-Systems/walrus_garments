@@ -8,8 +8,9 @@ import {
 } from "@react-pdf/renderer";
 import numberToText from "number-to-text";
 import moment from "moment";
-import WalrusLogo from "../../../assets/walrus.png";
-import { findFromList } from "../../../Utils/helper";
+import WalrusLogo from "../../../assets/walrusNew.png";
+import { findFromList, getCommonParams } from "../../../Utils/helper";
+import { useGetBranchByIdQuery } from "../../../redux/services/BranchMasterService";
 
 // ─── Colour palette matching the screenshot ────────────────────────────────
 const PURPLE = "#7878c8";       // header band fill
@@ -74,7 +75,8 @@ const s = {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 const PremiumSalesPrintFormat = ({
-  title = "Sale",
+  title = "",
+  subTittle,
   docId = "N/A",
   date = new Date(),
   branchData = {},
@@ -93,6 +95,8 @@ const PremiumSalesPrintFormat = ({
 }) => {
   const formattedDate = moment(date).format("DD-MM-YYYY");
   const formattedTime = moment(date).format("hh:mm A");
+
+  console.log(branchData, "branchData")
 
   // ── Tax calculation ────────────────────────────────────────────────────
   const getTaxBreakup = () => {
@@ -179,10 +183,8 @@ const PremiumSalesPrintFormat = ({
           ]}
         >
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image src={WalrusLogo} style={{ width: 36, height: 36, marginRight: 8 }} />
-            <Text style={{ fontSize: 9, color: TEXT_MID }}>
-              {branchData?.address || ""}
-            </Text>
+            <Image src={WalrusLogo} style={{ width: 120, height: 30, marginRight: 8 }} />
+
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <Text
@@ -194,8 +196,11 @@ const PremiumSalesPrintFormat = ({
             >
               {branchData?.branchName || "WALRUS GARMENTS"}
             </Text>
+            <Text style={{ fontSize: 9, color: TEXT_MID }}>
+              {branchData?.address || ""}
+            </Text>
             <Text style={{ fontSize: 8, color: TEXT_MID }}>
-              Ph. no.: {branchData?.contactPersonNumber || branchData?.phone || "—"}
+              Ph. no.: {branchData?.contactMobile || "N/A"}
             </Text>
           </View>
         </View>
@@ -224,7 +229,7 @@ const PremiumSalesPrintFormat = ({
               Shipping To
             </Text>
             <Text style={[s.bandCell, { flex: 1.5, color: "#ffeeaa" }]}>
-              Invoice Details
+              {subTittle} Details
             </Text>
           </View>
           {/* Content row */}
@@ -253,7 +258,7 @@ const PremiumSalesPrintFormat = ({
             {/* Invoice Details */}
             <View style={{ flex: 1.5, padding: 5 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 2 }}>
-                <Text style={{ fontSize: 8, color: TEXT_MID }}>Invoice No.:</Text>
+                <Text style={{ fontSize: 8, color: TEXT_MID }}>{subTittle} No.:</Text>
                 <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: PURPLE_DARK }}>
                   {docId}
                 </Text>
@@ -439,14 +444,14 @@ const PremiumSalesPrintFormat = ({
                 Rs. {fmt(netAmount)}
               </Text>
             </View>
-            <View style={s.summaryRow}>
+            {/* <View style={s.summaryRow}>
               <Text style={s.summaryLabel}>Received</Text>
               <Text style={s.summaryValue}>Rs. {fmt(totals?.received || 0)}</Text>
             </View>
             <View style={s.summaryRow}>
               <Text style={s.summaryLabel}>Balance</Text>
               <Text style={s.summaryValue}>Rs. {fmt((netAmount || 0) - (totals?.received || 0))}</Text>
-            </View>
+            </View> */}
           </View>
         </View>
 
@@ -466,10 +471,10 @@ const PremiumSalesPrintFormat = ({
           </View>
           <View style={s.flex1}>
             <View style={s.bandRow}>
-              <Text style={s.bandCell}>Description</Text>
+              <Text style={s.bandCell}>Remarks</Text>
             </View>
             <Text style={{ fontSize: 8, padding: 6, color: TEXT_MID }}>
-              {remarks || "Sale Description"}
+              {remarks || "--"}
             </Text>
           </View>
         </View>

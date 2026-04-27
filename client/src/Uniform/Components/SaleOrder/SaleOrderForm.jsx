@@ -155,8 +155,15 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     }
   }, [linkedQuoteId, quoteId]);
 
+
+
+
   useEffect(() => {
+    console.log("inside", linkedQuotationData)
+
     if (id || !linkedQuotationData?.data || !linkedQuoteId) return;
+
+    console.log("inside", linkedQuotationData)
 
     const quoteData = linkedQuotationData.data;
     setCustomerId(quoteData.customerId || "");
@@ -169,6 +176,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     setShippingChargeEnabled(Boolean(quoteData?.shippingChargeEnabled) || parseChargeAmount(quoteData?.shippingCharge) > 0);
     setShippingCharge(quoteData?.shippingChargeEnabled ? formatChargeValue(quoteData?.shippingCharge) : "");
   }, [id, linkedQuotationData, linkedQuoteId, setCustomerId, setSaleOrderItems]);
+
+
+
+
 
   useEffect(() => {
     if (!quoteId || id) {
@@ -196,22 +207,22 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
   const syncFormWithDb = useCallback((data) => {
     const today = new Date()
-    console.log(quoteId, "convertQuotationId")
+
     if (linkedQuoteId && !id) return
+
     if (id) {
       setReadOnly(true);
     } else {
       setReadOnly(false);
     }
     setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setSaleOrderItems(data?.SaleOrderItems ? data.SaleOrderItems : []);
     setCustomerId(data?.customerId ? data?.customerId : undefined)
     if (data?.docId) {
       setDocId(data?.docId)
     }
     if (data?.date) setDate(data?.date);
     setRemarks(data?.remarks || "");
-    setTerms(data?.terms || "");
+    setTerms(data?.termsAndCondition || "");
     const nextPackingCharge = formatChargeValue(data?.packingCharge);
     const nextShippingCharge = formatChargeValue(data?.shippingCharge);
     setPackingCharge(nextPackingCharge);
@@ -219,6 +230,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
     setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
     setSelectedOffersByRow(data?.selectedOffersByRow || {});
+    setLinkedQuoteId(data?.quotationId || "")
+    setSaleOrderItems(data?.SaleOrderItems ? data.SaleOrderItems : []);
+
+
   }, [id, linkedQuoteId]);
 
   useEffect(() => {
@@ -254,7 +269,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
     shippingChargeEnabled,
     shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
-    selectedOffersByRow
+    selectedOffersByRow,
+    termsAndCondition: terms,
   }
 
 
@@ -291,8 +307,13 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         returnData = await callback(data).unwrap();
       }
       dispatch(push({ name: "SALE ORDER", projectId: null }))
+      setLinkedQuoteId("")
       if (returnData.statusCode === 1) {
-        toast.error(returnData.message);
+        // toast.error(returnData.message);
+        Swal.fire({
+          icon: 'error',
+          title: returnData.message,
+        });
       } else {
 
 
@@ -367,7 +388,33 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
 
   const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, saleOrderItems || []), [activeOffers, saleOrderItems]);
-  const { cartWithOffers: saleOrderItemsWithOffers } = useMemo(() => calculateCartWithOffers(saleOrderItems || [], selectedOffersByRow, potentialOffers, activeOffers), [saleOrderItems, selectedOffersByRow, potentialOffers, activeOffers]);
+  const { cartWithOffers: rawItemsWithOffers } = useMemo(() => calculateCartWithOffers(saleOrderItems || [], selectedOffersByRow, potentialOffers, activeOffers), [saleOrderItems, selectedOffersByRow, potentialOffers, activeOffers]);
+
+  const saleOrderItemsWithOffers = useMemo(() => {
+    let items = [...(rawItemsWithOffers || [])];
+    const length = 20; // Standard placeholder row count
+    if (items.length < length) {
+      const padding = Array.from({ length: length - items.length }, () => ({
+        itemId: "",
+        qty: "0.00",
+        tax: "0",
+        colorId: "",
+        uomId: "",
+        price: "0.00",
+        discountValue: "0.00",
+        discountType: "",
+        noOfBags: "0",
+        weightPerBag: "0.00",
+        id: '',
+        poItemsId: "",
+        taxMethod: "",
+        barcode: "",
+        barcodeType: "REGULAR"
+      }));
+      return [...items, ...padding];
+    }
+    return items;
+  }, [rawItemsWithOffers]);
 
   const totalOfferDiscount = saleOrderItemsWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
 
@@ -579,13 +626,13 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
           value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
         },
-        {
-          key: "promoDiscount",
-          label: "Promo Discount",
-          value: `Rs.${parseFloat(totalOfferDiscount || 0).toFixed(2)}`,
-          summaryColumn: "right",
-          className: "text-emerald-600 font-bold"
-        },
+        // {
+        //   key: "promoDiscount",
+        //   label: "Promo Discount",
+        //   value: `Rs.${parseFloat(totalOfferDiscount || 0).toFixed(2)}`,
+        //   summaryColumn: "right",
+        //   className: "text-emerald-600 font-bold"
+        // },
         ...chargeRows,
         {
           key: "netAmount",
@@ -607,11 +654,15 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       ]}
       leftActions={
         <>
-          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+          <button onClick={() => saveData("new")}
+            disabled={readOnly}
+            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
             <FiSave className="w-4 h-4 mr-2" />
             Save & New
           </button>
-          <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+          <button onClick={() => saveData("close")}
+            disabled={readOnly}
+            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
             <HiOutlineRefresh className="w-4 h-4 mr-2" />
             Save & Close
           </button>
@@ -668,9 +719,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         <PDFViewer style={{ width: "100%", height: "90vh" }}>
           <PremiumSalesPrintFormat
             title="SALE ORDER"
+            subTittle="Sale Order"
             docId={docId}
             date={date}
-            branchData={findFromList(branchId, branchList?.data, "all")}
+            branchData={branchList?.data?.filter(i => i.id == branchId)}
             customerData={supplierDetails?.data}
             items={saleOrderItems?.filter(i => i.itemId)}
             remarks={remarks}
@@ -703,6 +755,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
       <TransactionEntryShell
         title="Sale Order"
+        id={id}
+        readOnly={readOnly}
         onClose={onClose}
         headerOpen={isHeaderOpen}
         setHeaderOpen={setIsHeaderOpen}
@@ -712,7 +766,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
 
-            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName={`${estimateDocId ? "grid-cols-12" : "grid-cols-2"}`}>
+            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName={`${estimateDocId ? "grid-cols-12" : "grid-cols-4"}`}>
               <div className={estimateDocId ? "col-span-3" : ""}>
                 <ReusableInput label="Sale Order No" readOnly value={docId} />
               </div>

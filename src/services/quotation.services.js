@@ -391,7 +391,7 @@ async function update(id, body) {
                 discountType: discountType || "",
                 discountValue: discountValue || "",
                 branchId: branchId ? parseInt(branchId) : undefined,
-                termId: termId ? parseInt(termId) : null,
+                // termId: termId ? parseInt(termId) : undefined,
                 minimumAdvancePayment: minimumAdvancePayment ? String(minimumAdvancePayment) : null,
                 packingChargeEnabled: Boolean(packingChargeEnabled),
                 packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,

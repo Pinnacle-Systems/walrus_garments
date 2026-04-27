@@ -65,7 +65,7 @@ const SalesDelivery = () => {
             setStoreId(saleOrderData.storeId || "");
             setReadOnly(false);
             setShowManufacturer(true);
-            dispatch(push({ name: "SALES DELIVERY", projectId: null }));
+            // dispatch(push({ name: "SALES DELIVERY", projectId: null }));
         }
     }, [saleOrderToConvertData, convertSaleOrderId, dispatch]);
 
@@ -115,7 +115,7 @@ const SalesDelivery = () => {
     };
 
     const handleDelete = async (id, childRecord) => {
-       if (id) {
+        if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
@@ -141,6 +141,8 @@ const SalesDelivery = () => {
         setReadOnly(false);
         setCustomerId("")
         setPartyId('')
+        dispatch(push({ name: "SALES DELIVERY", projectId: null }));
+        setDeliveryItems([])
     }
 
     return (

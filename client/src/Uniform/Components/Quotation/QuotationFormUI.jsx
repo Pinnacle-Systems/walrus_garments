@@ -71,7 +71,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
   const [showItemOfferModal, setShowItemOfferModal] = useState(false);
   const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
-
+  const [childRecord, setChildRecord] = useState(0);
 
 
   const { branchId, companyId, userId, finYearId } = getCommonParams()
@@ -186,7 +186,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       setIsMinimumAdvanceManuallyEdited(false);
     }
     setSelectedOffersByRow(data?.selectedOffersByRow || {});
-
+    setChildRecord(data?.Saleorder?.length > 0 ? true : false)
   }, [id]);
 
   useEffect(() => {
@@ -577,13 +577,13 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
         },
-        {
-          key: "promoDiscount",
-          label: "Promo Discount",
-          value: `Rs.${parseFloat(totalOfferDiscount || 0).toFixed(2)}`,
-          summaryColumn: "right",
-          className: "text-emerald-600 font-bold"
-        },
+        // {
+        //   key: "promoDiscount",
+        //   label: "Promo Discount",
+        //   value: `Rs.${parseFloat(totalOfferDiscount || 0).toFixed(2)}`,
+        //   summaryColumn: "right",
+        //   className: "text-emerald-600 font-bold"
+        // },
         ...chargeRows,
         {
           key: "netAmount",
@@ -611,11 +611,13 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       extraTotalsContentColumn="left"
       leftActions={
         <>
-          <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+          <button onClick={() => saveData("close")}
+            disabled={readOnly}
+            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
             <HiOutlineRefresh className="w-4 h-4 mr-2" />
             Save & Close
           </button>
-          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+          <button onClick={() => saveData("new")} disabled={readOnly} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
             <FiSave className="w-4 h-4 mr-2" />
             Save & New
           </button>
@@ -632,6 +634,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
               }
               setReadOnly(false);
             }}
+            disabled={childRecord}
           >
             <FiEdit2 className="w-4 h-4 mr-2" />
             Edit
@@ -706,9 +709,10 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
         <PDFViewer style={{ width: "100%", height: "90vh" }}>
           <PremiumSalesPrintFormat
             title="QUOTATION"
+            subTittle="Quotation"
             docId={docId}
             date={date}
-            branchData={findFromList(branchId, branchList?.data, "all")}
+            branchData={branchList?.data?.find(i => i.id == branchId)}
             customerData={supplierDetails?.data}
             items={quoteItems?.filter(i => i.itemId)}
             remarks={remarks}
@@ -743,6 +747,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       </Modal>
 
       <TransactionEntryShell
+        id={id}
+        readOnly={readOnly}
         title="Estimate / Quotation"
         onClose={onClose}
         headerOpen={isHeaderOpen}
