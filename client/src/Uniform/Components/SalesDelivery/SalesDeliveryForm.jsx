@@ -131,19 +131,19 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     }
   }, [convertSaleOrderId, linkedSaleOrderId]);
 
-  useEffect(() => {
-    if (id || !linkedSaleOrderId || !selectedSaleOrderData?.data) return;
+  // useEffect(() => {
+  //   if (id || !linkedSaleOrderId || !selectedSaleOrderData?.data) return;
 
-    console.log("convertSaleOrderId", convertSaleOrderId)
+  //   console.log("convertSaleOrderId", convertSaleOrderId)
 
-    const saleOrderData = selectedSaleOrderData.data;
-    setCustomerId(saleOrderData.customerId || "");
-    setDeliveryItems(saleOrderData.remainingSaleOrderItems || []);
-    setPackingChargeEnabled(Boolean(saleOrderData?.packingChargeEnabled) || parseChargeAmount(saleOrderData?.packingCharge) > 0);
-    setPackingCharge(saleOrderData?.packingChargeEnabled ? formatChargeValue(saleOrderData?.packingCharge) : "");
-    setShippingChargeEnabled(Boolean(saleOrderData?.shippingChargeEnabled) || parseChargeAmount(saleOrderData?.shippingCharge) > 0);
-    setShippingCharge(saleOrderData?.shippingChargeEnabled ? formatChargeValue(saleOrderData?.shippingCharge) : "");
-  }, [id, linkedSaleOrderId, selectedSaleOrderData, setCustomerId, setDeliveryItems]);
+  //   const saleOrderData = selectedSaleOrderData.data;
+  //   setCustomerId(saleOrderData.customerId || "");
+  //   setDeliveryItems(saleOrderData.remainingSaleOrderItems || []);
+  //   setPackingChargeEnabled(Boolean(saleOrderData?.packingChargeEnabled) || parseChargeAmount(saleOrderData?.packingCharge) > 0);
+  //   setPackingCharge(saleOrderData?.packingChargeEnabled ? formatChargeValue(saleOrderData?.packingCharge) : "");
+  //   setShippingChargeEnabled(Boolean(saleOrderData?.shippingChargeEnabled) || parseChargeAmount(saleOrderData?.shippingCharge) > 0);
+  //   setShippingCharge(saleOrderData?.shippingChargeEnabled ? formatChargeValue(saleOrderData?.shippingCharge) : "");
+  // }, [id, linkedSaleOrderId, selectedSaleOrderData, setCustomerId, setDeliveryItems]);
 
 
 

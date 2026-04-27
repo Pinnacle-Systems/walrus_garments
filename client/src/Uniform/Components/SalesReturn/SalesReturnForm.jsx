@@ -1244,7 +1244,7 @@ import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardN
 
 const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setDeliveryItems, deliveryItems,
-  yarnList, colorList, uomList, hsnList, setSalesDeliveryId, salesDeliveryId, termsData
+  yarnList, colorList, uomList, hsnList, setSalesDeliveryId, salesDeliveryId, termsData, convertSalesDeliveryId, invalidateTagsDispatch
 
 
 }) => {
@@ -1342,26 +1342,26 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     }
   }, [getWarehouseLocationId, id, setStoreId, storeId]);
 
-  useEffect(() => {
-    if (id || !salesDeliveryId || !singleSalesDeliveryData?.data) return;
+  // useEffect(() => {
+  //   if (id || !salesDeliveryId || !singleSalesDeliveryData?.data) return;
 
-    const salesDelivery = singleSalesDeliveryData.data;
-    setCustomerId(salesDelivery?.customerId || "");
-    setDeliveryItems(salesDelivery?.remainingReturnItems || []);
+  //   const salesDelivery = singleSalesDeliveryData.data;
+  //   setCustomerId(salesDelivery?.customerId || "");
+  //   setDeliveryItems(salesDelivery?.remainingReturnItems || []);
 
-    const warehouseId = getWarehouseLocationId();
-    if (warehouseId) {
-      setStoreId(warehouseId);
-    }
-  }, [
-    getWarehouseLocationId,
-    id,
-    salesDeliveryId,
-    setCustomerId,
-    setDeliveryItems,
-    setStoreId,
-    singleSalesDeliveryData,
-  ]);
+  //   const warehouseId = getWarehouseLocationId();
+  //   if (warehouseId) {
+  //     setStoreId(warehouseId);
+  //   }
+  // }, [
+  //   getWarehouseLocationId,
+  //   id,
+  //   salesDeliveryId,
+  //   setCustomerId,
+  //   setDeliveryItems,
+  //   setStoreId,
+  //   singleSalesDeliveryData,
+  // ]);
 
   const [addData] = useAddSalesReturnMutation();
   const [updateData] = useUpdateSalesReturnMutation();
@@ -1440,8 +1440,11 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
 
   const syncFormWithDb = useCallback((data) => {
-    console.log(data?.DirectItems, "data?.DirectItems")
     const today = new Date()
+    setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
+
+    if (convertSalesDeliveryId) return;
+
     if (id) {
       setReadOnly(true);
     } else {
@@ -1449,8 +1452,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     }
     setTransType(data?.poType ? data.poType : "DyedYarn");
     setPoInwardOrDirectInward(data?.poInwardOrDirectInward ? data?.poInwardOrDirectInward : "DirectInward")
-    setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-    setDeliveryItems(data?.SalesDeliveryItems ? data.SalesDeliveryItems : []);
+    setDeliveryItems(data?.SalesReturnItems ? data.SalesReturnItems : []);
     if (data?.docId) {
       setDocId(data?.docId)
     }
@@ -1579,7 +1581,12 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
         returnData = await callback(data).unwrap();
       }
       if (returnData.statusCode === 1) {
-        toast.error(returnData.message);
+        // toast.error(returnData.message);
+        Swal.fire({
+          icon: "error",
+          text: returnData?.message,
+
+        });
       } else {
         Swal.fire({
           icon: 'success',
@@ -1587,7 +1594,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
           showConfirmButton: false,
           timer: 2000
         });
-
+        invalidateTagsDispatch()
         if (returnData.statusCode === 0) {
           if (nextProcess == "new") {
             syncFormWithDb(undefined);
@@ -1932,8 +1939,8 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       <Modal isOpen={printOpen} onClose={() => setPrintOpen(false)} widthClass="w-[95%] h-[95%]">
         <PDFViewer style={{ width: "100%", height: "90vh" }}>
           <PremiumSalesPrintFormat
-            title="DELIVERY CHALLAN"
-            docId={docId}
+            title="SALES RETURN"
+            subTitle="Sales Return" docId={docId}
             date={date}
             branchData={findFromList(branchId, branchList?.data, "all")}
             customerData={supplierDetails?.data}
@@ -1951,7 +1958,9 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
         <PDFViewer style={{ width: "100%", height: "90vh" }}>
           <ThermalSalesPrintFormat
-            title="DELIVERY CHALLAN"
+            title="SALES RETURN"
+            subTitle="Sales Return"
+
             docId={docId}
             date={date}
             branchData={findFromList(branchId, branchList?.data, "all")}

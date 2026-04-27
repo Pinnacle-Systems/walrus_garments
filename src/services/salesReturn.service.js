@@ -186,11 +186,11 @@ async function getOne(id) {
         where: { id: parseInt(id) },
         include: {
             SalesReturnItems: {
-                include: { Item: true, Color: true, Size: true, SalesPerson: true }
+                include: { Item: true, Color: true, Size: true }
             },
             Party: true,
             Store: true,
-            PosPayments: true
+            // PosPayments: true
         }
     }); if (!data) return NoRecordFound("Sales Return");
 

@@ -91,7 +91,6 @@ const SalesReturnItems = ({
 
 
     useEffect(() => {
-        if (id) return
         if (deliveryItems?.length >= standardTransactionPlaceholderRowCount) return;
         setDeliveryItems((prev) => {
             let newArray = Array.from({ length: standardTransactionPlaceholderRowCount - prev.length }, (i) => {
@@ -611,7 +610,7 @@ const SalesReturnItems = ({
                         <div
                             style={{
                                 position: "absolute",
-                                top: `${contextMenu.mouseY - 50}px`,
+                                top: `${contextMenu.mouseY - 220}px`,
                                 left: `${contextMenu.mouseX - 30}px`,
 
                                 // background: "gray",
