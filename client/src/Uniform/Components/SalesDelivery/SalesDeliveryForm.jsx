@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
-import { DateInput, DropdownInput, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
+import { DateInput, DropdownInput, ReusableSearchableInput, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
@@ -28,6 +28,7 @@ import { push } from "../../../redux/features/opentabs";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 
 
 
@@ -65,6 +66,17 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [taxMethod, setTaxMethod] = useState("WithoutTax")
   const [isHeaderOpen, setIsHeaderOpen] = useState(true);
   const [linkedSaleOrderId, setLinkedSaleOrderId] = useState(convertSaleOrderId || "");
+
+
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef,
+    secondInputRef,
+    movedToNextSaveNewRef,
+    saveNewButtonRef,
+    saveCloseButtonRef,
+  } = refs;
 
 
 
@@ -122,6 +134,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   useEffect(() => {
     if (id || !linkedSaleOrderId || !selectedSaleOrderData?.data) return;
 
+    console.log("convertSaleOrderId", convertSaleOrderId)
+
     const saleOrderData = selectedSaleOrderData.data;
     setCustomerId(saleOrderData.customerId || "");
     setDeliveryItems(saleOrderData.remainingSaleOrderItems || []);
@@ -154,8 +168,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   }, [id]);
 
 
+
   const syncFormWithDb = useCallback((data) => {
-    console.log(data?.DirectItems, "data?.DirectItems")
+
+
     const today = new Date()
     if (convertSaleOrderId || !id) return
     if (id) {
@@ -241,7 +257,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   }
   const effectiveRemainingPaymentCapacity = selectedSaleOrderData?.data?.remainingPaymentCapacity ?? remainingPaymentCapacity;
   const effectiveTotalReceivedAmount = selectedSaleOrderData?.data?.totalReceivedAmount ?? totalReceivedAmount;
-  console.log(linkedSaleOrderId, "linkedSaleOrderId")
 
 
 
@@ -258,12 +273,17 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         returnData = await callback(data).unwrap();
       }
       if (returnData.statusCode === 1) {
-        toast.error(returnData.message);
+        // toast.error(returnData.message);
+        Swal.fire({
+          icon: 'error',
+          title: returnData.message,
+        });
       } else {
 
 
         if (returnData.statusCode === 0) {
           dispatch(push({ name: "SALES DELIVERY", id: null }));
+          setLinkedSaleOrderId("")
           Swal.fire({
             icon: 'success',
             title: `${text || 'Saved'} Successfully`,
@@ -657,10 +677,11 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       <Modal isOpen={printOpen} onClose={() => setPrintOpen(false)} widthClass="w-[95%] h-[95%]">
         <PDFViewer style={{ width: "100%", height: "90vh" }}>
           <PremiumSalesPrintFormat
-            title="DELIVERY CHALLAN"
+            title="SALE INVOICE"
+            subTittle="Sale Invoice"
             docId={docId}
             date={date}
-            branchData={findFromList(branchId, branchList?.data, "all")}
+            branchData={branchList?.data?.filter(i => i.id == branchId)}
             customerData={supplierDetails?.data}
             items={deliveryItems?.filter(i => i.itemId)}
             remarks={remarks}
@@ -694,6 +715,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
       <TransactionEntryShell
         title="Sales Delivery"
+        id={id}
+        readOnly={readOnly}
         onClose={onClose}
         headerOpen={isHeaderOpen}
         setHeaderOpen={setIsHeaderOpen}
@@ -728,7 +751,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
             <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
               <div className="col-span-3 overflow-visible">
-                <ReusableSearchableInput
+                {/* <ReusableSearchableInput
                   label="Customer Name"
                   component="PartyMaster"
                   placeholder="Search Customer Name..."
@@ -738,6 +761,19 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                   show={"isClient"}
                   required={true}
                   disabled={id}
+                /> */}
+                <ReusableSearchableInputNewCustomerwithBranches
+                  label="Customer Name"
+                  component="PartyMaster"
+                  placeholder="Search Customer Name..."
+                  optionList={supplierList?.data}
+                  setSearchTerm={(value) => { setCustomerId(value) }}
+                  searchTerm={customerId}
+                  show={"isClient"}
+                  required={true}
+                  disabled={id}
+                  ref={firstInputRef}
+                  nextRef={secondInputRef}
                 />
               </div>
               <TextInput
@@ -788,6 +824,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
               isHeaderOpen={isHeaderOpen}
               itemPriceList={itemPriceList}
               priceTemplateList={priceTemplateList}
+              convertSaleOrderId={convertSaleOrderId}
             // restrictSourceLineEdits={Boolean(convertSaleOrderId && !id)}
             />
           </fieldset>

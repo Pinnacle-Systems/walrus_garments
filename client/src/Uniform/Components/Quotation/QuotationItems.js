@@ -709,6 +709,7 @@ const QuotationItems = ({
                                                     className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 shadow-none outline-none focus:bg-transparent focus:outline-none"
                                                     value={row.barcodeType || "REGULAR"}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "barcodeType")}
+                                                    disabled={readOnly}
                                                 >
                                                     {availableBarcodes.length > 0 ? (
                                                         availableBarcodes.map((b) => (

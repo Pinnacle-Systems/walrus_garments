@@ -54,6 +54,7 @@ const SaleOrder = () => {
     const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "SALE ORDER");
     const convertQuotationId = currentTab?.projectId;
 
+    console.log(currentTab, "currentTab")
 
     const { data: quotationToConvertData, isFetching: isQuotationFetching } =
         useGetQuotationByIdQuery(convertQuotationId, { skip: !convertQuotationId });
@@ -73,8 +74,7 @@ const SaleOrder = () => {
             setReadOnly(false);
             setShowManufacturer(true);
 
-            // Important: Clear the conversion flag so it doesn't re-trigger
-            dispatch(push({ name: "SALE ORDER", projectId: null }));
+            // dispatch(push({ name: "SALE ORDER", projectId: null }));
         }
     }, [quotationToConvertData, convertQuotationId, dispatch]);
 
@@ -162,6 +162,7 @@ const SaleOrder = () => {
 
     };
     const onNew = () => {
+        dispatch(push({ name: "SALE ORDER", projectId: null }));
         setId("");
         setReadOnly(false);
         setDocId("New");

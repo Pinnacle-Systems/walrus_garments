@@ -448,6 +448,8 @@ async function create(body) {
         packingCharge,
         shippingChargeEnabled,
         shippingCharge,
+        termsAndCondition,
+        termId
     } = await body
 
     const quotationValidationMessage = await validateQuotationConversion(quoteId);
@@ -468,40 +470,43 @@ async function create(body) {
 
             data = await tx.saleorder.create({
                 data: {
-                customerId: customerId ? parseInt(customerId) : undefined,
-                discountType: discountType || "",
-                discountValue: discountValue || "",
-                branchId: branchId ? parseInt(branchId) : undefined,
-                quotationId: quoteId ? parseInt(quoteId) : undefined,
-                packingChargeEnabled: Boolean(packingChargeEnabled),
-                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
-                shippingChargeEnabled: Boolean(shippingChargeEnabled),
-                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
-                docId: docId,
-                SaleOrderItems: {
-                    createMany: saleOrderItems?.length > 0 ? {
-                        data: saleOrderItems?.filter(temp => temp.itemId).map((temp) => {
-                            let newItem = {}
+                    customerId: customerId ? parseInt(customerId) : undefined,
+                    discountType: discountType || "",
+                    discountValue: discountValue || "",
+                    branchId: branchId ? parseInt(branchId) : undefined,
+                    quotationId: quoteId ? parseInt(quoteId) : undefined,
+                    packingChargeEnabled: Boolean(packingChargeEnabled),
+                    packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                    shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                    shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
+                    docId: docId,
+                    termId: termId ? parseInt(termId) : undefined,
+                    termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
+
+                    SaleOrderItems: {
+                        createMany: saleOrderItems?.length > 0 ? {
+                            data: saleOrderItems?.filter(temp => temp.itemId).map((temp) => {
+                                let newItem = {}
 
 
-                            newItem["quotationItemId"] = temp["quotationItemId"] ? parseInt(temp["quotationItemId"]) : (quoteId && temp["id"] ? parseInt(temp["id"]) : null);
-                            newItem["itemId"] = temp["itemId"] ? parseInt(temp["itemId"]) : null;
-                            newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : null;
-                            newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
-                            newItem["uomId"] = temp["uomId"] ? parseInt(temp["uomId"]) : null;
-                            newItem["hsnId"] = temp["hsnId"] ? parseInt(temp["hsnId"]) : null;
-                            newItem["qty"] = temp["qty"] ? temp["qty"].toString() : "0";
-                            newItem["price"] = temp["price"] ? temp["price"].toString() : "0";
+                                newItem["quotationItemId"] = temp["quotationItemId"] ? parseInt(temp["quotationItemId"]) : (quoteId && temp["id"] ? parseInt(temp["id"]) : null);
+                                newItem["itemId"] = temp["itemId"] ? parseInt(temp["itemId"]) : null;
+                                newItem["sizeId"] = temp["sizeId"] ? parseInt(temp["sizeId"]) : null;
+                                newItem["colorId"] = temp["colorId"] ? parseInt(temp["colorId"]) : null;
+                                newItem["uomId"] = temp["uomId"] ? parseInt(temp["uomId"]) : null;
+                                newItem["hsnId"] = temp["hsnId"] ? parseInt(temp["hsnId"]) : null;
+                                newItem["qty"] = temp["qty"] ? temp["qty"].toString() : "0";
+                                newItem["price"] = temp["price"] ? temp["price"].toString() : "0";
 
-                            newItem["discountType"] = temp["discountType"];
-                            newItem["discountValue"] = temp["discountValue"] || "";
-                            newItem["taxPercent"] = temp["taxPercent"];
-                            newItem["taxMethod"] = temp["taxMethod"];
+                                newItem["discountType"] = temp["discountType"];
+                                newItem["discountValue"] = temp["discountValue"] || "";
+                                newItem["taxPercent"] = temp["taxPercent"];
+                                newItem["taxMethod"] = temp["taxMethod"];
 
-                            return newItem
-                        })
-                    } : undefined
-                }
+                                return newItem
+                            })
+                        } : undefined
+                    }
                 }
             })
         })
@@ -523,6 +528,8 @@ async function update(id, body) {
         shippingChargeEnabled,
         shippingCharge,
         quoteId,
+        termsAndCondition,
+        termId
     } = await body
 
     const dataFound = await prisma.saleorder.findUnique({
@@ -548,82 +555,84 @@ async function update(id, body) {
 
     try {
         await prisma.$transaction(async (tx) => {
-        const transactionalValidationMessage = await validateQuotationConversion(quoteId || dataFound?.quotationId, id, tx);
-        if (transactionalValidationMessage) {
-            throw new Error(transactionalValidationMessage);
-        }
+            const transactionalValidationMessage = await validateQuotationConversion(quoteId || dataFound?.quotationId, id, tx);
+            if (transactionalValidationMessage) {
+                throw new Error(transactionalValidationMessage);
+            }
 
-        // Delete removed items
-        if (removedItemIds.length > 0) {
-            await tx.saleOrderItems.deleteMany({
-                where: {
-                    id: { in: removedItemIds }
-                }
-            });
-        }
-
-        // Update main record
-        piData = await tx.saleorder.update({
-            where: {
-                id: parseInt(id)
-            },
-            data: {
-                customerId: customerId ? parseInt(customerId) : undefined,
-                discountType: discountType || "",
-                discountValue: discountValue || "",
-                branchId: branchId ? parseInt(branchId) : undefined,
-                packingChargeEnabled: Boolean(packingChargeEnabled),
-                packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
-                shippingChargeEnabled: Boolean(shippingChargeEnabled),
-                shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
-                quotationId: quoteId ? parseInt(quoteId) : dataFound?.quotationId,
-            },
-        })
-
-        // Process items (Update or Create)
-        for (const item of (saleOrderItems || []).filter(i => i.itemId)) {
-            if (item.id) {
-                await tx.saleOrderItems.update({
-                    where: { id: parseInt(item.id) },
-                    data: {
-                        itemId: item.itemId ? parseInt(item.itemId) : null,
-                        quotationItemId: item.quotationItemId ? parseInt(item.quotationItemId) : null,
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        uomId: item.uomId ? parseInt(item.uomId) : null,
-                        hsnId: item.hsnId ? parseInt(item.hsnId) : null,
-                        qty: item.qty ? item.qty.toString() : "0",
-                        price: item.price ? item.price.toString() : "0",
-
-                        discountType: item["discountType"] ? item["discountType"] : "",
-                        discountValue: item["discountValue"] ? item["discountValue"] : "",
-                        taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
-                        taxMethod: item["taxMethod"] ? item["taxMethod"] : "",
+            // Delete removed items
+            if (removedItemIds.length > 0) {
+                await tx.saleOrderItems.deleteMany({
+                    where: {
+                        id: { in: removedItemIds }
                     }
-                });
-            } else {
-                await tx.saleOrderItems.create({
-                    data: {
-                        saleOrderId: piData.id,
-                        quotationItemId: item.quotationItemId ? parseInt(item.quotationItemId) : null,
-                        itemId: item.itemId ? parseInt(item.itemId) : null,
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        uomId: item.uomId ? parseInt(item.uomId) : null,
-                        hsnId: item.hsnId ? parseInt(item.hsnId) : null,
-                        qty: item.qty ? item.qty.toString() : "0",
-                        price: item.price ? item.price.toString() : "0",
-
-                        discountType: item["discountType"] ? item["discountType"] : "",
-                        discountValue: item["discountValue"] ? item["discountValue"] : "",
-                        taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
-                        taxMethod: item["taxMethod"] ? item["taxMethod"] : "",
-
-                    }
-
                 });
             }
-        }
+
+            // Update main record
+            piData = await tx.saleorder.update({
+                where: {
+                    id: parseInt(id)
+                },
+                data: {
+                    customerId: customerId ? parseInt(customerId) : undefined,
+                    discountType: discountType || "",
+                    discountValue: discountValue || "",
+                    branchId: branchId ? parseInt(branchId) : undefined,
+                    packingChargeEnabled: Boolean(packingChargeEnabled),
+                    packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
+                    shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                    shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
+                    quotationId: quoteId ? parseInt(quoteId) : dataFound?.quotationId,
+                    termId: termId ? parseInt(termId) : undefined,
+                    termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
+                },
+            })
+
+            // Process items (Update or Create)
+            for (const item of (saleOrderItems || []).filter(i => i.itemId)) {
+                if (item.id) {
+                    await tx.saleOrderItems.update({
+                        where: { id: parseInt(item.id) },
+                        data: {
+                            itemId: item.itemId ? parseInt(item.itemId) : null,
+                            quotationItemId: item.quotationItemId ? parseInt(item.quotationItemId) : null,
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                            uomId: item.uomId ? parseInt(item.uomId) : null,
+                            hsnId: item.hsnId ? parseInt(item.hsnId) : null,
+                            qty: item.qty ? item.qty.toString() : "0",
+                            price: item.price ? item.price.toString() : "0",
+
+                            discountType: item["discountType"] ? item["discountType"] : "",
+                            discountValue: item["discountValue"] ? item["discountValue"] : "",
+                            taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
+                            taxMethod: item["taxMethod"] ? item["taxMethod"] : "",
+                        }
+                    });
+                } else {
+                    await tx.saleOrderItems.create({
+                        data: {
+                            saleOrderId: piData.id,
+                            quotationItemId: item.quotationItemId ? parseInt(item.quotationItemId) : null,
+                            itemId: item.itemId ? parseInt(item.itemId) : null,
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                            uomId: item.uomId ? parseInt(item.uomId) : null,
+                            hsnId: item.hsnId ? parseInt(item.hsnId) : null,
+                            qty: item.qty ? item.qty.toString() : "0",
+                            price: item.price ? item.price.toString() : "0",
+
+                            discountType: item["discountType"] ? item["discountType"] : "",
+                            discountValue: item["discountValue"] ? item["discountValue"] : "",
+                            taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
+                            taxMethod: item["taxMethod"] ? item["taxMethod"] : "",
+
+                        }
+
+                    });
+                }
+            }
         })
     } catch (error) {
         return { statusCode: 1, message: error.message || "Failed to update Sale Order." };

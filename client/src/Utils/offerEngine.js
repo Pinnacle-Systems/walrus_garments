@@ -146,6 +146,8 @@ export const calculateCartWithOffers = (cart, selectedOffersByRow, potentialOffe
         };
     });
 
+    console.log(computed, "computed")
+
     return { cartWithOffers: computed, appliedOffers: Array.from(appliedSet) };
 };
 

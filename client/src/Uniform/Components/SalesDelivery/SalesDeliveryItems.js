@@ -26,6 +26,8 @@ import TransactionLineItemsSection, {
     transactionTableRowClassName,
     transactionTableSelectInputClassName,
 } from "../ReusableComponents/TransactionLineItemsSection";
+import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
+import { ItemMaster } from "../../../Shocks";
 
 const SalesDeliveryItems = ({
     id,
@@ -50,6 +52,9 @@ const SalesDeliveryItems = ({
     itemPriceList,
     priceTemplateList,
     restrictSourceLineEdits = false,
+    movedToNextSaveNewRef,
+    handlers,
+    convertSaleOrderId
 }) => {
     const compactHeaderCellClassName = transactionTableHeaderCellClassName;
     const compactCellClassName = transactionTableCellClassName;
@@ -105,55 +110,16 @@ const SalesDeliveryItems = ({
             newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
         }
 
-        // if (field === "itemId" || field === "sizeId" || field === "colorId" || field === "qty") {
-        //     const currentItem = field === "itemId" ? value : newBlend[index].itemId;
-        //     const currentSize = field === "sizeId" ? value : newBlend[index].sizeId;
-        //     const currentColor = field === "colorId" ? value : newBlend[index].colorId;
-        //     const currentQty = field === "qty" ? value : newBlend[index].qty;
-        //     const isLegacySelection = isLegacyCatalogItem(catalogItems, currentItem);
-        //     const requiresSize = itemUsesSize(catalogItems, catalogPriceRows, currentItem);
-        //     const requiresColor = itemUsesColor(catalogItems, catalogPriceRows, currentItem);
-
-        //     if (currentItem) {
-        //         const templateDetail = getPriceFromTemplate(currentItem, currentQty);
-        //         if (templateDetail) {
-        //             newBlend[index]["price"] = templateDetail.price;
-        //             newBlend[index]["priceType"] = "BulkOfferPrice";
-        //         } else if (!requiresSize || currentSize || isLegacySelection) {
-        //             const foundPrice = resolveSellablePriceRow(
-        //                 catalogItems,
-        //                 catalogPriceRows,
-        //                 currentItem,
-        //                 currentSize,
-        //                 requiresColor ? currentColor : ""
-        //             );
-        //             if (foundPrice) {
-        //                 const numericQty = parseFloat(currentQty || 0);
-        //                 if (numericQty > 6 && foundPrice.offerPrice) {
-        //                     newBlend[index]["price"] = foundPrice.offerPrice;
-        //                     newBlend[index]["priceType"] = "offerPrice";
-        //                 } else {
-        //                     newBlend[index]["price"] = foundPrice.salesPrice;
-        //                     newBlend[index]["priceType"] = "SalesPrice";
-        //                 }
-        //             } else {
-        //                 newBlend[index]["priceType"] = null;
-        //             }
-        //         } else {
-        //             newBlend[index]["priceType"] = null;
-        //         }
-        //     }
-        // }
 
         newBlend[index][field] = value;
         setDeliveryItems(newBlend);
     };
 
     useEffect(() => {
-        // if (id) return;
-        // if (restrictSourceLineEdits) return;
+
         const length = standardTransactionPlaceholderRowCount;
         if (deliveryItems?.length >= length) return;
+
         setDeliveryItems((prev) => {
             let newArray = Array.from({ length: length - prev.length }, () => ({
                 itemId: "",
@@ -172,7 +138,7 @@ const SalesDeliveryItems = ({
             }));
             return [...prev, ...newArray];
         });
-    }, [transType, setDeliveryItems, deliveryItems, isHeaderOpen, id, restrictSourceLineEdits]);
+    }, [transType, setDeliveryItems, deliveryItems, isHeaderOpen,]);
 
     const addNewRow = () => {
         if (restrictSourceLineEdits) return;
@@ -238,6 +204,13 @@ const SalesDeliveryItems = ({
         return { subTotal, taxTotal, total: subTotal + taxTotal };
     };
 
+    const itemOptions = (id ? itemList?.data : itemList?.data?.filter(i => i.active) || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
+
+
+
     return (
         <>
             <fieldset className="h-full min-h-0">
@@ -257,6 +230,8 @@ const SalesDeliveryItems = ({
                                     <th className={`${compactHeaderCellClassName} w-12`}>UOM</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Quantity</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Price</th>
+                                    <th className={`${compactHeaderCellClassName} w-16`}>Barcode Type</th>
+
                                     {/* <th className={`${compactHeaderCellClassName} w-16`}>Price Type</th> */}
                                     {/* <th className={`${compactHeaderCellClassName} w-16`}>Discount Type</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Discount</th> */}
@@ -266,10 +241,17 @@ const SalesDeliveryItems = ({
                                     <th className={`${compactHeaderCellClassName} w-7`}></th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody>{console.log("deliveryItems", deliveryItems)}
                                 {(deliveryItems || []).map((row, index) => {
                                     const { subTotal, taxTotal, total } = getLineTotals(row);
-                                    return (
+                                    const selectedItemData = itemList?.data?.find(i => i.id === row.itemId);
+                                    const isLegacy = row.itemId ? selectedItemData?.isLegacy : true;
+                                    const priceList = selectedItemData?.ItemPriceList || [];
+                                    const currentPriceEntry = isLegacy
+                                        ? priceList[0]
+                                        : priceList.find(p => String(p.sizeId) === String(row.sizeId) && String(p.colorId) === String(row.colorId));
+
+                                    const availableBarcodes = currentPriceEntry?.ItemBarcodes || []; return (
                                         <tr
                                             key={index}
                                             className={`${transactionTableRowClassName}  ${index % 2 === 0 ? "bg-white" : "bg-gray-100"} `} onContextMenu={(e) => {
@@ -280,7 +262,7 @@ const SalesDeliveryItems = ({
 
                                             {/* Item */}
                                             <td className={compactFocusCellClassName}>
-                                                <select
+                                                {/* <select
                                                     onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "itemId"); }}
                                                     tabIndex="0" disabled={readOnly || restrictSourceLineEdits}
                                                     className={compactSelectClassName}
@@ -292,7 +274,18 @@ const SalesDeliveryItems = ({
                                                     {itemList?.data?.map(blend => (
                                                         <option value={blend.id} key={blend.id}>{blend?.name}</option>
                                                     ))}
-                                                </select>
+                                                </select> */}
+                                                <SearchableTableCellSelect
+                                                    value={row.itemId}
+                                                    options={itemOptions}
+                                                    disabled={readOnly}
+                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
+                                                    addNewModalWidth="w-[90%] h-[95%]"
+                                                    childComponent={ItemMaster}
+                                                    addNewLabel="+ Add New Item"
+                                                // handlers={handlers}
+                                                // movedToNextSaveNewRef={movedToNextSaveNewRef}
+                                                />
                                             </td>
 
                                             {/* Size */}
@@ -400,7 +393,26 @@ const SalesDeliveryItems = ({
                                                     onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "price")}
                                                 />
                                             </td>
-
+                                            <td className={`${compactCellClassName} px-1 text-[10px]`}>
+                                                <select
+                                                    className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 shadow-none outline-none focus:bg-transparent focus:outline-none"
+                                                    value={row.barcodeType || "REGULAR"}
+                                                    onChange={(e) => handleInputChange(e.target.value, index, "barcodeType")}
+                                                >
+                                                    {availableBarcodes.length > 0 ? (
+                                                        availableBarcodes.map((b) => (
+                                                            <option key={b.barcodeType} value={b.barcodeType}>
+                                                                {b.barcodeType}
+                                                            </option>
+                                                        ))
+                                                    ) : (
+                                                        <>
+                                                            {/* <option value="REGULAR">REGULAR</option>
+                                                            <option value="CLEARANCE">CLEARANCE</option> */}
+                                                        </>
+                                                    )}
+                                                </select>
+                                            </td>
                                             {/* Price Type Badge */}
                                             {/* <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
                                                 row.priceType === "offerPrice" ? "bg-indigo-100 text-indigo-800 border border-indigo-200" :
@@ -498,7 +510,7 @@ const SalesDeliveryItems = ({
                             <div
                                 style={{
                                     position: "absolute",
-                                    top: `${contextMenu.mouseY - 50}px`,
+                                    top: `${contextMenu.mouseY - 220}px`,
                                     left: `${contextMenu.mouseX - 30}px`,
                                     boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
                                     padding: "8px", borderRadius: "4px", zIndex: 1000,

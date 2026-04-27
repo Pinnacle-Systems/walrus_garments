@@ -155,12 +155,18 @@ const SaleOrderItems = ({
         setSaleOrderItems(newBlend);
     };
 
+
+
     useEffect(() => {
-        if (id) return;
-        const length = standardTransactionPlaceholderRowCount;
-        if (saleOrderItems?.length >= length) return;
+        const length = standardTransactionPlaceholderRowCount
+        const currentLength = saleOrderItems?.length || 0;
+        if (currentLength >= length) return;
+
         setSaleOrderItems((prev) => {
-            let newArray = Array.from({ length: length - prev.length }, () => ({
+            const actualPrev = prev || [];
+            if (actualPrev.length >= length) return actualPrev;
+
+            const padding = Array.from({ length: length - actualPrev.length }, () => ({
                 itemId: "",
                 qty: "0.00",
                 tax: "0",
@@ -177,10 +183,9 @@ const SaleOrderItems = ({
                 barcode: "",
                 barcodeType: "REGULAR"
             }));
-            return [...prev, ...newArray];
+            return [...actualPrev, ...padding];
         });
-    }, [transType, setSaleOrderItems, saleOrderItems, isHeaderOpen]);
-
+    }, [transType, setSaleOrderItems, saleOrderItems?.length, isHeaderOpen, id]);
     const addNewRow = () => {
         const newRow = {
             itemId: "",
@@ -257,7 +262,43 @@ const SaleOrderItems = ({
     };
 
     const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, saleOrderItems || []), [activeOffers, saleOrderItems]);
-    const { cartWithOffers: saleOrderItemsWithOffers } = useMemo(() => calculateCartWithOffers(saleOrderItems || [], selectedOffersByRow, potentialOffers, activeOffers), [saleOrderItems, selectedOffersByRow, potentialOffers, activeOffers]);
+    const { cartWithOffers: rawItemsWithOffers } = useMemo(() => calculateCartWithOffers(saleOrderItems || [], selectedOffersByRow, potentialOffers, activeOffers), [saleOrderItems, selectedOffersByRow, potentialOffers, activeOffers]);
+
+    const saleOrderItemsWithOffers = useMemo(() => {
+        let items = [...(rawItemsWithOffers || [])];
+        const length = standardTransactionPlaceholderRowCount;
+        if (items.length < length) {
+            const padding = Array.from({ length: length - items.length }, () => ({
+                itemId: "",
+                qty: "0.00",
+                tax: "0",
+                colorId: "",
+                uomId: "",
+                price: "0.00",
+                discountValue: "0.00",
+                discountType: "",
+                noOfBags: "0",
+                weightPerBag: "0.00",
+                id: '',
+                poItemsId: "",
+                taxMethod: "",
+                barcode: "",
+                barcodeType: "REGULAR"
+            }));
+            return [...items, ...padding];
+        }
+        return items;
+    }, [rawItemsWithOffers]);
+
+    console.log(saleOrderItemsWithOffers, "saleOrderItemsWithOffers")
+
+
+    // useEffect(() => {
+
+    //     if (saleOrderItemsWithOffers.length > 0) {
+    //         setSaleOrderItems(saleOrderItemsWithOffers)
+    //     }
+    // }, [saleOrderItemsWithOffers])
 
     const itemOptions = (id ? itemList?.data : itemList?.data?.filter(i => i.active) || [])?.map((item) => ({
         value: item.id,
@@ -339,8 +380,8 @@ const SaleOrderItems = ({
                                                     addNewModalWidth="w-[90%] h-[95%]"
                                                     childComponent={ItemMaster}
                                                     addNewLabel="+ Add New Item"
-                                                    handlers={handlers}
-                                                    movedToNextSaveNewRef={movedToNextSaveNewRef}
+                                                // handlers={handlers}
+                                                // movedToNextSaveNewRef={movedToNextSaveNewRef}
                                                 />
                                             </td>
 
