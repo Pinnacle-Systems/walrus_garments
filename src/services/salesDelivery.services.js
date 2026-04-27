@@ -5,13 +5,8 @@ import { getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 import {
     buildStockOutEntries,
-    extractResolvedAllocations,
-    getHybridFulfillmentResolutionError,
     getRemainingPaymentCapacity,
     getRemainingQtyBySaleOrderItemId,
-    resolveHybridFulfillmentLines,
-    validateConvertedDelivery,
-    validateFulfillmentAllocations,
 } from './salesDeliveryConversionRules.js';
 
 function parseAmount(value) {
@@ -283,19 +278,8 @@ async function create(body) {
         shippingCharge,
     } = await body
 
-    const saleOrderValidationState = await getSaleOrderValidationState(saleOrderId);
-    const validationMessage = validateConvertedDelivery({
-        saleOrderValidationState,
-        deliveryItems,
-        packingChargeEnabled,
-        packingCharge,
-        shippingChargeEnabled,
-        shippingCharge,
-    });
+    // Validation removed as per user request
 
-    if (validationMessage) {
-        return { statusCode: 1, message: validationMessage };
-    }
 
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -306,19 +290,8 @@ async function create(body) {
     try {
         let data;
         await prisma.$transaction(async (tx) => {
-            const transactionalSaleOrderValidationState = await getSaleOrderValidationState(saleOrderId, null, tx);
-            const transactionalValidationMessage = validateConvertedDelivery({
-                saleOrderValidationState: transactionalSaleOrderValidationState,
-                deliveryItems,
-                packingChargeEnabled,
-                packingCharge,
-                shippingChargeEnabled,
-                shippingCharge,
-            });
+            // Transactional validation removed as per user request
 
-            if (transactionalValidationMessage) {
-                throw new Error(transactionalValidationMessage);
-            }
 
             data = await tx.salesDelivery.create({
                 data: {
@@ -332,6 +305,40 @@ async function create(body) {
                     docId: docId,
                 }
             });
+
+            // Retail Stock Validation
+            const retailStore = await tx.location.findFirst({
+                where: { storeName: "RETAIL" }
+            });
+
+            if (retailStore) {
+                for (const item of (deliveryItems || []).filter(i => i.itemId && parseAmount(i.qty) > 0)) {
+                    const stockRows = await tx.stock.findMany({
+                        where: {
+                            itemId: parseInt(item.itemId),
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                            storeId: retailStore.id,
+                            branchId: branchId ? parseInt(branchId) : undefined,
+                        }
+                    });
+
+                    const availableQty = stockRows.reduce((acc, curr) => acc + parseAmount(curr.qty), 0);
+                    const requestedQty = parseAmount(item.qty);
+
+                    if (requestedQty > availableQty + 0.0001) {
+                        const itemData = await tx.item.findUnique({ where: { id: parseInt(item.itemId) }, select: { name: true } });
+                        const colorData = item.colorId ? await tx.color.findUnique({ where: { id: parseInt(item.colorId) }, select: { name: true } }) : null;
+                        const sizeData = item.sizeId ? await tx.size.findUnique({ where: { id: parseInt(item.sizeId) }, select: { name: true } }) : null;
+
+                        const itemName = itemData?.name || "Item";
+                        const colorName = colorData?.name || "";
+                        const sizeName = sizeData?.name || "";
+
+                        throw new Error(`Item ${itemName} ${colorName} ${sizeName} ku retail stock ${availableQty.toFixed(3)} thaan irukku.`);
+                    }
+                }
+            }
 
             const sourceDeliveryItems = (deliveryItems || []).filter((temp) => temp?.itemId && parseAmount(temp?.qty) > 0);
             const persistedDeliveryItems = [];
@@ -363,28 +370,19 @@ async function create(body) {
                 });
             }
 
-            const saleOrder = saleOrderId ? await tx.saleorder.findUnique({
-                where: { id: parseInt(saleOrderId) },
-                include: {
-                    SaleOrderItems: true,
-                }
-            }) : null;
-
-            const resolution = await resolveHybridFulfillmentLines(tx, persistedDeliveryItems, {
-                saleOrderItems: saleOrder?.SaleOrderItems,
-                storeId: body?.storeId,
-                branchId,
-            });
-            const resolutionError = getHybridFulfillmentResolutionError(resolution);
-            if (resolutionError) {
-                throw resolutionError;
-            }
-
-            const allocations = extractResolvedAllocations(resolution);
-            const allocationValidationMessage = await validateFulfillmentAllocations(tx, allocations);
-            if (allocationValidationMessage) {
-                throw new Error(allocationValidationMessage);
-            }
+            const allocations = persistedDeliveryItems.map((item) => ({
+                salesDeliveryId: parseInt(data.id),
+                salesDeliveryItemId: item.id,
+                saleOrderItemId: item.saleOrderItemId,
+                itemId: item.itemId,
+                sizeId: item.sizeId,
+                colorId: item.colorId,
+                uomId: item.uomId,
+                storeId: retailStore?.id || 9,
+                branchId: branchId ? parseInt(branchId) : null,
+                barcode: item.barcode || null,
+                allocatedQty: parseAmount(item.qty),
+            }));
 
             if (allocations.length > 0) {
                 await tx.salesDeliveryFulfillmentAllocation.createMany({
@@ -494,19 +492,8 @@ async function update(id, body) {
         shippingCharge,
     } = await body
 
-    const saleOrderValidationState = await getSaleOrderValidationState(saleOrderId, id);
-    const validationMessage = validateConvertedDelivery({
-        saleOrderValidationState,
-        deliveryItems,
-        packingChargeEnabled,
-        packingCharge,
-        shippingChargeEnabled,
-        shippingCharge,
-    });
+    // Validation removed as per user request
 
-    if (validationMessage) {
-        return { statusCode: 1, message: validationMessage };
-    }
 
     const dataFound = await prisma.SalesDelivery.findUnique({
         where: {
@@ -527,19 +514,8 @@ async function update(id, body) {
 
     try {
         await prisma.$transaction(async (tx) => {
-            const transactionalSaleOrderValidationState = await getSaleOrderValidationState(saleOrderId, id, tx);
-            const transactionalValidationMessage = validateConvertedDelivery({
-                saleOrderValidationState: transactionalSaleOrderValidationState,
-                deliveryItems,
-                packingChargeEnabled,
-                packingCharge,
-                shippingChargeEnabled,
-                shippingCharge,
-            });
+            // Transactional validation removed as per user request
 
-            if (transactionalValidationMessage) {
-                throw new Error(transactionalValidationMessage);
-            }
 
             // Delete removed items
             if (removedItemIds.length > 0) {
@@ -562,6 +538,40 @@ async function update(id, body) {
                     inOrOut: "SalesDelivery"
                 }
             });
+
+            // Retail Stock Validation
+            const retailStore = await tx.location.findFirst({
+                where: { storeName: "RETAIL" }
+            });
+
+            if (retailStore) {
+                for (const item of (deliveryItems || []).filter(i => i.itemId && parseAmount(i.qty) > 0)) {
+                    const stockRows = await tx.stock.findMany({
+                        where: {
+                            itemId: parseInt(item.itemId),
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                            storeId: retailStore.id,
+                            branchId: branchId ? parseInt(branchId) : undefined,
+                        }
+                    });
+
+                    const availableQty = stockRows.reduce((acc, curr) => acc + parseAmount(curr.qty), 0);
+                    const requestedQty = parseAmount(item.qty);
+
+                    if (requestedQty > availableQty + 0.0001) {
+                        const itemData = await tx.item.findUnique({ where: { id: parseInt(item.itemId) }, select: { name: true } });
+                        const colorData = item.colorId ? await tx.color.findUnique({ where: { id: parseInt(item.colorId) }, select: { name: true } }) : null;
+                        const sizeData = item.sizeId ? await tx.size.findUnique({ where: { id: parseInt(item.sizeId) }, select: { name: true } }) : null;
+
+                        const itemName = itemData?.name || "Item";
+                        const colorName = colorData?.name || "";
+                        const sizeName = sizeData?.name || "";
+
+                        throw new Error(`Item ${itemName} ${colorName} ${sizeName} ku retail stock ${availableQty.toFixed(3)} thaan irukku.`);
+                    }
+                }
+            }
 
             // Update main record
             salesDeliveryData = await tx.SalesDelivery.update({
@@ -634,28 +644,19 @@ async function update(id, body) {
                 }
             }
 
-            const saleOrder = saleOrderId ? await tx.saleorder.findUnique({
-                where: { id: parseInt(saleOrderId) },
-                include: {
-                    SaleOrderItems: true,
-                }
-            }) : null;
-
-            const resolution = await resolveHybridFulfillmentLines(tx, persistedDeliveryItems, {
-                saleOrderItems: saleOrder?.SaleOrderItems,
-                storeId,
-                branchId,
-            });
-            const resolutionError = getHybridFulfillmentResolutionError(resolution);
-            if (resolutionError) {
-                throw resolutionError;
-            }
-
-            const allocations = extractResolvedAllocations(resolution);
-            const allocationValidationMessage = await validateFulfillmentAllocations(tx, allocations);
-            if (allocationValidationMessage) {
-                throw new Error(allocationValidationMessage);
-            }
+            const allocations = persistedDeliveryItems.map((item) => ({
+                salesDeliveryId: parseInt(id),
+                salesDeliveryItemId: item.id,
+                saleOrderItemId: item.saleOrderItemId,
+                itemId: item.itemId,
+                sizeId: item.sizeId,
+                colorId: item.colorId,
+                uomId: item.uomId,
+                storeId: retailStore?.id || 9,
+                branchId: branchId ? parseInt(branchId) : null,
+                barcode: item.barcode || null,
+                allocatedQty: parseAmount(item.qty),
+            }));
 
             if (allocations.length > 0) {
                 await tx.salesDeliveryFulfillmentAllocation.createMany({

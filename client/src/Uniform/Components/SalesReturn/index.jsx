@@ -18,6 +18,7 @@ import SalesReturnReport from './SalesReturnReport';
 import SalesReturnForm from './SalesReturnForm';
 import { useDeleteSalesReturnMutation } from '../../../redux/uniformService/salesReturnServices';
 import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 
 
 
@@ -63,6 +64,7 @@ const SalesDelivery = () => {
 
 
     const [removeData] = useDeleteSalesReturnMutation();
+    const [invalidateTagsDispatch] = useInvalidateTags();
 
 
     const { data: yarnList } =
@@ -99,7 +101,7 @@ const SalesDelivery = () => {
         setStoreId(getWarehouseLocationId());
         setReadOnly(false);
         setShowManufacturer(true);
-        dispatch(push({ name: "SALES RETURN", projectId: null }));
+        // dispatch(push({ name: "SALES RETURN", projectId: null }));
     }, [convertSalesDeliveryId, deliveryToConvertData, dispatch, locationData]);
 
 
@@ -146,6 +148,8 @@ const SalesDelivery = () => {
                         Swal.showLoading();
                     }
                 });
+                invalidateTagsDispatch()
+
             } catch (error) {
                 toast.error("something went wrong");
             }
@@ -179,7 +183,7 @@ const SalesDelivery = () => {
                         partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
                         supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} salesDeliveryId={salesDeliveryId} setSalesDeliveryId={setSalesDeliveryId} setPosId={setPosId} posId={posId} returnType={returnType} setReturnType={setReturnType}
                         exchangeItems={exchangeItems} setExchangeItems={setExchangeItems}
-                        termsData={termsData}
+                        termsData={termsData} convertSalesDeliveryId={convertSalesDeliveryId} invalidateTagsDispatch={invalidateTagsDispatch}
                     />
                 </div>
 
