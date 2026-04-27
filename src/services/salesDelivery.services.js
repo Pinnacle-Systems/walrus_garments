@@ -335,7 +335,7 @@ async function create(body) {
                         const colorName = colorData?.name || "";
                         const sizeName = sizeData?.name || "";
 
-                        throw new Error(`Item ${itemName} ${colorName} ${sizeName} ku retail stock ${availableQty.toFixed(3)} thaan irukku.`);
+                        throw new Error(`Item "${itemName} - ${colorName} - ${sizeName}" has only ${availableQty.toFixed(3)} ss available in stock.`);
                     }
                 }
             }
