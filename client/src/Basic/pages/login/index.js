@@ -115,7 +115,10 @@ const Login = () => {
                     sessionStorage.getItem("sessionId") + "defaultAdmin",
                     JSON.stringify(result.data.userInfo.role.defaultRole)
                   );
-
+                  secureLocalStorage.setItem(
+                    sessionStorage.getItem("sessionId") + "userRole",
+                    result.data.userInfo.role.name
+                  );
 
 
 

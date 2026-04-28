@@ -329,6 +329,7 @@ model User {
   DeliveryChallanUpdateBy             DeliveryChallan[]            @relation(name: "UpdatedBy")
   ExpenseCreatedBy                    Expense[]                    @relation(name: "createdBy")
   ExpenseUpdateBy                     Expense[]                    @relation(name: "updatedBy")
+  Pos                                 Pos[]                        @relation(name: "approver")
 }
 
 model Employee {
@@ -5077,27 +5078,27 @@ model Quotation {
 }
 
 model QuotationItems {
-  id            Int                @id @default(autoincrement())
-  Quotation     Quotation?         @relation(fields: [quotationId], references: [id], onDelete: Cascade)
-  quotationId   Int?
-  Item          Item?              @relation(fields: [itemId], references: [id])
-  itemId        Int?
-  Size          Size?              @relation(fields: [sizeId], references: [id])
-  sizeId        Int?
-  Color         Color?             @relation(fields: [colorId], references: [id])
-  colorId       Int?
-  Uom           UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId         Int?
-  Hsn           Hsn?               @relation(fields: [hsnId], references: [id])
-  hsnId         Int?
-  qty           String?
-  price         String?
-  discountType  String?
-  discountValue String?
-  taxPercent    String?
-  taxType       String?
-  priceType     String?
-  taxMethod     String?
+  id             Int                @id @default(autoincrement())
+  Quotation      Quotation?         @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  quotationId    Int?
+  Item           Item?              @relation(fields: [itemId], references: [id])
+  itemId         Int?
+  Size           Size?              @relation(fields: [sizeId], references: [id])
+  sizeId         Int?
+  Color          Color?             @relation(fields: [colorId], references: [id])
+  colorId        Int?
+  Uom            UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId          Int?
+  Hsn            Hsn?               @relation(fields: [hsnId], references: [id])
+  hsnId          Int?
+  qty            String?
+  price          String?
+  discountType   String?
+  discountValue  String?
+  taxPercent     String?
+  taxType        String?
+  priceType      String?
+  taxMethod      String?
   SaleOrderItems SaleOrderItems[]
 }
 
@@ -5382,27 +5383,27 @@ model SalesReturn {
 }
 
 model SalesReturnItems {
-  id            Int                @id @default(autoincrement())
-  SalesReturn   SalesReturn?       @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
-  salesReturnId Int?
-  SalesDeliveryItems SalesDeliveryItems? @relation(fields: [salesDeliveryItemId], references: [id])
+  id                  Int                 @id @default(autoincrement())
+  SalesReturn         SalesReturn?        @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
+  salesReturnId       Int?
+  SalesDeliveryItems  SalesDeliveryItems? @relation(fields: [salesDeliveryItemId], references: [id])
   salesDeliveryItemId Int?
-  Item          Item?              @relation(fields: [itemId], references: [id])
-  itemId        Int?
-  Size          Size?              @relation(fields: [sizeId], references: [id])
-  sizeId        Int?
-  Color         Color?             @relation(fields: [colorId], references: [id])
-  colorId       Int?
-  Uom           UnitOfMeasurement? @relation(fields: [uomId], references: [id])
-  uomId         Int?
-  Hsn           Hsn?               @relation(fields: [hsnId], references: [id])
-  hsnId         Int?
-  qty           String?
-  price         String?
-  discountType  String?
-  discountValue String?
-  taxMethod     String?
-  taxType       String?
+  Item                Item?               @relation(fields: [itemId], references: [id])
+  itemId              Int?
+  Size                Size?               @relation(fields: [sizeId], references: [id])
+  sizeId              Int?
+  Color               Color?              @relation(fields: [colorId], references: [id])
+  colorId             Int?
+  Uom                 UnitOfMeasurement?  @relation(fields: [uomId], references: [id])
+  uomId               Int?
+  Hsn                 Hsn?                @relation(fields: [hsnId], references: [id])
+  hsnId               Int?
+  qty                 String?
+  price               String?
+  discountType        String?
+  discountValue       String?
+  taxMethod           String?
+  taxType             String?
 }
 
 model PriceTemplate {
@@ -5500,6 +5501,10 @@ model Pos {
   ReturnBillItems     PosItems[]    @relation("ReturnBill")
   PosPayments         PosPayments[] @relation("Bill")
   ReturnBillPayments  PosPayments[] @relation("ReturnBill")
+  approvalStatus      String?       @default("NONE")
+  approvedById        Int?
+  approvedAt          DateTime?
+  approver            User?         @relation("approver", fields: [approvedById], references: [id])
 }
 
 model PosItems {

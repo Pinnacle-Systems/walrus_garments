@@ -104,7 +104,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
   const { data: itemPriceList } = useGetItemPriceListQuery({ params });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
 
-  console.log(itemPriceList, "itemPriceList")
+  const { data: stockReportControlData, } = useGetStockReportControlQuery({ params });
 
   const {
     data: singleData,
@@ -255,7 +255,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
 
   const saveData = (nextProcess) => {
 
-    let mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty", "price"];
+    let mandatoryFields = ["itemId", "sizeId", "colorId", "uomId", "qty",];
 
     if (!validateData(data)) {
 
@@ -269,7 +269,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
     }
     if (!isGridDatasValid((data?.invoiceItems)?.filter(i => i.itemId), false, mandatoryFields)) {
       Swal.fire({
-        title: "Please fill all Quote Items Mandatory fields...!",
+        title: "Please fill all Delivery Challan Items Mandatory fields...!",
         icon: "warning",
       });
       return;
@@ -547,19 +547,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
             <FiPrinter className="w-4 h-4 mr-2" />
             Print
           </button>
-          <button
-            className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm ml-2"
-            onClick={() => {
-              if (!invoiceItems?.filter(i => i.itemId).length) {
-                toast.warning("Please add some items first");
-                return;
-              }
-              setThermalPrintOpen(true);
-            }}
-          >
-            <FiPrinter className="w-4 h-4 mr-2" />
-            Thermal Print
-          </button>
+
         </>
       }
     />
@@ -672,6 +660,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
               isHeaderOpen={isHeaderOpen}
               itemPriceList={itemPriceList}
               priceTemplateList={priceTemplateList}
+              stockReportControlData={stockReportControlData}
             />
           </fieldset>
         </div>
@@ -714,19 +703,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
               <FiPrinter className="w-4 h-4 mr-2" />
               Print
             </button>
-            <button
-              className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm"
-              onClick={() => {
-                if (!invoiceItems?.filter(i => i.itemId).length) {
-                  toast.warning("Please add some items first");
-                  return;
-                }
-                setThermalPrintOpen(true);
-              }}
-            >
-              <FiPrinter className="w-4 h-4 mr-2" />
-              Thermal Print
-            </button>
+
           </div>
         </div>
       </TransactionEntryShell>

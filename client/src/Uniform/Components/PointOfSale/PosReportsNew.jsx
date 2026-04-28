@@ -367,7 +367,14 @@ const PosReportsNew = ({
                                                 {index + 1}
                                             </td>
 
-                                            <td className="py-1.5 text-left">{dataObj.docId} </td>
+                                            <td className="py-1.5 text-left">
+                                                <div className="flex items-center gap-2">
+                                                    {dataObj.docId}
+                                                    {dataObj.approvalStatus === 'PENDING' && (
+                                                        <span className="bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded text-[8px] font-black uppercase border border-amber-200">Pending Approval</span>
+                                                    )}
+                                                </div>
+                                            </td>
 
 
                                             <td className="py-1.5 text-left">

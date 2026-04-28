@@ -61,6 +61,9 @@ async function getOne(id) {
     const data = await prisma.Expense.findUnique({
         where: {
             id: parseInt(id)
+        },
+        include: {
+            ExpenseEntryItems: true
         }
     })
     if (!data) return NoRecordFound("Country");

@@ -297,7 +297,10 @@ export const getCommonParams = () => ({
   userId: secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "userId"
   ),
-  finYearId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + 'currentFinYear')
+  finYearId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + 'currentFinYear'),
+  userRole: secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userRole"
+  ),
 })
 
 export function convertSpaceToUnderScore(str) {

@@ -23,12 +23,42 @@ const salesReportApi = createApi({
             },
             providesTags: ["salesReport"],
         }),
+        getSalesmanSummaryReport: builder.query({
+            query: (params) => {
+                return {
+                    url: `${SALES_REPORT_API}/salesman-summary`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                    params
+                };
+            },
+            providesTags: ["salesReport"],
+        }),
+        getOnlineSalesDeliveryReport: builder.query({
+            query: (params) => {
+                return {
+                    url: `${SALES_REPORT_API}/online-sales-delivery`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                    params
+                };
+            },
+            providesTags: ["salesReport"],
+        }),
     }),
 });
 
 export const {
     useGetSalesReportQuery,
     useLazyGetSalesReportQuery,
+    useGetSalesmanSummaryReportQuery,
+    useLazyGetSalesmanSummaryReportQuery,
+    useGetOnlineSalesDeliveryReportQuery,
+    useLazyGetOnlineSalesDeliveryReportQuery,
 } = salesReportApi;
 
 export default salesReportApi;

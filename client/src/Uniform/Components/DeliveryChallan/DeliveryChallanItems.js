@@ -52,7 +52,8 @@ const DeliveryChallanItems = ({
     setTaxMethod,
     isHeaderOpen,
     itemPriceList,
-    priceTemplateList
+    priceTemplateList,
+    stockReportControlData
 }) => {
     const compactHeaderCellClassName = transactionTableHeaderCellClassName;
     const compactCellClassName = transactionTableCellClassName;
@@ -61,7 +62,7 @@ const DeliveryChallanItems = ({
     const compactNumberInputClassName = transactionTableNumberInputClassName;
     const compactDropdownClassName = "h-full w-full max-w-none rounded-none border-0 bg-transparent px-1 py-0 text-[10px] shadow-none outline-none focus:bg-transparent focus:outline-none";
 
-    const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false);
+    const stockControldata = stockReportControlData?.data?.[0]
 
     const getBarcodeFromList = (itemId, sizeId, colorId) => {
         if (!itemPriceList?.data || !itemId) return null;
@@ -210,8 +211,9 @@ const DeliveryChallanItems = ({
         }]);
     };
 
-    const handleDeleteRow = (id) => {
-        setInvoiceItems(rows => rows.filter((_, index) => index !== parseInt(id)));
+    const handleDeleteRow = (rowId) => {
+
+        setInvoiceItems(rows => rows.filter((_, index) => index !== parseInt(rowId)));
     };
 
     const handleDeleteAllRows = () => {
@@ -320,13 +322,12 @@ const DeliveryChallanItems = ({
                                     <th className={`${compactHeaderCellClassName} w-20`}>Hsn</th>
                                     <th className={`${compactHeaderCellClassName} w-12`}>UOM</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Quantity</th>
-                                    <th className={`${compactHeaderCellClassName} w-16`}>Price</th>
+                                    {/* <th className={`${compactHeaderCellClassName} w-16`}>Price</th> */}
                                     {/* <th className={`${compactHeaderCellClassName} w-16`}>Price Type</th> */}
                                     {/* <th className={`${compactHeaderCellClassName} w-16`}>Discount Type</th> */}
                                     {/* <th className={`${compactHeaderCellClassName} w-16`}>Discount</th> */}
                                     {/* <th className={`${compactHeaderCellClassName} w-20`}>Tax Type</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Tax %</th> */}
-                                    <th className={`${compactHeaderCellClassName} w-16`}>Net Amount</th>
                                     <th className={`${compactHeaderCellClassName} w-7`}></th>
                                 </tr>
                             </thead>
@@ -457,90 +458,7 @@ const DeliveryChallanItems = ({
                                                 />
                                             </td>
 
-                                            {/* Price */}
-                                            <td className={`${compactFocusCellClassName} w-40 text-right relative`}>
-                                                <input
-                                                    onKeyDown={e => {
-                                                        if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
-                                                        if (e.key === "Delete") handleInputChange("0.00", index, "price");
-                                                    }}
-                                                    min="0" type="number"
-                                                    className={compactNumberInputClassName}
-                                                    onFocus={e => e.target.select()}
-                                                    value={(!row.price) ? 0 : row.price}
-                                                    disabled={readOnly || !row.qty}
-                                                    onChange={e => handleInputChange(e.target.value, index, "price")}
-                                                    onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "price")}
-                                                />
-                                            </td>
 
-                                            {/* Price Type Badge */}
-                                            {/* <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
-                                                row.priceType === "offerPrice" ? "bg-indigo-100 text-indigo-800 border border-indigo-200" :
-                                                    row.priceType === "SalesPrice" ? "bg-blue-100 text-blue-800 border border-blue-200" : ""}`}>
-                                                {row.priceType}
-                                            </td> */}
-
-                                            {/* Discount Type */}
-                                            {/* <td className={`${compactFocusCellClassName} w-40 text-right`}>
-                                                <select
-                                                    className={compactDropdownClassName}
-                                                    value={row.discountType}
-                                                    onChange={e => handleInputChange(e.target.value, index, "discountType")}
-                                                >
-                                                    <option value=""></option>
-                                                    <option value="Flat">Flat</option>
-                                                    <option value="Percentage">Percentage</option>
-                                                </select>
-                                            </td> */}
-
-                                            {/* Discount Value */}
-                                            {/* <td className={`${compactFocusCellClassName} w-40 text-right`}>
-                                                <input
-                                                    onKeyDown={e => {
-                                                        if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
-                                                        if (e.key === "Delete") handleInputChange("0.00", index, "discountValue");
-                                                    }}
-                                                    min="0" type="number"
-                                                    className={compactNumberInputClassName}
-                                                    onFocus={e => e.target.select()}
-                                                    value={(!row.discountValue) ? 0 : row.discountValue}
-                                                    disabled={readOnly || !row.qty}
-                                                    onChange={e => handleInputChange(e.target.value, index, "discountValue")}
-                                                    onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "discountValue")}
-                                                />
-                                            </td> */}
-
-                                            {/* Tax Method */}
-                                            {/* <td className={compactFocusCellClassName}>
-                                                <select
-                                                    className={compactDropdownClassName}
-                                                    value={row.itemId ? (row.taxMethod || "Inclusive") : (row.taxMethod || "")}
-                                                    onChange={e => handleInputChange(e.target.value, index, "taxMethod")}
-                                                >
-                                                    <option value=""></option>
-                                                    <option value="Inclusive">Inclusive</option>
-                                                    <option value="Exclusive">Exclusive</option>
-                                                </select>
-                                            </td> */}
-
-                                            {/* Tax % */}
-                                            {/* <td className={`${compactCellClassName} w-40 text-right`}>
-                                                <input
-                                                    min="0" type="number"
-                                                    className={compactNumberInputClassName}
-                                                    onFocus={e => e.target.select()}
-                                                    value={(!row.taxPercent) ? 0 : row.taxPercent}
-                                                    disabled={true}
-                                                    onChange={e => handleInputChange(e.target.value, index, "taxPercent")}
-                                                    onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "taxPercent")}
-                                                />
-                                            </td> */}
-
-                                            {/* Net Amount */}
-                                            <td className={`${compactCellClassName} w-40 text-right`}>
-                                                {total.toFixed(2)}
-                                            </td>
 
                                             {/* Add Row on Enter */}
                                             <td className="w-16 px-1 py-1 text-center">
@@ -564,6 +482,32 @@ const DeliveryChallanItems = ({
                                     );
                                 })}
                             </tbody>
+                            <tfoot className="sticky bottom-0 z-20 border-t border-gray-300 font-bold">
+                                <tr>
+                                    <td
+                                        // colSpan={
+                                        //     (stockControldata?.itemWise ? 1 : 0) +
+                                        //     (stockControldata?.sizeWise ? 1 : 0) +
+                                        //     (stockControldata?.sizeColorWise ? 1 : 0) +
+                                        //     4 +
+                                        //     (stockReportControlData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))
+                                        // }
+                                        colSpan={4}
+                                        className="bg-gray-300 px-1 py-1 text-right text-[12px]"
+                                    >
+                                    </td>
+                                    <td
+                                        colSpan={2}
+                                        className="bg-gray-300 px-1 py-1 text-right text-[12px]"
+                                    >
+                                        Total:
+                                    </td>
+                                    <td className="bg-gray-300 px-1 py-1 text-right text-[11px]">
+                                        {(invoiceItems || [])?.reduce((acc, curr) => acc + parseFloat(curr?.qty || 0), 0).toFixed(3)}
+                                    </td>
+                                    <td className="bg-gray-300 px-1 py-1 text-right text-[11px]"></td>
+                                </tr>
+                            </tfoot>
                         </table>
 
                         {contextMenu && (

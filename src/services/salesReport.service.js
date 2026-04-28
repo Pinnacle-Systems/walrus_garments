@@ -148,4 +148,166 @@ async function getSalesReport(query) {
     }
 }
 
-export { getSalesReport };
+async function getSalesmanSummaryReport(query) {
+    try {
+        const { fromDate, toDate, branchId } = query;
+
+        const from = fromDate ? new Date(fromDate) : undefined;
+        const to = toDate ? new Date(toDate) : undefined;
+
+        if (from) from.setHours(0, 0, 0, 0);
+        if (to) to.setHours(23, 59, 59, 999);
+
+        const posItems = await prisma.posItems.findMany({
+            where: {
+                Pos: {
+                    branchId: branchId ? parseInt(branchId) : undefined,
+                    // date: {
+                    //     gte: from,
+                    //     lte: to
+                    // },
+                    approvalStatus: { not: "PENDING" } // Only include processed sales
+                }
+            },
+            include: {
+                Employee: true,
+                Pos: true
+            }
+        });
+
+        console.log(posItems, "posItems")
+
+        // Group by Salesman
+        const salesmanMap = {};
+
+        posItems.forEach(item => {
+            const salesmanId = item.salesPersonId || 0;
+            const salesmanName = item.Employee?.name || 'Unassigned';
+            const salesmanCode = item?.Employee?.employeeId || 'N/A';
+
+            if (!salesmanMap[salesmanId]) {
+                salesmanMap[salesmanId] = {
+                    id: salesmanId,
+                    name: salesmanName,
+                    code: salesmanCode,
+                    totalBills: new Set(),
+                    totalQty: 0,
+                    totalAmount: 0,
+                    returnQty: 0,
+                    returnAmount: 0
+                };
+            }
+
+            const qty = parseFloat(item.qty || 0);
+            const price = parseFloat(item.price || 0);
+            const amount = qty * price;
+
+            if (item.isReturn) {
+                salesmanMap[salesmanId].returnQty += qty;
+                salesmanMap[salesmanId].returnAmount += amount;
+            } else {
+                salesmanMap[salesmanId].totalQty += qty;
+                salesmanMap[salesmanId].totalAmount += amount;
+                if (item.PosId) {
+                    salesmanMap[salesmanId].totalBills.add(item.PosId);
+                }
+            }
+        });
+
+        console.log(salesmanMap, "salesmanMap")
+
+        const result = Object.values(salesmanMap).map(s => ({
+            ...s,
+            totalBills: s.totalBills.size,
+            netQty: s.totalQty - s.returnQty,
+            netAmount: s.totalAmount - s.returnAmount
+        }));
+
+        return { statusCode: 0, data: result };
+    } catch (error) {
+        console.error("Salesman Summary Report Service Error:", error);
+        return { statusCode: 1, message: error.message };
+    }
+}
+
+async function getOnlineSalesDeliveryReport(query) {
+    try {
+        const { fromDate, toDate, branchId } = query;
+
+        const from = fromDate ? new Date(fromDate) : undefined;
+        const to = toDate ? new Date(toDate) : undefined;
+
+        if (from) from.setHours(0, 0, 0, 0);
+        if (to) to.setHours(23, 59, 59, 999);
+
+        const challanItems = await prisma.deliveryChallanItems.findMany({
+            where: {
+                DeliveryChallan: {
+                    branchId: branchId ? parseInt(branchId) : undefined,
+                    date: {
+                        gte: from,
+                        lte: to
+                    },
+                    // Assuming online sales have a platform set
+                    platform: { not: "" }
+                }
+            },
+            include: {
+                DeliveryChallan: true,
+                Item: true,
+                Size: true,
+                Color: true
+            }
+        });
+
+        // Group by Item + Size + Color
+        const itemMap = {};
+
+        challanItems.forEach(item => {
+            const key = `${item.itemId}-${item.sizeId}-${item.colorId}`;
+            const itemName = item.Item?.name || 'Unknown Item';
+            const sizeName = item.Size?.name || 'N/A';
+            const colorName = item.Color?.name || 'N/A';
+            const platform = item.DeliveryChallan?.platform || 'N/A';
+
+            if (!itemMap[key]) {
+                itemMap[key] = {
+                    key,
+                    itemName,
+                    sizeName,
+                    colorName,
+                    platform,
+                    inwardQty: 0,
+                    outwardQty: 0,
+                    inwardAmount: 0,
+                    outwardAmount: 0
+                };
+            }
+
+            const qty = parseFloat(item.qty || 0);
+            const price = parseFloat(item.price || 0);
+            const amount = qty * price;
+
+            if (item.DeliveryChallan?.challanType === "DcOutward") {
+                itemMap[key].outwardQty += qty;
+                itemMap[key].outwardAmount += amount;
+            } else {
+                itemMap[key].inwardQty += qty;
+                itemMap[key].inwardAmount += amount;
+            }
+        });
+
+        const result = Object.values(itemMap).map(i => ({
+            ...i,
+            netQty: i.inwardQty - i.outwardQty,
+            netAmount: i.inwardAmount - i.outwardAmount
+        }));
+
+        return { statusCode: 0, data: result };
+    } catch (error) {
+        console.error("Online Sales Delivery Report Service Error:", error);
+        return { statusCode: 1, message: error.message };
+    }
+}
+
+export { getSalesReport, getSalesmanSummaryReport, getOnlineSalesDeliveryReport };

@@ -41,13 +41,15 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 }
 
 async function get(req) {
-    const { branchId, active, pagination, pageNumber, dataPerPage, serachDocNo, searchDate, searchCustomerName, isExchnage } = req.query;
+    const { branchId, active, pagination, pageNumber, dataPerPage, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus, userRole } = req.query;
+    console.log(userRole, "userRole", userRole == "ADMIN" || userRole == "DEFAULT ADMIN")
 
     let where = {
-        branchId: branchId ? parseInt(branchId) : undefined,
-        active: active ? Boolean(active) : undefined,
-        docId: serachDocNo ? { contains: serachDocNo } : undefined,
-        Party: searchCustomerName ? { name: { contains: searchCustomerName } } : undefined,
+        // branchId: branchId ? parseInt(branchId) : undefined,
+        // active: active ? Boolean(active) : undefined,
+        // docId: serachDocNo ? { contains: serachDocNo } : undefined,
+        // Party: searchCustomerName ? { name: { contains: searchCustomerName } } : undefined,
+        // approvalStatus: approvalStatus ? approvalStatus : { not: "NONE" }
     };
 
     if (searchDate) {
@@ -88,7 +90,19 @@ async function get(req) {
         // take: pagination ? parseInt(dataPerPage) : undefined,
     });
 
-    console.log(data, "data In Pos")
+    console.log(data, "data")
+
+    if (approvalStatus) {
+
+        if (userRole == "ADMIN" || userRole == "DEFAULT ADMIN") {
+            data = data.filter(item => item.approvalStatus == "PENDING");
+            console.log(data, "data 1")
+        } else {
+            data = data.filter(item => item.approvalStatus == "APPROVED");
+        }
+
+    }
+
 
     return { statusCode: 0, data, totalCount };
 }
@@ -162,7 +176,8 @@ async function create(body) {
             netAmount, taxAmount, discountValue, discountType,
             manualDiscount, promotionalDiscount, roundOff,
             paidCash, paidUPI, paidCard, paidOnline,
-            receivedAmount, balanceReturn, paymentMethod
+            receivedAmount, balanceReturn, paymentMethod,
+            approvalStatus // Add this
         } = await body;
 
 
@@ -171,14 +186,17 @@ async function create(body) {
         let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
 
         const result = await prisma.$transaction(async (tx) => {
+            // Stage 1: Initial Request from Salesperson
+            const finalDocId = approvalStatus === 'PENDING' ? 'DRAFT' : (approvalStatus === 'APPROVED' ? 'PROCEED' : docId);
 
             const posRecord = await tx.pos.create({
                 data: {
                     customerId: customerId ? parseInt(customerId) : undefined,
-                    docId: docId,
+                    docId: finalDocId,
                     branchId: branchId ? parseInt(branchId) : undefined,
                     createdById: body.userId ? parseInt(body.userId) : undefined,
                     netAmount: netAmount ? String(netAmount) : "0",
+                    approvalStatus: approvalStatus || "NONE", // Save approval status
                     PosItems: {
                         createMany: {
                             data: (posItems || []).map((item) => ({
@@ -210,6 +228,11 @@ async function create(body) {
                     }
                 }
             });
+
+            // IMPORTANT: If approval is pending, don't deduct stock yet
+            if (approvalStatus === 'PENDING') {
+                return posRecord;
+            }
 
             const stockEntries = [];
             const retailStoreId = parseInt(storeId);
@@ -306,22 +329,45 @@ async function update(id, body) {
         if (!dataFound) return NoRecordFound("POS");
 
         const result = await prisma.$transaction(async (tx) => {
-            await tx.stock.deleteMany({
-                where: {
-                    transactionId: parseInt(id),
-                    OR: [
-                        { inOrOut: "POS" },
-                        { inOrOut: "StockTransferOut" },
-                        { inOrOut: "StockTransferIn" }
-                    ]
-                }
-            });
+            let finalDocId = dataFound.docId;
+
+            // Transition logic
+            if (finalDocId === 'DRAFT' && body.approvalStatus === 'APPROVED') {
+                finalDocId = 'PROCEED';
+            } else if (finalDocId === 'PROCEED' && body.approvalStatus === 'COMPLETED') {
+                const finYearDate = await getFinYearStartTimeEndTime(body.finYearId);
+                const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
+                finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+            } else if (!finalDocId && body.approvalStatus === 'NONE') {
+                // For regular sales
+                const finYearDate = await getFinYearStartTimeEndTime(body.finYearId);
+                const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
+                finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+            }
+
+            // DELETE existing stock only if we are doing a real stock transaction
+            if (body.approvalStatus === 'COMPLETED' || body.approvalStatus === 'NONE' || dataFound.approvalStatus === 'COMPLETED' || dataFound.approvalStatus === 'NONE') {
+                await tx.stock.deleteMany({
+                    where: {
+                        transactionId: parseInt(id),
+                        OR: [
+                            { inOrOut: "POS" },
+                            { inOrOut: "StockTransferOut" },
+                            { inOrOut: "StockTransferIn" }
+                        ]
+                    }
+                });
+            }
 
             const updatedPos = await tx.pos.update({
                 where: { id: parseInt(id) },
                 data: {
                     customerId: customerId ? parseInt(customerId) : undefined,
                     branchId: branchId ? parseInt(branchId) : undefined,
+                    docId: finalDocId,
+                    approvalStatus: body.approvalStatus || dataFound.approvalStatus,
+                    discountValue: String(discountValue || dataFound.discountValue),
+                    netAmount: String(netAmount || dataFound.netAmount),
                     // updatedBy: body.userId ? { connect: { id: parseInt(body.userId) } } : undefined,
                 }
             });
@@ -355,60 +401,62 @@ async function update(id, body) {
             const stockEntries = [];
             const retailStoreId = parseInt(storeId);
 
-            for (const item of (posItems || [])) {
-                if (!item.itemId && !item.id) continue;
+            if (body.approvalStatus === 'COMPLETED' || body.approvalStatus === 'NONE') {
+                for (const item of (posItems || [])) {
+                    if (!item.itemId && !item.id) continue;
 
-                const itemId = parseInt(item.itemId || item.id);
-                const fulfillments = item.fulfillments && !item.isReturn ? item.fulfillments : [{ storeId: item.sourceStoreId || retailStoreId, qty: item.qty }];
-                const price = parseFloat(item.price || 0);
+                    const itemId = parseInt(item.itemId || item.id);
+                    const fulfillments = item.fulfillments && !item.isReturn ? item.fulfillments : [{ storeId: item.sourceStoreId || retailStoreId, qty: item.qty }];
+                    const price = parseFloat(item.price || 0);
 
-                const baseEntry = {
-                    itemId,
-                    sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                    colorId: item.colorId ? parseInt(item.colorId) : null,
-                    uomId: item.uomId ? parseInt(item.uomId) : null,
-                    branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
-                    barcode: item.barcode || null,
-                    transactionId: parseInt(id),
-                    price: price,
-                };
+                    const baseEntry = {
+                        itemId,
+                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                        colorId: item.colorId ? parseInt(item.colorId) : null,
+                        uomId: item.uomId ? parseInt(item.uomId) : null,
+                        branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
+                        barcode: item.barcode || null,
+                        transactionId: parseInt(id),
+                        price: price,
+                    };
 
-                if (!item.isReturn) {
-                    for (const f of fulfillments) {
-                        const fQty = parseFloat(f.qty);
-                        if (fQty <= 0) continue;
+                    if (!item.isReturn) {
+                        for (const f of fulfillments) {
+                            const fQty = parseFloat(f.qty);
+                            if (fQty <= 0) continue;
 
-                        const fStoreId = parseInt(f.storeId);
-                        const currentStock = await tx.stock.aggregate({
-                            _sum: { qty: true },
-                            where: {
-                                itemId,
-                                sizeId: baseEntry.sizeId,
-                                colorId: baseEntry.colorId,
-                                uomId: baseEntry.uomId,
-                                storeId: fStoreId,
-                                branchId: baseEntry.branchId
+                            const fStoreId = parseInt(f.storeId);
+                            const currentStock = await tx.stock.aggregate({
+                                _sum: { qty: true },
+                                where: {
+                                    itemId,
+                                    sizeId: baseEntry.sizeId,
+                                    colorId: baseEntry.colorId,
+                                    uomId: baseEntry.uomId,
+                                    storeId: fStoreId,
+                                    branchId: baseEntry.branchId
+                                }
+                            });
+
+                            const available = parseFloat(currentStock._sum.qty || 0);
+                            if (available < fQty) {
+                                throw new Error(`Insufficient stock in ${f.storeName || 'Store'}. Available: ${available}, Required: ${fQty}`);
                             }
-                        });
 
-                        const available = parseFloat(currentStock._sum.qty || 0);
-                        if (available < fQty) {
-                            throw new Error(`Insufficient stock in ${f.storeName || 'Store'}. Available: ${available}, Required: ${fQty}`);
+                            if (fStoreId !== retailStoreId) {
+                                stockEntries.push({ ...baseEntry, qty: -fQty, storeId: fStoreId, inOrOut: "StockTransferOut" });
+                                stockEntries.push({ ...baseEntry, qty: fQty, storeId: retailStoreId, inOrOut: "StockTransferIn" });
+                            }
+
+                            stockEntries.push({ ...baseEntry, qty: -fQty, storeId: retailStoreId, inOrOut: "POS" });
                         }
-
-                        if (fStoreId !== retailStoreId) {
-                            stockEntries.push({ ...baseEntry, qty: -fQty, storeId: fStoreId, inOrOut: "StockTransferOut" });
-                            stockEntries.push({ ...baseEntry, qty: fQty, storeId: retailStoreId, inOrOut: "StockTransferIn" });
-                        }
-
-                        stockEntries.push({ ...baseEntry, qty: -fQty, storeId: retailStoreId, inOrOut: "POS" });
+                    } else {
+                        stockEntries.push({ ...baseEntry, qty: parseFloat(item.qty), storeId: retailStoreId, inOrOut: "POS" });
                     }
-                } else {
-                    stockEntries.push({ ...baseEntry, qty: parseFloat(item.qty), storeId: retailStoreId, inOrOut: "POS" });
                 }
-            }
 
-            await tx.stock.createMany({ data: stockEntries });
+                await tx.stock.createMany({ data: stockEntries });
+            }
 
             return updatedPos;
         });

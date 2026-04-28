@@ -119,6 +119,7 @@ const ExpenseEntry = () => {
     const onNew = () => {
         setId("");
         setExpenseItems([])
+
     }
 
     return (
