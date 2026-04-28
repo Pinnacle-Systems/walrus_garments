@@ -176,6 +176,7 @@ async function getSalesmanSummaryReport(query) {
             }
         });
 
+
         // Group by Salesman
         const salesmanMap = {};
 
