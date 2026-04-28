@@ -53,7 +53,7 @@ const POSHeader = ({
                         ref={scannerRef}
                         disabled={isBarcodeLoading || selectedReportSaleId}
                         placeholder={selectedReportSaleId ? "View Only Mode" : (isBarcodeLoading ? "Finding item..." : "Scan or Search Product Name / Barcode [F10]")}
-                        className={`w-full pl-10 pr-4 py-2 rounded-lg text-sm transition-all font-medium border outline-none ${ (isBarcodeLoading || selectedReportSaleId) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 placeholder:text-slate-400'}`}
+                        className={`w-full pl-10 pr-4 py-2 rounded-lg text-sm transition-all font-medium border outline-none ${(isBarcodeLoading || selectedReportSaleId) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 placeholder:text-slate-400'}`}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={handleScan}

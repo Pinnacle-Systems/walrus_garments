@@ -9,7 +9,7 @@ import { useGetPartyQuery, useAddPartyMutation } from '../../../redux/services/P
 import { useAddSalesInvoiceMutation } from '../../../redux/uniformService/salesInvoiceServices';
 import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
 import { useLazyGetUnifiedStockByBarcodeQuery } from '../../../redux/services/StockService';
-import { getCommonParams } from '../../../Utils/helper';
+import { findFromList, getCommonParams } from '../../../Utils/helper';
 import Swal from 'sweetalert2';
 import {
     useGetPointOfSalesQuery,
@@ -40,10 +40,11 @@ import ReceiptViewerModal from './components/ReceiptViewerModal';
 import StockLocationModal from './components/StockLocationModal';
 import PosReportsNew from './PosReportsNew';
 import { useGetcollectionsQuery } from '../../../redux/uniformService/CollectionsService';
+import { useGetRolesQuery } from '../../../redux/services/RolesMasterService';
+import secureLocalStorage from 'react-secure-storage';
 
 
 const PointOfSale = () => {
-    const dispatch = useDispatch();
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const [cart, setCart] = useState([]);
@@ -70,6 +71,8 @@ const PointOfSale = () => {
     const [printData, setPrintData] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [docId, setDocId] = useState("");
+    const [approvalStatus, setApprovalStatus] = useState("NONE");
+
 
 
     const [transactionType, setTransactionType] = useState("SALE");
@@ -94,8 +97,6 @@ const PointOfSale = () => {
     const [showStockModal, setShowStockModal] = useState(false);
     const [selectedItemForStock, setSelectedItemForStock] = useState(null);
 
-    const user = JSON.parse(localStorage.getItem("user"));
-    const isAdmin = user?.role === 'Admin' || user?.roleName === 'Admin' || user?.Role?.name === 'Admin';
 
     const lastPopulatedRef = useRef("");
     const [checkRefNo] = useLazyCheckReferenceNumberQuery();
@@ -103,12 +104,77 @@ const PointOfSale = () => {
     const { data: employeeData } = useGetEmployeeQuery({
         params: { branchId, userId, companyId, finYearId }
     });
+
+    const { data: roledData } = useGetRolesQuery({
+        params: { branchId, userId, companyId, finYearId }
+    });
+
     const employees = employeeData?.data || [];
 
-    const handlePayNow = () => {
+
+
+    const userRoleId = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + 'userRoleId')
+
+    const isAdmin = findFromList(userRoleId, roledData?.data, "name") == 'ADMIN' || findFromList(userRoleId, roledData?.data, "name") == 'DEFAULT ADMIN'
+    const dispatch = useDispatch();
+    const openTabsState = useSelector((state) => state.openTabs);
+    const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "POINT OF SALES");
+    const pendingPosId = currentTab?.projectId;
+
+    // const [getPosById, { isLoading: isPosLoading  }] = useLazyGetPointOfSalesByIdQuery();
+
+
+    useEffect(() => {
+        if (pendingPosId) {
+            setSelectedReportSaleId(pendingPosId)
+        }
+    }, [pendingPosId]);
+
+    // useEffect(() => {
+    //     if (pendingPosId) {
+    //         const loadPendingPos = async () => {
+    //             try {
+    //                 const response = await getPosById(pendingPosId).unwrap();
+    //                 if (response.statusCode === 0) {
+    //                     syncFormWithDb(response.data);
+    //                     setEditMode(true);
+    //                     setEditingInvoiceId(pendingPosId);
+    //                 }
+    //             } catch (error) {
+    //                 // toast.error("Failed to load pending request");
+    //                 Swal.fire({
+    //                     title: "Error",
+    //                     text: "Failed to load pending request",
+    //                     icon: "error"
+    //                 });
+    //             }
+    //         };
+    //         loadPendingPos();
+    //     }
+    // }, [pendingPosId]);
+
+    const handlePayNow = async () => {
         if (cart.length === 0 || isProcessing) return;
 
+        // Admin Approval Flow: Skip payment modal and validation
+        if (isAdmin && approvalStatus === 'PENDING') {
+            if (discount <= 0) {
+                const result = await Swal.fire({
+                    title: 'No Discount Entered',
+                    text: 'You have not entered any discount. Do you want to proceed with 0 discount?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4f46e5',
+                    confirmButtonText: 'Yes, Approve'
+                });
+                if (!result.isConfirmed) return;
+            }
+            handleCheckout(true);
+            return;
+        }
+
         const currentPhone = selectedCustomer ? selectedCustomer.contact : guestMobile;
+
         const phoneRegex = /^[0-9]{10}$/;
         const cleanPhone = currentPhone?.toString().replace(/\D/g, '') || '';
 
@@ -355,6 +421,8 @@ const PointOfSale = () => {
     //             if (rule.operator === '>=') return target >= parseFloat(rule.value);
     //             if (rule.operator === '<=') return target <= parseFloat(rule.value);
     //             if (rule.operator === '==') return target === parseFloat(rule.value);
+
+
     const getItemApplicableOffers = (item) => {
         if (!item || !activeOffers.length) return [];
 
@@ -459,8 +527,17 @@ const PointOfSale = () => {
 
 
 
+    const items = itemsData?.data || [];
+    const recentSales = posData?.data?.slice(0, 50) || [];
+    const customers = (customerData?.data || []).filter(c => c.isB2C);
+    const locations = locationsData?.data || [];
+    const retailLocation = locations.find(l => l.storeName?.toLowerCase().includes('retail'));
+    const retailStoreId = retailLocation?.id;
 
     const syncFormWithDb = useCallback((sale) => {
+
+        console.log(sale, "sale")
+
         if (!sale) {
             setCart([]);
             setDiscount(0);
@@ -475,8 +552,11 @@ const PointOfSale = () => {
             setPaidOnline(0);
             setDocId("");
             setUpiRefNo("");
+            setApprovalStatus("NONE");
             return;
         }
+
+
 
         const mappedCart = (sale.PosItems || []).map(item => {
             const masterItem = items.find(i => i.id === item.itemId);
@@ -514,6 +594,19 @@ const PointOfSale = () => {
 
         setDiscount(parseFloat(sale.discountValue || 0));
         setPaymentMethod(sale.paymentMethod || 'Cash');
+        setDocId(sale.docId || "");
+
+        if (sale.Party) {
+            setSelectedCustomer(sale.Party);
+            setIsGuestCustomer(false);
+            setGuestName(sale.Party.name);
+            setGuestMobile(sale.Party.contact);
+        } else {
+            setSelectedCustomer(null);
+            setIsGuestCustomer(true);
+            setGuestName(sale.customerName || "Walk-in");
+            setGuestMobile(sale.customerMobile || "");
+        }
         setPaidCash(cash);
         setPaidUPI(upi);
         setPaidCard(card);
@@ -531,8 +624,10 @@ const PointOfSale = () => {
             setGuestMobile(sale.customerMobile || "");
         }
         if (sale.docId) setDocId(sale.docId);
+        setApprovalStatus(sale.approvalStatus || "NONE");
         setShowReports(true);
-    }, [selectedReportSaleId]);
+    }, [selectedReportSaleId, items, employees, retailStoreId]);
+
 
     useEffect(() => {
         if (selectedReportSaleId) syncFormWithDb(fetchedSaleResponse?.data);
@@ -562,12 +657,6 @@ const PointOfSale = () => {
         setCurrentPageNumber(1);
     }, [reportsSearchDocNo, reportsSearchDate, reportsSearchCustomerName, dataPerPage]);
 
-    const items = itemsData?.data || [];
-    const recentSales = posData?.data?.slice(0, 50) || [];
-    const customers = (customerData?.data || []).filter(c => c.isB2C);
-    const locations = locationsData?.data || [];
-    const retailLocation = locations.find(l => l.storeName?.toLowerCase().includes('retail'));
-    const retailStoreId = retailLocation?.id;
 
     // Barcode Handling
     const resolveBarcodeMatch = (matches = []) => {
@@ -849,9 +938,10 @@ const PointOfSale = () => {
     const receivedAmount = paidCash + paidUPI + paidCard + paidOnline;
     const balanceReturn = Math.max(0, receivedAmount - total);
 
-    const handleCheckout = async () => {
+    const handleCheckout = async (isApprovalOnly = false) => {
         if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
-        if (receivedAmount < total) { Swal.fire({ title: "Error", text: "Incomplete payment", icon: "error" }); return; }
+        if (!isApprovalOnly && receivedAmount < total) { Swal.fire({ title: "Error", text: "Incomplete payment", icon: "error" }); return; }
+
 
         // const result = await Swal.fire({
         //     title: 'Confirm Sale',
@@ -896,8 +986,13 @@ const PointOfSale = () => {
                 posItems: cartWithOffers,
                 posPayments,
                 promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff, transactionType,
-                exchangeSalesNo
+                exchangeSalesNo,
+                // Stage Logic:
+                approvalStatus: (editMode && approvalStatus === 'PENDING' && isAdmin) ? "APPROVED" :
+                    (editMode && docId === 'DRAFT' && isAdmin) ? "APPROVED" :
+                        (editMode && docId === 'PROCEED') ? "COMPLETED" : "NONE"
             };
+
 
             let apiResponse;
             if (editMode) {
@@ -913,9 +1008,64 @@ const PointOfSale = () => {
             Swal.fire({ title: editMode ? 'Updated Successfully!' : 'Payment Successful!', icon: 'success', timer: 2000, showConfirmButton: false });
             setPrintData({ docId: apiResponse?.data?.docId || docId, date: new Date(), customerData: selectedCustomer || { name: guestName, contact: guestMobile }, items: cart, payments: { cash: paidCash, upi: paidUPI, card: paidCard }, summary: { subtotal, tax, discount, total, received: receivedAmount, balance: balanceReturn, roundOff }, branchData: locations.find(l => l.id === retailStoreId) });
             setCart([]); setDiscount(0); setSelectedCustomer(null); setPaidCash(0); setPaidUPI(0); setPaidCard(0); setUpiRefNo("");
-            setEditMode(false); setEditingInvoiceId(null);
+            setEditMode(false); setEditingInvoiceId(null); setSelectedReportSaleId(null);
         } catch (error) { Swal.fire({ title: "Error", text: error.message || "Failed to save invoice.", icon: "error" }); }
+
         finally { setIsProcessing(false); }
+    };
+
+    const handleRequestDiscount = async () => {
+        if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
+
+        const result = await Swal.fire({
+            title: 'Request Discount Approval?',
+            text: 'This will send your current cart to the Admin for discount entry.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            confirmButtonText: 'Yes, Send Request'
+        });
+
+        if (!result.isConfirmed) return;
+        setIsProcessing(true);
+
+        try {
+            let customerId = selectedCustomer?.id;
+            if (isGuestCustomer) {
+                const guestPayload = { name: guestName || 'Walk-in Customer', contact: guestMobile, isClient: true, isB2C: true, companyId, userId, partyCode: `WALK-${guestMobile.slice(-4)}-${Math.floor(Math.random() * 1000)}`, active: true, address: 'Walk-in Store', pincode: '000000', gstNo: 'N/A' };
+                try { const res = await addParty(guestPayload).unwrap(); customerId = res.data.id; }
+                catch (e) { customerId = customers.find(c => c.contact === guestMobile)?.id; if (!customerId) throw new Error("Could not register guest."); }
+            }
+
+            const invoicePayload = {
+                date: new Date().toISOString().split('T')[0],
+                customerId,
+                supplierId: customerId,
+                branchId, userId, companyId, finYearId,
+                paymentMethod: "Cash", // Default for request
+                storeId: retailStoreId,
+                poType: "General", poInwardOrDirectInward: "DirectInward",
+                netAmount: total, taxAmount: tax, discountValue: 0, discountType: "Flat",
+                paidCash: 0, paidUPI: 0, paidCard: 0, paidOnline: 0, receivedAmount: 0, balanceReturn: 0,
+                posItems: cartWithOffers,
+                posPayments: [],
+                promotionalDiscount: totalOfferDiscount, manualDiscount: 0, roundOff, transactionType: "SALE",
+                approvalStatus: "PENDING"
+            };
+
+            const apiResponse = await addPointOfSales(invoicePayload).unwrap();
+
+            if (apiResponse.statusCode !== 0) {
+                throw new Error(apiResponse.message || "Failed to send request.");
+            }
+
+            Swal.fire({ title: 'Request Sent!', text: 'Bill saved as PENDING. Admin can now enter discount.', icon: 'success' });
+            setCart([]); setDiscount(0); setSelectedCustomer(null); setGuestName(""); setGuestMobile("");
+        } catch (error) {
+            Swal.fire({ title: "Error", text: error.message || "Failed to send request.", icon: "error" });
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     const handleBillSelected = (bill) => {
@@ -1016,6 +1166,8 @@ const PointOfSale = () => {
                         setTransactionType={setTransactionType}
                         setShowReturnExchnageModal={setShowReturnExchnageModal}
                         selectedReportSaleId={selectedReportSaleId}
+                        approvalStatus={approvalStatus}
+                        isAdmin={isAdmin}
                     />
 
                     <div className="flex-1 flex overflow-hidden">
@@ -1033,6 +1185,8 @@ const PointOfSale = () => {
                             removeFromCart={removeFromCart}
                             qtyInputRefs={qtyInputRefs}
                             selectedReportSaleId={selectedReportSaleId}
+                            approvalStatus={approvalStatus}
+                            isAdmin={isAdmin}
                         />
 
                         <POSSidebar
@@ -1058,7 +1212,11 @@ const PointOfSale = () => {
                             returnTotal={returnTotal}
                             purchaseTotal={purchaseTotalBeforeOffer}
                             selectedReportSaleId={selectedReportSaleId}
+                            isAdmin={isAdmin}
+                            handleRequestDiscount={handleRequestDiscount}
+                            approvalStatus={approvalStatus}
                         />
+
                     </div>
 
                     <POSFooter

@@ -23,9 +23,14 @@ const POSSidebar = ({
     setPrintData,
     returnTotal = 0,
     purchaseTotal = 0,
-    selectedReportSaleId
+    selectedReportSaleId,
+    isAdmin,
+    handleRequestDiscount,
+    approvalStatus
 }) => {
     const isRefund = total < 0;
+    const isPendingApproval = approvalStatus === 'PENDING';
+    const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval);
 
     return (
         <aside className="w-[340px] border-l border-slate-200 bg-white flex flex-col shadow-2xl relative z-10 overflow-hidden h-full">
@@ -93,8 +98,8 @@ const POSSidebar = ({
                         )}
 
                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                             <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
-                             <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
+                            <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         {totalOfferDiscount > 0 && (
                             <div className="space-y-1">
@@ -122,10 +127,19 @@ const POSSidebar = ({
                                     type="number"
                                     value={discount}
                                     onChange={(e) => setDiscount(Number(e.target.value))}
-                                    disabled={selectedReportSaleId}
+                                    disabled={!isAdmin || (selectedReportSaleId && !isPendingApproval)}
                                     className="w-16 bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-right outline-none text-emerald-600 focus:border-emerald-500 transition-colors disabled:opacity-50"
                                     onFocus={(e) => e.target.select()}
                                 />
+                                {!isAdmin && (
+                                    <button
+                                        onClick={() => handleRequestDiscount()}
+                                        disabled={isProcessing || cart.length === 0 || selectedReportSaleId}
+                                        className="ml-1 px-2 py-1 bg-amber-100 text-amber-600 rounded-lg text-[9px] font-black uppercase hover:bg-amber-200 transition-colors disabled:opacity-50"
+                                    >
+                                        Request
+                                    </button>
+                                )}
                             </div>
                         </div>
                         {(totalOfferDiscount > 0 || discount > 0) && (
@@ -147,10 +161,10 @@ const POSSidebar = ({
                             <span>₹{roundOff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div className={`flex justify-between items-center font-black text-lg pt-2.5 border-t border-slate-200 mt-2 ${isRefund ? 'text-rose-600' : 'text-indigo-700'}`}>
-                             <span className={`text-[12px] uppercase tracking-widest ${isRefund ? 'text-rose-400' : 'text-indigo-400'}`}>
-                                 {isRefund ? 'Refund Amount' : 'Net Payable'}
-                             </span>
-                             <span>₹{Math.abs(total).toLocaleString()}</span>
+                            <span className={`text-[12px] uppercase tracking-widest ${isRefund ? 'text-rose-400' : 'text-indigo-400'}`}>
+                                {isRefund ? 'Refund Amount' : 'Net Payable'}
+                            </span>
+                            <span>₹{Math.abs(total).toLocaleString()}</span>
                         </div>
                     </div>
                 </div>
@@ -160,12 +174,12 @@ const POSSidebar = ({
             {/* Footer: Action Checkout */}
             <div className="p-3 bg-white border-t border-slate-100 space-y-2">
                 <button
-                    disabled={isProcessing || cart.length === 0 || selectedReportSaleId}
+                    disabled={isProcessing || cart.length === 0 || isReportOnly}
                     onClick={() => handlePayNow()}
-                    className={`w-full py-2 rounded-xl flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-xl ${ (cart.length === 0 || isProcessing || selectedReportSaleId) ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : (isRefund ? 'bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.98] shadow-rose-100' : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] shadow-indigo-100')}`}
+                    className={`w-full py-2 rounded-xl flex items-center justify-center gap-3 font-black text-sm uppercase tracking-widest transition-all shadow-xl ${(cart.length === 0 || isProcessing || isReportOnly) ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : (isRefund ? 'bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.98] shadow-rose-100' : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] shadow-indigo-100')}`}
                 >
                     <CreditCard size={18} />
-                    <span>{selectedReportSaleId ? "Report View" : (isRefund ? 'Process Refund [F8]' : 'Pay Now [F8]') }</span>
+                    <span>{isReportOnly ? "Report View" : (isAdmin && isPendingApproval ? "Approve & Proceed [F8]" : (isRefund ? 'Process Refund [F8]' : 'Pay Now [F8]'))}</span>
                 </button>
                 {printData && (
                     <div className="bg-amber-50 p-2 rounded-xl border border-amber-100 flex items-center justify-between animate-in slide-in-from-bottom-2">

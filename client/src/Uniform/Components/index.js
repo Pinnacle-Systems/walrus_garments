@@ -65,3 +65,5 @@ export { default as PartyOverAllLedger } from "./PurchaseOverAllLedger";
 export { default as DeliveryChallan } from "./DeliveryChallan";
 export { default as SalesReport } from "./SalesReport";
 export { default as ExpenseEntry } from "./ExpenseEntry";
+export { default as SalesmanSummaryReport } from "./SalesmanSummaryReport";
+export { default as OnlineSalesDeliveryReport } from "./OnlineSalesDeliveryReport";

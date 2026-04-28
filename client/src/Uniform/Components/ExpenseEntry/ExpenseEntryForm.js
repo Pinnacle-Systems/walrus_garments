@@ -150,9 +150,8 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
         } else {
             setReadOnly(false);
         }
-        setTransType(data?.poType ? data.poType : "DyedYarn");
         setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
-        // setInvoiceItems(data?.SalesInvoiceItems ? data.SalesInvoiceItems : []);
+        setExpenseItems(data?.ExpenseEntryItems ? data.ExpenseEntryItems : []);
         if (data?.docId) {
             setDocId(data?.docId)
         }
@@ -194,6 +193,8 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
 
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
+
+        console.log(nextProcess, "nextProcess")
         try {
             let returnData;
             if (text === "Updated") {
@@ -218,13 +219,10 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                         syncFormWithDb(undefined);
                         onNew()
                     }
-                    else if (nextProcess == "close") {
+                    else {
                         onClose()
                     }
-                    else {
-                        setId(returnData?.data?.id);
 
-                    }
 
 
 
@@ -683,32 +681,7 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                             <FiEdit2 className="w-4 h-4 mr-2" />
                             Edit
                         </button>
-                        <button
-                            className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-                            onClick={() => {
-                                if (!invoiceItems?.filter(i => i.itemId).length) {
-                                    toast.warning("Please add some items first");
-                                    return;
-                                }
-                                setPrintOpen(true);
-                            }}
-                        >
-                            <FiPrinter className="w-4 h-4 mr-2" />
-                            Print
-                        </button>
-                        <button
-                            className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm"
-                            onClick={() => {
-                                if (!invoiceItems?.filter(i => i.itemId).length) {
-                                    toast.warning("Please add some items first");
-                                    return;
-                                }
-                                setThermalPrintOpen(true);
-                            }}
-                        >
-                            <FiPrinter className="w-4 h-4 mr-2" />
-                            Thermal Print
-                        </button>
+
                     </div>
                 </div>
             </TransactionEntryShell>
