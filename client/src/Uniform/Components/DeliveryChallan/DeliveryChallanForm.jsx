@@ -28,6 +28,7 @@ import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import DeliveryChallanItems from "./DeliveryChallanItems";
 import { useAddDeliveryChallanMutation, useGetDeliveryChallanByIdQuery, useUpdateDeliveryChallanMutation } from "../../../redux/services/DeliveryChallanService";
+import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 
 
 

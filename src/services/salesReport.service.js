@@ -150,7 +150,7 @@ async function getSalesReport(query) {
 
 async function getSalesmanSummaryReport(query) {
     try {
-        const { fromDate, toDate, branchId } = query;
+        const { fromDate, toDate, branchId, salesPersonId, performanceFilter } = query;
 
         const from = fromDate ? new Date(fromDate) : undefined;
         const to = toDate ? new Date(toDate) : undefined;
@@ -160,6 +160,7 @@ async function getSalesmanSummaryReport(query) {
 
         const posItems = await prisma.posItems.findMany({
             where: {
+                salesPersonId: salesPersonId ? parseInt(salesPersonId) : undefined,
                 Pos: {
                     branchId: branchId ? parseInt(branchId) : undefined,
                     // date: {
@@ -174,8 +175,6 @@ async function getSalesmanSummaryReport(query) {
                 Pos: true
             }
         });
-
-        console.log(posItems, "posItems")
 
         // Group by Salesman
         const salesmanMap = {};
@@ -214,14 +213,19 @@ async function getSalesmanSummaryReport(query) {
             }
         });
 
-        console.log(salesmanMap, "salesmanMap")
-
-        const result = Object.values(salesmanMap).map(s => ({
+        let result = Object.values(salesmanMap).map(s => ({
             ...s,
             totalBills: s.totalBills.size,
             netQty: s.totalQty - s.returnQty,
             netAmount: s.totalAmount - s.returnAmount
         }));
+
+        // Apply performance filter (sorting)
+        if (performanceFilter === 'HIGHEST') {
+            result.sort((a, b) => b.netAmount - a.netAmount);
+        } else if (performanceFilter === 'LOWEST') {
+            result.sort((a, b) => a.netAmount - b.netAmount);
+        }
 
         return { statusCode: 0, data: result };
     } catch (error) {
@@ -232,7 +236,7 @@ async function getSalesmanSummaryReport(query) {
 
 async function getOnlineSalesDeliveryReport(query) {
     try {
-        const { fromDate, toDate, branchId } = query;
+        const { fromDate, toDate, branchId, challanType, orderBy = 'itemName', sortOrder = 'asc' } = query;
 
         const from = fromDate ? new Date(fromDate) : undefined;
         const to = toDate ? new Date(toDate) : undefined;
@@ -248,8 +252,8 @@ async function getOnlineSalesDeliveryReport(query) {
                         gte: from,
                         lte: to
                     },
-                    // Assuming online sales have a platform set
-                    platform: { not: "" }
+                    platform: { not: "" },
+                    challanType: challanType || undefined
                 }
             },
             include: {
@@ -297,11 +301,28 @@ async function getOnlineSalesDeliveryReport(query) {
             }
         });
 
-        const result = Object.values(itemMap).map(i => ({
+        let result = Object.values(itemMap).map(i => ({
             ...i,
             netQty: i.inwardQty - i.outwardQty,
             netAmount: i.inwardAmount - i.outwardAmount
         }));
+
+        // Sorting logic
+        result.sort((a, b) => {
+            let valA = a[orderBy];
+            let valB = b[orderBy];
+
+            if (typeof valA === 'string') {
+                valA = valA.toLowerCase();
+                valB = valB.toLowerCase();
+            }
+
+            if (sortOrder === 'desc') {
+                return valB > valA ? 1 : -1;
+            } else {
+                return valA > valB ? 1 : -1;
+            }
+        });
 
         return { statusCode: 0, data: result };
     } catch (error) {

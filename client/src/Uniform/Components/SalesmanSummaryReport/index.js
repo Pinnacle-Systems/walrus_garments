@@ -1,22 +1,34 @@
 import React, { useState } from 'react';
 import moment from 'moment';
 import { useLazyGetSalesmanSummaryReportQuery } from '../../../redux/uniformService/SalesReportServices';
-import { DateInput } from '../../../Inputs';
+import { useGetEmployeeQuery } from '../../../redux/services/EmployeeMasterService';
+import { DateInput, DropdownInput, DropdownInputSearch } from '../../../Inputs';
 import { getCommonParams } from '../../../Utils/helper';
 import { EMPTY_ICON, REFRESH_ICON } from '../../../icons';
 
 const SalesmanSummaryReport = () => {
     const [fromDate, setFromDate] = useState(moment().startOf('month').format("YYYY-MM-DD"));
     const [toDate, setToDate] = useState(moment().format("YYYY-MM-DD"));
+    const [salesPersonId, setSalesPersonId] = useState("");
+    const [performanceFilter, setPerformanceFilter] = useState("");
 
     const { branchId } = getCommonParams();
+
+    const { data: employeeData } = useGetEmployeeQuery({ params: { branchId } });
+    const employees = employeeData?.data || [];
+    const employeeOptions = employees.map(emp => ({ value: emp.id, show: emp.name }));
+
+    const performanceOptions = [
+        { value: "HIGHEST", show: "Highest Sales First" },
+        { value: "LOWEST", show: "Lowest Sales First" }
+    ];
 
     const [fetchReport, { data: reportData, isFetching }] = useLazyGetSalesmanSummaryReportQuery();
 
     const salesmanList = reportData?.data || [];
 
     const handleViewReport = () => {
-        fetchReport({ fromDate, toDate, branchId });
+        fetchReport({ fromDate, toDate, branchId, salesPersonId, performanceFilter });
     };
 
     const calculateTotal = (key) => {
@@ -40,9 +52,23 @@ const SalesmanSummaryReport = () => {
             </div>
 
             <div className='bg-white shadow-sm border rounded-lg mb-4 sticky top-0 z-20'>
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-6 p-4'>
+                <div className='grid grid-cols-1 md:grid-cols-5 gap-4 p-4'>
                     <DateInput name="From Date" value={fromDate} setValue={setFromDate} />
                     <DateInput name="To Date" value={toDate} setValue={setToDate} />
+                    <DropdownInputSearch
+                        name="Salesman"
+                        options={employeeOptions}
+                        value={salesPersonId}
+                        setValue={setSalesPersonId}
+                        placeholder="All Salesmen"
+                    />
+                    <DropdownInput
+                        name="Performance"
+                        options={performanceOptions}
+                        value={performanceFilter}
+                        setValue={setPerformanceFilter}
+                        clear
+                    />
                     <div className='flex items-end'>
                         <button
                             className={`w-full h-[38px] rounded font-semibold transition-all shadow-md
