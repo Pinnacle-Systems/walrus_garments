@@ -96,6 +96,7 @@ const PosReportsNew = ({
     const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
     const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+    const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
 
 
     const searchFields = {
@@ -427,7 +428,44 @@ const PosReportsNew = ({
                                                                 </svg>
                                                             </button>
                                                         )} */}
+                                                        <div className="relative inline-block"
+                                                            onMouseEnter={() =>
+                                                                setHoveredDeleteId(dataObj.id)
+                                                            }
+                                                            onMouseLeave={() => setHoveredDeleteId(null)}
+                                                            disabled={true}
+                                                        >
+                                                            {onDelete && (
+                                                                <button
+                                                                    className="text-red-800 flex items-center gap-1 px-1 bg-red-50 rounded disabled:opacity-50"
+                                                                    onClick={() =>
+                                                                        hasPermission(() => onDelete(dataObj.id), "delete", dataObj?._count)
+                                                                    }
+                                                                // disabled={hasChildRecords}
+                                                                >
+                                                                    <svg
+                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                        className="h-4 w-4"
+                                                                        viewBox="0 0 20 20"
+                                                                        fill="currentColor"
+                                                                    >
+                                                                        <path
+                                                                            fillRule="evenodd"
+                                                                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                                                            clipRule="evenodd"
+                                                                        />
+                                                                    </svg>
+                                                                </button>
+                                                            )}
+                                                            {
+                                                                hoveredDeleteId === dataObj.id && (
+                                                                    <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-[12px] rounded shadow-lg w-64 z-50">
+                                                                        Cannot delete. Child records exist.
 
+                                                                    </div>
+                                                                )}
+
+                                                        </div>
                                                     </div>
                                                 </td>
                                             )}

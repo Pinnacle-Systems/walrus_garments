@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -18,6 +18,7 @@ import { useGetpriceTemplateQuery } from "../../../redux/uniformService/priceTem
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import SalesDeliveryItems from "./SalesDeliveryItems";
+import DeliveryItemsSelection from "./DeliveryItemSelection";
 import { useAddSalesDeliveryMutation, useGetSalesDeliveryByIdQuery, useUpdateSalesDeliveryMutation } from "../../../redux/uniformService/salesDeliveryServices";
 import { useGetsaleOrderByIdQuery, useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
 import Modal from "../../../UiComponents/Modal";
@@ -66,6 +67,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [taxMethod, setTaxMethod] = useState("WithoutTax")
   const [isHeaderOpen, setIsHeaderOpen] = useState(true);
   const [linkedSaleOrderId, setLinkedSaleOrderId] = useState(convertSaleOrderId || "");
+  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
 
 
 
@@ -225,7 +227,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     payTermId,
     id, userId,
     storeId,
-    deliveryItems: deliveryItems?.filter(i => i.itemId && parseFloat(i?.qty || 0) > 0),
+    deliveryItems,
     discountType,
     discountValue,
     dcNo,
@@ -245,7 +247,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
   }
 
-  console.log(data, "data")
+  // console.log(data, "data")
 
   const validateData = (data) => {
 
@@ -319,23 +321,14 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     }
   };
 
-  function removeItem(id) {
-    setDeliveryItems(directInwardItems => {
-      let newItems = structuredClone(directInwardItems);
-      newItems = newItems.filter(item => parseInt(item.poItemsId) !== parseInt(id))
-      return newItems
-    });
-  }
 
 
 
+  console.log(deliveryItems, "deliveryItems")
 
 
 
   const saveData = (nextProcess) => {
-    const deliveryRows = (data?.deliveryItems)?.filter(i => i.itemId);
-    const catalogItems = itemList?.data || [];
-    const catalogPriceRows = itemPriceList?.data || [];
 
     if (!validateData(data)) {
       Swal.fire({
@@ -346,10 +339,15 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     }
 
 
-
-    if (!areSalesRowsValid(deliveryRows, catalogItems, catalogPriceRows)) {
+    if (
+      !isGridDatasValid(
+        data?.deliveryItems?.filter((i) => i.itemId),
+        false,
+        ["deliveryQty"],
+      )
+    ) {
       Swal.fire({
-        title: "Please fill in all mandatory fields for delivery items.",
+        title: "Please fill all Po Items Mandatory fields...!",
         icon: "warning",
       });
       return;
@@ -398,12 +396,12 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     return (
       deliveryItems?.reduce(
         (acc, curr) => {
-          const price = parseFloat(curr.price || 0);
-          const qty = parseFloat(curr.qty || 0);
-          const taxPercent = parseFloat(curr.taxPercent || 0);
-          const taxMethod = curr.taxMethod || "Inclusive";
+          const price = parseFloat(curr?.price || 0);
+          const qty = parseFloat(curr?.deliveryQty || 0);
+          const taxPercent = parseFloat(curr?.taxPercent || 0);
+          const taxMethod = curr?.taxMethod || "Inclusive";
 
-          const discountType = curr.discountType; // "Percentage" | "Flat"
+          const discountType = curr?.discountType; // "Percentage" | "Flat"
           const discountValue = parseFloat(curr.discountValue || 0);
 
           const gross = price * qty;
@@ -713,6 +711,16 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         </PDFViewer>
       </Modal>
 
+      <Modal isOpen={isSelectionModalOpen} onClose={() => setIsSelectionModalOpen(false)} widthClass="w-[95%] h-[95%]">
+        <DeliveryItemsSelection
+          linkedSaleOrderId={linkedSaleOrderId}
+          setDeliveryItems={setDeliveryItems}
+          deliveryItems={deliveryItems}
+          setDeliveryItemSelection={setIsSelectionModalOpen}
+          onClose={() => setIsSelectionModalOpen(false)}
+        />
+      </Modal>
+
       <TransactionEntryShell
         title="Sales Delivery"
         id={id}
@@ -724,44 +732,21 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         openStateClassName="max-h-[600px] opacity-100 overflow-visible"
         footer={footerContent}
         headerContent={(
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-2 overflow-visible">
 
-            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-12 gap-2">
+            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-8 gap-2">
               <div className="col-span-4">
                 <ReusableInput label="Sales Delivery No" readOnly value={docId} />
               </div>
               <div className="col-span-4">
                 <ReusableInput label="Sales Delivery Date" value={date} type="date" required readOnly disabled />
               </div>
-              <div className="col-span-4">
-                <DropdownInput
-                  name="Linked Sale Order"
-                  options={dropDownListObject(
-                    id ? saleOrderList?.data : saleOrderList?.data?.filter((item) => item?.canConvertToDelivery || String(item?.id) === String(linkedSaleOrderId)),
-                    "docId",
-                    "id"
-                  )}
-                  value={linkedSaleOrderId}
-                  setValue={setLinkedSaleOrderId}
-                  clear
-                  readOnly={Boolean(id) || readOnly}
-                />
-              </div>
+
             </TransactionHeaderSection>
 
-            <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
-              <div className="col-span-3 overflow-visible">
-                {/* <ReusableSearchableInput
-                  label="Customer Name"
-                  component="PartyMaster"
-                  placeholder="Search Customer Name..."
-                  optionList={supplierList?.data}
-                  setSearchTerm={(value) => { setCustomerId(value) }}
-                  searchTerm={customerId}
-                  show={"isClient"}
-                  required={true}
-                  disabled={id}
-                /> */}
+            <TransactionHeaderSection title="Customer Details" className="col-span-5 overflow-visible" bodyClassName="grid-cols-12 gap-1 overflow-visible">
+              <div className="col-span-4 overflow-visible">
+
                 <ReusableSearchableInputNewCustomerwithBranches
                   label="Customer Name"
                   component="PartyMaster"
@@ -797,6 +782,34 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                   disabled
                 />
               </div>
+              <div className="col-span-2">
+                <DropdownInput
+                  name="Linked Sale Order"
+                  options={dropDownListObject(
+                    id
+                      ? saleOrderList?.data
+                      : saleOrderList?.data?.filter((item) =>
+                        (item?.canConvertToDelivery || String(item?.id) === String(linkedSaleOrderId)) &&
+                        item?.customerId === customerId
+                      ),
+                    "docId",
+                    "id"
+                  )}
+                  value={linkedSaleOrderId}
+                  setValue={(value) => { setLinkedSaleOrderId(value); }}
+                  clear
+                  readOnly={Boolean(id) || readOnly}
+                />
+              </div>
+              <div className="col-span-2">
+                <button
+                  className="1 px-2 py-0.5 mt-6 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
+                  onClick={() => setIsSelectionModalOpen(true)(true)}
+                  disabled={id}
+                >
+                  Load from Sale Order
+                </button>
+              </div>
             </TransactionHeaderSection>
 
           </div>
@@ -825,7 +838,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
               itemPriceList={itemPriceList}
               priceTemplateList={priceTemplateList}
               convertSaleOrderId={convertSaleOrderId}
-            // restrictSourceLineEdits={Boolean(convertSaleOrderId && !id)}
             />
           </fieldset>
         </div>

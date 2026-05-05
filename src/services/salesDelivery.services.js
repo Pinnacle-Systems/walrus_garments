@@ -31,9 +31,10 @@ function isSameDeliveryReturnLine(deliveryItem, returnItem) {
 }
 
 function buildRemainingReturnItems(salesDeliveryItems = [], salesReturns = [], excludeSalesReturnId = null) {
+
     return (salesDeliveryItems || [])
         .map((deliveryItem) => {
-            const deliveredQty = parseAmount(deliveryItem?.qty);
+            const deliveredQty = parseAmount(deliveryItem?.deliveryQty);
             const returnedQty = (salesReturns || []).reduce((returnAcc, salesReturn) => {
                 if (excludeSalesReturnId && parseInt(salesReturn?.id) === parseInt(excludeSalesReturnId)) {
                     return returnAcc;
@@ -63,15 +64,24 @@ function getSalesDeliveryReturnState(salesDelivery, excludeSalesReturnId = null)
         salesDelivery?.SalesReturn,
         excludeSalesReturnId
     );
-    const deliveredQty = (salesDelivery?.SalesDeliveryItems || []).reduce((acc, curr) => acc + parseAmount(curr?.qty), 0);
+
+    console.log(salesDelivery, "salesDelivery")
+
+    const deliveredQty = (salesDelivery?.SalesDeliveryItems || []).reduce((acc, curr) => acc + parseAmount(curr?.deliveryQty), 0);
     const remainingQty = remainingReturnItems.reduce((acc, curr) => acc + parseAmount(curr?.remainingQty), 0);
     const returnedQty = Math.max(0, deliveredQty - remainingQty);
     const returnStatus = returnedQty <= 0.0001
         ? "Delivered"
         : (remainingQty > 0.0001 ? "Partially Returned" : "Fully Returned");
 
+
+    console.log({
+        deliveredQty,
+        remainingQty
+    })
+
     return {
-        remainingReturnItems,
+        // remainingReturnItems,
         returnedQty: returnedQty.toFixed(3),
         remainingReturnQty: remainingQty.toFixed(3),
         returnStatus,
@@ -171,6 +181,8 @@ async function get(req) {
     let data = await prisma.salesDelivery.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
+            isDeleted: false
+
         },
         include: {
             Party: {
@@ -201,6 +213,9 @@ async function get(req) {
                     SalesReturnItems: true,
                 }
             },
+        },
+        orderBy: {
+            id: "desc"
         }
     });
 
@@ -223,7 +238,35 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            SalesDeliveryItems: true,
+            SalesDeliveryItems: {
+                select: {
+                    id: true,
+                    itemId: true,
+                    sizeId: true,
+                    colorId: true,
+                    uomId: true,
+                    hsnId: true,
+                    Item: true,
+                    Size: true,
+                    Color: true,
+                    Uom: true,
+                    Hsn: true,
+                    price: true,
+                    taxPercent: true,
+                    taxMethod: true,
+                    discountType: true,
+                    discountValue: true,
+                    deliveryQty: true,
+
+                    SalesReturnItems: true,
+
+                    SaleOrderItems: {
+                        include: {
+                            SalesDeliveryItems: true
+                        }
+                    }
+                }
+            },
             FulfillmentAllocations: true,
             SalesReturn: {
                 include: {
@@ -239,8 +282,51 @@ async function getOne(id) {
             }
         }
     })
-    if (!data) return NoRecordFound("size");
-    return { statusCode: 0, data: { ...data, ...getSalesDeliveryReturnState(data), childRecord } };
+
+    const deliveryItemsWithReturnedQtyNew = data.SalesDeliveryItems.map((item) => {
+
+        const alreadyReturnedQty = item.SaleOrderItems?.SalesDeliveryItems
+            ?.reduce((sum, sri) => sum + parseFloat(sri.deliveryQty || 0), 0) ?? 0;
+        const balanceQty = (parseAmount(item?.SaleOrderItems?.qty || 0) + parseAmount(item?.deliveryQty || 0)) - alreadyReturnedQty;
+
+        return {
+            ...item,
+            alreadyReturnedQty,
+            balanceQty,
+        };
+    });
+
+    const deliveryItemsWithReturnedQty = (data.SalesDeliveryItems ?? []).map((item) => {
+        const returnedQty = (item.SalesReturnItems ?? []).reduce(
+            (sum, returnItem) => sum + parseAmount(returnItem.qty || 0),
+            0
+        );
+        const balanceQty = parseAmount(item.deliveryQty || 0) - returnedQty;
+
+        if (balanceQty > 0) {
+            return {
+                ...item,
+                returnedQty,
+                balanceQty,
+            };
+        }
+        return null;
+    }).filter(Boolean);
+
+    console.log(deliveryItemsWithReturnedQty, "deliveryItemsWithReturnedQty")
+
+    return {
+        statusCode: 0,
+        data: {
+            ...data,
+            // SalesDeliveryItems: deliveryItemsWithReturnedQty,
+            SalesDeliveryItems: deliveryItemsWithReturnedQtyNew,
+            remaingSaleDeliveryItems: deliveryItemsWithReturnedQty,
+
+            ...getSalesDeliveryReturnState(data), childRecord
+        }
+    };
+
 }
 
 async function getSearch(req) {
@@ -278,7 +364,6 @@ async function create(body) {
         shippingCharge,
     } = await body
 
-    // Validation removed as per user request
 
 
 
@@ -290,9 +375,6 @@ async function create(body) {
     try {
         let data;
         await prisma.$transaction(async (tx) => {
-            // Transactional validation removed as per user request
-
-
             data = await tx.salesDelivery.create({
                 data: {
                     customerId: customerId ? parseInt(customerId) : undefined,
@@ -306,13 +388,12 @@ async function create(body) {
                 }
             });
 
-            // Retail Stock Validation
             const retailStore = await tx.location.findFirst({
                 where: { storeName: "RETAIL" }
             });
 
             if (retailStore) {
-                for (const item of (deliveryItems || []).filter(i => i.itemId && parseAmount(i.qty) > 0)) {
+                for (const item of (deliveryItems || []).filter(i => i.itemId && parseAmount(i.deliveryQty) > 0)) {
                     const stockRows = await tx.stock.findMany({
                         where: {
                             itemId: parseInt(item.itemId),
@@ -324,7 +405,7 @@ async function create(body) {
                     });
 
                     const availableQty = stockRows.reduce((acc, curr) => acc + parseAmount(curr.qty), 0);
-                    const requestedQty = parseAmount(item.qty);
+                    const requestedQty = parseAmount(item.deliveryQty);
 
                     if (requestedQty > availableQty + 0.0001) {
                         const itemData = await tx.item.findUnique({ where: { id: parseInt(item.itemId) }, select: { name: true } });
@@ -335,7 +416,7 @@ async function create(body) {
                         const colorName = colorData?.name || "";
                         const sizeName = sizeData?.name || "";
 
-                        throw new Error(`Item "${itemName} - ${colorName} - ${sizeName}" has only ${availableQty.toFixed(3)} ss available in stock.`);
+                        throw new Error(`Item "${itemName} - ${colorName} - ${sizeName}" has only ${availableQty.toFixed(2)}  available in stock.`);
                     }
                 }
             }
@@ -347,13 +428,13 @@ async function create(body) {
                 const savedItem = await tx.salesDeliveryItems.create({
                     data: {
                         salesDeliveryId: parseInt(data.id),
-                        saleOrderItemId: temp["saleOrderItemId"] ? parseInt(temp["saleOrderItemId"]) : null,
+                        saleOrderItemId: temp["id"] ? parseInt(temp["id"]) : null,
                         itemId: temp["itemId"] ? parseInt(temp["itemId"]) : null,
                         sizeId: temp["sizeId"] ? parseInt(temp["sizeId"]) : null,
                         colorId: temp["colorId"] ? parseInt(temp["colorId"]) : null,
                         uomId: temp["uomId"] ? parseInt(temp["uomId"]) : null,
                         hsnId: temp["hsnId"] ? parseInt(temp["hsnId"]) : null,
-                        qty: temp["qty"] ? temp["qty"] : null,
+                        deliveryQty: temp["deliveryQty"] ? temp["deliveryQty"] : null,
                         price: temp["price"] ? temp["price"] : null,
                         discountType: temp["discountType"] || null,
                         discountValue: temp["discountValue"] || null,
@@ -381,7 +462,7 @@ async function create(body) {
                 storeId: retailStore?.id || 9,
                 branchId: branchId ? parseInt(branchId) : null,
                 barcode: item.barcode || null,
-                allocatedQty: parseAmount(item.qty),
+                allocatedQty: parseAmount(item.deliveryQty),
             }));
 
             if (allocations.length > 0) {
@@ -389,7 +470,7 @@ async function create(body) {
                     data: allocations.map((allocation) => ({
                         salesDeliveryId: parseInt(data.id),
                         salesDeliveryItemId: allocation.salesDeliveryItemId,
-                        saleOrderItemId: allocation.saleOrderItemId,
+                        saleOrderItemId: allocation.id,
                         itemId: allocation.itemId,
                         sizeId: allocation.sizeId,
                         colorId: allocation.colorId,
@@ -621,7 +702,7 @@ async function update(id, body) {
                     const savedItem = await tx.salesDeliveryItems.create({
                         data: {
                             salesDeliveryId: salesDeliveryData.id,
-                            saleOrderItemId: item.saleOrderItemId ? parseInt(item.saleOrderItemId) : null,
+                            saleOrderItemId: item.id ? parseInt(item.id) : null,
                             itemId: item.itemId ? parseInt(item.itemId) : null,
                             sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                             colorId: item.colorId ? parseInt(item.colorId) : null,

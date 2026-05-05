@@ -130,5 +130,9 @@ export { default as deliveryChallan } from "./deliveryChallan.route.js"
 export { default as salesReport } from "./salesReport.route.js"
 export { default as expense } from "./expense.route.js"
 export { default as expenseEntry } from "./expenseEntry.route.js"
+export { default as dayBook } from "./dayBook.route.js"
+export { default as paymentAdjustment } from "./paymentAdjustment.route.js"
+
+
 
 

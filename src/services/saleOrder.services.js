@@ -44,7 +44,7 @@ function buildRemainingSaleOrderItems(saleOrderItems = [], salesDeliveries = [],
 
             deliveredQtyBySaleOrderItemId.set(
                 saleOrderItemId,
-                (deliveredQtyBySaleOrderItemId.get(saleOrderItemId) || 0) + parseQty(deliveryItem?.qty)
+                (deliveredQtyBySaleOrderItemId.get(saleOrderItemId) || 0) + parseQty(deliveryItem?.deliveryQty)
             );
         }
     }
@@ -145,7 +145,7 @@ function getSaleOrderDeliveryState(saleOrder, quotationWithPayments = saleOrder?
             : "Partially Delivered");
 
     return {
-        remainingSaleOrderItems,
+        // remainingSaleOrderItems,
         totalReceivedAmount,
         remainingPaymentCapacity,
         deliveryStatus,
@@ -270,12 +270,13 @@ async function get(req) {
     let data = await prisma.saleorder.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
+            isDeleted: false
+
         },
         include: {
             Party: {
                 select: {
                     name: true,
-                    // branchId: true,
                     BranchType: {
                         select: {
                             name: true
@@ -298,6 +299,13 @@ async function get(req) {
                     uomId: true,
                     hsnId: true,
                     qty: true,
+
+                    price: true,
+                    taxPercent: true,
+                    taxMethod: true,
+                    discountType: true,
+                    discountValue: true,
+                    SalesDeliveryItems: true
                 }
             },
             Quotation: {
@@ -318,7 +326,7 @@ async function get(req) {
                             colorId: true,
                             uomId: true,
                             hsnId: true,
-                            qty: true,
+                            deliveryQty: true
                         }
                     }
                 }
@@ -351,6 +359,14 @@ async function get(req) {
         }
         const state = getSaleOrderDeliveryState(saleOrder, quotationWithPayments);
 
+
+
+
+
+
+
+
+
         return {
             ...saleOrder,
             Quotation: quotationWithPayments,
@@ -367,7 +383,30 @@ async function getOne(id) {
             id: parseInt(id)
         },
         include: {
-            SaleOrderItems: true,
+            SaleOrderItems: {
+                select: {
+                    id: true,
+                    itemId: true,
+                    sizeId: true,
+                    colorId: true,
+                    uomId: true,
+                    hsnId: true,
+                    Item: true,
+                    Size: true,
+                    Color: true,
+                    Uom: true,
+                    Hsn: true,
+                    qty: true,
+                    price: true,
+                    taxPercent: true,
+                    taxMethod: true,
+                    discountType: true,
+                    discountValue: true,
+                    SalesDeliveryItems: true
+
+
+                }
+            },
             SalesDelivery: {
                 include: {
                     SalesDeliveryItems: true,
@@ -403,18 +442,38 @@ async function getOne(id) {
             paymentData,
         };
     }
+    const saleOrderItemsWithDeliveredQty = data.SaleOrderItems.map((item) => {
+        const deliveredQty = item.SalesDeliveryItems.reduce(
+            (sum, deliveryItem) => sum + parseFloat(deliveryItem.deliveryQty || 0),
+            0
+        );
+        const balanceQty = parseFloat(item.qty || 0) - deliveredQty;
+
+        if (balanceQty > 0) {
+            return {
+                ...item,
+                deliveredQty,
+                balanceQty,
+            };
+        }
+        return null;
+    }).filter(Boolean);
+
 
     const state = getSaleOrderDeliveryState(data, quotationWithPayments);
+
 
     return {
         statusCode: 0,
         data: {
             ...data,
+            remaingSaleOrderItems: saleOrderItemsWithDeliveredQty,
             Quotation: quotationWithPayments,
             ...state,
         }
     };
 }
+
 
 async function getSearch(req) {
     const { searchKey } = req.params

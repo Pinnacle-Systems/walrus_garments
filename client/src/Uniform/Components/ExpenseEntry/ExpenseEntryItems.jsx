@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import TransactionLineItemsSection, { standardTransactionPlaceholderRowCount, transactionTableClassName, transactionTableHeadClassName, transactionTableIndexCellClassName, transactionTableRowClassName } from "../ReusableComponents/TransactionLineItemsSection";
 import { DropdownInputNew } from "../../../Inputs";
+import { dropDownListObject } from "../../../Utils/contructObject";
 
 const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, readOnly }) => {
 
@@ -78,11 +79,10 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
                                     <tr key={index} className={transactionTableRowClassName}>
                                         <td className={transactionTableIndexCellClassName}>{index + 1}</td>
 
-                                        {/* Expense Type */}
                                         <td className={compactFocusCellClassName}>
                                             <DropdownInputNew
                                                 searchable={true}
-                                                options={selectableExpenses}
+                                                options={dropDownListObject(expenseTypeList?.data, "name", "id")}
                                                 value={row.expenseCategoryId}
                                                 setValue={v => handleInputChange(v, index, "expenseCategoryId")}
                                                 readOnly={readOnly}
@@ -91,7 +91,6 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
                                             />
                                         </td>
 
-                                        {/* Description */}
                                         <td className={compactFocusCellClassName}>
                                             <input
                                                 type="text"
@@ -103,7 +102,6 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
                                             />
                                         </td>
 
-                                        {/* Amount */}
                                         <td className={`${compactFocusCellClassName} text-right`}>
                                             <input
                                                 type="number"
@@ -116,7 +114,6 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
                                             />
                                         </td>
 
-                                        {/* Action */}
                                         <td className={`${compactCellClassName} text-center`}>
                                             <button
                                                 onClick={addNewRow}

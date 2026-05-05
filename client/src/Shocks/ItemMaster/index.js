@@ -357,14 +357,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   };
 
   const validateData = (data) => {
-    if (!data.name || !data?.code || !data?.hsnId || !data?.mainCategory) {
+
+
+    if (!data.name || !data?.code || !data?.hsnId || !data?.mainCategory || !data?.subCategory) {
       return false;
     }
 
     if (effectivePricingMode === "STANDARD") {
       const standardPrice = data?.itemPriceList?.[0];
       const hasBarcodes = (standardPrice?.ItemBarcodes || []).some(b => b.barcode?.trim());
-      if (!hasBarcodes || !standardPrice?.sku?.trim() || !standardPrice?.salesPrice?.trim()) {
+      if (!hasBarcodes || !standardPrice?.salesPrice?.trim()) {
         return false;
       }
     }
@@ -1398,7 +1400,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                       type="text"
                                       className="text-center rounded w-full px-1 py-1 text-xs border-none focus:ring-0 uppercase"
                                       value={item?.ItemBarcodes?.[0]?.barcode || ""}
-                                      disabled={readOnly || isLegacyItem}
+                                      disabled={true}
                                       onChange={e => {
                                         const val = e.target.value.toUpperCase();
                                         setItemPriceList(prev => {

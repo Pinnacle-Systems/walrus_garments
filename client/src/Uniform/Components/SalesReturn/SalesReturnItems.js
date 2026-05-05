@@ -68,8 +68,8 @@ const SalesReturnItems = ({
 
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false)
 
-    const handleInputChange = (value, index, field) => {
-        console.log(value, "value", index, "index", field, "field")
+    const handleInputChange = (value, index, field, item) => {
+
         const newBlend = structuredClone(deliveryItems);
         if (field == "itemId") {
             const selectedItem = findSelectedItem(value);
@@ -78,6 +78,17 @@ const SalesReturnItems = ({
             if (selectedItem?.isLegacy) {
                 newBlend[index]["sizeId"] = "";
                 newBlend[index]["colorId"] = "";
+            }
+        }
+
+        if (field === "qty") {
+            if (parseFloat(item?.balanceQty || 0) < parseFloat(value || 0)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Return Quantity cannot be greater than Balance Quantity",
+                });
+                return
             }
         }
 
@@ -368,12 +379,18 @@ const SalesReturnItems = ({
                                     UOM
                                 </th>
 
+                                <th
+
+                                    className={`${compactHeaderCellClassName} w-16`}
+                                >
+                                    Balance Qty
+                                </th>
 
                                 <th
 
                                     className={`${compactHeaderCellClassName} w-16`}
                                 >
-                                    Quantity
+                                    Return Qty
                                 </th>
                                 <th
 
@@ -525,12 +542,16 @@ const SalesReturnItems = ({
                                         </select>
                                     </td>
 
+                                    <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                                        {parseFloat(row?.balanceQty || 0).toFixed(2)}
+
+                                    </td>
 
                                     <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                         <input
                                             onKeyDown={e => {
                                                 if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
+                                                if (e.key === "Delete") { handleInputChange("0.000", index, "qty", row) }
                                             }}
                                             min={"0"}
                                             type="number"
@@ -540,10 +561,10 @@ const SalesReturnItems = ({
                                             value={row?.qty}
                                             disabled={readOnly || !row.uomId}
                                             onChange={(e) =>
-                                                handleInputChange(e.target.value, index, "qty")
+                                                handleInputChange(e.target.value, index, "qty", row)
                                             }
                                             onBlur={(e) => {
-                                                handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
+                                                handleInputChange(parseFloat(e.target.value).toFixed(2), index, "qty", row);
                                             }
                                             }
                                         />
@@ -565,7 +586,7 @@ const SalesReturnItems = ({
                                                 handleInputChange(e.target.value, index, "price")
                                             }
                                             onBlur={(e) => {
-                                                handleInputChange(parseFloat(e.target.value).toFixed(3), index, "price");
+                                                handleInputChange(parseFloat(e.target.value).toFixed(2), index, "price");
 
                                             }
                                             }
@@ -577,7 +598,7 @@ const SalesReturnItems = ({
 
 
                                     <td className={`${compactCellClassName} text-right`}>
-                                        {(parseFloat(row?.price) * parseFloat(row?.qty)).toFixed(3) || 0}</td>
+                                        {(parseFloat(row?.price || 0) * parseFloat(row?.qty || 0)).toFixed(2)}</td>
 
 
 

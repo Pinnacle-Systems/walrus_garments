@@ -417,77 +417,7 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
             showTermSelect
             termValue={term}
             onTermChange={handleTermTemplateChange}
-            // termOptions={((id ? termsData?.data : termsData?.data?.filter((item) => item?.active)) || []).map((blend) => ({
-            //   value: blend.id,
-            //   label: blend?.name,
-            //   templateText: blend?.termsAndCondition || blend?.description || "",
-            // }))}
-            // chargeOptions={[
-            //   {
-            //     key: "packingChargeToggle",
-            //     label: "Packing",
-            //     checked: packingChargeEnabled,
-            //     onToggle: (checked) => {
-            //       setPackingChargeEnabled(checked);
-            //       if (!checked) {
-            //         setPackingCharge("");
-            //       } else if (!packingCharge) {
-            //         setPackingCharge("0.00");
-            //       }
-            //     },
-            //   },
-            //   {
-            //     key: "shippingChargeToggle",
-            //     label: "Shipping",
-            //     checked: shippingChargeEnabled,
-            //     onToggle: (checked) => {
-            //       setShippingChargeEnabled(checked);
-            //       if (!checked) {
-            //         setShippingCharge("");
-            //       } else if (!shippingCharge) {
-            //         setShippingCharge("0.00");
-            //       }
-            //     },
-            //   },
-            // ]}
-            // totalsRows={[
-            //   {
-            //     key: "totalQty",
-            //     label: "Total Qty",
-            //     value: parseFloat(getTotalQty()).toFixed(3),
-            //     summaryColumn: "left",
-            //   },
-            //   {
-            //     key: "beforeTaxAmount",
-            //     label: "Gross Amount",
-            //     value: `Rs.${parseFloat(subtotal || 0).toFixed(2)}`,
-            //     summaryColumn: "right",
-            //   },
-            //   {
-            //     key: "taxAmount",
-            //     label: "Tax Amount",
-            //     value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
-            //     summaryColumn: "right",
-            //   },
-            //   ...chargeRows,
-            //   {
-            //     key: "netAmount",
-            //     label: "Net Amount",
-            //     value: `Rs.${parseFloat(adjustedNetAmount || 0).toFixed(2)}`,
-            //     summaryColumn: "right",
-            //     emphasized: true,
-            //   },
-            //   ...(shouldShowPaymentReceived
-            //     ? [
-            //       {
-            //         key: "paymentReceived",
-            //         label: "Payment Received",
-            //         value: `Rs.${parseFloat(paymentReceivedAmount || 0).toFixed(2)}`,
-            //         summaryColumn: "left",
-            //       },
-            //     ]
-            //     : []),
-            // ]}
+
             leftActions={
                 <>
                     <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
@@ -599,31 +529,7 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
 
                         </TransactionHeaderSection>
                         <TransactionHeaderSection className="col-span-2" bodyClassName={`${saleOrderDocId ? "grid-cols-12" : "grid-cols-5"}`}>
-                            {/* <div className="grid grid-cols-1">
-                                <DropdownInputNew
-                                    name="Expense Type"
-                                    options={dropDownListObject(
-                                        id ? ExpenseEntryList?.data : ExpenseEntryList?.data?.filter(i => i.active),
-                                        "name", "id"
-                                    )}
-                                    value={expenseType}
-                                    setValue={setExpenseType}
-                                    readOnly={readOnly}
-                                    addNewLabel="+ Add New Expense Type"
-                                    // childComponent={ExpenseType}
-                                    addNewModalWidth="w-[40%] h-[50%]"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1">
-                                <DropdownInputNew
-                                    value={platForm}
-                                    setValue={setPlatForm}
-                                    options={platformList}
-                                    name="Platform"
-                                    required={true}
 
-                                />
-                            </div> */}
 
                         </TransactionHeaderSection>
 

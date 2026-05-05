@@ -116,7 +116,7 @@ const POSCartTable = ({
                                     </td>
                                     <td className="px-2 py-0.5 border-r border-slate-200">
                                         <div className="flex items-center gap-1 justify-center">
-                                            <button 
+                                            <button
                                                 disabled={isReportOnly}
                                                 onClick={() => updateQuantity(item.id, -1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">-</button>
                                             <input
@@ -128,7 +128,7 @@ const POSCartTable = ({
                                                 onFocus={(e) => { e.target.select(); setActiveRowIndex(index); }}
                                                 disabled={isReportOnly}
                                             />
-                                            <button 
+                                            <button
                                                 disabled={isReportOnly}
                                                 onClick={() => updateQuantity(item.id, 1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">+</button>
                                             <button
@@ -163,7 +163,7 @@ const POSCartTable = ({
                                             onChange={(e) => updateRate(item.id, e.target.value, item.sizeId, item.colorId)}
                                             className={`w-full py-0.5 text-right bg-transparent border-transparent hover:border-slate-200 focus:bg-white focus:border-indigo-400 rounded transition-all font-black text-sm outline-none ${item.priceType === 'offerPrice' ? 'text-emerald-600' : 'text-slate-800'}`}
                                             onFocus={(e) => e.target.select()}
-                                            disabled={isReportOnly}
+                                            disabled={true}
                                         />
                                     </td>
                                     <td className="px-2 py-1 text-right border-r border-slate-200 bg-slate-50/50 font-serif">

@@ -334,13 +334,19 @@ const PointOfSale = () => {
                 if (off.maxDiscountValue && discountValue > off.maxDiscountValue) discountValue = off.maxDiscountValue;
             } else if (off.discountType === 'Fixed') {
                 discountValue = off.discountValue || 0;
-            } else if (['Volume', 'Override'].includes(off.discountType)) {
+            } else if (off.discountType === 'Override') {
                 const sortedTiers = [...(off.OfferTier || [])].sort((a, b) => b.minQty - a.minQty);
                 const tier = sortedTiers.find(t => scopeQty >= t.minQty);
                 if (tier) {
                     if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
-                    else if (off.discountType === 'Override') discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
-                    else discountValue = tier.value;
+                    else discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
+                }
+            } else if (off.discountType === 'Volume') {
+                const sortedTiers = [...(off.OfferTier || [])].sort((a, b) => b.minQty - a.minQty);
+                const tier = sortedTiers.find(t => scopeQty >= t.minQty);
+                if (tier) {
+                    if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
+                    else discountValue = tier.value * scopeQty;
                 }
             }
             if (discountValue > 0) potential.push({ ...off, calculatedDiscount: discountValue, inScopeItems });
@@ -350,6 +356,26 @@ const PointOfSale = () => {
 
     const { cartWithOffers, appliedOffers } = useMemo(() => {
         if (!cart.length) return { cartWithOffers: [], appliedOffers: [] };
+
+        // 1. Pre-calculate total quantity for each offer's scope in the current cart
+        const offerScopeTotals = {};
+        activeOffers.forEach(off => {
+            const inScopeItems = cart.filter(item => {
+                if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+                if (item.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
+                if (off.scopeMode === 'Global') return true;
+                if (off.scopeMode === 'Item') return off.OfferScope?.some(s => String(s.refId) === String(item.itemId));
+                if (off.scopeMode === 'Collection') {
+                    return off.OfferScope?.some(scope => {
+                        const matchedCollection = collectionsData?.data?.find(col => String(col.id) === String(scope.refId));
+                        return matchedCollection?.CollectionItems?.some(ci => String(ci.itemId) === String(item.itemId));
+                    });
+                }
+                return false;
+            });
+            offerScopeTotals[off.id] = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
+        });
+
         const appliedSet = new Set();
         const computed = cart.map(item => {
             const cartKey = `${item.itemId}-${item.sizeId}-${item.colorId}-${item.barcodeType}`;
@@ -357,24 +383,35 @@ const PointOfSale = () => {
             if (!rowOfferId) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
 
             const selectedOffer = potentialOffers.find(o => o.id === rowOfferId) || activeOffers.find(o => o.id === rowOfferId);
+            console.log(selectedOffer, "selectedOffer")
+
             if (!selectedOffer) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
 
             appliedSet.add(selectedOffer);
             let currentItemPrice = item.salesPrice !== undefined ? parseFloat(item.salesPrice) : parseFloat(item.price);
+            const totalScopeQty = offerScopeTotals[selectedOffer.id] || 0;
 
             if (selectedOffer.discountType === 'Percentage') currentItemPrice *= (1 - parseFloat(selectedOffer.discountValue || 0) / 100);
-            else if (selectedOffer.discountType === 'Fixed') currentItemPrice = Math.max(0, currentItemPrice - ((selectedOffer.discountValue || 0) / (parseFloat(item.qty) || 1)));
-            else if (['Override', 'Volume'].includes(selectedOffer.discountType)) {
-                const tier = [...(selectedOffer.OfferTier || [])].sort((a, b) => b.minQty - a.minQty).find(t => parseFloat(item.qty) >= t.minQty);
+            else if (selectedOffer.discountType === 'Fixed')
+                currentItemPrice = Math.max(0, currentItemPrice - parseFloat(selectedOffer.discountValue || 0));
+            else if (selectedOffer.discountType === 'Override') {
+                const tier = [...(selectedOffer.OfferTier || [])].sort((a, b) => b.minQty - a.minQty).find(t => totalScopeQty >= t.minQty);
                 if (tier) {
                     if (tier.type === 'Fixed') currentItemPrice = tier.value;
+                    else currentItemPrice *= (1 - parseFloat(tier.value || 0) / 100);
+                }
+            }
+            else if (selectedOffer.discountType === 'Volume') {
+                const tier = [...(selectedOffer.OfferTier || [])].sort((a, b) => b.minQty - a.minQty).find(t => totalScopeQty >= t.minQty);
+                if (tier) {
+                    if (tier.type === 'Fixed') currentItemPrice = Math.max(0, currentItemPrice - parseFloat(tier.value || 0));
                     else currentItemPrice *= (1 - parseFloat(tier.value || 0) / 100);
                 }
             }
             return { ...item, priceType: 'offerPrice', price: Math.max(0, currentItemPrice), appliedOfferName: selectedOffer.name };
         });
         return { cartWithOffers: computed, appliedOffers: Array.from(appliedSet) };
-    }, [cart, selectedOffersByRow, potentialOffers, activeOffers]);
+    }, [cart, selectedOffersByRow, potentialOffers, activeOffers, collectionsData]);
 
     const [showItemOfferModal, setShowItemOfferModal] = useState(false);
     const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
@@ -383,44 +420,6 @@ const PointOfSale = () => {
 
     const handleShowItemOffers = (item) => { setSelectedItemForOffers(item); setShowItemOfferModal(true); };
 
-    // const getItemApplicableOffers = (item) => {
-    //     if (!item || !activeOffers.length) return [];
-
-    //     return activeOffers.filter(off => {
-    //         // ✅ CLEARANCE Check
-    //         if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
-
-    //         // ✅ REGULAR Check
-    //         if (item.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
-
-    //         const targetId = item.itemId || item.id;
-    //         let isInScope = off.scopeMode === 'Global' ||
-    //             ((off.scopeMode === 'Item' || off.scopeMode === 'Collection') &&
-    //                 off.OfferScope?.some(s => String(s.refId) === String(targetId)));
-
-    //         if (!isInScope) return false;
-
-    //         const inScopeItems = cartWithOffers.filter(cit => {
-    //             // ✅ CLEARANCE Check
-    //             if (cit.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
-    //             // ✅ REGULAR Check
-    //             if (cit.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
-
-    //             const citId = cit.itemId || cit.id;
-    //             return off.scopeMode === 'Global' ||
-    //                 ((off.scopeMode === 'Item' || off.scopeMode === 'Collection') &&
-    //                     off.OfferScope?.some(s => String(s.refId) === String(citId)));
-    //         });
-
-    //         const scopeQty = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
-    //         const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
-
-    //         const rules = off.OfferRule?.[0]?.conditions?.rules || [];
-    //         const results = rules.map(rule => {
-    //             const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
-    //             if (rule.operator === '>=') return target >= parseFloat(rule.value);
-    //             if (rule.operator === '<=') return target <= parseFloat(rule.value);
-    //             if (rule.operator === '==') return target === parseFloat(rule.value);
 
 
     const getItemApplicableOffers = (item) => {

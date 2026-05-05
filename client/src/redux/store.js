@@ -27,6 +27,7 @@ import {
   AccessoryStockApi,
   paymentApi,
   DeliveryChallanApi,
+  paymentAdjustmentApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -68,7 +69,8 @@ import {
   collectionsApi,
   salesReportApi,
   ExpenseMasterApi,
-  ExpenseEntryApi
+  ExpenseEntryApi,
+  DayBookApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -225,6 +227,8 @@ const commonReducers = {
   salesReport: salesReportApi.reducer,
   ExpenseMaster: ExpenseMasterApi.reducer,
   ExpenseEntry: ExpenseEntryApi.reducer,
+  dayBook: DayBookApi.reducer,
+  paymentAdjustment: paymentAdjustmentApi.reducer,
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -355,7 +359,9 @@ collectionsApi.middleware,
 DeliveryChallanApi.middleware,
 salesReportApi.middleware,
 ExpenseMasterApi.middleware,
-ExpenseEntryApi.middleware
+ExpenseEntryApi.middleware,
+DayBookApi.middleware,
+  paymentAdjustmentApi.middleware
 ];
 
 

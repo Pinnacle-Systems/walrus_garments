@@ -15,7 +15,7 @@ const PosItemsSelection = ({
     // Current items from the selected bill
     const billItems = returnType === "Pos"
         ? (singlePosData?.data?.PosItems || [])
-        : (singleSalesDeliveryData?.data?.SalesDeliveryItems || []);
+        : (singleSalesDeliveryData?.data?.remaingSaleDeliveryItems || []);
 
     const [localSelectedItems, setLocalSelectedItems] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -186,10 +186,10 @@ const PosItemsSelection = ({
                                         {item.uomName || findFromList(item.uomId, itemList?.data, "uomName") || "-"}
                                     </td>
                                     <td className="border border-gray-300 p-1 text-[11px] text-right px-2 font-mono">
-                                        {parseFloat(item.price || item.salesPrice || 0).toFixed(3)}
+                                        {parseFloat(item.price || item.salesPrice || 0).toFixed(2)}
                                     </td>
                                     <td className="border border-gray-300 p-1 text-[11px] text-right px-2 font-bold text-indigo-600">
-                                        {parseFloat(item.qty).toFixed(3)}
+                                        {parseFloat(item.deliveryQty || 0).toFixed(2)}
                                     </td>
                                 </tr>
                             )) : (

@@ -105,6 +105,7 @@ async function get(req) {
     let data = await prisma.quotation.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
+            isDeleted: false
         },
         include: {
             Party: {
@@ -219,6 +220,7 @@ async function create(body) {
         packingCharge,
         shippingChargeEnabled,
         shippingCharge,
+        isMinAdvanceEdited
     } = await body
 
 
@@ -243,6 +245,7 @@ async function create(body) {
                 shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                 remarks: remarks ? remarks : undefined,
                 termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
+                isMinAdvanceEdited: isMinAdvanceEdited ? isMinAdvanceEdited : false,
                 QuotationItems: {
                     createMany: quoteItems?.length > 0 ? {
                         data: quoteItems?.filter(temp => temp.itemId).map((temp) => {
@@ -351,6 +354,7 @@ async function update(id, body) {
         packingCharge,
         shippingChargeEnabled,
         shippingCharge,
+        isMinAdvanceEdited
     } = await body
 
     const dataFound = await prisma.quotation.findUnique({
@@ -399,6 +403,8 @@ async function update(id, body) {
                 shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                 remarks: remarks || null,
                 termsAndCondition: termsAndCondition || null,
+                isMinAdvanceEdited: isMinAdvanceEdited ? isMinAdvanceEdited : false,
+
             },
         })
 
@@ -453,10 +459,13 @@ async function update(id, body) {
 }
 
 async function remove(id) {
-    const data = await prisma.quotation.delete({
+    const data = await prisma.quotation.update({
         where: {
             id: parseInt(id)
         },
+        data: {
+            isDeleted: true
+        }
     })
     return { statusCode: 0, data };
 }

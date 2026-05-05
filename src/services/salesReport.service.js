@@ -332,4 +332,255 @@ async function getOnlineSalesDeliveryReport(query) {
     }
 }
 
-export { getSalesReport, getSalesmanSummaryReport, getOnlineSalesDeliveryReport };
+
+async function getOverAllSalesReport(query) {
+    try {
+        const { fromDate, toDate, branchId } = query;
+
+        const from = fromDate ? new Date(fromDate) : undefined;
+        const to = toDate ? new Date(toDate) : undefined;
+
+        if (from) from.setHours(0, 0, 0, 0);
+        if (to) to.setHours(23, 59, 59, 999);
+
+        const commonWhere = {
+            branchId: branchId ? parseInt(branchId) : undefined,
+            createdAt: from && to ? {
+                gte: from,
+                lte: to
+            } : undefined
+        };
+
+        // 1. Fetch POS Sales
+        const posSales = await prisma.pos.findMany({
+            where: commonWhere,
+            include: {
+                Party: true,
+                PosPayments: true,
+                PosItems: {
+                    include: {
+                        Employee: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // 2. Fetch Bulk Sales (Sales Delivery)
+        const bulkSales = await prisma.salesDelivery.findMany({
+            where: {
+                ...commonWhere,
+                isDeleted: false
+            },
+            include: {
+                Party: true,
+                SalesDeliveryItems: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // 3. Fetch Online Sales (Delivery Challan with platform)
+        const onlineSales = await prisma.deliveryChallan.findMany({
+            where: {
+                ...commonWhere,
+                platform: { not: "" }
+            },
+            include: {
+                Party: true,
+                DeliveryChallanItems: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // 4. Fetch Expenses
+        const expenses = await prisma.expense.findMany({
+            where: commonWhere,
+            include: {
+                ExpenseEntryItems: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // --- Formatting ---
+
+        const formattedPos = posSales.map(sale => {
+            const payments = sale.PosPayments || [];
+            const getPayment = (mode) => {
+                const p = payments.find(pay => pay.paymentMode && pay.paymentMode.toLowerCase() === mode.toLowerCase());
+                return parseFloat(p?.amount || 0);
+            };
+
+            return {
+                id: `pos-${sale.id}`,
+                date: sale.date || sale.createdAt,
+                docId: sale.docId,
+                customerName: sale.Party?.name || 'Walk-in',
+                type: 'POS Sales',
+                cash: getPayment('Cash'),
+                upi: getPayment('UPI'),
+                card: getPayment('Card'),
+                online: getPayment('Online'),
+                totalAmount: parseFloat(sale.netAmount || 0),
+                salesman: sale.PosItems?.[0]?.Employee?.name || 'N/A',
+                platform: 'N/A'
+            };
+        });
+
+        const formattedBulk = bulkSales.map(sale => {
+            const itemsAmount = (sale.SalesDeliveryItems || []).reduce((acc, curr) => {
+                const price = parseFloat(curr.price || 0);
+                const qty = parseFloat(curr.deliveryQty || 0);
+                const taxPercent = parseFloat(curr.taxPercent || 0);
+                const taxMethod = curr.taxMethod || "Inclusive";
+                const lineDiscountType = curr.discountType;
+                const lineDiscountValue = parseFloat(curr.discountValue || 0);
+
+                let rowTotal = price * qty;
+                if (lineDiscountType === "Percentage") {
+                    rowTotal -= (rowTotal * lineDiscountValue) / 100;
+                } else if (lineDiscountType === "Flat") {
+                    rowTotal -= lineDiscountValue;
+                }
+                rowTotal = Math.max(0, rowTotal);
+
+                if (taxMethod === "Exclusive") {
+                    rowTotal += (rowTotal * taxPercent) / 100;
+                }
+
+                return acc + rowTotal;
+            }, 0);
+
+            const packingCharge = sale.packingChargeEnabled ? parseFloat(sale.packingCharge || 0) : 0;
+            const shippingCharge = sale.shippingChargeEnabled ? parseFloat(sale.shippingCharge || 0) : 0;
+            const netAmount = itemsAmount + packingCharge + shippingCharge;
+
+            return {
+                id: `bulk-${sale.id}`,
+                date: sale.date || sale.createdAt,
+                docId: sale.docId,
+                customerName: sale.Party?.name || 'N/A',
+                type: 'Bulk Sales',
+                cash: 0,
+                upi: 0,
+                card: 0,
+                online: 0,
+                totalAmount: netAmount,
+                salesman: 'N/A',
+                platform: 'N/A'
+            };
+        });
+
+        const formattedOnline = onlineSales.map(sale => {
+            const totalAmount = (sale.DeliveryChallanItems || []).reduce((acc, curr) => {
+                const price = parseFloat(curr.price || 0);
+                const qty = parseFloat(curr.qty || 0);
+                return acc + (price * qty);
+            }, 0);
+
+            return {
+                id: `online-${sale.id}`,
+                date: sale.date || sale.createdAt,
+                docId: sale.docId,
+                customerName: sale.Party?.name || 'N/A',
+                type: 'Online',
+                platform: sale.platform || 'N/A',
+                cash: 0,
+                upi: 0,
+                card: 0,
+                online: totalAmount,
+                totalAmount: totalAmount,
+                salesman: 'N/A'
+            };
+        });
+
+        const formattedExpenses = expenses.map(expense => {
+            const totalAmount = (expense.ExpenseEntryItems || []).reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+
+            return {
+                id: `expense-${expense.id}`,
+                date: expense.date || expense.createdAt,
+                docId: expense.docId,
+                customerName: 'Expense',
+                type: 'Expense',
+                cash: 0,
+                upi: 0,
+                card: 0,
+                online: 0,
+                totalAmount: totalAmount,
+                salesman: 'N/A',
+                platform: 'N/A',
+                isExpense: true
+            };
+        });
+
+        // Combined Transactions
+        const allTransactions = [
+            ...formattedPos, 
+            ...formattedBulk, 
+            ...formattedOnline, 
+            ...formattedExpenses
+        ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // --- Salesman Summary ---
+        const salesmanMap = {};
+        posSales.forEach(sale => {
+            sale.PosItems.forEach(item => {
+                const smId = item.salesPersonId || 0;
+                const smName = item.Employee?.name || 'Unassigned';
+                
+                if (!salesmanMap[smId]) {
+                    salesmanMap[smId] = {
+                        id: smId,
+                        name: smName,
+                        totalSales: 0,
+                        posSales: 0,
+                        billCount: new Set()
+                    };
+                }
+                
+                const qty = parseFloat(item.qty || 0);
+                const price = parseFloat(item.price || 0);
+                const amount = qty * price;
+                
+                if (item.isReturn) {
+                    salesmanMap[smId].totalSales -= amount;
+                    salesmanMap[smId].posSales -= amount;
+                } else {
+                    salesmanMap[smId].totalSales += amount;
+                    salesmanMap[smId].posSales += amount;
+                    salesmanMap[smId].billCount.add(sale.id);
+                }
+            });
+        });
+
+        const salesmanSummary = Object.values(salesmanMap).map(s => ({
+            ...s,
+            billCount: s.billCount.size
+        }));
+
+        // Summary Totals
+        const summary = {
+            totalPos: formattedPos.reduce((acc, curr) => acc + curr.totalAmount, 0),
+            totalBulk: formattedBulk.reduce((acc, curr) => acc + curr.totalAmount, 0),
+            totalOnline: formattedOnline.reduce((acc, curr) => acc + curr.totalAmount, 0),
+            totalExpense: formattedExpenses.reduce((acc, curr) => acc + curr.totalAmount, 0),
+        };
+        summary.netSales = summary.totalPos + summary.totalBulk + summary.totalOnline;
+        summary.finalProfit = summary.netSales - summary.totalExpense;
+
+        return { 
+            statusCode: 0, 
+            data: {
+                transactions: allTransactions,
+                salesmanSummary,
+                summary
+            } 
+        };
+    } catch (error) {
+        console.error("OverAll Sales Report Service Error:", error);
+        return { statusCode: 1, message: error.message };
+    }
+}
+
+export { getSalesReport, getSalesmanSummaryReport, getOnlineSalesDeliveryReport, getOverAllSalesReport };
+

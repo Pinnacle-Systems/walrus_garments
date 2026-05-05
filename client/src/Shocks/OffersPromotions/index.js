@@ -735,7 +735,7 @@ const OffersPromotions = () => {
                                 {id ? (readOnly ? "View Promotion" : "Edit Promotion") : "Add New Promotion"}
                             </h2>
                             <div className="flex gap-2">
-                                <button onClick={() => setForm(false)} className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded transition-all">Cancel</button>
+
                                 {!readOnly && (
                                     <button
                                         onClick={() => saveData("close")}

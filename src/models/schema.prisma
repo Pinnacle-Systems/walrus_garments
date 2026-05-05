@@ -177,6 +177,7 @@ model Branch {
   Offer                                  Offer[]
   DeliveryChallan                        DeliveryChallan[]
   expenses                               Expense[]
+  DayBook                                DayBook[]
 }
 
 model UserOnBranch {
@@ -330,6 +331,8 @@ model User {
   ExpenseCreatedBy                    Expense[]                    @relation(name: "createdBy")
   ExpenseUpdateBy                     Expense[]                    @relation(name: "updatedBy")
   Pos                                 Pos[]                        @relation(name: "approver")
+  DayBook                             DayBook[]
+  PaymentAdjustmentCreatedBy          PaymentAdjustment[]          @relation(name: "createdBy")
 }
 
 model Employee {
@@ -5075,6 +5078,8 @@ model Quotation {
   Saleorder             Saleorder[]
   TermsAndConditionsNew TermsAndConditionsNew? @relation(fields: [termsAndConditionsId], references: [id])
   termsAndConditionsId  Int?
+  isDeleted             Boolean?               @default(false)
+  isMinAdvanceEdited    Boolean?               @default(false)
 }
 
 model QuotationItems {
@@ -5128,9 +5133,11 @@ model Saleorder {
   termsAndCondition     String?
   TermsAndConditionsNew TermsAndConditionsNew? @relation(fields: [termsAndConditionsId], references: [id])
   termsAndConditionsId  Int?
-  SaleOrderItems        SaleOrderItems[]
-  SalesDelivery         SalesDelivery[]
-  SalesInvoice          SalesInvoice[]
+  isDeleted             Boolean?               @default(false)
+
+  SaleOrderItems SaleOrderItems[]
+  SalesDelivery  SalesDelivery[]
+  SalesInvoice   SalesInvoice[]
 }
 
 model SaleOrderItems {
@@ -5216,30 +5223,32 @@ model StockAdjustmentItems {
 }
 
 model SalesDelivery {
-  id                     Int                                  @id @default(autoincrement())
-  docId                  String?
-  date                   DateTime?
-  Branch                 Branch?                              @relation(fields: [branchId], references: [id])
-  branchId               Int?
-  Party                  Party?                               @relation(fields: [customerId], references: [id])
-  customerId             Int?
-  createdAt              DateTime?                            @default(now())
-  updatedAt              DateTime?                            @updatedAt
-  createdBy              User?                                @relation("createdBy", fields: [createdById], references: [id])
-  createdById            Int?
-  updatedBy              User?                                @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById            Int?
-  taxType                String?
-  packingChargeEnabled   Boolean?                             @default(false)
-  packingCharge          String?
-  shippingChargeEnabled  Boolean?                             @default(false)
-  shippingCharge         String?
-  remarks                String?
-  termsAndCondition      String?
-  TermsAndConditionsNew  TermsAndConditionsNew?               @relation(fields: [termsAndConditionsId], references: [id])
-  termsAndConditionsId   Int?
-  saleOrderId            Int?
-  Saleorder              Saleorder?                           @relation(fields: [saleOrderId], references: [id])
+  id                    Int                    @id @default(autoincrement())
+  docId                 String?
+  date                  DateTime?
+  Branch                Branch?                @relation(fields: [branchId], references: [id])
+  branchId              Int?
+  Party                 Party?                 @relation(fields: [customerId], references: [id])
+  customerId            Int?
+  createdAt             DateTime?              @default(now())
+  updatedAt             DateTime?              @updatedAt
+  createdBy             User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdById           Int?
+  updatedBy             User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById           Int?
+  taxType               String?
+  packingChargeEnabled  Boolean?               @default(false)
+  packingCharge         String?
+  shippingChargeEnabled Boolean?               @default(false)
+  shippingCharge        String?
+  remarks               String?
+  termsAndCondition     String?
+  TermsAndConditionsNew TermsAndConditionsNew? @relation(fields: [termsAndConditionsId], references: [id])
+  termsAndConditionsId  Int?
+  saleOrderId           Int?
+  Saleorder             Saleorder?             @relation(fields: [saleOrderId], references: [id])
+  isDeleted             Boolean?               @default(false)
+
   SalesDeliveryItems     SalesDeliveryItems[]
   FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
   SalesReturn            SalesReturn[]
@@ -5262,6 +5271,7 @@ model SalesDeliveryItems {
   Hsn                    Hsn?                                 @relation(fields: [hsnId], references: [id])
   hsnId                  Int?
   qty                    String?
+  deliveryQty            String?
   price                  String?
   discountType           String?
   discountValue          String?
@@ -5378,6 +5388,7 @@ model SalesReturn {
   ExchangePos           Pos?               @relation("ExchangeNewBill", fields: [exchangePosId], references: [id])
   refundType            String?
   SalesDelivery         SalesDelivery?     @relation(fields: [salesDeliveryId], references: [id])
+  isDeleted             Boolean?           @default(false)
   SalesReturnItems      SalesReturnItems[]
   Expense               Expense[]
 }
@@ -5450,6 +5461,7 @@ model Payment {
   paymentMode     String
   isDeleted       Boolean  @default(false)
   cvv             DateTime
+  date            DateTime
   paidAmount      Int?     @default(0)
   paymentType     String
   totalBillAmount Int?
@@ -5539,15 +5551,18 @@ model PosItems {
 }
 
 model PosPayments {
-  id             Int     @id @default(autoincrement())
-  Pos            Pos?    @relation("Bill", fields: [PosId], references: [id], onDelete: Cascade)
+  id             Int       @id @default(autoincrement())
+  Pos            Pos?      @relation("Bill", fields: [PosId], references: [id], onDelete: Cascade)
   PosId          Int?
   amount         String?
   paymentMode    String?
   reference_no   String?
   transaction_id String?
-  RetunBill      Pos?    @relation("ReturnBill", fields: [retunBillId], references: [id], onDelete: Cascade)
+  RetunBill      Pos?      @relation("ReturnBill", fields: [retunBillId], references: [id], onDelete: Cascade)
   retunBillId    Int?
+  date           DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model Collections {
@@ -5716,4 +5731,48 @@ model ExpenseEntryItems {
   amount            String?
   paymentMethod     String?
   referenceNo       String?
+}
+
+model DayBook {
+  id             Int      @id @default(autoincrement())
+  date           DateTime
+  branchId       Int
+  Branch         Branch?  @relation(fields: [branchId], references: [id])
+  openingBalance Float    @default(0)
+  posCashSales   Float    @default(0)
+  bulkCashSales  Float    @default(0)
+  otherReceipts  Float    @default(0)
+  cashExpenses   Float    @default(0)
+  otherPayments  Float    @default(0)
+
+  expectedCash Float @default(0)
+  difference   Float @default(0)
+
+  totalUpi    Float @default(0)
+  totalCard   Float @default(0)
+  totalOnline Float @default(0)
+
+  denominations Json?
+  remarks       String? @db.Text
+  status        String  @default("CLOSED")
+
+  closedById Int
+  closedBy   User?    @relation(fields: [closedById], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+
+model PaymentAdjustment {
+  id              Int               @id @default(autoincrement())
+  date            DateTime?
+  referenceNumber String?           @db.VarChar(50)
+  adjustmentType  String?
+  adjustmentAmount String?
+  paymentMode    String?        
+  userId          Int?
+  createdBy       User?               @relation("createdBy", fields: [userId], references: [id])
+  reason          String?           @db.VarChar(255)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }

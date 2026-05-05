@@ -97,10 +97,11 @@ const SalesDelivery = () => {
         setId("");
         setCustomerId(deliveryData.customerId || "");
         setSalesDeliveryId(convertSalesDeliveryId);
-        setDeliveryItems(deliveryData.remainingReturnItems || []);
+        setDeliveryItems(deliveryData.remaingSaleDeliveryItems || []);
         setStoreId(getWarehouseLocationId());
         setReadOnly(false);
         setShowManufacturer(true);
+
         // dispatch(push({ name: "SALES RETURN", projectId: null }));
     }, [convertSalesDeliveryId, deliveryToConvertData, dispatch, locationData]);
 
@@ -118,35 +119,29 @@ const SalesDelivery = () => {
         setReadOnly(false);
     };
 
-    const handleDelete = async (id, childRecord) => {
+    const onNew = () => {
+        setId("");
+        setReadOnly(false);
+        setCustomerId("")
+        setPartyId('')
+        setPosId('')
+        setSalesDeliveryId('')
+        // setStoreId(getWarehouseLocationId())
+        setDeliveryItems([])
+    }
 
-
-        // if (childRecordCount(childRecord)) {
-        //     Swal.fire({
-        //         icon: 'error',
-        //         text: 'Child Record Exists',
-        //     });
-        //     return
-        // }
-
+    const handleDelete = async (id) => {
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
             try {
                 await removeData(id)
-                setId("");
+                setId(null);
                 onNew();
-                // toast.success("Deleted Successfully");
                 Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",
-                    draggable: true,
-                    timer: 1000,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
                 });
                 invalidateTagsDispatch()
 
@@ -156,16 +151,8 @@ const SalesDelivery = () => {
         }
 
     };
-    const onNew = () => {
-        setId("");
-        setReadOnly(false);
-        setCustomerId("")
-        setPartyId('')
-        setPosId('')
-        setSalesDeliveryId('')
-        setStoreId(getWarehouseLocationId())
-        setDeliveryItems([])
-    }
+
+
 
     return (
         <>
@@ -183,7 +170,7 @@ const SalesDelivery = () => {
                         partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
                         supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} hsnList={hsnList} salesDeliveryId={salesDeliveryId} setSalesDeliveryId={setSalesDeliveryId} setPosId={setPosId} posId={posId} returnType={returnType} setReturnType={setReturnType}
                         exchangeItems={exchangeItems} setExchangeItems={setExchangeItems}
-                        termsData={termsData} convertSalesDeliveryId={convertSalesDeliveryId} invalidateTagsDispatch={invalidateTagsDispatch}
+                        termsData={termsData} convertSalesDeliveryId={convertSalesDeliveryId} invalidateTagsDispatch={invalidateTagsDispatch} deliveryId={convertSalesDeliveryId}
                     />
                 </div>
 

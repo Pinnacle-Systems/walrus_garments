@@ -32,7 +32,7 @@ function buildRemainingReturnQtyByDeliveryItemId(salesDelivery, excludeSalesRetu
     const remainingQtyByDeliveryItemId = new Map();
 
     for (const deliveryItem of salesDelivery?.SalesDeliveryItems || []) {
-        const deliveredQty = parseAmount(deliveryItem?.qty);
+        const deliveredQty = parseAmount(deliveryItem?.deliveryQty);
         const returnedQty = (salesDelivery?.SalesReturn || []).reduce((returnAcc, salesReturn) => {
             if (excludeSalesReturnId && parseInt(salesReturn?.id) === parseInt(excludeSalesReturnId)) {
                 return returnAcc;
@@ -74,15 +74,20 @@ async function getSalesDeliveryReturnValidationState(tx, salesDeliveryId, exclud
     };
 }
 
-function validateLinkedReturnItems(deliveryItems = [], validationState) {
+function validateLinkedReturnItems(deliveryItems = [], validationState, id) {
+    // console.log(deliveryItems, "deliveryItems")
     if (!validationState) return null;
 
     for (const item of (deliveryItems || []).filter(i => i.itemId)) {
-        if (!item?.salesDeliveryItemId) {
+        if (!item?.id) {
             return "Each converted return line must be tied to a sales delivery line.";
         }
-
-        const salesDeliveryItemId = parseInt(item.salesDeliveryItemId);
+        let salesDeliveryItemId;
+        if (id) {
+            salesDeliveryItemId = parseInt(item.salesDeliveryItemId);
+        } else {
+            salesDeliveryItemId = parseInt(item.id);
+        }
         const remainingQty = validationState.remainingQtyByDeliveryItemId.get(salesDeliveryItemId);
         if (remainingQty === undefined) {
             return "One or more return lines are not part of the selected sales delivery.";
@@ -148,6 +153,8 @@ async function get(req) {
     let data = await prisma.salesReturn.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
+            isDeleted: false
+
         },
         include: {
             Party: {
@@ -186,15 +193,46 @@ async function getOne(id) {
         where: { id: parseInt(id) },
         include: {
             SalesReturnItems: {
-                include: { Item: true, Color: true, Size: true }
+                include: {
+                    Item: true,
+                    Color: true,
+                    Size: true,
+                    SalesDeliveryItems: {
+                        include: {
+                            SalesReturnItems: true
+                        }
+                    },
+                }
             },
             Party: true,
             Store: true,
-            // PosPayments: true
         }
     }); if (!data) return NoRecordFound("Sales Return");
 
-    return { statusCode: 0, data: { ...data, childRecord } };
+
+
+    const SalesReturnItems = data.SalesReturnItems.map((item) => {
+        const alreadyReturnedQty = item.SalesDeliveryItems?.SalesReturnItems
+            // ?.filter((sri) => sri.id !== item.id) // current record தவிர
+            ?.reduce((sum, sri) => sum + parseFloat(sri.qty || 0), 0) ?? 0;
+        const balanceQty = (parseAmount(item?.SalesDeliveryItems?.deliveryQty || 0) + parseAmount(item?.qty || 0)) - alreadyReturnedQty;
+
+        return {
+            ...item,
+            alreadyReturnedQty,
+            balanceQty,
+        };
+    });
+
+
+
+    return {
+        statusCode: 0, data: {
+            ...data,
+            SalesReturnItems,
+            childRecord
+        }
+    };
 }
 
 async function getSearch(req) {
@@ -225,9 +263,9 @@ async function getSearch(req) {
     return { statusCode: 0, data };
 }
 
-function mapSalesReturnItem(item = {}, isExchange = false) {
+function mapSalesReturnItem(item = {}, id) {
     return {
-        salesDeliveryItemId: item.salesDeliveryItemId ? parseInt(item.salesDeliveryItemId) : null,
+        salesDeliveryItemId: id ? item?.salesDeliveryItemId ? parseInt(item?.salesDeliveryItemId) : null : item.id ? parseInt(item.id) : null,
         itemId: item.itemId ? parseInt(item.itemId) : null,
         sizeId: item.sizeId ? parseInt(item.sizeId) : null,
         colorId: item.colorId ? parseInt(item.colorId) : null,
@@ -259,12 +297,11 @@ async function create(body) {
         const result = await prisma.$transaction(async (tx) => {
             const effectiveStoreId = await validateReturnStore(tx, storeId, branchId);
             const validationState = await getSalesDeliveryReturnValidationState(tx, salesDeliveryId);
-            const validationMessage = validateLinkedReturnItems(deliveryItems, validationState);
+            const validationMessage = validateLinkedReturnItems(deliveryItems, validationState, null);
             if (validationMessage) {
                 throw new Error(validationMessage);
             }
 
-            // 2. Create Sales Return
             const salesReturn = await tx.salesReturn.create({
                 data: {
                     docId: newSRDocId,
@@ -278,12 +315,11 @@ async function create(body) {
                     shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                     createdById: userId ? parseInt(userId) : undefined,
                     SalesReturnItems: {
-                        create: (deliveryItems || []).filter(i => i.itemId).map(i => mapSalesReturnItem(i, false)),
+                        create: (deliveryItems || []).filter(i => i.itemId).map(i => mapSalesReturnItem(i, null)),
                     }
                 },
             });
 
-            // 3. Stock Inward for returned goods
             const stockEntries = (deliveryItems || []).filter(i => i.itemId).map(item => ({
                 itemId: parseInt(item.itemId),
                 sizeId: item.sizeId ? parseInt(item.sizeId) : null,
@@ -326,7 +362,7 @@ async function update(id, body) {
 
             const effectiveStoreId = await validateReturnStore(tx, storeId, branchId);
             const validationState = await getSalesDeliveryReturnValidationState(tx, salesDeliveryId, id);
-            const validationMessage = validateLinkedReturnItems(deliveryItems, validationState);
+            const validationMessage = validateLinkedReturnItems(deliveryItems, validationState, id);
             if (validationMessage) {
                 throw new Error(validationMessage);
             }
@@ -345,7 +381,7 @@ async function update(id, body) {
                     shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                     updatedById: userId ? parseInt(userId) : undefined,
                     SalesReturnItems: {
-                        create: (deliveryItems || []).filter(i => i.itemId).map(i => mapSalesReturnItem(i, false)),
+                        create: (deliveryItems || []).filter(i => i.itemId).map(i => mapSalesReturnItem(i, id)),
                     }
                 },
             });

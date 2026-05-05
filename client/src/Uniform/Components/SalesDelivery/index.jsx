@@ -54,12 +54,14 @@ const SalesDelivery = () => {
     const { data: saleOrderToConvertData } =
         useGetsaleOrderByIdQuery(convertSaleOrderId, { skip: !convertSaleOrderId });
 
+    console.log(saleOrderToConvertData, "saleOrderToConvertData");
+
     useEffect(() => {
         if (saleOrderToConvertData?.data && convertSaleOrderId) {
             const saleOrderData = saleOrderToConvertData?.data;
             setId("");
             setCustomerId(saleOrderData.customerId);
-            setDeliveryItems(saleOrderData.remainingSaleOrderItems || []);
+            setDeliveryItems(saleOrderData.remaingSaleOrderItems || []);
             setPayTermId(saleOrderData.payTermId || "");
             setLocationId(saleOrderData.branchId || "");
             setStoreId(saleOrderData.storeId || "");

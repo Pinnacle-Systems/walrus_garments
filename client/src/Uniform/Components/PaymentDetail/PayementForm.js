@@ -19,13 +19,23 @@ import { useGetQuotationQuery } from "../../../redux/uniformService/quotationSer
 import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvoiceServices";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { push } from "../../../redux/features/opentabs";
+import { useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
 
-const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTransactionType, initialTransactionId,
-
-    transactionId,
-    transactionType,
-    setTransactionId,
-    setTransactionType
+const PaymentForm = ({
+    id, setId, onClose, initialReadOnly = false, initialTransactionType, initialTransactionId,
+    transactionId, transactionType, setTransactionId, setTransactionType,
+    docId, setDocId, cvv, setCvv, paymentMode, setPaymentMode,
+    paymentRefNo, setPaymentRefNo, partyId, setPartyId,
+    paymentType, setPaymentType, paidAmount, setPaidAmount,
+    discount, setDiscount, balanceAmount, setBalanceAmount,
+    totalBillAmount, setTotalBillAmount, totalPayAmount, setTotalPayAmount,
+    supplierId, setSupplierId, paymentFlow, setPaymentFlow,
+    lockPrefilledTransactionFields, setLockPrefilledTransactionFields,
+    linkedPaymentOverrideEnabled, setLinkedPaymentOverrideEnabled,
+    refId, setRefId, refDocId, setRefDocId,
+    currentHistoryPage, setCurrentHistoryPage,
+    readOnly, setReadOnly, childRecord,
+    onNew
 }) => {
 
     const calculateQuotationNetAmount = (quotationItems = []) => {
@@ -88,42 +98,38 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
     };
 
 
+    const getSalesOrderOutstandingAmount = (salesOrder) => {
+        if (!salesOrder) return 0;
+
+
+        console.log(salesOrder, "salesOrder")
+
+        const salesOrderNetAmount = calculateQuotationNetAmount(salesOrder?.SaleOrderItems);
+
+        const receivedAmount = (salesOrder?.paymentData || []).reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        const advanceReceivedAmount = (salesOrder?.advancePaymentData || []).reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        console.log(salesOrderNetAmount, receivedAmount, advanceReceivedAmount, "salesOrderNetAmount", salesOrderNetAmount - receivedAmount - advanceReceivedAmount)
+
+        return Math.max(0, salesOrderNetAmount - receivedAmount - advanceReceivedAmount);
+    };
+
+
     const today = new Date().toISOString().split('T')[0];
 
     const { branchId, companyId, finYearId, userId } = getCommonParams();
 
     const [form, setForm] = useState(true);
-    const [date, setDate] = useState(getDateFromDateTime(today));
-    const [docId, setDocId] = useState("New");
-    const [formReport, setFormReport] = useState(false)
-    const [readOnly, setReadOnly] = useState(false);
-    const [cvv, setCvv] = useState(moment.utc(new Date()).format("YYYY-MM-DD"));
-    const [paymentMode, setPaymentMode] = useState('');
-    const [paymentRefNo, setPaymentRefNo] = useState('');
-    const [partyId, setPartyId] = useState("");
-    const [paymentType, setPaymentType] = useState(
-        initialTransactionType === "QUOTATION" ? "ADVANCE" : "INVOICE"
-    );
-    const [lockPrefilledTransactionFields, setLockPrefilledTransactionFields] = useState(false);
-    const [linkedPaymentOverrideEnabled, setLinkedPaymentOverrideEnabled] = useState(false);
-    const [paidAmount, setPaidAmount] = useState('');
-    const [discount, setDiscount] = useState('')
-    const [balanceAmount, setBalanceAmount] = useState('');
-    const [totalBillAmount, setTotalBillAmount] = useState('');
-    const [totalPayAmount, setTotalPayAmount] = useState('')
-    const [purchaseOrderForm, setPurchaseOrderForm] = useState("")
-    const [paymentFlow, setPaymentFlow] = useState(initialTransactionType ? "Receipt" : "Receipt");
-
-
-
-    const [refId, setRefId] = useState("");
-    const [refDocId, setRefDocId] = useState("");
-
+    const [formReport, setFormReport] = useState(false);
     const [searchValue, setSearchValue] = useState("");
-    const [supplierId, setSupplierId] = useState("");
-    const [currentHistoryPage, setCurrentHistoryPage] = useState(1);
 
-    const childRecord = useRef(0);
     const hasLinkedTransaction = Boolean(transactionType && transactionId);
     const areLinkedFieldsLocked = readOnly || lockPrefilledTransactionFields;
 
@@ -149,42 +155,11 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
         isLoading: isSingleLoading,
     } = useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
-      const [invalidateTagsDispatch] = useInvalidateTags    ();
+    const [invalidateTagsDispatch] = useInvalidateTags();
 
 
 
-    const syncFormWithDb = useCallback(
-        (data) => {
-            if (!id) return
-            // if (id) setReadOnly(true);
-            // else setReadOnly(false);
-            setDocId(data?.docId ? data?.docId : "New");
-            if (data?.createdAt) setDate(moment.utc(data?.createdAt).format("YYYY-MM-DD"));
-            setPaidAmount(data?.paidAmount || '');
-            setDiscount(data?.discount || 0)
-            setSupplierId(data?.partyId || '')
-            setPaymentMode(data?.paymentMode || '');
-            setPaymentType(data?.paymentType || 'INVOICE')
-            setPaymentRefNo(data?.paymentRefNo || '');
-            setRefId(data?.refId || '');
-            setRefDocId(data?.refDocId || '');
-            setTotalPayAmount(PartyData?.data?.soa ? data?.totalPaymentPurchaseBill : data?.totalPaymentSalesBill)
-            setPartyId(data?.partyId || '');
-            setTotalBillAmount(data?.totalBillAmount || '')
-            setTransactionType(data?.transactionType)
-            setTransactionId(data?.transactionId)
-            setCvv(data?.cvv ? moment.utc(data?.cvv).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"))
-            setPaymentFlow(data?.paymentFlow ? data?.paymentFlow : "Receipt")
-            childRecord.current = data?.childRecord ? data?.childRecord : 0;
-            setLinkedPaymentOverrideEnabled(false);
-            setLockPrefilledTransactionFields(Boolean(data?.transactionType && data?.transactionId));
-
-        }, [id])
-
-
-    useEffect(() => {
-        syncFormWithDb(singleData?.data);
-    }, [syncFormWithDb, singleData])
+    // Removed local syncFormWithDb and useEffect for sync as it's now handled by the parent index.js
 
     useEffect(() => {
         if (id) {
@@ -261,8 +236,8 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
             let returnData = await callback(data).unwrap();
             if (returnData.statusCode === 0) {
                 setId("")
-                syncFormWithDb(undefined)
-                
+                // syncFormWithDb(undefined)
+
                 if (returnData.statusCode === 0) {
                     Swal.fire({
                         icon: 'success',
@@ -270,7 +245,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                         // showConfirmButton: false,
                         // timer: 2000
                     });
-                          invalidateTagsDispatch()
+                    invalidateTagsDispatch()
 
                     if (initialTransactionType && initialTransactionId) {
                         dispatch(push({ name: "PAYMENTS", transactionType: null, id: null }));
@@ -278,7 +253,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
 
                     if (nextProcess === "new") {
                         onNew()
-                        syncFormWithDb(undefined)
+                        // syncFormWithDb(undefined)
                         setReadOnly(false);
 
                     }
@@ -353,33 +328,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
         }
     }
 
-    const onNew = () => {
-        setId("");
-        setReadOnly(false);
-        setForm(true);
-        setSearchValue("")
-        setDocId("New");
-        setCvv(moment.utc(new Date()).format("YYYY-MM-DD"));
-        setPaymentMode('');
-        setPaymentRefNo('');
-        setPartyId("");
-        setPaidAmount('');
-        setDiscount('');
-        setBalanceAmount('');
-        setTotalPayAmount('');
-        setSupplierId("");
-        setLockPrefilledTransactionFields(false);
-        setLinkedPaymentOverrideEnabled(false);
-        setPaymentType("INVOICE");
-        setPaymentFlow("Receipt");
-        setTransactionType("");
-        setTransactionId("");
-        setRefDocId("");
-        setRefId("");
-        setTotalBillAmount("");
-        syncFormWithDb(undefined);
 
-    }
     const { data: supplierList } = useGetPartyQuery({ params: { branchId, finYearId, isAddessCombined: true } });
 
     const supplierData = supplierList?.data ? supplierList.data : [];
@@ -407,6 +356,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
     const { data: paymentList } = useGetPaymentQuery({ params: { branchId, finYearId } });
     const { data: quotationList } = useGetQuotationQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "QUOTATION" });
     const { data: salesInvoiceList } = useGetSalesInvoiceQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "SALESINVOICE" });
+    const { data: salesOrderList } = useGetsaleOrderQuery({ params: { branchId, finYearId } }, { skip: transactionType !== "SALESORDER" });
 
     const paymentHistory = (paymentList?.data || [])
         .filter((payment) =>
@@ -425,7 +375,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
         let list = [];
         if (transactionType === "QUOTATION") list = quotationList?.data || [];
         else if (transactionType === "SALESINVOICE") list = salesInvoiceList?.data || [];
-
+        else if (transactionType === "SALESORDER") list = salesOrderList?.data || [];
         // Filter by selected party if supplierId exists
         if (supplierId) {
             list = list.filter(item => String(item.customerId || item.partyId) === String(supplierId));
@@ -447,12 +397,14 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
         let transactionList = [];
         if (transactionType === "QUOTATION") transactionList = quotationList?.data || [];
         else if (transactionType === "SALESINVOICE") transactionList = salesInvoiceList?.data || [];
-
+        else if (transactionType === "SALESORDER") transactionList = salesOrderList?.data || [];
         const selectedTransaction = transactionList.find(
             (item) => String(item.id) === String(transactionId)
         );
 
         if (!selectedTransaction) return;
+
+        console.log(selectedTransaction, "selectedTransaction")
 
         setRefId(selectedTransaction.id);
         setRefDocId(selectedTransaction.docId || "");
@@ -465,8 +417,10 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
             setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
         } else if (transactionType === "SALESINVOICE") {
             setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+        } else if (transactionType === "SALESORDER") {
+            setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
         }
-    }, [id, transactionId, transactionType, quotationList, salesInvoiceList]);
+    }, [id, transactionId, transactionType, quotationList, salesInvoiceList, salesOrderList]);
 
 
 
@@ -585,8 +539,8 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                 <div className='flex flex-col w-full '>
 
                     <div className="w-full  mx-auto rounded-md shadow-lg px-2 overflow-y-auto">
-                        <div className="flex justify-between items-center mb-1">
-                            <h1 className="text-2xl font-bold text-gray-800">Payment</h1>
+                        <div className="flex justify-between items-center bg-white">
+                            <h1 className="text-lg font-bold text-gray-800">Payment</h1>
                             <button
                                 onClick={() => {
                                     // onNew()
@@ -642,28 +596,7 @@ const PaymentForm = ({ id, setId, onClose, initialReadOnly = false, initialTrans
                                 </select>
                             </div>
                             <div className="mb-2 col-span-2">
-                                {/* <label htmlFor="paymentType" className="block text-xs font-bold text-gray-600 mb-1 ">
-                                    {paymentFlow == "Receipt" ? "Customer" : "Supplier"} <span className="text-red-500">*</span>
-                                </label> */}
-                                {/* <DropdownInputNew
-                                    ref={inputRef}
 
-                                    className="block text-gray-600 font-medium mb-2"
-                                    options={dropDownListObject(
-                                        id
-                                            ? supplierData
-                                            : paymentFlow == "Receipt"
-                                                ? supplierData.filter((value) => value.isClient && value.active)
-                                                : supplierData.filter((value) => value.isSupplier && value.active),
-                                        "name",
-                                        "id"
-                                    )}
-                                    value={supplierId}
-                                    setValue={setSupplierId}
-                                    required
-                                    readOnly={readOnly}
-                                    disabled={childRecord.current > 0}
-                                /> */}
                                 <div className="col-span-3 overflow-visible">
                                     <ReusableSearchableInputNewCustomerwithBranches
                                         label={`${paymentFlow == "Receipt" ? "Customer" : "Supplier"}`}

@@ -96,11 +96,11 @@ const POSSidebar = ({
                                 </div>
                             </div>
                         )}
-
                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
-                            <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Gross Total</span>
+                            <span>₹{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
+                        {/* 
                         {totalOfferDiscount > 0 && (
                             <div className="space-y-1">
                                 <div className="flex justify-between items-center text-violet-600 text-xs font-bold">
@@ -117,7 +117,29 @@ const POSSidebar = ({
                                     ))}
                                 </div>
                             </div>
-                        )}
+                        )} */}
+
+                        <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
+                            <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        {/* {totalOfferDiscount > 0 && (
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-center text-violet-600 text-xs font-bold">
+                                    <span className="text-[11px] uppercase tracking-wider flex items-center gap-1">
+                                        <Gift size={11} className="text-violet-500" /> Offer Disc
+                                    </span>
+                                    <span>-₹{totalOfferDiscount.toLocaleString()}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                    {appliedOffers.map((off, idx) => (
+                                        <span key={idx} className="bg-violet-50 text-violet-600 px-1.5 py-0.5 rounded text-[8px] font-black uppercase border border-violet-100/50 flex items-center gap-1">
+                                            <Zap size={8} fill="currentColor" />{off.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )} */}
                         <div className="flex justify-between items-center text-emerald-500 text-xs font-bold">
                             <span className="text-[11px] uppercase tracking-wider">Manual Disc</span>
                             <div className="flex items-center gap-1">

@@ -816,7 +816,6 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
 
 
   useEffect(() => {
-    console.log(show, "showshow", partyId)
 
     if (!partyId) return
     if (partyId == "new") {
@@ -872,7 +871,6 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
     {
       header: "Branch Type",
       accessor: (item) => item?.BranchType?.name || "-",
-      //   cellClass: () => "font-medium text-gray-900",
       className: "font-medium text-gray-900 text-left uppercase w-40 pl-2",
     },
     {

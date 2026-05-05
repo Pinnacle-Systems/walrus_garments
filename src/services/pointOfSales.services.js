@@ -222,7 +222,7 @@ async function create(body) {
                                 reference_no: p.reference_no,
                                 transaction_id: p.transaction_id,
                                 retunBillId: exchangeSalesNo ? parseInt(exchangeSalesNo) : null,
-
+                                date: new Date()
                             }))
                         }
                     }
