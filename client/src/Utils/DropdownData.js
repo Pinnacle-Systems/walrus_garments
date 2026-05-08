@@ -112,7 +112,7 @@ export const paymentTypes = [
 
 
 export const paymentModes = [
-    { show: "Check", value: "Check" },
+    { show: "Card", value: "Card" },
     { show: "Online", value: "Online" },
     { show: "Upi", value: "Upi" },
     { show: "Cash", value: "Cash" },
@@ -361,8 +361,8 @@ export const PaymentFlow = [
 ]
 
 export const PaymentType = [
-    { show: "Invoice Payment", value: "INVOICE" },
     { show: "Advance Payment", value: "ADVANCE" },
+    { show: "Invoice Payment", value: "INVOICE" },
 ]
 
 export const TransactionAgainst = [
@@ -390,5 +390,5 @@ export const challanTypeList = [
 export const TransactionType = [
     { show: "SALE", value: "SALE" },
     { show: "EXCHNAGE", value: "EXCHNAGE" },
-    { show: "REFUND", value: "REFUND" },
+    { show: "RETURN", value: "RETURN" },
 ]

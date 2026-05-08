@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import Modal from "../../../UiComponents/Modal";
 
 const normalize = (value) => String(value ?? "").toLowerCase().trim();
 
-const SearchableTableCellSelect = ({
+const SearchableTableCellSelect = forwardRef(({
   value,
   options = [],
   onChange,
@@ -16,9 +16,15 @@ const SearchableTableCellSelect = ({
   addNewModalWidth = "w-[40%] h-[45%]",
   movedToNextSaveNewRef,
   handlers,
-}) => {
+}, ref) => {
   const containerRef = useRef(null);
   const inputRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      inputRef.current?.focus();
+    }
+  }));
   const listRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -335,6 +341,6 @@ const SearchableTableCellSelect = ({
       })()}
     </div>
   );
-};
+});
 
 export default SearchableTableCellSelect;

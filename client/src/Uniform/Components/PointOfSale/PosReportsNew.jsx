@@ -29,6 +29,7 @@ const PosReportsNew = ({
     onConvertToInvoice,
     onMakePayment,
     rowActions = true,
+    reportsTransactionType = "SALE"
 }) => {
 
     const calculateQuotationNetAmount = (quotationItems = []) => {
@@ -105,7 +106,8 @@ const PosReportsNew = ({
         searchDate,
         supplier,
         searchMaterial,
-        searchCustomerName
+        searchCustomerName,
+        reportsTransactionType
 
     };
 
@@ -117,7 +119,8 @@ const PosReportsNew = ({
         searchDate,
         supplier,
         searchMaterial,
-        searchCustomerName
+        searchCustomerName,
+        reportsTransactionType
     ]);
 
     useEffect(() => {
@@ -160,7 +163,7 @@ const PosReportsNew = ({
 
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-    const indexOfLastItem = currentPage * parseInt(10);
+    const indexOfLastItem = currentPage * parseInt(itemsPerPage);
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
     console.log(indexOfLastItem, "indexOfLastItem")

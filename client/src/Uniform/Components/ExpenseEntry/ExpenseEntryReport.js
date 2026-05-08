@@ -136,7 +136,7 @@ const ExpenseEntryReport = ({
 
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-    const indexOfLastItem = currentPage * parseInt(10);
+    const indexOfLastItem = currentPage * parseInt(itemsPerPage);
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
     console.log(indexOfLastItem, "indexOfLastItem")
@@ -341,7 +341,7 @@ const ExpenseEntryReport = ({
 
 
                                             <td className="py-1.5 text-center">
-                                                {getDateFromDateTimeToDisplay(dataObj.createdAt)}
+                                                {getDateFromDateTimeToDisplay(dataObj.date)}
                                             </td>
 
 

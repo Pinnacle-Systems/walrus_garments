@@ -94,11 +94,11 @@ const PointOfSale = () => {
     const [reportsSearchDocNo, setReportsSearchDocNo] = useState("");
     const [reportsSearchDate, setReportsSearchDate] = useState("");
     const [reportsSearchCustomerName, setReportsSearchCustomerName] = useState("");
+    const [reportsTransactionType, setReportsTransactionType] = useState("SALE");
     const [showStockModal, setShowStockModal] = useState(false);
     const [selectedItemForStock, setSelectedItemForStock] = useState(null);
 
 
-    const lastPopulatedRef = useRef("");
     const [checkRefNo] = useLazyCheckReferenceNumberQuery();
 
     const { data: employeeData } = useGetEmployeeQuery({
@@ -130,33 +130,10 @@ const PointOfSale = () => {
         }
     }, [pendingPosId]);
 
-    // useEffect(() => {
-    //     if (pendingPosId) {
-    //         const loadPendingPos = async () => {
-    //             try {
-    //                 const response = await getPosById(pendingPosId).unwrap();
-    //                 if (response.statusCode === 0) {
-    //                     syncFormWithDb(response.data);
-    //                     setEditMode(true);
-    //                     setEditingInvoiceId(pendingPosId);
-    //                 }
-    //             } catch (error) {
-    //                 // toast.error("Failed to load pending request");
-    //                 Swal.fire({
-    //                     title: "Error",
-    //                     text: "Failed to load pending request",
-    //                     icon: "error"
-    //                 });
-    //             }
-    //         };
-    //         loadPendingPos();
-    //     }
-    // }, [pendingPosId]);
 
     const handlePayNow = async () => {
         if (cart.length === 0 || isProcessing) return;
 
-        // Admin Approval Flow: Skip payment modal and validation
         if (isAdmin && approvalStatus === 'PENDING') {
             if (discount <= 0) {
                 const result = await Swal.fire({
@@ -1048,8 +1025,9 @@ const PointOfSale = () => {
                 paidCash: 0, paidUPI: 0, paidCard: 0, paidOnline: 0, receivedAmount: 0, balanceReturn: 0,
                 posItems: cartWithOffers,
                 posPayments: [],
-                promotionalDiscount: totalOfferDiscount, manualDiscount: 0, roundOff, transactionType: "SALE",
-                approvalStatus: "PENDING"
+                promotionalDiscount: totalOfferDiscount, manualDiscount: 0, roundOff,
+                approvalStatus: "PENDING",
+                transactionType
             };
 
             const apiResponse = await addPointOfSales(invoicePayload).unwrap();
@@ -1118,6 +1096,10 @@ const PointOfSale = () => {
         setCart([]);
         setDiscount(0);
         setSelectedReportSaleId(null)
+        setGuestMobile("")
+        setGuestName("Walk-in")
+        setIsGuestCustomer(true)
+        setSelectedCustomer(null)
     }
 
     const onViewStock = (item) => {
@@ -1137,7 +1119,8 @@ const PointOfSale = () => {
             />
             <ReturnExchangeModal
                 isOpen={showReturnExchnageModal}
-                onClose={() => setShowReturnExchnageModal(false)}
+                setShowReturnExchnageModal={setShowReturnExchnageModal}
+                onClose={() => { setShowReturnExchnageModal(false); }}
                 onBillSelected={handleBillSelected}
                 Swal={Swal}
                 salesNo={exchangeSalesNo}
@@ -1231,7 +1214,18 @@ const PointOfSale = () => {
             ) : (
                 <div className=" bg-[#F1F1F0] min-h-screen">
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-3 items-start sm:items-center  gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-                        <h1 className="text-md font-bold text-gray-800">Point Of Sale</h1>
+                        <div className="flex items-center gap-4">
+                            <h1 className="text-md font-bold text-gray-800">Point Of Sales</h1>
+                            <select
+                                value={reportsTransactionType}
+                                onChange={(e) => setReportsTransactionType(e.target.value)}
+                                className="text-sm border border-gray-300 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-green-500 bg-gray-50"
+                            >
+                                <option value="ALL">All Transactions</option>
+                                <option value="SALE">Sales Only</option>
+                                <option value="RETURN">Returns Only</option>
+                            </select>
+                        </div>
                         <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => { onNew() }}>
                             <Plus size={14} /> Create New
                         </button>
@@ -1259,6 +1253,7 @@ const PointOfSale = () => {
                             onEdit={handleEditPOS}
                             onDelete={true}
                             onView={true}
+                            reportsTransactionType={reportsTransactionType}
                         />
                     </div>
                 </div>

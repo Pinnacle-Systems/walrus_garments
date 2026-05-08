@@ -2408,10 +2408,10 @@ export const ReusableSearchableInput = forwardRef(
       data: partyList,
       isLoading: isPartyLoading,
       isFetching: isPartyFetching,
-    } = useGetPartyQuery({ params: { companyId, userId, isAddressCombined: true } });
+    } = useGetPartyQuery({ params: { companyId, userId, isAddressCombined: true, } });
 
     // Ensure we have a list to resolve names from, prioritizing passed options but falling back to the full party list
-    const effectiveOptionList = optionList || partyList?.data || [];
+    const effectiveOptionList = partyList?.data || [];
 
     console.log(effectiveOptionList?.filter(item => item.id == searchTerm), "effectiveOptionList", searchTerm);
 
@@ -3308,6 +3308,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       id,
       isShow = true,
       isInwardRetuenParties = false,
+      isBillable = false,
       supplierId
     },
     ref
@@ -3322,7 +3323,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     );
 
     const { data: partyList } = useGetPartyQuery({
-      params: { companyId, userId, isAddressCombined: true, isInwardRetuenParties },
+      params: { companyId, userId, isAddressCombined: true, isInwardRetuenParties, isBillable },
     });
     const [removeData] = useDeletePartyMutation();
 

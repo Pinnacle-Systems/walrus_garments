@@ -151,7 +151,15 @@ async function get(req) {
                 },
             });
 
-            return enrichQuotationConversionState(item, paymentData);
+            const SaleOrderpaymentData = await prisma.payment.findMany({
+                where: {
+                    transactionType: "SALESORDER",
+                    transactionId: item.Saleorder.id,
+                },
+            });
+
+
+            return enrichQuotationConversionState(item, [...paymentData, ...SaleOrderpaymentData]);
         })
     );
 

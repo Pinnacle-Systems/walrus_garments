@@ -12,12 +12,10 @@ const ItemOfferModal = ({
     Swal
 }) => {
 
-    console.log(selectedItemForOffers, "selectedItemForOffers")
 
     return (
         <Modal isOpen={isOpen} widthClass="w-[90vw] max-w-[1100px]" onClose={onClose}>
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[85vh]">
-                {/* Header */}
                 <div className="p-4 bg-gradient-to-r from-slate-900 to-indigo-900 text-white flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/10 rounded-lg">
@@ -33,7 +31,6 @@ const ItemOfferModal = ({
                     </button>
                 </div>
 
-                {/* Table Content */}
                 <div className="flex-1 overflow-auto bg-white p-4">
                     {getItemApplicableOffers(selectedItemForOffers).length > 0 ? (
                         <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">

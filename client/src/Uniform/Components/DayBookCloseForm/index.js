@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-    LayoutDashboard, 
-    ListOrdered, 
-    Save, 
-    RefreshCcw, 
-    ArrowUpRight, 
-    ArrowDownLeft, 
-    Wallet, 
-    CreditCard, 
-    Smartphone, 
+import {
+    LayoutDashboard,
+    ListOrdered,
+    Save,
+    RefreshCcw,
+    ArrowUpRight,
+    ArrowDownLeft,
+    Wallet,
+    CreditCard,
+    Smartphone,
     Globe,
     AlertCircle,
     CheckCircle2,
@@ -19,18 +19,14 @@ import moment from 'moment';
 import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
 import { getCommonParams } from '../../../Utils/helper';
-import { 
-    useGetDayBookSummaryQuery, 
-    useSaveDayBookClosingMutation 
+import {
+    useGetDayBookSummaryQuery,
+    useSaveDayBookClosingMutation
 } from '../../../redux/uniformService/DayBookService';
 
 const DayBookClosingForm = () => {
     const { branchId, userId } = getCommonParams();
     const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
-    const [viewMode, setViewMode] = useState('summary'); // 'summary' or 'transactions'
-    const [physicalDenominations, setPhysicalDenominations] = useState({
-        '2000': 0, '500': 0, '200': 0, '100': 0, '50': 0, '20': 0, '10': 0, '5': 0, '2': 0, '1': 0
-    });
     const [remarks, setRemarks] = useState('');
 
     const { data: summaryResponse, isLoading, isFetching, refetch } = useGetDayBookSummaryQuery({
@@ -38,14 +34,66 @@ const DayBookClosingForm = () => {
         branchId
     });
 
-    const [saveClosing, { isLoading: isSaving }] = useSaveDayBookClosingMutation();
-
     const summary = summaryResponse?.data || {};
-    const { openingBalance = 0, posPayments = [], bulkPayments = [], expenses = [], isClosed = false, closedData = null } = summary;
+    const {
+        openingBalance = 0,
+        posPayments = [],
+        bulkPayments = [],
+        salesReturns = [],
+        paymentAdjustments = [],
+        expenses = [],
+        isClosed = false,
+        closedData = null
+    } = summary;
 
-    // Calculations
+    const combinedSalesList = useMemo(() => {
+        const posList = Array.isArray(posPayments) ? posPayments.map(p => ({
+            ...p,
+            entryType: 'pos',
+            time: p.createdAt || p.date,
+            type: p.retunBillId ? "Exchange" : "POS Sale"
+        })) : [];
+
+        const bulkList = Array.isArray(bulkPayments) ? bulkPayments.map(p => ({
+            ...p,
+            entryType: 'bulk',
+            time: p.createdAt || p.date,
+            type: p.paymentType === "ADVANCE" ? "Advance" : "Bulk Sale"
+        })) : [];
+
+        const returnList = Array.isArray(salesReturns) ? salesReturns.map(p => {
+            const total = (p.SalesReturnItems || []).reduce((acc, item) =>
+                acc + (parseFloat(item.price) * parseFloat(item.qty)), 0);
+            return { ...p, entryType: 'return', time: p.createdAt || p.date, amount: total, type: "Return" };
+        }) : [];
+
+        const adjList = Array.isArray(paymentAdjustments) ? paymentAdjustments
+            .map(p => ({
+                ...p,
+                entryType: 'adjustment',
+                time: p.date,
+                type: 'Adjustments'
+            })) : [];
+
+        const expList = Array.isArray(expenses) ? expenses.map(e => ({  // ← ...expenses.map() fix
+            ...e,
+            entryType: 'expense',
+            time: e.Expense?.date,
+            type: 'Expense'
+        })) : [];
+
+
+        return [...posList, ...bulkList, ...returnList, ...adjList, ...expList]
+            .sort((a, b) => new Date(a.time) - new Date(b.time));
+
+    }, [posPayments, bulkPayments, salesReturns, paymentAdjustments, expenses]); // ← expenses dependency add பண்ணோம்
+
+    console.log(combinedSalesList, 'combinedSalesList')
+
     const totals = useMemo(() => {
         let posCash = 0, posUpi = 0, posCard = 0, posOnline = 0;
+
+
         posPayments.forEach(p => {
             const mode = (p.paymentMode || "").toLowerCase();
             const amt = parseFloat(p.amount) || 0;
@@ -56,320 +104,254 @@ const DayBookClosingForm = () => {
         });
 
         let bulkCash = 0, bulkUpi = 0, bulkCard = 0, bulkOnline = 0;
+        let totalAdvances = 0;
+        let totalBulkSales = 0;
         bulkPayments.forEach(p => {
             const mode = (p.paymentMode || "").toLowerCase();
             const amt = parseFloat(p.paidAmount) || 0;
+
+            if (p.paymentType === "ADVANCE") {
+                totalAdvances += amt;
+            } else {
+                totalBulkSales += amt;
+            }
+
             if (mode.includes('cash')) bulkCash += amt;
             else if (mode.includes('upi')) bulkUpi += amt;
             else if (mode.includes('card')) bulkCard += amt;
             else if (mode.includes('online')) bulkOnline += amt;
         });
 
-        let cashExp = 0;
-        expenses.forEach(e => {
-            if ((e.paymentMethod || "").toLowerCase().includes('cash')) {
-                cashExp += parseFloat(e.amount) || 0;
+        let adjCashIn = 0, adjUpi = 0, adjCard = 0, adjOnline = 0;
+        let adjCashOut = 0
+        let adjUpiOut = 0
+        let adjCardOut = 0
+        let adjOnlineOut = 0;
+        paymentAdjustments.forEach(adj => {
+            const amt = parseFloat(adj.adjustmentAmount) || 0;
+            const mode = (adj.paymentMode || "").toLowerCase();
+            if (adj.adjustmentType === 'PLUS') {
+                if (mode.includes('cash')) adjCashIn += amt;
+                else if (mode.includes('upi')) adjUpi += amt;
+                else if (mode.includes('card')) adjCard += amt;
+                else if (mode.includes('online')) adjOnline += amt;
+            } else {
+                if (mode.includes('cash')) adjCashOut += amt;
+                else if (mode.includes('upi')) adjUpiOut += amt;
+                else if (mode.includes('card')) adjCardOut += amt;
+                else if (mode.includes('online')) adjOnlineOut += amt;
             }
         });
 
-        const totalCashIn = posCash + bulkCash;
-        const totalUpi = posUpi + bulkUpi;
-        const totalCard = posCard + bulkCard;
-        const totalOnline = posOnline + bulkOnline;
+        let expense = 0;
+        expenses.forEach(e => {
+            expense += parseFloat(e.amount) || 0;
+
+        });
+
+        let cashReturns = 0;
+        salesReturns.forEach(sr => {
+            if ((sr.refundType || "").toLowerCase() === 'cash') {
+                const total = (sr.SalesReturnItems || []).reduce((acc, item) => acc + (parseFloat(item.price) * parseFloat(item.qty)), 0);
+                cashReturns += total;
+            }
+        });
+
+        console.log({
+            posCash,
+            posUpi,
+            posCard,
+            posOnline,
+            expense
+        })
+
+        const totalCashIn = posCash + bulkCash + adjCashIn;
+        const totalUpi = posUpi + bulkUpi + adjUpi;
+        const totalCard = posCard + bulkCard + adjCard;
+        const totalOnline = posOnline + bulkOnline + adjOnline;
+
 
         const totalPosSales = posCash + posUpi + posCard + posOnline;
-        const totalBulkSales = bulkCash + bulkUpi + bulkCard + bulkOnline;
 
-        const expectedCash = openingBalance + totalCashIn - cashExp;
+
+        const ajustAmountIn = adjCashIn + adjUpi + adjCard + adjOnline;
+        const ajustAmountOut = adjCashOut + adjUpiOut + adjCardOut + adjOnlineOut;
+
+
+
+        const netBalance = (totalPosSales + totalBulkSales + totalAdvances + ajustAmountIn) - (expense + ajustAmountOut + cashReturns);
+
+        const closingBalance = openingBalance + netBalance
 
         return {
-            posCash, bulkCash, totalCashIn,
+            posCash, bulkCash, adjCashIn, totalCashIn,
             totalUpi, totalCard, totalOnline,
-            totalPosSales, totalBulkSales,
-            cashExp, expectedCash
+            totalPosSales, totalBulkSales, totalAdvances,
+            expense, adjCashOut, cashReturns, closingBalance, netBalance,
+            ajustAmountIn, ajustAmountOut
         };
-    }, [posPayments, bulkPayments, expenses, openingBalance]);
-
-    const physicalTotal = useMemo(() => {
-        return Object.entries(physicalDenominations).reduce((sum, [denom, count]) => {
-            return sum + (parseInt(denom) * (parseInt(count) || 0));
-        }, 0);
-    }, [physicalDenominations]);
-
-    const difference = physicalTotal - totals.expectedCash;
+    }, [posPayments, bulkPayments, paymentAdjustments, expenses, openingBalance]);
 
     useEffect(() => {
         if (isClosed && closedData) {
             setRemarks(closedData.remarks || '');
-            if (closedData.denominations) {
-                try {
-                    const denoms = typeof closedData.denominations === 'string' 
-                        ? JSON.parse(closedData.denominations) 
-                        : closedData.denominations;
-                    setPhysicalDenominations(denoms);
-                } catch (e) { console.error("Error parsing denominations", e); }
-            }
         } else {
             setRemarks('');
-            setPhysicalDenominations({
-                '2000': 0, '500': 0, '200': 0, '100': 0, '50': 0, '20': 0, '10': 0, '5': 0, '2': 0, '1': 0
-            });
         }
     }, [isClosed, closedData]);
-
-    const handleDenominationChange = (denom, value) => {
-        if (isClosed) return;
-        setPhysicalDenominations(prev => ({ ...prev, [denom]: value }));
-    };
-
-    const handleCloseDay = async () => {
-        if (isClosed) return;
-
-        const result = await Swal.fire({
-            title: 'Close Day?',
-            text: `Are you sure you want to close accounts for ${moment(selectedDate).format('DD-MM-YYYY')}? This action cannot be undone.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#4f46e5',
-            confirmButtonText: 'Yes, Close Day'
-        });
-
-        if (result.isConfirmed) {
-            try {
-                await saveClosing({
-                    date: selectedDate,
-                    branchId,
-                    openingBalance,
-                    posCashSales: totals.posCash,
-                    bulkCashSales: totals.bulkCash,
-                    otherReceipts: 0,
-                    cashExpenses: totals.cashExp,
-                    otherPayments: 0,
-                    expectedCash: totals.expectedCash,
-                    physicalCash: physicalTotal,
-                    difference,
-                    totalUpi: totals.totalUpi,
-                    totalCard: totals.totalCard,
-                    totalOnline: totals.totalOnline,
-                    denominations: physicalDenominations,
-                    remarks,
-                    closedById: userId
-                }).unwrap();
-                Swal.fire('Closed!', 'Day Book has been closed successfully.', 'success');
-                refetch();
-            } catch (err) {
-                Swal.fire('Error', err.data?.message || 'Failed to close Day Book', 'error');
-            }
-        }
-    };
 
     if (isLoading) return <div className="flex items-center justify-center h-full">Loading Summary...</div>;
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen font-sans">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                        <Wallet className="text-indigo-600" size={32} />
-                        Day Book Closing
-                    </h1>
-                    <p className="text-gray-500 mt-1">Manage and finalize your daily accounts</p>
+        <div className="p-4 bg-gray-50 min-h-screen font-sans">
+            {/* Header - COMPACT */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shrink-0">
+                        <Wallet size={20} />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold text-gray-900 leading-tight">Day Book Report</h1>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Daily Transaction & Balance</p>
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-4 bg-white p-2 rounded-xl shadow-sm border">
-                    <div className="flex items-center gap-2 px-3 border-r">
-                        <CalendarIcon size={18} className="text-gray-400" />
-                        <input 
-                            type="date" 
+                <div className="flex items-center gap-2 bg-white p-1.5 rounded-lg shadow-sm border">
+                    <div className="flex items-center gap-2 px-2 border-r">
+                        <CalendarIcon size={14} className="text-gray-400" />
+                        <input
+                            type="date"
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
-                            className="border-none focus:ring-0 text-sm font-medium"
+                            className="border-none focus:ring-0 text-xs font-bold p-0 bg-transparent"
                         />
                     </div>
-                    <button 
+                    <button
                         onClick={() => refetch()}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-indigo-600"
+                        className="p-1 hover:bg-gray-100 rounded-md transition-colors text-indigo-600"
                         title="Refresh Data"
                     >
-                        <RefreshCcw size={20} className={isFetching ? 'animate-spin' : ''} />
+                        <RefreshCcw size={16} className={isFetching ? 'animate-spin' : ''} />
                     </button>
                 </div>
             </div>
 
-            {/* Status Banner */}
-            {isClosed && (
-                <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-xl mb-6 flex items-center gap-3"
-                >
-                    <CheckCircle2 className="text-green-600" />
-                    <div>
-                        <span className="font-bold">Day Closed!</span> This day's account was finalized by {closedData.closedBy?.username || 'User'} at {moment(closedData.createdAt).format('hh:mm A')}.
-                    </div>
-                </motion.div>
-            )}
+            {/* Dashboard Content - SCROLLABLE CONTAINER */}
+            <div className="h-[calc(100vh-10rem)] overflow-y-auto pr-2 custom-scrollbar space-y-4">
+                {/* 1. High Level Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <SummaryCard
+                        title="Opening Balance"
+                        value={openingBalance}
+                        icon={<ArrowUpRight size={24} />}
+                        color="green"
+                    />
+                    <SummaryCard
+                        title="Total Collection"
+                        value={totals.totalPosSales + totals.totalBulkSales + totals.totalAdvances}
+                        icon={<ArrowUpRight size={24} />}
+                        color="green"
+                    />
 
-            {/* View Toggle */}
-            <div className="flex p-1 bg-gray-200 rounded-xl w-fit mb-8 shadow-inner">
-                <button 
-                    onClick={() => setViewMode('summary')}
-                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${viewMode === 'summary' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
-                >
-                    <LayoutDashboard size={18} />
-                    Summary View
-                </button>
-                <button 
-                    onClick={() => setViewMode('transactions')}
-                    className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${viewMode === 'transactions' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
-                >
-                    <ListOrdered size={18} />
-                    Transaction List
-                </button>
+                    <SummaryCard
+                        title="Total Expenses"
+                        value={totals.expense}
+                        icon={<ArrowDownLeft size={24} />}
+                        color="red"
+                    />
+
+                    <SummaryCard
+                        title="Adjustment Amount"
+                        value={totals.ajustAmountIn - totals.ajustAmountOut}
+                        subValueIn={totals.ajustAmountIn}
+                        subValueOut={totals.ajustAmountOut}
+                        icon={<ArrowUpRight size={24} />}
+                        color="blue"
+                    />
+                    <SummaryCard
+                        title="Closing Balance"
+                        value={totals.closingBalance}
+                        icon={<AlertCircle size={24} />}
+                        color="indigo"
+                        highlight
+                    />
+                </div>
+
+                {/* 2. Detailed Breakdown Grid - COMPACT */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Sales Summary */}
+                    <div className="bg-white rounded-xl shadow-sm border p-4">
+                        <div className="flex items-center justify-between border-b pb-2 mb-3">
+                            <h3 className="text-sm font-bold text-gray-900">Sales Breakdown</h3>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">By Channel</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="p-3 bg-indigo-50 rounded-lg flex justify-between items-center">
+                                <p className="text-[11px] font-bold text-indigo-400 uppercase">POS</p>
+                                <p className="text-sm font-bold text-indigo-700">₹{totals.totalPosSales.toLocaleString()}</p>
+                            </div>
+                            <div className="p-3 bg-blue-50 rounded-lg flex justify-between items-center">
+                                <p className="text-[11px] font-bold text-blue-400 uppercase">Bulk</p>
+                                <p className="text-sm font-bold text-blue-700">₹{totals.totalBulkSales.toLocaleString()}</p>
+                            </div>
+                            <div className="p-3 bg-emerald-50 rounded-lg flex justify-between items-center">
+                                <p className="text-[11px] font-bold text-emerald-400 uppercase">Advance</p>
+                                <p className="text-sm font-bold text-emerald-700">₹{totals.totalAdvances.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Payments Summary */}
+                    <div className="bg-white rounded-xl shadow-sm border p-4">
+                        <div className="flex items-center justify-between border-b pb-2 mb-3">
+                            <h3 className="text-sm font-bold text-gray-900">Payment Breakdown</h3>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">By Mode</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                            <div className="text-center p-1.5 bg-gray-50 rounded-lg">
+                                <p className="text-[9px] font-bold text-gray-400 uppercase">Cash</p>
+                                <p className="text-xs font-bold text-green-600">₹{(totals.posCash + totals.bulkCash + totals.adjCashIn).toLocaleString()}</p>
+                            </div>
+                            <div className="text-center p-1.5 bg-gray-50 rounded-lg">
+                                <p className="text-[9px] font-bold text-gray-400 uppercase">UPI</p>
+                                <p className="text-xs font-bold text-purple-600">₹{totals.totalUpi.toLocaleString()}</p>
+                            </div>
+                            <div className="text-center p-1.5 bg-gray-50 rounded-lg">
+                                <p className="text-[9px] font-bold text-gray-400 uppercase">Card</p>
+                                <p className="text-xs font-bold text-orange-600">₹{totals.totalCard.toLocaleString()}</p>
+                            </div>
+                            <div className="text-center p-1.5 bg-gray-50 rounded-lg">
+                                <p className="text-[9px] font-bold text-gray-400 uppercase">Online</p>
+                                <p className="text-xs font-bold text-teal-600">₹{totals.totalOnline.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 3. Transaction Lists */}
+                <div className="space-y-4">
+                    {/* Sales & Returns list */}
+                    <TransactionTable title="Sales & Returns Transactions" data={combinedSalesList} type="combined" />
+
+                    {/* Expense list */}
+                    {/* <TransactionTable title="Daily Expenses & Payouts" data={[
+                        ...expenses.map(e => ({ ...e, entryType: 'expense' })),
+                        ...paymentAdjustments.filter(a => a.adjustmentType === 'MINUS').map(a => ({ ...a, entryType: 'adjustment_out' }))
+                    ]} type="expense_combined" /> */}
+                </div>
+
+                {/* 4. Remarks (Optional View) */}
+                {remarks && (
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6">
+                        <h3 className="text-sm font-bold text-indigo-900 uppercase tracking-widest mb-2">Closing Remarks</h3>
+                        <p className="text-indigo-700 italic">"{remarks}"</p>
+                    </div>
+                )}
             </div>
 
-            <AnimatePresence mode="wait">
-                {viewMode === 'summary' ? (
-                    <motion.div 
-                        key="summary"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className="grid grid-cols-1 lg:grid-cols-12 gap-8"
-                    >
-                        {/* Financial Cards */}
-                        <div className="lg:col-span-8 space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <SummaryCard title="Opening Balance" value={openingBalance} icon={<Wallet size={24} />} color="blue" />
-                                <SummaryCard title="Cash In (Sales)" value={totals.totalCashIn} icon={<ArrowUpRight size={24} />} color="green" />
-                                <SummaryCard title="Cash Out (Expenses)" value={totals.cashExp} icon={<ArrowDownLeft size={24} />} color="red" />
-                                <SummaryCard title="Expected Cash" value={totals.expectedCash} icon={<AlertCircle size={24} />} color="indigo" highlight />
-                            </div>
 
-                            {/* Additional Sales Info */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="bg-white p-5 rounded-2xl border shadow-sm flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
-                                            <Save size={20} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total POS Sales</p>
-                                            <p className="text-xl font-bold text-gray-900">₹{totals.totalPosSales.toLocaleString()}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase">Incl. Digital</p>
-                                    </div>
-                                </div>
-                                <div className="bg-white p-5 rounded-2xl border shadow-sm flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
-                                            <ListOrdered size={20} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Bulk Sales</p>
-                                            <p className="text-xl font-bold text-gray-900">₹{totals.totalBulkSales.toLocaleString()}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase">Incl. Digital</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Payment Mode Breakdown */}
-                            <div className="bg-white rounded-2xl shadow-sm border p-6">
-                                <h3 className="text-lg font-bold text-gray-900 mb-6">Payment Mode Summary</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <PaymentModeStat label="UPI Payments" value={totals.totalUpi} icon={<Smartphone size={20} />} color="purple" />
-                                    <PaymentModeStat label="Card Payments" value={totals.totalCard} icon={<CreditCard size={20} />} color="orange" />
-                                    <PaymentModeStat label="Online Transfer" value={totals.totalOnline} icon={<Globe size={20} />} color="teal" />
-                                </div>
-                            </div>
-
-                            {/* Remarks */}
-                            <div className="bg-white rounded-2xl shadow-sm border p-6">
-                                <h3 className="text-lg font-bold text-gray-900 mb-4">Closing Remarks</h3>
-                                <textarea 
-                                    value={remarks}
-                                    onChange={(e) => setRemarks(e.target.value)}
-                                    disabled={isClosed}
-                                    placeholder="Enter any notes or observations for the day..."
-                                    className="w-full h-32 p-4 rounded-xl border focus:ring-2 focus:ring-indigo-500 bg-gray-50 disabled:bg-gray-100 transition-all outline-none text-gray-700"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Denominations & Closing Action */}
-                        <div className="lg:col-span-4 space-y-8">
-                            <div className="bg-white rounded-2xl shadow-sm border p-6 overflow-hidden">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-bold text-gray-900">Physical Cash</h3>
-                                    <div className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider">Verification</div>
-                                </div>
-                                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                                    {Object.keys(physicalDenominations).sort((a, b) => b - a).map(denom => (
-                                        <div key={denom} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                                            <div className="flex items-center gap-3">
-                                                <span className="w-10 text-right font-bold text-gray-600">₹{denom}</span>
-                                                <span className="text-gray-400">×</span>
-                                                <input 
-                                                    type="number" 
-                                                    min="0"
-                                                    value={physicalDenominations[denom]}
-                                                    onChange={(e) => handleDenominationChange(denom, e.target.value)}
-                                                    disabled={isClosed}
-                                                    className="w-20 p-1.5 border rounded-lg text-center font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                />
-                                            </div>
-                                            <span className="font-mono text-gray-700">₹{(parseInt(denom) * (parseInt(physicalDenominations[denom]) || 0)).toLocaleString()}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="mt-6 pt-6 border-t space-y-4">
-                                    <div className="flex items-center justify-between text-gray-500">
-                                        <span>Total Physical Cash</span>
-                                        <span className="font-bold text-gray-900 text-xl">₹{physicalTotal.toLocaleString()}</span>
-                                    </div>
-                                    <div className={`flex items-center justify-between p-4 rounded-xl ${difference >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                                        <span className="font-bold">Difference</span>
-                                        <span className="font-bold text-xl">₹{difference.toLocaleString()}</span>
-                                    </div>
-                                    <button 
-                                        onClick={handleCloseDay}
-                                        disabled={isClosed || isSaving}
-                                        className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all transform hover:scale-[1.02] active:scale-95 ${isClosed ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'}`}
-                                    >
-                                        <Save size={20} />
-                                        {isSaving ? 'Processing...' : isClosed ? 'Day Closed' : 'Finalize & Close Day'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                ) : (
-                    <motion.div 
-                        key="transactions"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-8"
-                    >
-                        {/* POS Transactions Table */}
-                        <TransactionTable title="POS Sales Transactions" data={posPayments} type="pos" />
-                        
-                        {/* Bulk Sales Transactions Table */}
-                        <TransactionTable title="Bulk Sales & Other Payments" data={bulkPayments} type="bulk" />
-                        
-                        {/* Expense Transactions Table */}
-                        <TransactionTable title="Daily Expenses" data={expenses} type="expense" />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <style dangerouslySetInnerHTML={{ __html: `
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -379,7 +361,7 @@ const DayBookClosingForm = () => {
     );
 };
 
-const SummaryCard = ({ title, value, icon, color, highlight = false }) => {
+const SummaryCard = ({ title, value, icon, color, highlight = false, subValueIn, subValueOut }) => {
     const colors = {
         blue: 'bg-blue-50 text-blue-600 border-blue-100',
         green: 'bg-green-50 text-green-600 border-green-100',
@@ -388,12 +370,26 @@ const SummaryCard = ({ title, value, icon, color, highlight = false }) => {
     };
 
     return (
-        <div className={`p-6 rounded-2xl border shadow-sm ${highlight ? 'bg-white border-indigo-200 ring-2 ring-indigo-50' : 'bg-white'}`}>
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${colors[color]}`}>
-                {icon}
+        <div className={`p-3 rounded-xl border shadow-sm ${highlight ? 'bg-white border-indigo-200 ring-2 ring-indigo-50' : 'bg-white'}`}>
+            <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${colors[color]}`}>
+                    {React.cloneElement(icon, { size: 20 })}
+                </div>
+                <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{title}</p>
+                    <p className="text-lg font-bold text-gray-900 leading-tight">₹{parseFloat(value || 0).toLocaleString()}</p>
+                    {(subValueIn !== undefined || subValueOut !== undefined) && (
+                        <div className="flex gap-2 mt-0.5">
+                            {subValueIn !== undefined && (
+                                <span className="text-[9px] font-bold text-green-600 bg-green-50 px-1 rounded">In: ₹{parseFloat(subValueIn).toLocaleString()}</span>
+                            )}
+                            {subValueOut !== undefined && (
+                                <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1 rounded">Out: ₹{parseFloat(subValueOut).toLocaleString()}</span>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
-            <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-            <p className="text-2xl font-bold text-gray-900">₹{parseFloat(value).toLocaleString()}</p>
         </div>
     );
 };
@@ -421,49 +417,65 @@ const PaymentModeStat = ({ label, value, icon, color }) => {
 const TransactionTable = ({ title, data, type }) => {
     if (!data || data.length === 0) {
         return (
-            <div className="bg-white rounded-2xl shadow-sm border p-8 text-center text-gray-500">
-                <p className="text-lg font-medium">No {title} found for this date.</p>
+            <div className="bg-white rounded-xl shadow-sm border p-4 text-center text-gray-500">
+                <p className="text-sm font-medium">No {title} found for this date.</p>
             </div>
         );
     }
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-            <div className="p-6 border-b bg-gray-50/50">
-                <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div className="px-4 py-2 border-b bg-gray-50/50 flex justify-between items-center">
+                <h3 className="text-sm font-bold text-gray-900">{title}</h3>
+                <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">{data.length} Items</span>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
                 <table className="w-full text-left">
-                    <thead className="bg-gray-50 text-gray-400 text-xs font-bold uppercase tracking-widest border-b">
+                    <thead className="bg-gray-50 text-gray-400 text-[10px] font-bold uppercase tracking-widest border-b sticky top-0 z-10">
                         <tr>
-                            <th className="px-6 py-4">Doc No</th>
-                            <th className="px-6 py-4">Customer / Category</th>
-                            <th className="px-6 py-4">Time</th>
-                            <th className="px-6 py-4">Mode</th>
-                            <th className="px-6 py-4 text-right">Amount</th>
+                            <th className="px-4 py-2">Doc No</th>
+                            <th className="px-4 py-2">Customer / Category</th>
+                            <th className="px-4 py-2">Time</th>
+                            <th className="px-4 py-2">Mode</th>
+                            <th className="px-4 py-2">Type</th>
+
+                            <th className="px-4 py-2 text-right">Amount</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y text-sm">
+                    <tbody className="divide-y text-[11px]">
                         {data.map((item, idx) => (
                             <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 font-bold text-indigo-600">
-                                    {type === 'pos' ? item.Pos?.docId : (type === 'bulk' ? item.docId : item.Expense?.docId)}
+                                <td className="px-4 py-2 font-bold text-indigo-600">
+                                    {item.entryType === 'pos' ? item.Pos?.docId :
+                                        item.entryType === 'bulk' ? item.docId :
+                                            item.entryType === 'return' ? item.docId :
+                                                item.entryType === 'adjustment' ? item.docId :
+                                                    item.entryType === 'adjustment_out' ? item.docId :
+                                                        item.entryType === 'expense' ? item.Expense?.docId : item.docId}
                                 </td>
-                                <td className="px-6 py-4 text-gray-600">
-                                    {type === 'pos' ? (item.Pos?.Party?.name || 'Walk-in') : (type === 'bulk' ? (item.Party?.name || '-') : (item.ExpenseCategory?.name || 'Expense'))}
+                                <td className="px-4 py-2 text-gray-600">
+                                    {item.entryType === 'pos' ? (item.Pos?.Party?.name || 'Walk-in') :
+                                        item.entryType === 'bulk' ? (item.Party?.name || '-') :
+                                            item.entryType === 'return' ? (item.Party?.name || 'Return') :
+                                                item.entryType === 'adjustment' ? (item.reason || 'Adjustment') :
+                                                    item.entryType === 'adjustment_out' ? (item.reason || 'Payout') :
+                                                        item.entryType === 'expense' ? (item.ExpenseCategory?.name || 'Expense') : '-'}
                                 </td>
-                                <td className="px-6 py-4 text-gray-500 font-mono">
-                                    {moment(item.createdAt || item.date).format('hh:mm A')}
+                                <td className="px-4 py-2 text-gray-500 font-mono">
+                                    {moment(item.time || item.createdAt || item.date).format('hh:mm A')}
                                 </td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                                        (item.paymentMode || item.paymentMethod || "").toLowerCase().includes('cash') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                                    }`}>
+                                <td className="px-4 py-2">
+                                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${(item.paymentMode || item.paymentMethod || "").toLowerCase().includes('cash') ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                                        }`}>
                                         {item.paymentMode || item.paymentMethod}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-right font-bold text-gray-900">
-                                    ₹{parseFloat(item.amount || item.paidAmount || 0).toLocaleString()}
+
+                                <td className="px-4 py-2 text-left font-bold text-gray-900">
+                                    {item?.type}
+                                </td>
+                                <td className="px-4 py-2 text-right font-bold text-gray-900">
+                                    ₹{parseFloat(item.amount || item.paidAmount || item.adjustmentAmount || 0).toLocaleString()}
                                 </td>
                             </tr>
                         ))}

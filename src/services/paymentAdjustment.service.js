@@ -5,10 +5,9 @@ import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { prisma } from '../lib/prisma.js';
 
 async function getNextDocId(branchId, shortCode, startTime, endTime) {
-    let lastObject = await prisma.payment.findFirst({
+    let lastObject = await prisma.paymentAdjustment.findFirst({
         where: {
-            branchId: parseInt(branchId),
-            paymentType: "ADJUSTMENT",
+            // branchId: parseInt(branchId),
             AND: [
                 {
                     createdAt: {
@@ -39,19 +38,10 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 async function get(req) {
     const { branchId, finYearId } = req.query;
 
-    let data = await prisma.payment.findMany({
+    let data = await prisma.paymentAdjustment.findMany({
         where: {
-            branchId: branchId ? parseInt(branchId) : undefined,
-            paymentType: "ADJUSTMENT",
-            isDeleted: false,
         },
-        include: {
-            Party: {
-                select: {
-                    name: true
-                }
-            }
-        },
+
         orderBy: {
             id: "desc"
         }
@@ -87,7 +77,8 @@ async function create(body) {
             paymentMode,
             reason,
             userId,
-            finYearId
+            finYearId,
+            adjustmentAmount
         } = body;
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -96,7 +87,7 @@ async function create(body) {
 
         const dateWithTime = attachCurrentTime(date);
 
-        const data = await prisma.payment.create({
+        const data = await prisma.paymentAdjustment.create({
             data: {
                 docId: newDocId,
                 referenceNumber: referenceNumber ? referenceNumber : null,
@@ -105,7 +96,7 @@ async function create(body) {
                 paymentMode: paymentMode ? paymentMode : null,
                 reason: reason ? reason : null,
                 userId: userId ? parseInt(userId) : null,
-                date: date ? date : null,
+                date: dateWithTime ? dateWithTime : null,
             }
         });
 
@@ -129,22 +120,25 @@ async function update(id, body) {
             finYearId
         } = body;
 
-        const dataFound = await prisma.payment.findUnique({
+        const dateWithTime = attachCurrentTime(date);
+
+
+        const dataFound = await prisma.paymentAdjustment.findUnique({
             where: { id: parseInt(id) }
         });
         if (!dataFound) return NoRecordFound("Payment Adjustment");
 
-        const data = await prisma.payment.update({
+        const data = await prisma.paymentAdjustment.update({
             where: { id: parseInt(id) },
             data: {
-                docId: newDocId,
+                // docId: newDocId,
                 referenceNumber: referenceNumber ? referenceNumber : null,
                 adjustmentType: adjustmentType ? adjustmentType : null,
                 adjustmentAmount: adjustmentAmount ? adjustmentAmount : null,
                 paymentMode: paymentMode ? paymentMode : null,
                 reason: reason ? reason : null,
                 userId: userId ? parseInt(userId) : null,
-                date: date ? date : null,
+                date: dateWithTime ? dateWithTime : null,
             }
         });
 
@@ -157,9 +151,8 @@ async function update(id, body) {
 
 async function remove(id) {
     try {
-        const data = await prisma.payment.update({
+        const data = await prisma.paymentAdjustment.delete({
             where: { id: parseInt(id) },
-            data: { isDeleted: true }
         });
         return { statusCode: 0, data };
     } catch (error) {

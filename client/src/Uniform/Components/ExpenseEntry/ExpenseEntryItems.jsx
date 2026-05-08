@@ -2,10 +2,12 @@ import { useEffect } from "react";
 import TransactionLineItemsSection, { standardTransactionPlaceholderRowCount, transactionTableClassName, transactionTableHeadClassName, transactionTableIndexCellClassName, transactionTableRowClassName } from "../ReusableComponents/TransactionLineItemsSection";
 import { DropdownInputNew } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
+import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 
-const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, readOnly }) => {
+const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, readOnly, handlers, firstInputRef,
+    movedToNextSaveNewRef }) => {
 
-    const compactHeaderCellClassName = "bg-gray-300 px-1 py-0.5 text-center font-bold text-[10px] text-slate-700 border-r border-b border-gray-300";
+    const compactHeaderCellClassName = "bg-gray-300 px-1 py-1.5 text-center font-bold text-[10px] text-slate-700 border-r border-b border-gray-300";
     const compactCellClassName = "border-r border-b border-gray-300 p-0 text-[10px]";
     const compactFocusCellClassName = `${compactCellClassName} focus-within:bg-blue-50`;
     const compactSelectClassName = "h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-left outline-none focus:outline-none text-[10px]";
@@ -80,7 +82,7 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
                                         <td className={transactionTableIndexCellClassName}>{index + 1}</td>
 
                                         <td className={compactFocusCellClassName}>
-                                            <DropdownInputNew
+                                            {/* <DropdownInputNew
                                                 searchable={true}
                                                 options={dropDownListObject(expenseTypeList?.data, "name", "id")}
                                                 value={row.expenseCategoryId}
@@ -88,6 +90,18 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
                                                 readOnly={readOnly}
                                                 className="w-full !px-1 !py-0.5 !text-[11px] !border-0 !shadow-none"
                                                 width="w-full"
+                                            /> */}
+                                            <SearchableTableCellSelect
+                                                value={row.expenseCategoryId}
+                                                options={selectableExpenses}
+                                                disabled={readOnly}
+                                                onChange={(nextValue) => handleInputChange(nextValue, index, "expenseCategoryId")}
+                                                addNewModalWidth="w-[90%] h-[95%]"
+                                                // childComponent={ExpenseMaster}
+                                                // addNewLabel="+ Add New Expense"
+                                                ref={index === 0 ? firstInputRef : null}
+                                                handlers={handlers}
+                                                movedToNextSaveNewRef={movedToNextSaveNewRef}
                                             />
                                         </td>
 

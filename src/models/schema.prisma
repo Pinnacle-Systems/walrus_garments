@@ -5445,27 +5445,27 @@ model PriceTemplateDetails {
 }
 
 model Payment {
-  id              Int      @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   docId           String
-  Party           Party    @relation(fields: [partyId], references: [id], onDelete: Restrict)
+  Party           Party     @relation(fields: [partyId], references: [id], onDelete: Restrict)
   partyId         Int
-  isTaxBill       Boolean  @default(false)
-  Branch          Branch?  @relation(fields: [branchId], references: [id])
+  isTaxBill       Boolean   @default(false)
+  Branch          Branch?   @relation(fields: [branchId], references: [id])
   branchId        Int?
-  createdBy       User     @relation("createdBy", fields: [createdById], references: [id])
+  createdBy       User      @relation("createdBy", fields: [createdById], references: [id])
   createdById     Int
-  updatedBy       User?    @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy       User?     @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById     Int?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
   paymentMode     String
-  isDeleted       Boolean  @default(false)
-  cvv             DateTime
-  date            DateTime
-  paidAmount      Int?     @default(0)
+  isDeleted       Boolean   @default(false)
+  cvv             DateTime?
+  date            DateTime?
+  paidAmount      Int?      @default(0)
   paymentType     String
   totalBillAmount Int?
-  discount        Int?     @default(0)
+  discount        Int?      @default(0)
   paymentRefNo    String?
   totalAmount     Int?
   paymentFlow     String?
@@ -5507,6 +5507,8 @@ model Pos {
   taxAmount           String?
   isExchange          Boolean?      @default(false)
   bilStatus           String?
+  transactionType     String?
+  isReturn            Boolean?      @default(false)
   OriginalBill        SalesReturn[] @relation("OriginalBill")
   ExchangeNewBill     SalesReturn[] @relation("ExchangeNewBill")
   PosItems            PosItems[]    @relation("Bill")
@@ -5545,6 +5547,8 @@ model PosItems {
   isReturn       Boolean?           @default(false)
   retunBill      Pos?               @relation("ReturnBill", fields: [retunBillId], references: [id], onDelete: Cascade)
   retunBillId    Int?
+  barcode        String?
+  barcodeType    String?  
   originalItem   PosItems?          @relation("ReturnItem", fields: [originalItemId], references: [id])
   originalItemId Int?
   ReturnItems    PosItems[]         @relation("ReturnItem")
@@ -5762,17 +5766,17 @@ model DayBook {
   updatedAt  DateTime @updatedAt
 }
 
-
 model PaymentAdjustment {
-  id              Int               @id @default(autoincrement())
-  date            DateTime?
-  referenceNumber String?           @db.VarChar(50)
-  adjustmentType  String?
+  id               Int       @id @default(autoincrement())
+  date             DateTime?
+  docId            String?
+  referenceNumber  String?   @db.VarChar(50)
+  adjustmentType   String?
   adjustmentAmount String?
-  paymentMode    String?        
-  userId          Int?
-  createdBy       User?               @relation("createdBy", fields: [userId], references: [id])
-  reason          String?           @db.VarChar(255)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  paymentMode      String?
+  userId           Int?
+  createdBy        User?     @relation("createdBy", fields: [userId], references: [id])
+  reason           String?   @db.VarChar(255)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }

@@ -556,68 +556,7 @@ const PurchaseInwardForm = ({
                 />
               </div>
             </TransactionHeaderSection>
-            {/* 
-            <TransactionHeaderSection
-              title="Inward Details"
-              bodyClassName="grid-cols-2 gap-1.5"
-            >
-              <DropdownInput
-                name="Inward Type"
-                beforeChange={() => setDirectInwardReturnItems([])}
-                options={directOrPo}
-                value={poInwardOrDirectInward}
-                setValue={setPoInwardOrDirectInward}
-                required
-                disabled={childRecord > 0}
-                readOnly={readOnly}
-                ref={inwardTyperef}
-              />
-              <DropdownInput
-                name="Branch"
-                options={
-                  branchList
-                    ? dropDownListObject(
-                      id
-                        ? branchList?.data
-                        : branchList?.data?.filter((item) => item.active),
-                      "branchName",
-                      "id",
-                    )
-                    : []
-                }
-                value={branchId}
-                setValue={(value) => {
-                  setLocationId(value);
-                  setStoreId("");
-                }}
-                disabled={childRecord > 0}
 
-                required
-                ref={branchRef}
-                readOnly={readOnly}
-
-              />
-              <DropdownInput
-                name="Location"
-                options={dropDownListObject(
-                  id
-                    ? storeOptions
-                    : storeOptions?.filter(
-                      (item) => item.storeName.includes("WAREHOUSE") && item.active,
-                    ),
-                  "storeName",
-                  "id",
-                )}
-                value={storeId}
-                setValue={setStoreId}
-                required
-                ref={locationRef}
-                readOnly={readOnly}
-                disabled={childRecord > 0}
-
-
-              />
-            </TransactionHeaderSection> */}
 
             <TransactionHeaderSection
               title="Supplier Details"

@@ -32,11 +32,10 @@ const MODEL = "Payments";
 export default function Form() {
   const today = new Date().toISOString().split('T')[0];
 
-  const { branchId, companyId, finYearId, userId } = getCommonParams();
 
   const [form, setForm] = useState(true);
   const [date, setDate] = useState(getDateFromDateTime(today));
-  const [docId, setDocId] = useState("");
+  const [docId, setDocId] = useState("New");
   const [formReport, setFormReport] = useState(false)
   const [id, setId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
@@ -49,6 +48,7 @@ export default function Form() {
   const [discount, setDiscount] = useState('')
   const [balanceAmount, setBalanceAmount] = useState('');
   const [totalBillAmount, setTotalBillAmount] = useState('');
+  const [billAmount, setBillAmount] = useState('');
   const [totalPayAmount, setTotalPayAmount] = useState('')
   const [purchaseOrderForm, setPurchaseOrderForm] = useState("")
   const [searchValue, setSearchValue] = useState("");
@@ -64,6 +64,8 @@ export default function Form() {
   const [refDocId, setRefDocId] = useState("");
   const [currentHistoryPage, setCurrentHistoryPage] = useState(1);
   const childRecord = useRef(0);
+
+  const [paymentHistory, setPaymentHistory] = useState([])
 
 
   const dispatch = useDispatch()
@@ -125,6 +127,8 @@ export default function Form() {
     setRefDocId("");
     setRefId("");
     setTotalBillAmount("");
+    setBillAmount("");
+    setPaymentHistory([])
   }
 
 
@@ -133,13 +137,13 @@ export default function Form() {
 
 
 
-  useEffect(() => {
-    if (!id) {
+  // useEffect(() => {
+  //   if (!id) {
 
 
-      setTotalBillAmount(PartyData?.data?.coa + PartyData?.data?.totaloutstanding - PartyData?.data?.totalPaymentAgainstInvoice);
-    }
-  }, [paymentType, PartyData]);
+  //     setTotalBillAmount(PartyData?.data?.coa + PartyData?.data?.totaloutstanding - PartyData?.data?.totalPaymentAgainstInvoice);
+  //   }
+  // }, [paymentType, PartyData]);
 
   console.log(totalBillAmount, "totalBillAmount")
   console.log(PartyData?.data?.totaloutstanding, "outstanding")
@@ -230,6 +234,8 @@ export default function Form() {
           setBalanceAmount={setBalanceAmount}
           totalBillAmount={totalBillAmount}
           setTotalBillAmount={setTotalBillAmount}
+          billAmount={billAmount}
+          setBillAmount={setBillAmount}
           totalPayAmount={totalPayAmount}
           setTotalPayAmount={setTotalPayAmount}
           supplierId={supplierId}
@@ -249,6 +255,8 @@ export default function Form() {
           readOnly={readOnly}
           setReadOnly={setReadOnly}
           childRecord={childRecord}
+          setPaymentHistory={setPaymentHistory}
+          paymentHistory={paymentHistory}
         />
       ) : (
         <div className="bg-[#F1F1F0]">

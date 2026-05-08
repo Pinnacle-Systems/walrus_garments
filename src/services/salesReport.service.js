@@ -415,7 +415,7 @@ async function getOverAllSalesReport(query) {
                 date: sale.date || sale.createdAt,
                 docId: sale.docId,
                 customerName: sale.Party?.name || 'Walk-in',
-                type: 'POS Sales',
+                type: sale?.isReturn === false ? 'POS Sales' : 'POS Return',
                 cash: getPayment('Cash'),
                 upi: getPayment('UPI'),
                 card: getPayment('Card'),
@@ -515,9 +515,9 @@ async function getOverAllSalesReport(query) {
 
         // Combined Transactions
         const allTransactions = [
-            ...formattedPos, 
-            ...formattedBulk, 
-            ...formattedOnline, 
+            ...formattedPos,
+            ...formattedBulk,
+            ...formattedOnline,
             ...formattedExpenses
         ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -527,7 +527,7 @@ async function getOverAllSalesReport(query) {
             sale.PosItems.forEach(item => {
                 const smId = item.salesPersonId || 0;
                 const smName = item.Employee?.name || 'Unassigned';
-                
+
                 if (!salesmanMap[smId]) {
                     salesmanMap[smId] = {
                         id: smId,
@@ -537,11 +537,11 @@ async function getOverAllSalesReport(query) {
                         billCount: new Set()
                     };
                 }
-                
+
                 const qty = parseFloat(item.qty || 0);
                 const price = parseFloat(item.price || 0);
                 const amount = qty * price;
-                
+
                 if (item.isReturn) {
                     salesmanMap[smId].totalSales -= amount;
                     salesmanMap[smId].posSales -= amount;
@@ -568,13 +568,13 @@ async function getOverAllSalesReport(query) {
         summary.netSales = summary.totalPos + summary.totalBulk + summary.totalOnline;
         summary.finalProfit = summary.netSales - summary.totalExpense;
 
-        return { 
-            statusCode: 0, 
+        return {
+            statusCode: 0,
             data: {
                 transactions: allTransactions,
                 salesmanSummary,
                 summary
-            } 
+            }
         };
     } catch (error) {
         console.error("OverAll Sales Report Service Error:", error);

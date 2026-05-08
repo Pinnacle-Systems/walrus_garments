@@ -2,10 +2,31 @@ import { useState } from 'react';
 import { FaPlus } from "react-icons/fa";
 import PaymentAdjustmentFormContent from './Form';
 import PaymentAdjustmentReport from './Report';
+import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
+import moment from "moment";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
+import { useDeletePaymentAdjustmentMutation } from '../../../redux/services/PaymentAdjustmentService';
+import Swal from 'sweetalert2';
 
 const PaymentAdjustmentForm = () => {
+
+    const { hasPermission } = usePermissionForUsers()
+
     const [showForm, setShowForm] = useState(false);
     const [id, setId] = useState("");
+
+    const [readOnly, setReadOnly] = useState(false)
+    const [docId, setDocId] = useState("")
+    const [date, setDate] = useState(moment().format("YYYY-MM-DD"))
+    const [adjustmentType, setAdjustmentType] = useState("")
+    const [referenceNumber, setReferenceNumber] = useState("")
+    const [adjustmentAmount, setAdjustmentAmount] = useState("")
+    const [paymentMode, setPaymentMode] = useState("")
+    const [reason, setReason] = useState("")
+
+
+    const [removeData] = useDeletePaymentAdjustmentMutation();
+    const [invalidateTagsDispatch] = useInvalidateTags();
 
     const handleView = (viewId) => {
         setId(viewId);
@@ -19,8 +40,42 @@ const PaymentAdjustmentForm = () => {
 
     const onNew = () => {
         setId("");
-        setShowForm(true);
+        setDocId("New")
+        setReadOnly(false)
+        setAdjustmentType("")
+        setReferenceNumber("")
+        setAdjustmentAmount("")
+        setPaymentMode("")
+        setReason("")
     };
+
+    const handleDelete = async (id) => {
+        if (id) {
+            if (!window.confirm("Are you sure to delete...?")) {
+                return;
+            }
+            try {
+                await removeData(id)
+                setId("");
+                onNew();
+                Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
+                    draggable: true,
+                    timer: 1000,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                invalidateTagsDispatch()
+            } catch (error) {
+                toast.error("something went wrong");
+            }
+        }
+
+    };
+
 
     return (
         <>
@@ -30,6 +85,23 @@ const PaymentAdjustmentForm = () => {
                         id={id}
                         setId={setId}
                         onClose={() => setShowForm(false)}
+                        hasPermission={hasPermission}
+                        readOnly={readOnly}
+                        setReadOnly={setReadOnly}
+                        docId={docId}
+                        setDocId={setDocId}
+                        date={date}
+                        setDate={setDate}
+                        adjustmentType={adjustmentType}
+                        setAdjustmentType={setAdjustmentType}
+                        referenceNumber={referenceNumber}
+                        setReferenceNumber={setReferenceNumber}
+                        adjustmentAmount={adjustmentAmount}
+                        setAdjustmentAmount={setAdjustmentAmount}
+                        paymentMode={paymentMode}
+                        setPaymentMode={setPaymentMode}
+                        reason={reason}
+                        setReason={setReason}
                     />
                 </div>
             ) : (
@@ -40,7 +112,10 @@ const PaymentAdjustmentForm = () => {
                         </h1>
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-xs"
-                            onClick={onNew}
+                            onClick={() => {
+                                onNew()
+                                setShowForm(true)
+                            }}
                         >
                             <FaPlus /> Create New
                         </button>
@@ -50,6 +125,8 @@ const PaymentAdjustmentForm = () => {
                         <PaymentAdjustmentReport
                             onView={handleView}
                             onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            itemsPerPage={15}
                         />
                     </div>
                 </div>

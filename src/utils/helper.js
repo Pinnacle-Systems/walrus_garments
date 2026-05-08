@@ -586,9 +586,7 @@ export async function classListData(data) {
 
 
 export function attachCurrentTime(dateOnlyStr) {
-  console.log(dateOnlyStr, "dateOnlyStr");
 
-  // dateOnlyStr format: "YYYY-MM-DD"
   const [year, month, day] = dateOnlyStr.split('-').map(Number);
 
   const now = new Date();

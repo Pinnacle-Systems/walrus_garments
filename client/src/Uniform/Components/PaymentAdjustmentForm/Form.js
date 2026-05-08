@@ -4,107 +4,115 @@ import { useState, useEffect, useCallback } from "react";
 import { ReusableInput } from "../Order/CommonInput";
 import { DropdownInput, TextAreaNew, TextInputNew } from "../../../Inputs";
 import { adjTypeData, paymentModes } from "../../../Utils/DropdownData";
-import { 
-    useAddPaymentAdjustmentMutation, 
-    useUpdatePaymentAdjustmentMutation, 
+import {
+    useAddPaymentAdjustmentMutation,
+    useUpdatePaymentAdjustmentMutation,
     useGetPaymentAdjustmentQuery,
-    useGetPaymentAdjustmentByIdQuery 
+    useGetPaymentAdjustmentByIdQuery
 } from "../../../redux/services/PaymentAdjustmentService";
 import Swal from "sweetalert2";
 import { FiSave, FiEdit2 } from "react-icons/fi";
 import { HiOutlineRefresh } from "react-icons/hi";
 import moment from "moment";
 
-const PaymentAdjustmentFormContent = ({ id, setId, onClose }) => {
+const PaymentAdjustmentFormContent = ({
+    id, setId, onClose, readOnly, hasPermission,
+    setReadOnly, docId, setDocId, date, setDate, adjustmentType,
+    setAdjustmentType, referenceNumber, setReferenceNumber, adjustmentAmount,
+    setAdjustmentAmount, paymentMode, setPaymentMode, reason, setReason
+}) => {
 
 
     const { branchId, companyId, finYearId, userId } = getCommonParams();
 
-    const [readOnly, setReadOnly] = useState(false)
-    const [docId, setDocId] = useState("")
-    const [date, setDate] = useState(moment().format("YYYY-MM-DD"))
-    const [adjustmentType, setAdjustmentType] = useState("")
-    const [referenceNumber, setReferenceNumber] = useState("")
-    const [adjustmentAmount, setAdjustmentAmount] = useState("")
-    const [paymentMode, setPaymentMode] = useState("")
-    const [reason, setReason] = useState("")
 
-    const { data: nextDocData, refetch: refetchNextDoc } = useGetPaymentAdjustmentQuery({ branchId, finYearId });
-    const { data: singleData, isFetching: isSingleFetching } = useGetPaymentAdjustmentByIdQuery(id, { skip: !id });
 
-    const [addPaymentAdjustment] = useAddPaymentAdjustmentMutation();
-    const [updatePaymentAdjustment] = useUpdatePaymentAdjustmentMutation();
+    const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetPaymentAdjustmentByIdQuery(id, { skip: !id });
 
-    const resetForm = useCallback(() => {
-        setAdjustmentType("");
-        setReferenceNumber("");
-        setAdjustmentAmount("");
-        setPaymentMode("");
-        setReason("");
-        setDate(moment().format("YYYY-MM-DD"));
-        if (!id) {
-            refetchNextDoc();
-        }
-    }, [id, refetchNextDoc]);
+    const [addData] = useAddPaymentAdjustmentMutation();
+    const [updateData] = useUpdatePaymentAdjustmentMutation();
+
+
+    const syncFormWithDb = useCallback((data) => {
+        const today = new Date();
+
+        setDate(data?.date ? moment.utc(data.date).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
+        setDocId(data?.docId ? data?.docId : "New");
+        setAdjustmentType(data?.adjustmentType ? data?.adjustmentType : "");
+        setReferenceNumber(data?.referenceNumber ? data?.referenceNumber : "");
+        setAdjustmentAmount(data?.adjustmentAmount ? data?.adjustmentAmount : "");
+        setPaymentMode(data?.paymentMode ? data?.paymentMode : "");
+        setReason(data?.reason ? data?.reason : "");
+    }, [id]);
 
     useEffect(() => {
-        if (id && singleData?.data) {
-            const data = singleData.data;
-            setDocId(data.docId);
-            setDate(moment(data.date).format("YYYY-MM-DD"));
-            setAdjustmentType(data.transactionType);
-            setReferenceNumber(data.paymentRefNo);
-            setAdjustmentAmount(data.paidAmount);
-            setPaymentMode(data.paymentMode);
-            setReason(data.transaction);
-            setReadOnly(true);
-        } else if (!id && nextDocData) {
-            setDocId(nextDocData.nextDocId);
-            setReadOnly(false);
-        }
-    }, [id, singleData, nextDocData]);
+        if (id) syncFormWithDb(singleData?.data);
+        else syncFormWithDb(undefined);
+    }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-    const handleSave = async (nextAction) => {
-        if (!adjustmentType || !adjustmentAmount || !paymentMode || !reason) {
-            Swal.fire({ icon: "warning", title: "Please fill all required fields" });
+
+    const validateData = (d) =>
+        !!(d?.adjustmentType && d?.adjustmentAmount && d?.paymentMode && d?.reason);
+
+    const handleSubmitCustom = async (callback, payload, text, nextProcess) => {
+        try {
+            const returnData = await callback(payload).unwrap();
+            if (returnData.statusCode === 1) {
+                Swal.fire({ icon: "error", title: returnData?.message, });
+            } else {
+                Swal.fire({ icon: "success", title: `${text || "Saved"} Successfully`, });
+                if (returnData.statusCode === 0) {
+                    if (nextProcess === "new") {
+                        syncFormWithDb(undefined)
+                        onNew();
+                    } else {
+                        syncFormWithDb(undefined)
+
+                        onClose()
+                    }
+
+                } else {
+                    // toast.error(returnData?.message);
+                    Swal.fire({ icon: "error", title: returnData?.message, });
+                }
+            }
+        } catch (error) {
+            console.log("handle", error);
+        }
+    };
+
+
+    const data = {
+        branchId, finYearId, companyId, userId,
+        adjustmentType,
+        referenceNumber,
+        adjustmentAmount,
+        paymentMode,
+        reason,
+        date,
+        docId,
+    }
+
+
+    const saveData = (nextProcess) => {
+
+
+        if (!validateData(data)) {
+            Swal.fire({ title: "Please fill all required fields...!", icon: "warning" });
             return;
         }
 
-        const payload = {
-            branchId,
-            companyId,
-            finYearId,
-            userId,
-            date,
-            adjustmentType,
-            referenceNumber,
-            adjustmentAmount,
-            paymentMode,
-            reason,
-        };
 
-        try {
-            let result;
-            if (id) {
-                result = await updatePaymentAdjustment({ id, ...payload }).unwrap();
-            } else {
-                result = await addPaymentAdjustment(payload).unwrap();
-            }
+        if (!window.confirm("Are you sure save the details ...?")) return;
 
-            if (result.statusCode === 0) {
-                Swal.fire({ icon: "success", title: `Payment Adjustment ${id ? 'Updated' : 'Saved'} Successfully` });
-                if (nextAction === "close") {
-                    onClose();
-                } else {
-                    setId("");
-                    resetForm();
-                }
-            } else {
-                Swal.fire({ icon: "error", title: result.message || "Something went wrong" });
-            }
-        } catch (error) {
-            Swal.fire({ icon: "error", title: "Internal Server Error" });
-        }
+        if (nextProcess === "draft" && !id)
+            handleSubmitCustom(addData, { ...data, draftSave: true }, "Added", nextProcess);
+        else if (id && nextProcess === "draft")
+            handleSubmitCustom(updateData, { ...data, draftSave: true }, "Updated", nextProcess);
+        else if (id)
+            handleSubmitCustom(updateData, data, "Updated", nextProcess);
+        else
+            handleSubmitCustom(addData, data, "Added", nextProcess);
     };
 
     return (
@@ -133,19 +141,20 @@ const PaymentAdjustmentFormContent = ({ id, setId, onClose }) => {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <ReusableInput label="Adjustment No" readOnly value={docId} />
-                            <ReusableInput 
-                                label="Adjustment Date" 
-                                value={date} 
-                                type={"date"} 
-                                required={true} 
+                            <ReusableInput
+                                label="Adjustment Date"
+                                value={date}
+                                setValue={setDate}
+                                type={"date"}
+                                required={true}
                                 onChange={(e) => setDate(e.target.value)}
                                 readOnly={readOnly}
                             />
-                            <TextInputNew 
-                                name="Reference Number" 
-                                value={referenceNumber} 
-                                setValue={setReferenceNumber} 
-                                type={"text"} 
+                            <TextInputNew
+                                name="Reference Number"
+                                value={referenceNumber}
+                                setValue={setReferenceNumber}
+                                type={"text"}
                                 readOnly={readOnly}
                             />
                             <DropdownInput
@@ -156,12 +165,12 @@ const PaymentAdjustmentFormContent = ({ id, setId, onClose }) => {
                                 required
                                 readOnly={readOnly}
                             />
-                            <TextInputNew 
-                                name="Adjustment Amount" 
-                                value={adjustmentAmount} 
-                                setValue={setAdjustmentAmount} 
-                                type={"number"} 
-                                required={true} 
+                            <TextInputNew
+                                name="Adjustment Amount"
+                                value={adjustmentAmount}
+                                setValue={setAdjustmentAmount}
+                                type={"number"}
+                                required={true}
                                 readOnly={readOnly}
                             />
                             <DropdownInput
@@ -187,35 +196,35 @@ const PaymentAdjustmentFormContent = ({ id, setId, onClose }) => {
                 </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-2 justify-between flex-none bg-white p-2 rounded-md border border-slate-200 shadow-sm mt-auto mx-2 mb-2">
+            <div className="flex flex-col md:flex-row gap-2 justify-between flex-none bg-white p-2 rounded-md border border-slate-200 shadow-sm">
                 <div className="flex gap-2 flex-wrap">
                     <button
-                        onClick={() => handleSave("close")}
+                        onClick={() => hasPermission(() => saveData("close"), "save")}
                         disabled={readOnly}
-                        className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95 disabled:opacity-50"
-                    >
+
+                        className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
                         <HiOutlineRefresh className="w-4 h-4 mr-2" />
                         Save & Close
                     </button>
                     <button
-                        onClick={() => handleSave("new")}
+                        onClick={() => hasPermission(() => saveData("new"), "save")}
                         disabled={readOnly}
-                        className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95 disabled:opacity-50"
-                    >
+                        className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
                         <FiSave className="w-4 h-4 mr-2" />
                         Save & New
                     </button>
+
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                    {id && (
-                        <button 
-                            className="bg-yellow-600 text-white px-4 py-1.5 rounded-md hover:bg-yellow-700 flex items-center text-sm shadow-sm transition-all active:scale-95"
-                            onClick={() => setReadOnly(false)}
-                        >
-                            <FiEdit2 className="w-4 h-4 mr-2" />
-                            Edit
-                        </button>
-                    )}
+                    <button className="bg-yellow-600 text-white px-4 py-1.5 rounded-md hover:bg-yellow-700 flex items-center text-sm shadow-sm transition-all active:scale-95"
+                        // onClick={() => setReadOnly(false)}
+                        onClick={() => hasPermission(() => setReadOnly(false), "edit")}
+
+                    >
+                        <FiEdit2 className="w-4 h-4 mr-2" />
+                        Edit
+                    </button>
+
                 </div>
             </div>
         </div>

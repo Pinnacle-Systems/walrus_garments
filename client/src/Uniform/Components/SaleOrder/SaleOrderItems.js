@@ -78,12 +78,42 @@ const SaleOrderItems = ({
 
 
     const handleInputChange = (value, index, field) => {
-        const newBlend = structuredClone(saleOrderItems);
+        let newBlend = structuredClone(saleOrderItems || []);
+
+        if (!newBlend[index]) {
+            const defaultRow = {
+                itemId: "",
+                qty: "0.00",
+                tax: "0",
+                colorId: "",
+                uomId: "",
+                price: "0.00",
+                discountValue: "0.00",
+                discountType: "",
+                noOfBags: "0",
+                weightPerBag: "0.00",
+                id: '',
+                poItemsId: "",
+                taxMethod: "",
+                barcode: "",
+                barcodeType: "REGULAR"
+            };
+
+            while (newBlend.length <= index) {
+                newBlend.push({ ...defaultRow });
+            }
+        }
+
         if (field === "itemId") {
             const selectedItem = findSelectedItem(value);
+
+            console.log("selectedItem", selectedItem)
+
             if (selectedItem) {
-                newBlend[index]["sectionId"] = selectedItem.sectionId;
-                newBlend[index]["hsnId"] = selectedItem.hsnId;
+                console.log(selectedItem?.hsnId, "selectedItem?.sectionId", selectedItem?.sectionId)
+
+                // newBlend[index]["sectionId"] = selectedItem?.sectionId || "";
+                newBlend[index]["hsnId"] = selectedItem?.hsnId ? selectedItem?.hsnId : null;
                 if (!itemUsesSize(catalogItems, catalogPriceRows, selectedItem.id)) {
                     newBlend[index]["sizeId"] = "";
                 }

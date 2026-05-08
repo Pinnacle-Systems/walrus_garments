@@ -733,21 +733,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
             <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
 
-              {/* 
 
-
-                <ReusableSearchableInput
-                  label="Customer Name"
-                  component="PartyMaster"
-                  placeholder="Search Customer Name..."
-                  optionList={supplierList?.data}
-                  setSearchTerm={(value) => { setCustomerId(value) }}
-                  searchTerm={customerId}
-                  show={"isClient"}
-                  required={true}
-                  disabled={id}
-                />
-              </div> */}
               <div className="col-span-3 overflow-visible">
                 <ReusableSearchableInputNewCustomerwithBranches
                   label="Customer Name"

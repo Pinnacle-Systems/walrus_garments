@@ -22,6 +22,7 @@ import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import ExpenseEntryForm from './ExpenseEntryForm';
 import ExpenseEntryReport from './ExpenseEntryReport';
 import { useDeleteExpenseEntryMutation } from '../../../redux/uniformService/ExpenseEntryServices';
+import { useFormKeyboardNavigation } from '../../../CustomHooks/useFormKeyboardNavigation';
 
 
 
@@ -31,13 +32,12 @@ const ExpenseEntry = () => {
 
     const [showManufacturer, setShowManufacturer] = useState(false);
     const [id, setId] = useState("");
-    const [poInwardOrDirectInward, setPoInwardOrDirectInward] = useState("DirectInward");
 
 
     const [docId, setDocId] = useState("New")
     const today = new Date()
     const [date, setDate] = useState(getDateFromDateTime(today));
-    const [readOnly, setReadOnly] = useState('')
+    const [readOnly, setReadOnly] = useState(false)
     const [transType, setTransType] = useState("DyedYarn");
     const [dcNo, setDcNo] = useState("")
     const [dcDate, setDcDate] = useState('')
@@ -51,23 +51,21 @@ const ExpenseEntry = () => {
     const [expenseItems, setExpenseItems] = useState([]);
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
-    const dispatch = useDispatch();
-    const openTabsState = useSelector((state) => state.openTabs);
-    const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "SALE ORDER");
-    const convertQuotationId = currentTab?.projectId;
-
-
-    const { data: quotationToConvertData, isFetching: isQuotationFetching } =
-        useGetQuotationByIdQuery(convertQuotationId, { skip: !convertQuotationId });
 
 
 
 
+    const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+    const {
+        firstInputRef,
+        secondInputRef,
+        movedToNextSaveNewRef,
+        saveNewButtonRef,
+        saveCloseButtonRef,
+    } = refs;
 
 
-    const params = {
-        branchId, userId, finYearId
-    };
+
 
 
 
@@ -119,7 +117,7 @@ const ExpenseEntry = () => {
     const onNew = () => {
         setId("");
         setExpenseItems([])
-
+        setDocId("New")
     }
 
     return (
@@ -131,7 +129,8 @@ const ExpenseEntry = () => {
                         docId={docId} setDocId={setDocId} date={date} setDate={setDate} readOnly={readOnly} setReadOnly={setReadOnly}
                         transType={transType} setTransType={setTransType} dcNo={dcNo} setDcNo={setDcNo} dcDate={dcDate} setDcDate={setDcDate}
                         expenseItems={expenseItems} setExpenseItems={setExpenseItems}
-
+                        handlers={handlers}
+                        movedToNextSaveNewRef={movedToNextSaveNewRef} firstInputRef={firstInputRef}
                     />
                 </div>
 
@@ -155,6 +154,7 @@ const ExpenseEntry = () => {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            itemsPerPage={15}
                         />
                     </div>
 
