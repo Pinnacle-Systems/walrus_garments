@@ -28,6 +28,7 @@ import TransactionLineItemsSection, {
 } from "../ReusableComponents/TransactionLineItemsSection";
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 import { ItemMaster } from "../../../Shocks";
+import Swal from "sweetalert2";
 
 const SalesDeliveryItems = ({
     id,
@@ -84,7 +85,7 @@ const SalesDeliveryItems = ({
         return detail || null;
     };
 
-    const handleInputChange = (value, index, field) => {
+    const handleInputChange = (value, index, field, item) => {
         const newBlend = structuredClone(deliveryItems);
         if (field === "itemId") {
             const selectedItem = catalogItems?.find(item => String(item.id) === String(value));
@@ -110,6 +111,17 @@ const SalesDeliveryItems = ({
             newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
         }
 
+        if (field === "deliveryQty") {
+            if (parseFloat(item.balanceQty || 0) < parseFloat(value || 0)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Delivery Quantity cannot be greater than balance quantity",
+                });
+                return
+            }
+        }
+
 
         newBlend[index][field] = value;
         setDeliveryItems(newBlend);
@@ -123,7 +135,7 @@ const SalesDeliveryItems = ({
         setDeliveryItems((prev) => {
             let newArray = Array.from({ length: length - prev.length }, () => ({
                 itemId: "",
-                qty: "0.00",
+                deliveryQty: "0.00",
                 tax: "0",
                 colorId: "",
                 uomId: "",
@@ -134,7 +146,8 @@ const SalesDeliveryItems = ({
                 weightPerBag: "0.00",
                 id: '',
                 poItemsId: "",
-                taxMethod: ""
+                taxMethod: "",
+                hsnId: ""
             }));
             return [...prev, ...newArray];
         });
@@ -143,8 +156,9 @@ const SalesDeliveryItems = ({
     const addNewRow = () => {
         if (restrictSourceLineEdits) return;
         setDeliveryItems([...deliveryItems, {
-            itemId: "", qty: "", tax: "0", colorId: "", uomId: "",
-            price: "", discountTypes: "", discountValue: "0.00", id: '', poItemsId: "", taxMethod: ""
+            itemId: "", deliveryQty: "", tax: "0", colorId: "", uomId: "",
+            price: "", discountTypes: "", discountValue: "0.00", id: '', poItemsId: "", taxMethod: "",
+            hsnId: ""
         }]);
     };
 
@@ -180,7 +194,7 @@ const SalesDeliveryItems = ({
     };
 
     const getLineTotals = (line) => {
-        const quantity = Math.max(0, Number(line.qty));
+        const quantity = Math.max(0, Number(line.deliveryQty));
         const unitPrice = Math.max(0, Number(line.price));
         const taxRate = Number(line.taxPercent) || 0;
         const linetaxMethod = line.taxMethod;
@@ -199,8 +213,8 @@ const SalesDeliveryItems = ({
             const taxTotal = discountedAmount - subTotal;
             return { subTotal, taxTotal, total: discountedAmount };
         }
-        const subTotal = discountedAmount;
-        const taxTotal = subTotal * (taxRate / 100);
+        const subTotal = discountedAmount || 0;
+        const taxTotal = subTotal * (taxRate / 100 || 0);
         return { subTotal, taxTotal, total: subTotal + taxTotal };
     };
 
@@ -228,11 +242,12 @@ const SalesDeliveryItems = ({
                                     {showColor && <th className={`${compactHeaderCellClassName} w-32`}>Color</th>}
                                     <th className={`${compactHeaderCellClassName} w-20`}>Hsn</th>
                                     <th className={`${compactHeaderCellClassName} w-12`}>UOM</th>
-                                    <th className={`${compactHeaderCellClassName} w-16`}>Quantity</th>
+                                    <th className={`${compactHeaderCellClassName} w-16`}>Balance Qty</th>
+                                    <th className={`${compactHeaderCellClassName} w-16`}><span className="text-red-500">*</span>Delivery Qty</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Price</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Barcode Type</th>
 
-                                    {/* <th className={`${compactHeaderCellClassName} w-16`}>Price Type</th> */}
+                                    {/*  */}
                                     {/* <th className={`${compactHeaderCellClassName} w-16`}>Discount Type</th>
                                     <th className={`${compactHeaderCellClassName} w-16`}>Discount</th> */}
                                     <th className={`${compactHeaderCellClassName} w-20`}>Tax Type</th>
@@ -262,19 +277,7 @@ const SalesDeliveryItems = ({
 
                                             {/* Item */}
                                             <td className={compactFocusCellClassName}>
-                                                {/* <select
-                                                    onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "itemId"); }}
-                                                    tabIndex="0" disabled={readOnly || restrictSourceLineEdits}
-                                                    className={compactSelectClassName}
-                                                    value={row.itemId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "itemId")}
-                                                    onBlur={e => handleInputChange(e.target.value, index, "itemId")}
-                                                >
-                                                    <option></option>
-                                                    {itemList?.data?.map(blend => (
-                                                        <option value={blend.id} key={blend.id}>{blend?.name}</option>
-                                                    ))}
-                                                </select> */}
+
                                                 <SearchableTableCellSelect
                                                     value={row.itemId}
                                                     options={itemOptions}
@@ -283,8 +286,7 @@ const SalesDeliveryItems = ({
                                                     addNewModalWidth="w-[90%] h-[95%]"
                                                     childComponent={ItemMaster}
                                                     addNewLabel="+ Add New Item"
-                                                // handlers={handlers}
-                                                // movedToNextSaveNewRef={movedToNextSaveNewRef}
+
                                                 />
                                             </td>
 
@@ -360,21 +362,23 @@ const SalesDeliveryItems = ({
                                                     ))}
                                                 </select>
                                             </td>
+                                            <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                                                {parseFloat(row?.balanceQty || 0).toFixed(2)}
 
-                                            {/* Qty */}
+                                            </td>
                                             <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                                 <input
                                                     onKeyDown={e => {
                                                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
-                                                        if (e.key === "Delete") handleInputChange("0.000", index, "qty");
+                                                        if (e.key === "Delete") handleInputChange("0.000", index, "deliveryQty");
                                                     }}
                                                     min="0" type="number"
                                                     className={compactNumberInputClassName}
                                                     onFocus={e => e.target.select()}
-                                                    value={row?.qty}
+                                                    value={row?.deliveryQty}
                                                     disabled={readOnly || !row.uomId}
-                                                    onChange={e => handleInputChange(e.target.value, index, "qty")}
-                                                    onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty")}
+                                                    onChange={e => handleInputChange(e.target.value, index, "deliveryQty", row)}
+                                                    onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(2), index, "deliveryQty", row)}
                                                 />
                                             </td>
 
@@ -390,7 +394,7 @@ const SalesDeliveryItems = ({
                                                     value={(!row.price) ? 0 : row.price}
                                                     disabled={readOnly || restrictSourceLineEdits || !row.qty}
                                                     onChange={e => handleInputChange(e.target.value, index, "price")}
-                                                    onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "price")}
+                                                    onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(2), index, "price")}
                                                 />
                                             </td>
                                             <td className={`${compactCellClassName} px-1 text-[10px]`}>
@@ -407,50 +411,13 @@ const SalesDeliveryItems = ({
                                                         ))
                                                     ) : (
                                                         <>
-                                                            {/* <option value="REGULAR">REGULAR</option>
-                                                            <option value="CLEARANCE">CLEARANCE</option> */}
+
                                                         </>
                                                     )}
                                                 </select>
                                             </td>
-                                            {/* Price Type Badge */}
-                                            {/* <td className={`${compactCellClassName} px-1 text-[10px] font-bold leading-none ${row.priceType === "BulkOfferPrice" ? "bg-green-100 text-green-800 border border-green-200" :
-                                                row.priceType === "offerPrice" ? "bg-indigo-100 text-indigo-800 border border-indigo-200" :
-                                                    row.priceType === "SalesPrice" ? "bg-blue-100 text-blue-800 border border-blue-200" : ""}`}>
-                                                {row.priceType}
-                                            </td> */}
 
-                                            {/* <td className={`${compactFocusCellClassName} w-40 text-right`}>
-                                                <select
-                                                    className={compactDropdownClassName}
-                                                    value={row.discountType}
-                                                    onChange={e => handleInputChange(e.target.value, index, "discountType")}
-                                                    disabled={readOnly || restrictSourceLineEdits}
-                                                >
-                                                    <option value=""></option>
-                                                    <option value="Flat">Flat</option>
-                                                    <option value="Percentage">Percentage</option>
-                                                </select>
-                                            </td>
 
-                                            <td className={`${compactFocusCellClassName} w-40 text-right`}>
-                                                <input
-                                                    onKeyDown={e => {
-                                                        if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
-                                                        if (e.key === "Delete") handleInputChange("0.00", index, "discountValue");
-                                                    }}
-                                                    min="0" type="number"
-                                                    className={compactNumberInputClassName}
-                                                    onFocus={e => e.target.select()}
-                                                    value={(!row.discountValue) ? 0 : row.discountValue}
-                                                    disabled={readOnly || restrictSourceLineEdits || !row.qty}
-                                                    onChange={e => handleInputChange(e.target.value, index, "discountValue")}
-                                                    onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "discountValue")}
-                                                />
-                                            </td> 
-                                            */}
-
-                                            {/* Tax Method */}
                                             <td className={compactFocusCellClassName}>
                                                 <select
                                                     className={compactDropdownClassName}
@@ -464,7 +431,6 @@ const SalesDeliveryItems = ({
                                                 </select>
                                             </td>
 
-                                            {/* Tax % */}
                                             <td className={`${compactCellClassName} w-40 text-right`}>
                                                 <input
                                                     min="0" type="number"
@@ -477,12 +443,10 @@ const SalesDeliveryItems = ({
                                                 />
                                             </td>
 
-                                            {/* Net Amount */}
                                             <td className={`${compactCellClassName} w-40 text-right`}>
                                                 {total.toFixed(2)}
                                             </td>
 
-                                            {/* Add Row on Enter */}
                                             <td className="w-16 px-1 py-1 text-center">
                                                 <button
                                                     onClick={() => addNewRow(index)}

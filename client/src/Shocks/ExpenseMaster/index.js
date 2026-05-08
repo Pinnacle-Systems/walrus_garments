@@ -241,7 +241,7 @@ export default function Form() {
 
     <div onKeyDown={handleKeyDown} className="p-1 h-[90%]">
       <div className="w-full flex bg-white p-1 justify-between  items-center">
-        <h5 className="text-2xl font-bold text-gray-800">Expense Category Master</h5>
+        <h5 className="text-2xl font-bold text-gray-800">Expense Type Master</h5>
         <div className="flex items-center">
           <button
             onClick={() => {
@@ -250,7 +250,7 @@ export default function Form() {
             }}
             className="bg-white border  border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white text-sm px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
           >
-            + Add New Expense Category
+            + Add New Expense Type
           </button>
         </div>
       </div>
@@ -283,9 +283,9 @@ export default function Form() {
                   <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
                     {id
                       ? !readOnly
-                        ? "Edit Expense Category Master"
-                        : "Expense Category Master"
-                      : "Add New Expense Category"}
+                        ? "Edit Expense Type Master"
+                        : "Expense Type Master"
+                      : "Add New Expense Type"}
                   </h2>
                 </div>
                 <div className="flex gap-2">
@@ -328,7 +328,7 @@ export default function Form() {
                         <fieldset className=' rounded mt-2'>
                           <div className=''>
                             <div className='mb-3 w-[48%]'>
-                              <TextInput name="Expense Category Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
+                              <TextInput name="Expense Type Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
                             </div>
 
                             <div className='mb-5'>

@@ -7,8 +7,8 @@ import { push } from '../../../redux/features/opentabs';
 
 const PartyOverAllLedger = () => {
     const [searchPartyName, setSearchPartyName] = useState('');
-    const { data } = useGetPartyQuery({ params: { isPartyPurchaseOverAllReport: true, searchValue: searchPartyName } });
-    const partyList = data?.data || [];
+    const { data } = useGetPartyQuery({ params: { isPaymentOutstanding: true, searchValue: searchPartyName } });
+    const partyList = data?.data?.filter(i => !i.isB2C && i.isClient) || [];
     const dispatch = useDispatch();
     return (
         <div className={` relative w-full overflow-y-auto mx-auto py-1`}>
@@ -23,8 +23,6 @@ const PartyOverAllLedger = () => {
                                     onChange={(e) => { setSearchPartyName(e.target.value) }} />
                             </div>
                         </th>
-                        <th className="table-data w-5"> Purchase Value</th>
-                        <th className="table-data w-5">Payment Value</th>
                         <th className="table-data w-5">Balance</th>
                         <th className="table-data w-5">View</th>
                     </tr>
@@ -38,26 +36,17 @@ const PartyOverAllLedger = () => {
                             <td className="table-data text-left px-1 py-1">
                                 {party.name}
                             </td>
+
                             <td className="table-data">
                                 <div className='flex items-center justify-center'>
-                                    {party?.purchaseAmount}
-                                </div>
-                            </td>
-                            <td className="table-data">
-                                <div className='flex items-center justify-center'>
-                                    {party?.paymentAmount}
-                                </div>
-                            </td>
-                            <td className="table-data">
-                                <div className='flex items-center justify-center'>
-                                    {party?.balance}
+                                    {party?.outstandingBalance}
                                 </div>
                             </td>
                             <td className="table-data">
                                 <div className='flex items-center justify-center' onClick={() => {
                                     dispatch(push({
-                                        name: "PURCHASE LEDGER",
-                                        previewId: party.id
+                                        name: "LEDGER",
+                                        projectId: party.id
                                     }))
                                 }}>
                                     {VIEW}

@@ -47,6 +47,8 @@ export { default as HsnMasterApi } from "./HsnMasterServices"
 export { default as AccessoryStockApi } from "./AccessoryStockService"
 export { default as paymentApi } from "./PaymentService"
 export { default as DeliveryChallanApi } from "./DeliveryChallanService"
+export { default as paymentAdjustmentApi } from "./PaymentAdjustmentService"
+
 
 
 

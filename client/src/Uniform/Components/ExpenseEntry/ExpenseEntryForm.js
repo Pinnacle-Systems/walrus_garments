@@ -32,8 +32,14 @@ import ExpenseEntryItems from "./ExpenseEntryItems";
 
 
 const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
-    dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setInvoiceItems, invoiceItems,
-    yarnList, colorList, uomList, convertSaleOrderId, sourceSaleOrderDocId, sourceAdvanceReceived = 0, termsData, invalidateTagsDispatch, dispatch, expenseItems, setExpenseItems
+    dcNo, setDcNo, dcDate, setDcDate, customerId, setInwardItemSelection, onNew, branchList, locationData, supplierList, setInvoiceItems, invoiceItems,
+    yarnList, colorList, uomList, convertSaleOrderId, sourceSaleOrderDocId, sourceAdvanceReceived = 0, termsData, invalidateTagsDispatch, dispatch, expenseItems, setExpenseItems,
+    handlers,
+    movedToNextSaveNewRef,
+    firstInputRef,
+    secondInputRef,
+    saveNewButtonRef,
+    saveCloseButtonRef,
 
 
 }) => {
@@ -105,13 +111,14 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     const { data: itemPriceList } = useGetItemPriceListQuery({ params });
     const { data: ExpenseEntryList } = useGetExpenseMasterQuery({ params });
 
-    console.log(ExpenseEntryList, "ExpenseEntryList")
+    console.log(id, "expenseid")
 
     const {
         data: singleData,
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
     } = useGetExpenseEntryByIdQuery(id, { skip: !id });
+
     const saleOrderDocId = singleData?.data?.Saleorder?.docId || sourceSaleOrderDocId || "";
 
 
@@ -121,51 +128,24 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
 
 
 
-    const inwardTyperef = useRef(null);
 
 
-    useEffect(() => {
-        if (inwardTyperef.current && !id) {
-            inwardTyperef.current.focus();
-        }
-    }, []);
-
-    useEffect(() => {
-        if (!id) {
-            setTerm("");
-            setPackingChargeEnabled(false);
-            setPackingCharge("");
-            setShippingChargeEnabled(false);
-            setShippingCharge("");
-        }
-    }, [id]);
 
 
     const syncFormWithDb = useCallback((data) => {
-        console.log(data?.DirectItems, "data?.DirectItems")
-        const today = new Date()
-        if (convertSaleOrderId && !id) return
-        if (id) {
-            setReadOnly(true);
-        } else {
-            setReadOnly(false);
-        }
-        setDate(data?.createdAt ? moment.utc(data.createdAt).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
+        const today = new Date();
+        setDate(data?.date ? moment.utc(data.date).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
         setExpenseItems(data?.ExpenseEntryItems ? data.ExpenseEntryItems : []);
-        if (data?.docId) {
-            setDocId(data?.docId)
-        }
-        if (data?.date) setDate(data?.date);
-
-    }, [id]);
+        setDocId(data?.docId ? data?.docId : "New");
+    }, []);
 
     useEffect(() => {
-        if (id) {
-            syncFormWithDb(singleData?.data);
-        } else {
-            syncFormWithDb(undefined);
+        if (id && singleData?.data) {
+            syncFormWithDb(singleData.data);
+        } else if (!id) {
+            syncFormWithDb(null);
         }
-    }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+    }, [id, singleData, syncFormWithDb]);
 
     const data = {
         docId,
@@ -176,15 +156,7 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
         expenseEntryItems: expenseItems?.filter(i => i.expenseCategoryId),
     }
 
-    console.log(convertSaleOrderId, "convertSaleOrderId")
-    const validateData = (data) => {
 
-        if (data?.customerId) {
-            return true
-        }
-
-        return false
-    }
 
 
 
@@ -203,20 +175,24 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                 returnData = await callback(data).unwrap();
             }
             if (returnData.statusCode === 1) {
-                toast.error(returnData.message);
+                // toast.error(returnData.message);
+                Swal.fire({
+                    icon: 'error',
+                    text: returnData.message,
+                });
             } else {
 
-
+                console.log(nextProcess == "new", "nextProcess")
                 if (returnData.statusCode === 0) {
                     Swal.fire({
                         icon: 'success',
                         title: `${text || 'Saved'} Successfully`,
 
                     });
-                    dispatch(push({ name: "SALES INVOICE", projectId: null }));
+                    setId('')
                     invalidateTagsDispatch()
                     if (nextProcess == "new") {
-                        syncFormWithDb(undefined);
+                        syncFormWithDb(null);
                         onNew()
                     }
                     else {
@@ -228,12 +204,15 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
 
 
                 } else {
-                    toast.error(returnData?.message);
+                    Swal.fire({
+                        icon: 'error',
+                        text: returnData.message,
+                    });
                 }
 
             }
         } catch (error) {
-            console.log("handle");
+            console.log("handleSubmitCustom error", error);
         }
     };
 
@@ -417,125 +396,7 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
             showTermSelect
             termValue={term}
             onTermChange={handleTermTemplateChange}
-            // termOptions={((id ? termsData?.data : termsData?.data?.filter((item) => item?.active)) || []).map((blend) => ({
-            //   value: blend.id,
-            //   label: blend?.name,
-            //   templateText: blend?.termsAndCondition || blend?.description || "",
-            // }))}
-            // chargeOptions={[
-            //   {
-            //     key: "packingChargeToggle",
-            //     label: "Packing",
-            //     checked: packingChargeEnabled,
-            //     onToggle: (checked) => {
-            //       setPackingChargeEnabled(checked);
-            //       if (!checked) {
-            //         setPackingCharge("");
-            //       } else if (!packingCharge) {
-            //         setPackingCharge("0.00");
-            //       }
-            //     },
-            //   },
-            //   {
-            //     key: "shippingChargeToggle",
-            //     label: "Shipping",
-            //     checked: shippingChargeEnabled,
-            //     onToggle: (checked) => {
-            //       setShippingChargeEnabled(checked);
-            //       if (!checked) {
-            //         setShippingCharge("");
-            //       } else if (!shippingCharge) {
-            //         setShippingCharge("0.00");
-            //       }
-            //     },
-            //   },
-            // ]}
-            // totalsRows={[
-            //   {
-            //     key: "totalQty",
-            //     label: "Total Qty",
-            //     value: parseFloat(getTotalQty()).toFixed(3),
-            //     summaryColumn: "left",
-            //   },
-            //   {
-            //     key: "beforeTaxAmount",
-            //     label: "Gross Amount",
-            //     value: `Rs.${parseFloat(subtotal || 0).toFixed(2)}`,
-            //     summaryColumn: "right",
-            //   },
-            //   {
-            //     key: "taxAmount",
-            //     label: "Tax Amount",
-            //     value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
-            //     summaryColumn: "right",
-            //   },
-            //   ...chargeRows,
-            //   {
-            //     key: "netAmount",
-            //     label: "Net Amount",
-            //     value: `Rs.${parseFloat(adjustedNetAmount || 0).toFixed(2)}`,
-            //     summaryColumn: "right",
-            //     emphasized: true,
-            //   },
-            //   ...(shouldShowPaymentReceived
-            //     ? [
-            //       {
-            //         key: "paymentReceived",
-            //         label: "Payment Received",
-            //         value: `Rs.${parseFloat(paymentReceivedAmount || 0).toFixed(2)}`,
-            //         summaryColumn: "left",
-            //       },
-            //     ]
-            //     : []),
-            // ]}
-            leftActions={
-                <>
-                    <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                        <FiSave className="w-4 h-4 mr-2" />
-                        Save & New
-                    </button>
-                    <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                        <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                        Save & Close
-                    </button>
-                </>
-            }
-            rightActions={
-                <>
-                    <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-                        onClick={() => setReadOnly(false)}
-                    >
-                        <FiEdit2 className="w-4 h-4 mr-2" />
-                        Edit
-                    </button>
-                    <button
-                        className="bg-slate-600 text-white px-4 py-1 rounded-md hover:bg-slate-700 flex items-center text-sm"
-                        onClick={() => {
-                            if (!invoiceItems?.filter(i => i.itemId).length) {
-                                toast.warning("Please add some items first");
-                                return;
-                            }
-                            setPrintOpen(true);
-                        }}
-                    >
-                        <FiPrinter className="w-4 h-4 mr-2" />
-                        Print
-                    </button>
-                    <button
-                        className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm ml-2"
-                        onClick={() => {
-                            if (!invoiceItems?.filter(i => i.itemId).length) {
-                                toast.warning("Please add some items first");
-                                return;
-                            }
-                            setThermalPrintOpen(true);
-                        }}
-                    >
-                        <FiPrinter className="w-4 h-4 mr-2" />
-                        Thermal Print
-                    </button>
-                </>
-            }
+
         />
     );
 
@@ -580,6 +441,8 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
             </Modal>
             <TransactionEntryShell
                 title="Expense Entry"
+                readOnly={readOnly}
+                id={id}
                 onClose={onClose}
                 headerOpen={isHeaderOpen}
                 setHeaderOpen={setIsHeaderOpen}
@@ -594,36 +457,12 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                                 <ReusableInput label="Expense Entry No" readOnly value={docId} />
                             </div>
                             <div className={saleOrderDocId ? "col-span-4" : ""}>
-                                <ReusableInput label="Expense Entry Date" value={date} type="date" required readOnly disabled />
+                                <ReusableInput label="Expense Entry Date" value={date} setValue={setDate} type="date" required readOnly={readOnly} />
                             </div>
 
                         </TransactionHeaderSection>
                         <TransactionHeaderSection className="col-span-2" bodyClassName={`${saleOrderDocId ? "grid-cols-12" : "grid-cols-5"}`}>
-                            {/* <div className="grid grid-cols-1">
-                                <DropdownInputNew
-                                    name="Expense Type"
-                                    options={dropDownListObject(
-                                        id ? ExpenseEntryList?.data : ExpenseEntryList?.data?.filter(i => i.active),
-                                        "name", "id"
-                                    )}
-                                    value={expenseType}
-                                    setValue={setExpenseType}
-                                    readOnly={readOnly}
-                                    addNewLabel="+ Add New Expense Type"
-                                    // childComponent={ExpenseType}
-                                    addNewModalWidth="w-[40%] h-[50%]"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1">
-                                <DropdownInputNew
-                                    value={platForm}
-                                    setValue={setPlatForm}
-                                    options={platformList}
-                                    name="Platform"
-                                    required={true}
 
-                                />
-                            </div> */}
 
                         </TransactionHeaderSection>
 
@@ -652,24 +491,37 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                             isHeaderOpen={isHeaderOpen}
                             itemPriceList={itemPriceList}
                             expenseTypeList={ExpenseEntryList}
+                            handlers={handlers}
+                            movedToNextSaveNewRef={movedToNextSaveNewRef}
+                            firstInputRef={firstInputRef}
+                            secondInputRef={secondInputRef}
+                            saveNewButtonRef={saveNewButtonRef}
+                            saveCloseButtonRef={saveCloseButtonRef}
                         />
                     </fieldset>
                 </div>
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
+
                         <button
-                            onClick={() => saveData("new")}
-                            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
-                        >
-                            <FiSave className="w-4 h-4 mr-2" />
-                            Save & New
-                        </button>
-                        <button
+                            ref={saveCloseButtonRef}
                             onClick={() => saveData("close")}
+                            disabled={readOnly}
+
                             className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
                         >
                             <HiOutlineRefresh className="w-4 h-4 mr-2" />
                             Save & Close
+                        </button>
+                        <button
+                            ref={saveNewButtonRef}
+                            onClick={() => saveData("new")}
+                            disabled={readOnly}
+
+                            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm"
+                        >
+                            <FiSave className="w-4 h-4 mr-2" />
+                            Save & New
                         </button>
                     </div>
 

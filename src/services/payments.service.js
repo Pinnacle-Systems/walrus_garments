@@ -137,15 +137,14 @@ async function create(body) {
             data = await tx.payment.create({
                 data: {
                     docId: newDocId,
-                    partyId: parseInt(supplierId),
-                    branchId: parseInt(branchId),
-                    paymentMode,
-                    paidAmount: parseFloat(paidAmount),
-                    // discount: parseFloat(discount),
-                    paymentRefNo: paymentRefNo,
+                    partyId: supplierId ? parseInt(supplierId) : null,
+                    branchId: branchId ? parseInt(branchId) : null,
+                    paymentMode: paymentMode ? paymentMode : null,
+                    paidAmount: paidAmount ? parseFloat(paidAmount) : null,
+                    paymentRefNo: paymentRefNo ? paymentRefNo : null,
                     createdById: parseInt(userId),
                     cvv: dateOnly ? new Date(dateOnly) : null,
-                    paymentType,
+                    paymentType: paymentType ? paymentType : null,
                     totalBillAmount: totalBillAmount ? parseInt(totalBillAmount) : undefined,
                     totalAmount: totalAmount ? parseInt(totalAmount) : undefined,
                     paymentFlow: paymentFlow ? paymentFlow : "",
@@ -154,6 +153,7 @@ async function create(body) {
                     refDocId: refDocId ? refDocId : "",
                     transaction: transaction ? transaction : "",
                     transactionId: transactionId ? parseInt(transactionId) : undefined,
+                    date: dateOnly ? new Date(dateOnly) : null,
                 }
             });
         });
@@ -171,7 +171,7 @@ async function update(id, body) {
     let data
     const {
         branchId, paymentMode, cvv, paymentType, paidAmount, discount, supplierId, userId, paymentRefNo, partyId, finYearId, totalAmount,
-        paymentFlow, transactionType, refId, refDocId
+        paymentFlow, transactionType, refId, refDocId, transaction, transactionId
     } = await body
 
 

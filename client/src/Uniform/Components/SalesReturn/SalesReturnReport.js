@@ -323,7 +323,11 @@ const SalesReturnReport = ({
                       </td>
 
 
-                      <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>
+
+                      <td className="py-1.5 text-left">   {`${dataObj?.Party?.name}${dataObj?.Party?.BranchType?.name
+                        ? ` / ${dataObj?.Party?.BranchType?.name}`
+                        : ""
+                        }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`} </td>
                       {rowActions && (
                         <td className="border-gray-200 px-2 h-8">
                           <div className="flex items-center justify-end gap-1">

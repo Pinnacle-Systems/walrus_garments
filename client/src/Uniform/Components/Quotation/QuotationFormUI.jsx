@@ -103,7 +103,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     saveCloseButtonRef,
   } = refs;
 
-  console.log(focusFirstInput, "focusFirstInput")
+  console.log(isMinimumAdvanceManuallyEdited, "isMinimumAdvanceManuallyEdited")
 
 
   const { data: supplierDetails } =
@@ -157,7 +157,6 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
 
   const syncFormWithDb = useCallback((data) => {
-    console.log(data?.DirectItems, "data?.DirectItems")
     if (id) {
       if (!data) return;
       setReadOnly(true);
@@ -178,13 +177,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     setShippingCharge(nextShippingCharge);
     setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
     setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
-    if (data?.minimumAdvancePayment !== null && data?.minimumAdvancePayment !== undefined && data?.minimumAdvancePayment !== "") {
-      setMinimumAdvancePayment(String(data.minimumAdvancePayment));
-      setIsMinimumAdvanceManuallyEdited(true);
-    } else {
-      setMinimumAdvancePayment("");
-      setIsMinimumAdvanceManuallyEdited(false);
-    }
+    setMinimumAdvancePayment(data?.minimumAdvancePayment ? String(data?.minimumAdvancePayment) : "");
+    setIsMinimumAdvanceManuallyEdited(data?.isMinAdvanceEdited ? Boolean(data?.isMinAdvanceEdited) : false)
     setSelectedOffersByRow(data?.selectedOffersByRow || {});
     setChildRecord(data?.Saleorder?.length > 0 ? true : false)
   }, [id]);
@@ -223,43 +217,13 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     shippingChargeEnabled,
     shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
     taxMethod,
-    selectedOffersByRow
+    selectedOffersByRow,
+    isMinAdvanceEdited: isMinimumAdvanceManuallyEdited
   }
 
   console.log(data, "data")
 
 
-
-
-
-
-  // const validateData = (data) => {
-  //   let mandatoryFields = ["uomId", "colorId", "price"];
-  //   let lotMandatoryFields = ["qty"]
-  //   if (transType === "GreyYarn" || transType === "DyedYarn") {
-  //     mandatoryFields = [...mandatoryFields, "yarnId"]
-  //     lotMandatoryFields = [...lotMandatoryFields, "noOfBags", "weightPerBag"]
-  //   } else if (transType === "GreyFabric" || transType === "DyedFabric") {
-  //     mandatoryFields = [...mandatoryFields, ...["fabricId", "designId", "gaugeId", "loopLengthId", "gsmId", "kDiaId", "fDiaId"]]
-  //     lotMandatoryFields = [...lotMandatoryFields, "noOfRolls"]
-  //   } else if (transType === "Accessory") {
-  //     mandatoryFields = [...mandatoryFields, ...["accessoryId"]]
-  //   }
-
-
-
-
-  //   return data.poType && data.supplierId && data.dcDate && data.payTermId && data.dcNo
-  //     &&
-  //     (
-  //       (data.poType === "Accessory")
-  //         ?
-  //         isGridDatasValid(data.directInwardReturnItems, false, [...mandatoryFields, "qty"])
-  //         :
-  //         data.directInwardReturnItems.every(item => item?.inwardLotDetails && isGridDatasValid(item?.inwardLotDetails, false, lotMandatoryFields))
-  //     )
-  //     && isGridDatasValid(data.directInwardReturnItems, false, mandatoryFields)
-  //     && data.directInwardReturnItems.length !== 0
 
 
 
@@ -274,7 +238,6 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
     return false
   }
-  console.log(data, "data")
 
 
 
@@ -291,7 +254,11 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
         returnData = await callback(data).unwrap();
       }
       if (returnData.statusCode === 1) {
-        toast.error(returnData.message);
+        // toast.error(returnData.message);
+        Swal.fire({
+          icon: 'error',
+          title: `${returnData?.message}`,
+        });
       } else {
 
         if (returnData.statusCode === 0) {
@@ -305,20 +272,20 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             syncFormWithDb(undefined);
             onNew()
           }
-          else if (nextProcess == "close") {
+          else {
             onClose()
           }
-          else {
-            setId(returnData?.data?.id);
-
-          }
-
-
-
 
         } else {
-          toast.error(returnData?.message);
+          Swal.fire({
+            icon: 'error',
+            title: `${returnData?.message}!`,
+          });
         }
+
+
+
+
 
       }
     } catch (error) {
@@ -443,11 +410,15 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const { subtotal, taxAmount, netAmount } = calculateTotals();
   const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
   const adjustedNetAmount = netAmount + extraCharges;
+
   const defaultMinimumAdvancePayment = (parseFloat(adjustedNetAmount || 0) * 0.25).toFixed(2);
-  const displayedMinimumAdvancePayment =
-    id && readOnly && singleData?.data?.minimumAdvancePayment !== null && singleData?.data?.minimumAdvancePayment !== undefined && singleData?.data?.minimumAdvancePayment !== ""
-      ? String(singleData.data.minimumAdvancePayment)
-      : minimumAdvancePayment;
+
+
+
+
+
+
+
   const chargeRows = [
     ...(packingChargeEnabled
       ? [{
@@ -595,16 +566,30 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       ]}
       extraTotalsContent={
         <div className="flex items-center justify-between gap-2 py-0.5 text-[12px]">
-          <span className="text-slate-600">Min. Advance</span>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-600">Min. Advance</span>
+            <input
+              disabled={readOnly}
+              type="checkbox"
+              checked={isMinimumAdvanceManuallyEdited}
+              onChange={(e) => {
+                setIsMinimumAdvanceManuallyEdited(e.target.checked);
+                if (!e.target.checked) {
+                  setMinimumAdvancePayment(defaultMinimumAdvancePayment);
+                }
+              }}
+              className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              title="Enable manual edit"
+            />
+          </div>
           <input
-            type="number"
-            value={displayedMinimumAdvancePayment}
+            // type="number"
+            value={minimumAdvancePayment}
             onChange={(e) => {
               setMinimumAdvancePayment(e.target.value);
-              setIsMinimumAdvanceManuallyEdited(true);
             }}
-            readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white"}`}
+            readOnly={readOnly || !isMinimumAdvanceManuallyEdited}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly || !isMinimumAdvanceManuallyEdited ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white"}`}
           />
         </div>
       }
@@ -628,10 +613,13 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           <button
             className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
             onClick={() => {
-              if (id && singleData?.data?.minimumAdvancePayment !== null && singleData?.data?.minimumAdvancePayment !== undefined && singleData?.data?.minimumAdvancePayment !== "") {
-                setMinimumAdvancePayment(String(singleData.data.minimumAdvancePayment));
-                setIsMinimumAdvanceManuallyEdited(true);
-              }
+              // if (id && 
+              // singleData?.data?.minimumAdvancePayment !== null 
+              // && singleData?.data?.minimumAdvancePayment !== undefined
+              //  && singleData?.data?.minimumAdvancePayment !== "") {
+              //   setMinimumAdvancePayment(String(singleData.data.minimumAdvancePayment));
+              //   setIsMinimumAdvanceManuallyEdited(true);
+              // }
               setReadOnly(false);
             }}
             disabled={childRecord}
@@ -672,11 +660,6 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
   console.log(adjustedNetAmount, "netAmount", taxAmount, 'taxAmount')
 
-  useEffect(() => {
-    if (!isMinimumAdvanceManuallyEdited) {
-      setMinimumAdvancePayment(defaultMinimumAdvancePayment);
-    }
-  }, [defaultMinimumAdvancePayment, isMinimumAdvanceManuallyEdited]);
 
 
   function isSupplierOutside() {

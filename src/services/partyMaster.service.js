@@ -2,11 +2,11 @@ import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 import { exclude, getRemovedItems } from '../utils/helper.js';
 import { parse } from 'path';
-import { getPartyPurchaseOverAllReport } from './partyLedger.js';
+import { getPartyLedgerReport, getPartyPurchaseOverAllReport } from './partyLedger.js';
 
 async function get(req) {
     const { companyId, active, isAddressCombined, isInwardRetuenParties, supplierId, id,
-        isPartyPurchaseOverAllReport, searchValue } = req.query
+        isPartyPurchaseOverAllReport, searchValue, isBillable, isPaymentOutstanding, isPartyLedgerReport, partyId, startDate, endDate } = req.query
 
 
     let data
@@ -14,6 +14,8 @@ async function get(req) {
         where: {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
+            name: searchValue ? { contains: searchValue } : undefined,
+
         },
         include: {
 
@@ -55,22 +57,42 @@ async function get(req) {
                     children: true
 
                 }
+            },
+            Quotation: {
+                where: { isDeleted: false }
+            },
+            Saleorder: {
+                where: { isDeleted: false },
+
+                include: {
+                    SaleOrderItems: { select: { qty: true } },
+                    SalesDelivery: {
+                        include: {
+                            SalesDeliveryItems: { select: { deliveryQty: true } }
+                        }
+                    }
+                }
+            },
+            SalesDelivery: {
+                where: { isDeleted: false },
+                include: {
+                    SalesDeliveryItems: true
+                }
+            },
+            Payment: {
+                where: { isDeleted: false }
             }
         }
 
     });
     if (Boolean(isAddressCombined)) {
-
         data = await data?.map(i => ({
             ...i,
             name: `${i.name}${i?.BranchType?.name ? ` / ${i.BranchType.name}` : ""
                 }${i?.City?.name ? ` / ${i.City.name}` : ""}`
 
         }))
-        // console.log(data, "datadata")
-
     }
-
     if (isInwardRetuenParties === true || isInwardRetuenParties === "true") {
         data = data.filter(party => {
 
@@ -98,13 +120,98 @@ async function get(req) {
 
 
 
+
+
+
     if (isPartyPurchaseOverAllReport) {
         const data = await getPartyPurchaseOverAllReport(searchValue)
         return { statusCode: 0, data };
     }
 
-    isPartyPurchaseOverAllReport
+    if (isPartyLedgerReport) {
+        const data = await getPartyLedgerReport(partyId, startDate, endDate)
+        return { statusCode: 0, data };
+    }
 
+    if (isBillable === true || isBillable === "true") {
+        console.log("data", data);
+
+        data = data.filter(party => {
+            const hasSaleOrder = (party.Saleorder && party.Saleorder.length > 0) ||
+                (party._count && party._count.Saleorder > 0);
+
+            const hasQuotation = (party.Quotation && party.Quotation.length > 0) ||
+                (party._count && party._count.Quotation > 0);
+
+            // If party has sale orders (quotation was converted)
+
+            if (hasSaleOrder && party.Saleorder && party.Saleorder.length > 0) {
+
+                // Only show if at least one sale order is NOT fully delivered
+                return party.Saleorder.some(so => {
+                    const totalOrdered = (so.SaleOrderItems || []).reduce(
+                        (acc, item) => acc + parseFloat(item.qty || 0), 0
+                    );
+                    const totalDelivered = (so.SalesDelivery || []).reduce((acc, sd) => {
+                        return acc + (sd.SalesDeliveryItems || []).reduce(
+                            (acc2, item) => acc2 + parseFloat(item.deliveryQty || 0), 0
+                        );
+                    }, 0);
+                    return totalOrdered > (totalDelivered + 0.0001);
+                });
+            }
+
+            // If only quotation exists (not converted to SO), show the party
+            if (hasQuotation && !hasSaleOrder) return true;
+
+            return false;
+        });
+    }
+
+
+    if (isPaymentOutstanding === true || isPaymentOutstanding === "true") {
+        data = data.map(party => {
+            const totalDeliveryValue = (party.SalesDelivery || []).reduce((acc, sale) => {
+                const itemsAmount = (sale.SalesDeliveryItems || []).reduce((itemAcc, curr) => {
+                    const price = parseFloat(curr.price || 0);
+                    const qty = parseFloat(curr.deliveryQty || 0);
+                    const taxPercent = parseFloat(curr.taxPercent || 0);
+                    const taxMethod = curr.taxMethod || "Inclusive";
+                    const lineDiscountType = curr.discountType;
+                    const lineDiscountValue = parseFloat(curr.discountValue || 0);
+
+                    let rowTotal = price * qty;
+                    if (lineDiscountType === "Percentage") {
+                        rowTotal -= (rowTotal * lineDiscountValue) / 100;
+                    } else if (lineDiscountType === "Flat") {
+                        rowTotal -= lineDiscountValue;
+                    }
+                    rowTotal = Math.max(0, rowTotal);
+
+                    if (taxMethod === "Exclusive") {
+                        rowTotal += (rowTotal * taxPercent) / 100;
+                    }
+
+                    return itemAcc + rowTotal;
+                }, 0);
+
+                const packingCharge = sale.packingChargeEnabled ? parseFloat(sale.packingCharge || 0) : 0;
+                const shippingCharge = sale.shippingChargeEnabled ? parseFloat(sale.shippingCharge || 0) : 0;
+                return acc + itemsAmount + packingCharge + shippingCharge;
+            }, 0);
+
+            const totalPayments = (party.Payment || []).reduce((acc, pay) => {
+                return acc + (parseFloat(pay.paidAmount || 0));
+            }, 0);
+
+            return {
+                ...party,
+                totalDeliveryValue: Math.round(totalDeliveryValue * 100) / 100,
+                totalPayments: Math.round(totalPayments * 100) / 100,
+                outstandingBalance: Math.round((totalDeliveryValue - totalPayments) * 100) / 100
+            };
+        });
+    }
 
     data = data.map((item) => {
         const types = [];
@@ -351,7 +458,6 @@ async function create(body) {
         }
     )
 
-    console.log(data, "data")
 
     return { statusCode: 0, data };
 }

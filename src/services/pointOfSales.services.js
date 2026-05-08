@@ -8,12 +8,15 @@ import { getTableRecordWithId } from '../utils/helperQueries.js';
 
 
 
-async function getNextDocId(branchId, shortCode, startTime, endTime) {
+async function getNextDocId(branchId, shortCode, startTime, endTime, transactionType) {
+
+
 
 
     let lastObject = await prisma.pos.findFirst({
         where: {
             branchId: parseInt(branchId),
+            isReturn: transactionType == "RETURN" ? true : false,
             AND: [
                 {
                     createdAt: {
@@ -32,24 +35,34 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
             id: 'desc'
         }
     });
+
+    let prefix = "POS"
+
+    if (transactionType == "RETURN") {
+        prefix = "RE"
+    }
+
     const branchObj = await getTableRecordWithId(branchId, "branch")
-    let newDocId = `${branchObj.branchCode}/${shortCode}/POS/1`
+    let newDocId = `${branchObj.branchCode}/${shortCode}/${prefix}/1`
     if (lastObject) {
-        newDocId = `${branchObj.branchCode}/${shortCode}/POS/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
+        newDocId = `${branchObj.branchCode}/${shortCode}/${prefix}/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
     }
     return newDocId
 }
 
 async function get(req) {
-    const { branchId, active, pagination, pageNumber, dataPerPage, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus, userRole } = req.query;
-    console.log(userRole, "userRole", userRole == "ADMIN" || userRole == "DEFAULT ADMIN")
+    const { branchId, active, pagination, pageNumber, dataPerPage, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus, userRole, reportsTransactionType } = req.query;
+
+    console.log(reportsTransactionType, "reportsTransactionType")
 
     let where = {
-        // branchId: branchId ? parseInt(branchId) : undefined,
-        // active: active ? Boolean(active) : undefined,
-        // docId: serachDocNo ? { contains: serachDocNo } : undefined,
-        // Party: searchCustomerName ? { name: { contains: searchCustomerName } } : undefined,
-        // approvalStatus: approvalStatus ? approvalStatus : { not: "NONE" }
+        branchId: branchId ? parseInt(branchId) : undefined,
+        docId: serachDocNo ? { contains: serachDocNo } : undefined,
+        Party: searchCustomerName ? { name: { contains: searchCustomerName } } : undefined,
+        approvalStatus: approvalStatus ? approvalStatus : undefined,
+        isReturn: reportsTransactionType === "RETURN" ? true : reportsTransactionType === "SALE" ? false : undefined,
+
+
     };
 
     if (searchDate) {
@@ -60,9 +73,8 @@ async function get(req) {
     }
 
     let totalCount = 0;
-    // if (pagination) {
-    //     totalCount = await prisma.pos.count({ where });
-    // }
+
+    console.log(where, "where")
 
     let data = await prisma.pos.findMany({
         where,
@@ -90,13 +102,13 @@ async function get(req) {
         // take: pagination ? parseInt(dataPerPage) : undefined,
     });
 
-    console.log(data, "data")
+    // console.log(data, "data")
 
     if (approvalStatus) {
 
         if (userRole == "ADMIN" || userRole == "DEFAULT ADMIN") {
             data = data.filter(item => item.approvalStatus == "PENDING");
-            console.log(data, "data 1")
+            // console.log(data, "data 1")
         } else {
             data = data.filter(item => item.approvalStatus == "APPROVED");
         }
@@ -173,17 +185,13 @@ async function create(body) {
     try {
         const {
             customerId, posItems, posPayments, finYearId, branchId, storeId, exchangeSalesNo,
-            netAmount, taxAmount, discountValue, discountType,
-            manualDiscount, promotionalDiscount, roundOff,
-            paidCash, paidUPI, paidCard, paidOnline,
-            receivedAmount, balanceReturn, paymentMethod,
-            approvalStatus // Add this
+            netAmount, approvalStatus, transactionType
         } = await body;
 
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
         const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-        let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+        let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, transactionType);
 
         const result = await prisma.$transaction(async (tx) => {
             // Stage 1: Initial Request from Salesperson
@@ -196,7 +204,9 @@ async function create(body) {
                     branchId: branchId ? parseInt(branchId) : undefined,
                     createdById: body.userId ? parseInt(body.userId) : undefined,
                     netAmount: netAmount ? String(netAmount) : "0",
-                    approvalStatus: approvalStatus || "NONE", // Save approval status
+                    approvalStatus: approvalStatus || "NONE",
+                    transactionType: transactionType ? transactionType : "DEFAULT",
+                    isReturn: transactionType === "RETURN" ? true : false,
                     PosItems: {
                         createMany: {
                             data: (posItems || []).map((item) => ({
@@ -210,7 +220,8 @@ async function create(body) {
                                 isReturn: item.isReturn || false,
                                 originalItemId: item.originalItemId || null,
                                 retunBillId: item.retunBillId || null,
-
+                                barcode: item.barcode || null,
+                                barcodeType: item.barcodeType || null,
                             }))
                         }
                     },
@@ -222,7 +233,7 @@ async function create(body) {
                                 reference_no: p.reference_no,
                                 transaction_id: p.transaction_id,
                                 retunBillId: exchangeSalesNo ? parseInt(exchangeSalesNo) : null,
-
+                                date: new Date()
                             }))
                         }
                     }
@@ -316,10 +327,7 @@ async function update(id, body) {
     try {
         const {
             customerId, posItems, posPayments, branchId, storeId,
-            netAmount, taxAmount, discountValue, discountType,
-            manualDiscount, promotionalDiscount, roundOff,
-            paidCash, paidUPI, paidCard, paidOnline,
-            receivedAmount, balanceReturn, paymentMethod
+            netAmount, taxAmount, discountValue, transactionType
         } = await body;
 
 
@@ -368,6 +376,9 @@ async function update(id, body) {
                     approvalStatus: body.approvalStatus || dataFound.approvalStatus,
                     discountValue: String(discountValue || dataFound.discountValue),
                     netAmount: String(netAmount || dataFound.netAmount),
+                    transactionType: transactionType ? transactionType : "DEFAULT",
+                    isReturn: transactionType === "RETURN" ? true : false,
+
                     // updatedBy: body.userId ? { connect: { id: parseInt(body.userId) } } : undefined,
                 }
             });
@@ -384,6 +395,8 @@ async function update(id, body) {
                     price: String(item.price),
                     salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
                     isReturn: item.isReturn || false,
+                    barcode: item.barcode || null,
+                    barcodeType: item.barcodeType || null,
                 }))
             });
 

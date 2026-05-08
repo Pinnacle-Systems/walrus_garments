@@ -21,8 +21,8 @@ const xprisma = prisma.$extends({
 
 
 async function login(req) {
-    // const returnData = await getSubscriptionDetails()
-    // if (returnData) return returnData
+    const returnData = await getSubscriptionDetails()
+    if (returnData) return returnData
     const { username, password } = req.body
     const data = await xprisma.user.findUnique({
         where: {

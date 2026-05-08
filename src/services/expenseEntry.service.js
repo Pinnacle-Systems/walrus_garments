@@ -1,7 +1,7 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
-import { getYearShortCodeForFinYear } from '../utils/helper.js';
+import { attachCurrentTime, getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 
 
@@ -96,7 +96,10 @@ async function getSearch(req) {
 
 
 async function create(body) {
-    const { expenseEntryItems, finYearId, branchId } = await body
+    const { expenseEntryItems, finYearId, branchId, date } = await body
+
+    const dateWithTime = attachCurrentTime(date);
+
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -107,6 +110,7 @@ async function create(body) {
             data: {
                 docId: docId,
                 branchId: branchId ? parseInt(branchId) : null,
+                date: dateWithTime ? dateWithTime : null,
                 ExpenseEntryItems: {
                     createMany: expenseEntryItems?.length > 0 ? {
                         data: expenseEntryItems?.map((temp) => {
@@ -130,7 +134,11 @@ async function update(id, body) {
         expenseEntryItems,
         finYearId,
         branchId,
+        date
     } = await body
+
+    const dateWithTime = attachCurrentTime(date);
+
 
     const dataFound = await prisma.Expense.findUnique({
         where: {
@@ -164,6 +172,7 @@ async function update(id, body) {
                 id: parseInt(id)
             },
             data: {
+                date: dateWithTime ? dateWithTime : null,
 
             },
         })

@@ -94,11 +94,11 @@ const PointOfSale = () => {
     const [reportsSearchDocNo, setReportsSearchDocNo] = useState("");
     const [reportsSearchDate, setReportsSearchDate] = useState("");
     const [reportsSearchCustomerName, setReportsSearchCustomerName] = useState("");
+    const [reportsTransactionType, setReportsTransactionType] = useState("SALE");
     const [showStockModal, setShowStockModal] = useState(false);
     const [selectedItemForStock, setSelectedItemForStock] = useState(null);
 
 
-    const lastPopulatedRef = useRef("");
     const [checkRefNo] = useLazyCheckReferenceNumberQuery();
 
     const { data: employeeData } = useGetEmployeeQuery({
@@ -130,33 +130,10 @@ const PointOfSale = () => {
         }
     }, [pendingPosId]);
 
-    // useEffect(() => {
-    //     if (pendingPosId) {
-    //         const loadPendingPos = async () => {
-    //             try {
-    //                 const response = await getPosById(pendingPosId).unwrap();
-    //                 if (response.statusCode === 0) {
-    //                     syncFormWithDb(response.data);
-    //                     setEditMode(true);
-    //                     setEditingInvoiceId(pendingPosId);
-    //                 }
-    //             } catch (error) {
-    //                 // toast.error("Failed to load pending request");
-    //                 Swal.fire({
-    //                     title: "Error",
-    //                     text: "Failed to load pending request",
-    //                     icon: "error"
-    //                 });
-    //             }
-    //         };
-    //         loadPendingPos();
-    //     }
-    // }, [pendingPosId]);
 
     const handlePayNow = async () => {
         if (cart.length === 0 || isProcessing) return;
 
-        // Admin Approval Flow: Skip payment modal and validation
         if (isAdmin && approvalStatus === 'PENDING') {
             if (discount <= 0) {
                 const result = await Swal.fire({
@@ -334,13 +311,19 @@ const PointOfSale = () => {
                 if (off.maxDiscountValue && discountValue > off.maxDiscountValue) discountValue = off.maxDiscountValue;
             } else if (off.discountType === 'Fixed') {
                 discountValue = off.discountValue || 0;
-            } else if (['Volume', 'Override'].includes(off.discountType)) {
+            } else if (off.discountType === 'Override') {
                 const sortedTiers = [...(off.OfferTier || [])].sort((a, b) => b.minQty - a.minQty);
                 const tier = sortedTiers.find(t => scopeQty >= t.minQty);
                 if (tier) {
                     if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
-                    else if (off.discountType === 'Override') discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
-                    else discountValue = tier.value;
+                    else discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
+                }
+            } else if (off.discountType === 'Volume') {
+                const sortedTiers = [...(off.OfferTier || [])].sort((a, b) => b.minQty - a.minQty);
+                const tier = sortedTiers.find(t => scopeQty >= t.minQty);
+                if (tier) {
+                    if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
+                    else discountValue = tier.value * scopeQty;
                 }
             }
             if (discountValue > 0) potential.push({ ...off, calculatedDiscount: discountValue, inScopeItems });
@@ -350,6 +333,26 @@ const PointOfSale = () => {
 
     const { cartWithOffers, appliedOffers } = useMemo(() => {
         if (!cart.length) return { cartWithOffers: [], appliedOffers: [] };
+
+        // 1. Pre-calculate total quantity for each offer's scope in the current cart
+        const offerScopeTotals = {};
+        activeOffers.forEach(off => {
+            const inScopeItems = cart.filter(item => {
+                if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+                if (item.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
+                if (off.scopeMode === 'Global') return true;
+                if (off.scopeMode === 'Item') return off.OfferScope?.some(s => String(s.refId) === String(item.itemId));
+                if (off.scopeMode === 'Collection') {
+                    return off.OfferScope?.some(scope => {
+                        const matchedCollection = collectionsData?.data?.find(col => String(col.id) === String(scope.refId));
+                        return matchedCollection?.CollectionItems?.some(ci => String(ci.itemId) === String(item.itemId));
+                    });
+                }
+                return false;
+            });
+            offerScopeTotals[off.id] = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
+        });
+
         const appliedSet = new Set();
         const computed = cart.map(item => {
             const cartKey = `${item.itemId}-${item.sizeId}-${item.colorId}-${item.barcodeType}`;
@@ -357,24 +360,35 @@ const PointOfSale = () => {
             if (!rowOfferId) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
 
             const selectedOffer = potentialOffers.find(o => o.id === rowOfferId) || activeOffers.find(o => o.id === rowOfferId);
+            console.log(selectedOffer, "selectedOffer")
+
             if (!selectedOffer) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
 
             appliedSet.add(selectedOffer);
             let currentItemPrice = item.salesPrice !== undefined ? parseFloat(item.salesPrice) : parseFloat(item.price);
+            const totalScopeQty = offerScopeTotals[selectedOffer.id] || 0;
 
             if (selectedOffer.discountType === 'Percentage') currentItemPrice *= (1 - parseFloat(selectedOffer.discountValue || 0) / 100);
-            else if (selectedOffer.discountType === 'Fixed') currentItemPrice = Math.max(0, currentItemPrice - ((selectedOffer.discountValue || 0) / (parseFloat(item.qty) || 1)));
-            else if (['Override', 'Volume'].includes(selectedOffer.discountType)) {
-                const tier = [...(selectedOffer.OfferTier || [])].sort((a, b) => b.minQty - a.minQty).find(t => parseFloat(item.qty) >= t.minQty);
+            else if (selectedOffer.discountType === 'Fixed')
+                currentItemPrice = Math.max(0, currentItemPrice - parseFloat(selectedOffer.discountValue || 0));
+            else if (selectedOffer.discountType === 'Override') {
+                const tier = [...(selectedOffer.OfferTier || [])].sort((a, b) => b.minQty - a.minQty).find(t => totalScopeQty >= t.minQty);
                 if (tier) {
                     if (tier.type === 'Fixed') currentItemPrice = tier.value;
+                    else currentItemPrice *= (1 - parseFloat(tier.value || 0) / 100);
+                }
+            }
+            else if (selectedOffer.discountType === 'Volume') {
+                const tier = [...(selectedOffer.OfferTier || [])].sort((a, b) => b.minQty - a.minQty).find(t => totalScopeQty >= t.minQty);
+                if (tier) {
+                    if (tier.type === 'Fixed') currentItemPrice = Math.max(0, currentItemPrice - parseFloat(tier.value || 0));
                     else currentItemPrice *= (1 - parseFloat(tier.value || 0) / 100);
                 }
             }
             return { ...item, priceType: 'offerPrice', price: Math.max(0, currentItemPrice), appliedOfferName: selectedOffer.name };
         });
         return { cartWithOffers: computed, appliedOffers: Array.from(appliedSet) };
-    }, [cart, selectedOffersByRow, potentialOffers, activeOffers]);
+    }, [cart, selectedOffersByRow, potentialOffers, activeOffers, collectionsData]);
 
     const [showItemOfferModal, setShowItemOfferModal] = useState(false);
     const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
@@ -383,44 +397,6 @@ const PointOfSale = () => {
 
     const handleShowItemOffers = (item) => { setSelectedItemForOffers(item); setShowItemOfferModal(true); };
 
-    // const getItemApplicableOffers = (item) => {
-    //     if (!item || !activeOffers.length) return [];
-
-    //     return activeOffers.filter(off => {
-    //         // ✅ CLEARANCE Check
-    //         if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
-
-    //         // ✅ REGULAR Check
-    //         if (item.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
-
-    //         const targetId = item.itemId || item.id;
-    //         let isInScope = off.scopeMode === 'Global' ||
-    //             ((off.scopeMode === 'Item' || off.scopeMode === 'Collection') &&
-    //                 off.OfferScope?.some(s => String(s.refId) === String(targetId)));
-
-    //         if (!isInScope) return false;
-
-    //         const inScopeItems = cartWithOffers.filter(cit => {
-    //             // ✅ CLEARANCE Check
-    //             if (cit.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
-    //             // ✅ REGULAR Check
-    //             if (cit.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
-
-    //             const citId = cit.itemId || cit.id;
-    //             return off.scopeMode === 'Global' ||
-    //                 ((off.scopeMode === 'Item' || off.scopeMode === 'Collection') &&
-    //                     off.OfferScope?.some(s => String(s.refId) === String(citId)));
-    //         });
-
-    //         const scopeQty = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
-    //         const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
-
-    //         const rules = off.OfferRule?.[0]?.conditions?.rules || [];
-    //         const results = rules.map(rule => {
-    //             const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
-    //             if (rule.operator === '>=') return target >= parseFloat(rule.value);
-    //             if (rule.operator === '<=') return target <= parseFloat(rule.value);
-    //             if (rule.operator === '==') return target === parseFloat(rule.value);
 
 
     const getItemApplicableOffers = (item) => {
@@ -1049,8 +1025,9 @@ const PointOfSale = () => {
                 paidCash: 0, paidUPI: 0, paidCard: 0, paidOnline: 0, receivedAmount: 0, balanceReturn: 0,
                 posItems: cartWithOffers,
                 posPayments: [],
-                promotionalDiscount: totalOfferDiscount, manualDiscount: 0, roundOff, transactionType: "SALE",
-                approvalStatus: "PENDING"
+                promotionalDiscount: totalOfferDiscount, manualDiscount: 0, roundOff,
+                approvalStatus: "PENDING",
+                transactionType
             };
 
             const apiResponse = await addPointOfSales(invoicePayload).unwrap();
@@ -1119,6 +1096,10 @@ const PointOfSale = () => {
         setCart([]);
         setDiscount(0);
         setSelectedReportSaleId(null)
+        setGuestMobile("")
+        setGuestName("Walk-in")
+        setIsGuestCustomer(true)
+        setSelectedCustomer(null)
     }
 
     const onViewStock = (item) => {
@@ -1138,7 +1119,8 @@ const PointOfSale = () => {
             />
             <ReturnExchangeModal
                 isOpen={showReturnExchnageModal}
-                onClose={() => setShowReturnExchnageModal(false)}
+                setShowReturnExchnageModal={setShowReturnExchnageModal}
+                onClose={() => { setShowReturnExchnageModal(false); }}
                 onBillSelected={handleBillSelected}
                 Swal={Swal}
                 salesNo={exchangeSalesNo}
@@ -1232,7 +1214,18 @@ const PointOfSale = () => {
             ) : (
                 <div className=" bg-[#F1F1F0] min-h-screen">
                     <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-3 items-start sm:items-center  gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-                        <h1 className="text-md font-bold text-gray-800">Point Of Sale</h1>
+                        <div className="flex items-center gap-4">
+                            <h1 className="text-md font-bold text-gray-800">Point Of Sales</h1>
+                            <select
+                                value={reportsTransactionType}
+                                onChange={(e) => setReportsTransactionType(e.target.value)}
+                                className="text-sm border border-gray-300 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-green-500 bg-gray-50"
+                            >
+                                <option value="ALL">All Transactions</option>
+                                <option value="SALE">Sales Only</option>
+                                <option value="RETURN">Returns Only</option>
+                            </select>
+                        </div>
                         <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => { onNew() }}>
                             <Plus size={14} /> Create New
                         </button>
@@ -1260,6 +1253,7 @@ const PointOfSale = () => {
                             onEdit={handleEditPOS}
                             onDelete={true}
                             onView={true}
+                            reportsTransactionType={reportsTransactionType}
                         />
                     </div>
                 </div>

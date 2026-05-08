@@ -132,4 +132,8 @@ export const DELIVERY_CHALLAN_API = "deliveryChallan"
 export const SALES_REPORT_API = "salesReport"
 export const EXPENSE_MASTER = "expense"
 export const EXPENSE_ENTRY = "expenseEntry"
+export const DAY_BOOK_API = "dayBook"
+export const PAYMENT_ADJUSTMENT_API = "paymentAdjustment"
+
+
 

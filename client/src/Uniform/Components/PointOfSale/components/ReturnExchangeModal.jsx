@@ -11,7 +11,8 @@ const ReturnExchangeModal = ({
     onBillSelected,
     Swal,
     salesNo,
-    setSalesNo
+    setSalesNo,
+    setShowReturnExchnageModal
 }) => {
     const { branchId, companyId, finYearId } = getCommonParams();
     const [selectedBill, setSelectedBill] = useState(null);
@@ -34,7 +35,7 @@ const ReturnExchangeModal = ({
         }
     }, [isOpen, branchId, companyId, finYearId, fetchBills]);
 
-    const billOptions = (billsData?.data || []).map(b => ({
+    const billOptions = (billsData?.data || [])?.filter(item => !item.isReturn)?.map(b => ({
         value: String(b.id),
         label: `${b.docId}`,
         bill: b
@@ -70,7 +71,7 @@ const ReturnExchangeModal = ({
         if (!selectedBill || selectedIndices.length === 0) return;
         const filteredBill = {
             ...selectedBill,
-            PosItems: selectedBill.PosItems.filter((_, i) => selectedIndices.includes(i))
+            PosItems: selectedBill.PosItems.filter((item, i) => selectedIndices.includes(i) && !item.retunBillId)
         };
         onBillSelected(filteredBill);
         handleModalClose();
@@ -79,8 +80,7 @@ const ReturnExchangeModal = ({
     const handleModalClose = () => {
         setSelectedBill(null);
         setSelectedIndices([]);
-        // setSalesNo('');
-        onClose();
+        setShowReturnExchnageModal(false);
     };
 
     const toggleItem = (idx) => {

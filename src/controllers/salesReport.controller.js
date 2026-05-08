@@ -1,7 +1,8 @@
 import { 
     getSalesReport as _getSalesReport,
     getSalesmanSummaryReport as _getSalesmanSummaryReport,
-    getOnlineSalesDeliveryReport as _getOnlineSalesDeliveryReport
+    getOnlineSalesDeliveryReport as _getOnlineSalesDeliveryReport,
+    getOverAllSalesReport as _getOverAllSalesReport
 } from '../services/salesReport.service.js';
 
 async function getSalesReport(req, res, next) {
@@ -31,8 +32,18 @@ async function getOnlineSalesDeliveryReport(req, res, next) {
     }
 }
 
+async function getOverAllSalesReport(req, res, next) {
+    try {
+        res.json(await _getOverAllSalesReport(req.query));
+    } catch (err) {
+        console.error(`Error `, err.message);
+        res.status(500).json({ statusCode: 1, message: err.message });
+    }
+}
+
 export {
     getSalesReport,
     getSalesmanSummaryReport,
-    getOnlineSalesDeliveryReport
+    getOnlineSalesDeliveryReport,
+    getOverAllSalesReport
 };

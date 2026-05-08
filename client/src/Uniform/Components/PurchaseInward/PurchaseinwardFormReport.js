@@ -123,7 +123,7 @@ const PurchaseInwardFormReport = ({
 
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-  const indexOfLastItem = currentPage * parseInt(10);
+  const indexOfLastItem = currentPage * parseInt(itemsPerPage);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
@@ -134,9 +134,9 @@ const PurchaseInwardFormReport = ({
       setCurrentPage(newPage);
     }
   };
-  const Pagination = () => {
-    // if (totalPages <= 1) return null;
 
+
+  const Pagination = () => {
     return (
       <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
         <div className="text-sm text-gray-600 mb-2 sm:mb-0">
@@ -406,7 +406,7 @@ const PurchaseInwardFormReport = ({
                         </td>
 
                         {rowActions && (
-                        <td className="px-2 h-8">
+                          <td className="px-2 h-8">
                             <div className="flex items-center justify-end">
                               <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
                                 {/* BILL ENTRY */}

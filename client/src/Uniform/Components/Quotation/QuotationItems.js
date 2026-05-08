@@ -170,14 +170,13 @@ const QuotationItems = ({
         setQuoteItems(newBlend);
     };
 
-    console.log(quoteItems, "quoteItems",);
 
 
     useEffect(() => {
-        if (id) return
         const length = standardTransactionPlaceholderRowCount
         if (quoteItems?.length >= length) return;
         setQuoteItems((prev) => {
+            console.log(prev, "prev", quoteItems?.length)
             let newArray = Array.from({ length: length - prev.length }, (i) => {
                 return {
                     itemId: "",
@@ -199,7 +198,7 @@ const QuotationItems = ({
             });
             return [...prev, ...newArray];
         });
-    }, [transType, setQuoteItems, quoteItems, isHeaderOpen]);
+    }, [transType, setQuoteItems, quoteItems, isHeaderOpen, id]);
 
     const addNewRow = () => {
         const newRow = {
@@ -358,9 +357,35 @@ const QuotationItems = ({
     };
 
     const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, quoteItems), [activeOffers, quoteItems]);
-    const { cartWithOffers: quoteItemsWithOffers } = useMemo(() => calculateCartWithOffers(quoteItems, selectedOffersByRow, potentialOffers, activeOffers), [quoteItems, selectedOffersByRow, potentialOffers, activeOffers]);
+    const { cartWithOffers: rawItemsWithOffers } = useMemo(() => calculateCartWithOffers(quoteItems, selectedOffersByRow, potentialOffers, activeOffers), [quoteItems, selectedOffersByRow, potentialOffers, activeOffers]);
 
 
+
+    const quoteItemsWithOffers = useMemo(() => {
+        let items = [...(rawItemsWithOffers || [])];
+        const length = standardTransactionPlaceholderRowCount;
+        if (items.length < length) {
+            const padding = Array.from({ length: length - items.length }, () => ({
+                itemId: "",
+                qty: "0.00",
+                tax: "0",
+                colorId: "",
+                uomId: "",
+                price: "0.00",
+                discountValue: "0.00",
+                discountType: "",
+                noOfBags: "0",
+                weightPerBag: "0.00",
+                id: '',
+                poItemsId: "",
+                taxMethod: "",
+                barcode: "",
+                barcodeType: "REGULAR"
+            }));
+            return [...items, ...padding];
+        }
+        return items;
+    }, [rawItemsWithOffers]);
     const itemOptions = (id ? itemList?.data : itemList?.data?.filter(i => i.active) || [])?.map((item) => ({
         value: item.id,
         label: item?.name || "",
@@ -526,19 +551,7 @@ const QuotationItems = ({
 
                                     const availableBarcodes = currentPriceEntry?.ItemBarcodes || [];
 
-
-                                    // if (row?.itemId) {
-                                    //     console.log(row, "row", taxMethod)
-                                    //     console.log(subTotal, taxTotal, total, "subTotal, taxTotal, total");
-
-
-                                    // }
-
-
                                     return (
-
-
-
                                         <tr className={`${transactionTableRowClassName}  ${index % 2 === 0 ? "bg-white" : "bg-gray-100"} `}
                                             onContextMenu={(e) => {
                                                 if (!readOnly) {
@@ -565,24 +578,7 @@ const QuotationItems = ({
 
                                             {showSize && (
                                                 <td className={compactFocusCellClassName}>
-                                                    {/* <select
-                                                    onKeyDown={e => { if (e.key === "Delete") { handleInputChange("", index, "sizeId") } }}
-                                                    tabIndex={"0"} className={compactSelectClassName}
-                                                    value={row.sizeId}
-                                                    onChange={(e) => handleInputChange(e.target.value, index, "sizeId")}
-                                                    onBlur={(e) => {
-                                                        handleInputChange((e.target.value), index, "sizeId")
-                                                    }
-                                                    }
-                                                    disabled={readOnly || !isSizeReady(row) || isLegacyRow(row)}
-                                                >
-                                                    <option >
-                                                    </option>
-                                                    {getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId)?.map((blend) =>
-                                                        <option value={blend.id} key={blend.id}>
-                                                            {blend?.name}
-                                                        </option>)}
-                                                </select> */}
+
                                                     <SearchableTableCellSelect
                                                         value={row.sizeId}
                                                         options={
@@ -726,8 +722,9 @@ const QuotationItems = ({
                                                 </select>
                                             </td>
                                             <td className={`${compactCellClassName} px-1 text-[10px] text-center font-bold leading-none relative`}>
-                                                {!readOnly && row.itemId && (
+                                                {row.itemId && (
                                                     <button
+                                                        disabled={readOnly}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             setSelectedItemForOffers(row);
@@ -740,58 +737,11 @@ const QuotationItems = ({
                                                     </button>
                                                 )}
                                             </td>
-                                            {/* <td className={`${compactFocusCellClassName} w-40 text-right`}>
 
-                                                <SearchableTableCellSelect
-                                                    value={row.discountType}
-                                                    options={discountTypeOptions}
-                                                    disabled={readOnly}
-                                                    onChange={(nextValue) => handleInputChange(nextValue, index, "discountType")}
-                                                    addNewModalWidth="w-[90%] h-[95%]"
 
-                                                />
 
-                                            </td>
-                                            <td className={`${compactFocusCellClassName} w-40 text-right`}>
-                                                <input
-                                                    onKeyDown={e => {
-                                                        if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                        if (e.key === "Delete") { handleInputChange("0.00", index, "discount") }
-                                                    }}
-                                                    min={"0"}
-                                                    type="number"
-                                                    className={compactNumberInputClassName}
-                                                    onFocus={(e) => e.target.select()}
-                                                    value={(!row.discountValue) ? 0 : row.discountValue}
-                                                    disabled={readOnly || !row.qty}
-                                                    onChange={(e) =>
-                                                        handleInputChange(e.target.value, index, "discountValue")
-                                                    }
-                                                    onBlur={(e) => {
-                                                        handleInputChange(parseFloat(e.target.value).toFixed(3), index, "discountValue");
-
-                                                    }
-                                                    }
-
-                                                />
-
-                                            </td> */}
-
-                                            {/* 
-                                            <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
-                                                {(subTotal).toFixed(2)}
-
-                                            </td> */}
                                             <td className={compactFocusCellClassName}>
-                                                {/* <select
-                                                    className={compactDropdownClassName}
-                                                    value={row.itemId ? (row.taxMethod || "Inclusive") : (row.taxMethod || "")}
-                                                    onChange={(e) => handleInputChange(e.target.value, index, "taxMethod")}
-                                                >
-                                                    <option value=""></option>
-                                                    <option value="Inclusive">Inclusive</option>
-                                                    <option value="Exclusive">Exclusive</option>
-                                                </select> */}
+
                                                 <SearchableTableCellSelect
                                                     value={row.taxMethod}
                                                     options={taxMethodOptions}
@@ -826,10 +776,7 @@ const QuotationItems = ({
                                                 />
 
                                             </td>
-                                            {/* <td className='py-0.5 border border-gray-300 text-[11px] text-right'>
-                                                {(taxTotal).toFixed(2)}
 
-                                            </td> */}
                                             <td className={`${compactCellClassName} w-40 text-right px-2`}>
                                                 {(total).toFixed(2)}
                                             </td>

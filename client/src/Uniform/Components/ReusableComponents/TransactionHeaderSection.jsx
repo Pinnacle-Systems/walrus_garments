@@ -6,7 +6,7 @@ const TransactionHeaderSection = ({
   titleClassName = "",
 }) => {
   const sectionClasses = [
-    "relative  rounded-md bg-white px-2 pt-2 pb-0 shadow-sm",
+    "relative  rounded-md bg-white px-2  pb-0 shadow-sm",
     className,
   ]
     .filter(Boolean)

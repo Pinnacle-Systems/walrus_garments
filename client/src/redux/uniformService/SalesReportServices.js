@@ -49,6 +49,19 @@ const salesReportApi = createApi({
             },
             providesTags: ["salesReport"],
         }),
+        getOverAllSalesReport: builder.query({
+            query: (params) => {
+                return {
+                    url: `${SALES_REPORT_API}/overall`,
+                    method: "GET",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                    params
+                };
+            },
+            providesTags: ["salesReport"],
+        }),
     }),
 });
 
@@ -59,6 +72,9 @@ export const {
     useLazyGetSalesmanSummaryReportQuery,
     useGetOnlineSalesDeliveryReportQuery,
     useLazyGetOnlineSalesDeliveryReportQuery,
+    useGetOverAllSalesReportQuery,
+    useLazyGetOverAllSalesReportQuery,
 } = salesReportApi;
+
 
 export default salesReportApi;

@@ -61,3 +61,5 @@ export { default as collectionsApi } from "./CollectionsService"
 export { default as salesReportApi } from "./SalesReportServices"
 export { default as ExpenseMasterApi } from "./ExpenseMasterServices"
 export { default as ExpenseEntryApi } from "./ExpenseEntryServices"
+export { default as DayBookApi } from "./DayBookService"
+

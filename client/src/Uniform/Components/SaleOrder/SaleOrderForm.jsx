@@ -106,6 +106,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
   } = useGetsaleOrderByIdQuery(id, { skip: !id });
+
   const estimateDocId = singleData?.data?.Quotation?.docId || sourceQuotationDocId || findFromList(linkedQuoteId, quotationList?.data, "docId") || "";
   const advanceReceivedAmount = id
     ? (singleData?.data?.Quotation?.paymentData || []).reduce(
@@ -764,44 +765,21 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         openStateClassName="max-h-[600px] opacity-100 overflow-visible"
         footer={footerContent}
         headerContent={(
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 overflow-visible">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 overflow-visible">
 
-            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName={`${estimateDocId ? "grid-cols-12" : "grid-cols-4"}`}>
-              <div className={estimateDocId ? "col-span-3" : ""}>
+            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName={`${"grid-cols-2"}`}>
+              <div className={"col-span-1"}>
                 <ReusableInput label="Sale Order No" readOnly value={docId} />
               </div>
-              <div className={estimateDocId ? "col-span-3" : ""}>
+              <div className={"col-span-1"}>
                 <ReusableInput label="Sale Order Date" value={date} type="date" required readOnly disabled />
               </div>
-              <div className={estimateDocId ? "col-span-6" : "col-span-2"}>
-                <DropdownInput
-                  name="Estimate No"
-                  options={dropDownListObject(
-                    id ? quotationList?.data : quotationList?.data?.filter((item) => item?.canConvertToSaleOrder || String(item?.id) === String(linkedQuoteId)),
-                    "docId",
-                    "id"
-                  )}
-                  value={linkedQuoteId}
-                  setValue={setLinkedQuoteId}
-                  clear
-                  readOnly={Boolean(id) || readOnly}
-                />
-              </div>
+
             </TransactionHeaderSection>
 
-            <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
-              <div className="col-span-3 overflow-visible">
-                {/* <ReusableSearchableInput
-                        label="Customer Name"
-                        component="PartyMaster"
-                        placeholder="Search Customer Name..."
-                        optionList={supplierList?.data}
-                        setSearchTerm={(value) => { setCustomerId(value) }}
-                        searchTerm={customerId}
-                        show={"isClient"}
-                        required={true}
-                        disabled={id}
-                      /> */}
+            <TransactionHeaderSection title="Customer Details" className="col-span-3 overflow-visible" bodyClassName="grid-cols-11 gap-1 overflow-visible">
+              <div className="col-span-4 overflow-visible">
+
                 <ReusableSearchableInputNewCustomerwithBranches
                   label="Customer Name"
                   component="PartyMaster"
@@ -824,6 +802,22 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
                   placeholder="Address"
                   value={customerAddress}
                   disabled
+                />
+              </div>
+              <div className={"col-span-3"}>
+                <DropdownInput
+                  name="Estimate No"
+                  options={dropDownListObject(
+                    id ?
+                      quotationList?.data :
+                      quotationList?.data?.filter((item) => (item?.canConvertToSaleOrder || String(item?.id) === String(linkedQuoteId)) && item?.customerId === customerId),
+                    "docId",
+                    "id"
+                  )}
+                  value={linkedQuoteId}
+                  setValue={setLinkedQuoteId}
+                  clear
+                  readOnly={Boolean(id) || readOnly}
                 />
               </div>
             </TransactionHeaderSection>

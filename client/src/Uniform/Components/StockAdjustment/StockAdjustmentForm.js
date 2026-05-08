@@ -37,8 +37,7 @@ import { ItemMaster } from "../../../Shocks";
 import { ColorMaster, SizeMaster, UomMaster } from "../../../Basic/components";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
 
-const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
-  dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, branchList, locationData, yarnList, hasPermission }) => {
+const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOnly, setReadOnly, setLocationId, storeId, setStoreId, branchList, locationData, hasPermission }) => {
 
   const [contextMenu, setContextMenu] = useState(false)
 
@@ -63,7 +62,6 @@ const StockAdjustmentFrom = ({ params, onClose, id, setId, docId, setDocId, date
     },
   ]);
 
-  console.log(rows, 'rowsrows')
 
   const [modalState, setModalState] = useState({
     item: { open: false, rowId: null, value: "", editItem: null },
