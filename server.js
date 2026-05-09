@@ -76,6 +76,7 @@ import {
   expenseEntry,
   dayBook,
   paymentAdjustment,
+  dashboard,
 } from './src/routes/index.js';
 
 import { socketMain } from './src/sockets/socket.js';
@@ -255,6 +256,7 @@ app.use("/expense", expense)
 app.use("/expenseEntry", expenseEntry)
 app.use("/dayBook", dayBook)
 app.use("/paymentAdjustment", paymentAdjustment)
+app.use("/dashboard", dashboard)
 
 
 

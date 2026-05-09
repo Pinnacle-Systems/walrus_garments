@@ -74,7 +74,8 @@ const Home = () => {
           </>
         ) : (
           <div >
-            <Header profile={profile} setProfile={setProfile} />
+            <Header profile={profile} setProfile={setProfile} setIsGlobalOpen={setIsGlobalOpen}
+            />
 
             <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />
             <div className="pt-9 py-2 px-2 bg-[#f1f1f0] :tab">

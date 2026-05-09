@@ -26,6 +26,7 @@ import { FaPlus } from 'react-icons/fa';
 import PaymentForm from './PayementForm.js';
 import Swal from 'sweetalert2';
 import PaymentFormReport from './PaymentDetailsReport.js';
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 
 const MODEL = "Payments";
 
@@ -85,6 +86,7 @@ export default function Form() {
 
   const [removeData] = useDeletePaymentMutation();
 
+  const [invalidateTagsDispatch] = useInvalidateTags();
 
 
   const {
@@ -175,6 +177,8 @@ export default function Form() {
       }
       try {
         let deldata = await removeData(id).unwrap();
+        invalidateTagsDispatch()
+
         if (deldata?.statusCode == 1) {
           Swal.fire({
             icon: "error",
@@ -257,6 +261,7 @@ export default function Form() {
           childRecord={childRecord}
           setPaymentHistory={setPaymentHistory}
           paymentHistory={paymentHistory}
+          invalidateTagsDispatch={invalidateTagsDispatch}
         />
       ) : (
         <div className="bg-[#F1F1F0]">

@@ -482,52 +482,14 @@ const LedgerReportPrintFormat = ({ ledgerData, startDate, endDate, branchData, p
                                     textTransform: "uppercase",
                                 }}
                             >
-                                CUSTOMER LEDGER REPORT
+                                LEDGER REPORT
                             </Text>
                         </View>
 
 
-                        {/* <View style={{ alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-                            <Text
-                                style={{
-                                    fontSize: 15,
-                                    color: "#1D3A76",
-                                    fontWeight: "bold",
-                                    marginBottom: 4,
-                                    marginTop: 10,
-                                    textAlign: "center",
-                                }}
-                            >
-                                {branchData?.branchName}
-                            </Text>
-                        </View> */}
-
-                        {/* <Image src={Sangeethatex} style={styles.logo} /> */}
 
                     </View>
-                    {/* 
-                    <View >
-                        <View style={{ alignItems: "", marginTop: 5, marginBottom: 3, marginRight: 7 }}>
-                            <View style={{}}>
-                                <View style={{ flexDirection: "row", marginBottom: 3 }}>
-                                    <Text style={[styles.companyText, { width: 50, textAlign: "left" }]}>Customer Name</Text>
-                                    <Text style={styles.companyText}>:{findFromList(partyId, partyData, "name")}</Text>
-                                </View>
 
-                                <View style={{ flexDirection: "row", marginBottom: 3 }}>
-                                    <Text style={[styles.companyText, { width: 50, textAlign: "left" }]}>PO Date</Text>
-                                </View>
-
-                                <View style={{ flexDirection: "row", marginBottom: 3 }}>
-                                    <Text style={[styles.companyText, { width: 50, textAlign: "left" }]}>Due Date</Text>
-                                </View>
-                            </View>
-                        </View>
-
-
-
-
-                    </View> */}
                     <View style={{ width: "100%", marginVertical: 6 }}>
                         <Text
                             style={{
@@ -546,7 +508,7 @@ const LedgerReportPrintFormat = ({ ledgerData, startDate, endDate, branchData, p
                             flexDirection: "row",
                             justifyContent: "space-between",
                             marginBottom: 12,
-                            marginTop : 5
+                            marginTop: 5
                         }}
                     >
                         {/* FROM */}
@@ -644,8 +606,8 @@ const LedgerReportPrintFormat = ({ ledgerData, startDate, endDate, branchData, p
                         <Text style={[styles.th, { flex: 1 }]}>Date</Text>
                         <Text style={[styles.th, { flex: 5 }]}>Vch Type</Text>
                         <Text style={[styles.th, { flex: 2 }]}>Vch No</Text>
-                        <Text style={[styles.th, { flex: 2 ,textAlign : "right"  }]}>Debit</Text>
-                        <Text style={[styles.th, { flex: 2 ,textAlign : "right" }]}>Credit</Text>
+                        <Text style={[styles.th, { flex: 2, textAlign: "right" }]}>Debit</Text>
+                        <Text style={[styles.th, { flex: 2, textAlign: "right" }]}>Credit</Text>
 
                     </View>
 

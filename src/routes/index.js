@@ -132,6 +132,7 @@ export { default as expense } from "./expense.route.js"
 export { default as expenseEntry } from "./expenseEntry.route.js"
 export { default as dayBook } from "./dayBook.route.js"
 export { default as paymentAdjustment } from "./paymentAdjustment.route.js"
+export { default as dashboard } from "./dashboard.route.js"
 
 
 

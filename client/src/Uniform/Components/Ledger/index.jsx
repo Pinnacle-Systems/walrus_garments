@@ -91,7 +91,7 @@ const Ledger = () => {
                         Parameters
                     </legend>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-8 gap-2 bg-gray-200 p-2 rounded">
+                    <div className="grid grid-cols-1 sm:grid-cols-8 gap-2  rounded">
                         {/* Customer */}
                         {/* <div className="sm:col-span-2">
                             <PartyDropdownSearchCus

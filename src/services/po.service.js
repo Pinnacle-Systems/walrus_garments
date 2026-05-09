@@ -75,20 +75,20 @@ async function get(req) {
                         }
                     ] : undefined,
                 },
-                {
-                    AND: (startDate && endDate) ? [
-                        {
-                            createdAt: {
-                                gte: startDateStartTime
-                            }
-                        },
-                        {
-                            createdAt: {
-                                lte: endDateEndTime
-                            }
-                        }
-                    ] : undefined,
-                }
+                // {
+                //     AND: (startDate && endDate) ? [
+                //         {
+                //             createdAt: {
+                //                 gte: startDateStartTime
+                //             }
+                //         },
+                //         {
+                //             createdAt: {
+                //                 lte: endDateEndTime
+                //             }
+                //         }
+                //     ] : undefined,
+                // }
             ],
             branchId: branchId ? parseInt(branchId) : undefined,
             active: active ? Boolean(active) : undefined,

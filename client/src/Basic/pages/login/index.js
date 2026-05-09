@@ -254,15 +254,7 @@ const Login = () => {
 
               <div className="flex items-center justify-between py-1">
                 <div className="flex items-center">
-                  {/* <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      className="h-3.5 w-3.5 text-black border-stone-300 rounded focus:ring-black cursor-pointer"
-                    />
-                    <label htmlFor="remember-me" className="ml-2 block text-xs text-stone-700 cursor-pointer">
-                      Remember me
-                    </label> */}
+
                 </div>
               </div>
 

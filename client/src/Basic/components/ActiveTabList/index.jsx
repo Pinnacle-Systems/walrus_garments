@@ -165,7 +165,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "SALESMAN SUMMARY REPORT": <SalesmanSummaryReport />,
     "ONLINE SALES DELIVERY REPORT": <OnlineSalesDeliveryReport />,
     "OVERALL SALES REPORTS": <OverallSalesReports />,
-    "DAY BOOK CLOSING FORM": <DayBookClosingForm />,
+    "DAY BOOK CLOSING REPORT": <DayBookClosingForm />,
     "PAYMENT ADJUSTMENT FORM": <PaymentAdjustmentForm />,
     "LEDGER": <Ledger />
   };

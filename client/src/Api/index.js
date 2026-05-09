@@ -134,6 +134,6 @@ export const EXPENSE_MASTER = "expense"
 export const EXPENSE_ENTRY = "expenseEntry"
 export const DAY_BOOK_API = "dayBook"
 export const PAYMENT_ADJUSTMENT_API = "paymentAdjustment"
-
+export const DASHBOARD_API = "dashboard"
 
 
