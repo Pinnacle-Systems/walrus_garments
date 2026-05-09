@@ -65,12 +65,12 @@ async function get(req) {
 
     };
 
-    if (searchDate) {
-        where.date = {
-            gte: new Date(`${searchDate}T00:00:00.000Z`),
-            lte: new Date(`${searchDate}T23:59:59.999Z`),
-        };
-    }
+    // if (searchDate) {
+    //     where.date = {
+    //         gte: new Date(`${searchDate}T00:00:00.000Z`),
+    //         lte: new Date(`${searchDate}T23:59:59.999Z`),
+    //     };
+    // }
 
     let totalCount = 0;
 

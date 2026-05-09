@@ -17,7 +17,6 @@ import { useAddPaymentMutation, useDeletePaymentMutation, useGetPaymentByIdQuery
 import { useGetPaymentQuery } from "../../../redux/services/PaymentService";
 import { useGetQuotationQuery } from "../../../redux/uniformService/quotationServices";
 import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvoiceServices";
-import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import { push } from "../../../redux/features/opentabs";
 import { useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
 
@@ -37,7 +36,7 @@ const PaymentForm = ({
     refId, setRefId, refDocId, setRefDocId,
     currentHistoryPage, setCurrentHistoryPage,
     readOnly, setReadOnly, childRecord,
-    onNew, paymentHistory, setPaymentHistory
+    onNew, paymentHistory, setPaymentHistory, invalidateTagsDispatch
 }) => {
 
     const calculateQuotationNetAmount = (quotationItems = []) => {
@@ -105,12 +104,12 @@ const PaymentForm = ({
         return Math.max(0, salesInvoiceNetAmount - receivedAmount - advanceReceivedAmount);
     };
 
+    console.log(id, "idfffffffffffffffffffffffffffffff")
 
     const getSalesOrderOutstandingAmount = (salesOrder) => {
         if (!salesOrder) return 0;
 
 
-        console.log(salesOrder, "salesOrder")
 
         const salesOrderNetAmount = calculateQuotationNetAmount(salesOrder?.SaleOrderItems);
         setPaymentHistory(salesOrder?.paymentData);
@@ -139,7 +138,6 @@ const PaymentForm = ({
     const hasLinkedTransaction = Boolean(transactionType && transactionId);
     const areLinkedFieldsLocked = readOnly || lockPrefilledTransactionFields;
 
-    console.log(lockPrefilledTransactionFields, "lockPrefilledTransactionFields", readOnly, "readOnly", initialTransactionId, "initialTransactionId", initialTransactionType, "initialTransactionType", id, "id")
 
 
     const dispatch = useDispatch()
@@ -153,11 +151,12 @@ const PaymentForm = ({
         isLoading: isSingleLoading,
     } = useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
-    const [invalidateTagsDispatch] = useInvalidateTags();
 
     const syncFormWithDb = useCallback(
         (data) => {
-            if (!id) return
+
+            console.log(data, "data in sync")
+            // if (!id) return
             // if (id) setReadOnly(true);
             // else setReadOnly(false);
             setDocId(data?.docId ? data?.docId : "New");
@@ -270,7 +269,6 @@ const PaymentForm = ({
             let returnData = await callback(data).unwrap();
             if (returnData.statusCode === 0) {
                 setId("")
-                // syncFormWithDb(undefined)
 
                 if (returnData.statusCode === 0) {
                     Swal.fire({
@@ -287,7 +285,7 @@ const PaymentForm = ({
 
                     if (nextProcess === "new") {
                         onNew()
-                        // syncFormWithDb(undefined)
+                        syncFormWithDb(undefined)
                         setReadOnly(false);
 
                     }
@@ -363,24 +361,15 @@ const PaymentForm = ({
     }
 
 
-    // const { data: supplierList } = useGetPartyQuery({ params: { branchId, finYearId, isAddessCombined: true, isBillable: true } });
 
-    // const supplierData = supplierList?.data ? supplierList.data : [];
 
     const handleChange = (e) => {
         const value = e.target.value;
-        // if (/^\d*$/.test(value)) {
         setPaidAmount(value);
-        // }
     };
-    const handleChange1 = (e) => {
-        const value = e.target.value;
-        setDiscount(value)
 
-    }
     const inputRef = useRef(null);
-    const customerRef = useRef(null)
-    const customerDate = useRef(null)
+
 
     useEffect(() => {
         inputRef.current?.focus();

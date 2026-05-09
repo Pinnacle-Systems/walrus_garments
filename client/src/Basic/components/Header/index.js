@@ -26,10 +26,11 @@ import { push } from "../../../redux/features/opentabs";
 import Swal from "sweetalert2";
 import NotificationBell from "../Notification";
 import PageSearch from "./PageSearch";
+import { GLOBE_ICON } from "../../../icons";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
-const Header = ({ profile, setProfile }) => {
+const Header = ({ profile, setIsGlobalOpen }) => {
 
 
 
@@ -181,7 +182,11 @@ const Header = ({ profile, setProfile }) => {
                     </div>
                 </div> */}
                 <PageSearch pageList={allowedPages?.filter(i => i.active)} />
-
+                <div
+                    className="text-lg"
+                    onClick={() => { setIsGlobalOpen(true) }}>
+                    {GLOBE_ICON}
+                </div>
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-beige">
                     <NotificationBell />
                 </div>

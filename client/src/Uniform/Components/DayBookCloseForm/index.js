@@ -51,15 +51,52 @@ const DayBookClosingForm = () => {
             ...p,
             entryType: 'pos',
             time: p.createdAt || p.date,
-            type: p.retunBillId ? "Exchange" : "POS Sale"
+            type: p.retunBillId ? "Exchange" : "POS Sale",
+            // amount: p.amount
         })) : [];
 
         const bulkList = Array.isArray(bulkPayments) ? bulkPayments.map(p => ({
             ...p,
             entryType: 'bulk',
             time: p.createdAt || p.date,
-            type: p.paymentType === "ADVANCE" ? "Advance" : "Bulk Sale"
+            type: p.paymentType === "ADVANCE" ? "Advance" : "Bulk Sale",
+            amount: p.paidAmount
         })) : [];
+
+        const returnList = Array.isArray(salesReturns) ? salesReturns.map(p => {
+            const total = (p.SalesReturnItems || []).reduce((acc, item) =>
+                acc + (parseFloat(item.price) * parseFloat(item.qty)), 0);
+            return { ...p, entryType: 'return', time: p.createdAt || p.date, amount: total, type: "Return" };
+        }) : [];
+
+        // const adjList = Array.isArray(paymentAdjustments) ? paymentAdjustments
+        //     .map(p => ({
+        //         ...p,
+        //         entryType: 'adjustment',
+        //         time: p.date,
+        //         type: 'Adjustments',
+        //         amount: p.adjustmentAmount
+        //     })) : [];
+
+        // const expList = Array.isArray(expenses) ? expenses.map(e => ({
+        //     ...e,
+        //     entryType: 'expense',
+        //     time: e.Expense?.date,
+        //     type: 'Expense',
+        //     amount: e?.amount
+        // })) : [];
+
+
+        return [...posList, ...bulkList, ...returnList]
+            .sort((a, b) => new Date(a.time) - new Date(b.time));
+
+    }, [posPayments, bulkPayments, salesReturns, paymentAdjustments, expenses]);
+
+    console.log(combinedSalesList, 'combinedSalesList')
+
+    const combinedExpenseList = useMemo(() => {
+
+
 
         const returnList = Array.isArray(salesReturns) ? salesReturns.map(p => {
             const total = (p.SalesReturnItems || []).reduce((acc, item) =>
@@ -72,23 +109,24 @@ const DayBookClosingForm = () => {
                 ...p,
                 entryType: 'adjustment',
                 time: p.date,
-                type: 'Adjustments'
+                type: 'Adjustments',
+                amount: p.adjustmentAmount
             })) : [];
 
-        const expList = Array.isArray(expenses) ? expenses.map(e => ({  // ← ...expenses.map() fix
+        const expList = Array.isArray(expenses) ? expenses.map(e => ({
             ...e,
             entryType: 'expense',
             time: e.Expense?.date,
-            type: 'Expense'
+            type: 'Expense',
+            amount: e?.amount
         })) : [];
 
 
-        return [...posList, ...bulkList, ...returnList, ...adjList, ...expList]
+        return [...returnList, ...adjList, ...expList]
             .sort((a, b) => new Date(a.time) - new Date(b.time));
 
-    }, [posPayments, bulkPayments, salesReturns, paymentAdjustments, expenses]); // ← expenses dependency add பண்ணோம்
+    }, [posPayments, bulkPayments, salesReturns, paymentAdjustments, expenses]);
 
-    console.log(combinedSalesList, 'combinedSalesList')
 
     const totals = useMemo(() => {
         let posCash = 0, posUpi = 0, posCard = 0, posOnline = 0;
@@ -239,7 +277,7 @@ const DayBookClosingForm = () => {
             {/* Dashboard Content - SCROLLABLE CONTAINER */}
             <div className="h-[calc(100vh-10rem)] overflow-y-auto pr-2 custom-scrollbar space-y-4">
                 {/* 1. High Level Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <SummaryCard
                         title="Opening Balance"
                         value={openingBalance}
@@ -277,12 +315,10 @@ const DayBookClosingForm = () => {
                     />
                 </div>
 
-                {/* 2. Detailed Breakdown Grid - COMPACT */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Sales Summary */}
                     <div className="bg-white rounded-xl shadow-sm border p-4">
                         <div className="flex items-center justify-between border-b pb-2 mb-3">
-                            <h3 className="text-sm font-bold text-gray-900">Sales Breakdown</h3>
+                            <h3 className="text-sm font-bold text-gray-900">Sales Summary</h3>
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">By Channel</span>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
@@ -301,7 +337,6 @@ const DayBookClosingForm = () => {
                         </div>
                     </div>
 
-                    {/* Payments Summary */}
                     <div className="bg-white rounded-xl shadow-sm border p-4">
                         <div className="flex items-center justify-between border-b pb-2 mb-3">
                             <h3 className="text-sm font-bold text-gray-900">Payment Breakdown</h3>
@@ -328,19 +363,14 @@ const DayBookClosingForm = () => {
                     </div>
                 </div>
 
-                {/* 3. Transaction Lists */}
-                <div className="space-y-4">
-                    {/* Sales & Returns list */}
-                    <TransactionTable title="Sales & Returns Transactions" data={combinedSalesList} type="combined" />
+                <div className="space-y-4 grid grid-cols-2 gap-4">
+                    <TransactionTable title="Pay In" data={combinedSalesList} type="combined" />
+                    <TransactionTable title="Pay Out" data={combinedExpenseList} type="combined" />
 
-                    {/* Expense list */}
-                    {/* <TransactionTable title="Daily Expenses & Payouts" data={[
-                        ...expenses.map(e => ({ ...e, entryType: 'expense' })),
-                        ...paymentAdjustments.filter(a => a.adjustmentType === 'MINUS').map(a => ({ ...a, entryType: 'adjustment_out' }))
-                    ]} type="expense_combined" /> */}
+
+
                 </div>
 
-                {/* 4. Remarks (Optional View) */}
                 {remarks && (
                     <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6">
                         <h3 className="text-sm font-bold text-indigo-900 uppercase tracking-widest mb-2">Closing Remarks</h3>
@@ -394,27 +424,9 @@ const SummaryCard = ({ title, value, icon, color, highlight = false, subValueIn,
     );
 };
 
-const PaymentModeStat = ({ label, value, icon, color }) => {
-    const colorClasses = {
-        purple: 'text-purple-600 bg-purple-50',
-        orange: 'text-orange-600 bg-orange-50',
-        teal: 'text-teal-600 bg-teal-50',
-    };
 
-    return (
-        <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClasses[color]}`}>
-                {icon}
-            </div>
-            <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</p>
-                <p className="text-lg font-bold text-gray-900">₹{parseFloat(value).toLocaleString()}</p>
-            </div>
-        </div>
-    );
-};
 
-const TransactionTable = ({ title, data, type }) => {
+const TransactionTable = ({ title, data }) => {
     if (!data || data.length === 0) {
         return (
             <div className="bg-white rounded-xl shadow-sm border p-4 text-center text-gray-500">
@@ -427,7 +439,9 @@ const TransactionTable = ({ title, data, type }) => {
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
             <div className="px-4 py-2 border-b bg-gray-50/50 flex justify-between items-center">
                 <h3 className="text-sm font-bold text-gray-900">{title}</h3>
-                <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">{data.length} Items</span>
+                <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">
+                    Total: ₹{data.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0).toLocaleString()}
+                </span>
             </div>
             <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
                 <table className="w-full text-left">

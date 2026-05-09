@@ -5548,7 +5548,7 @@ model PosItems {
   retunBill      Pos?               @relation("ReturnBill", fields: [retunBillId], references: [id], onDelete: Cascade)
   retunBillId    Int?
   barcode        String?
-  barcodeType    String?  
+  barcodeType    String?
   originalItem   PosItems?          @relation("ReturnItem", fields: [originalItemId], references: [id])
   originalItemId Int?
   ReturnItems    PosItems[]         @relation("ReturnItem")

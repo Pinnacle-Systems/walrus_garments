@@ -10,11 +10,11 @@ const tw = createTw({
         primary: '#000000',
       },
       fontSize: {
-        'xxs': '7pt',
-        'xs': '8pt',
-        'sm': '9pt',
-        'base': '10pt',
-        'lg': '12pt',
+        'xxs': '8.5pt',
+        'xs': '10pt',
+        'sm': '11pt',
+        'base': '12pt',
+        'lg': '14pt',
       }
     },
   },
@@ -48,19 +48,19 @@ const PosThermalPrint = ({
 
   return (
     <Document title={`POS_RECEIPT_${docId}`}>
-      <Page size={[216, 1200]} style={tw('p-2 bg-white flex flex-col')}>
+      <Page size={[226, 1200]} style={tw('p-1 bg-white flex flex-col')}>
         {/* Header */}
-        <View style={tw('flex flex-col items-center mb-1')}>
-          <Text style={tw('font-bold text-xs')}>{branchData?.branchName || "WALRUS GARMENTS"}</Text>
-          <Text style={tw('text-[7pt] text-center w-full')}>
+        <View style={tw('flex flex-col items-center mb-2')}>
+          <Text style={tw('font-bold text-base')}>{branchData?.branchName || "WALRUS GARMENTS"}</Text>
+          <Text style={tw('text-xxs text-center w-full px-2')}>
             {branchData?.address || "Address details not available"}
           </Text>
           <Text style={tw('text-xxs')}>Ph No.: {branchData?.phone || branchData?.contactMobile?.toString() || branchData?.contactPersonNumber || "9159477722"}</Text>
-          {branchData?.gstNo && <Text style={tw('text-xxs')}>GSTIN: {branchData.gstNo}</Text>}
+          {branchData?.gstNo && <Text style={tw('text-xxs font-bold')}>GSTIN: {branchData.gstNo}</Text>}
         </View>
 
         <View style={tw('flex flex-col items-center my-1')}>
-          <Text style={tw('font-bold text-xxs underline')}>TAX INVOICE</Text>
+          <Text style={tw('font-bold text-xs underline')}>TAX INVOICE</Text>
         </View>
 
         {/* Transaction Info */}
@@ -89,21 +89,19 @@ const PosThermalPrint = ({
         {items.map((item, index) => {
           const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
           const rowTotal = parseFloat(item.qty || 0) * parseFloat(item.price || item.rate || 0);
-          const taxableValue = rowTotal / (1 + (itemTaxPercent / 100));
-          const itemTax = rowTotal - taxableValue;
 
           return (
-            <View key={index} style={tw('flex flex-col mb-1.5')}>
+            <View key={index} style={tw('flex flex-col mb-2')}>
               <View style={tw('flex flex-row justify-between')}>
-                <View style={tw('w-[45%] flex flex-col')}>
+                <View style={tw('w-[50%] flex flex-col')}>
                   <Text style={tw('text-xxs font-bold')}>{item?.Item?.name || item?.itemName}</Text>
-                  <Text style={tw('text-[6pt] text-gray-500')}>
-                    {item?.Size?.name || item?.sizeName} | {item?.Color?.name || item?.colorName} | Tax: {itemTaxPercent}%
+                  <Text style={tw('text-[7pt] text-gray-600')}>
+                    {item?.Size?.name || item?.sizeName} | {item?.Color?.name || item?.colorName}
                   </Text>
                 </View>
-                <Text style={tw('text-xxs w-[15%] text-right')}>{parseFloat(item.qty || 0)}</Text>
-                <Text style={tw('text-xxs w-[20%] text-right')}>{parseFloat(item.price || item.rate || 0).toFixed(2)}</Text>
-                <Text style={tw('text-xxs w-[20%] text-right')}>{rowTotal.toFixed(2)}</Text>
+                <Text style={tw('text-xxs w-[10%] text-right font-bold')}>{parseFloat(item.qty || 0)}</Text>
+                <Text style={tw('text-xxs w-[20%] text-right')}>{parseFloat(item.price || item.rate || 0).toFixed(0)}</Text>
+                <Text style={tw('text-xxs w-[20%] text-right font-bold')}>{rowTotal.toFixed(0)}</Text>
               </View>
             </View>
           );
@@ -140,8 +138,8 @@ const PosThermalPrint = ({
             </View>
           )}
           <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
-            <Text style={tw('text-xs font-black')}>GRAND TOTAL :</Text>
-            <Text style={tw('text-xs font-black')}>Rs. {summary.total.toFixed(2)}</Text>
+            <Text style={tw('text-sm font-black')}>GRAND TOTAL :</Text>
+            <Text style={tw('text-sm font-black')}>Rs. {summary.total.toFixed(0)}</Text>
           </View>
         </View>
 

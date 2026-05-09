@@ -657,10 +657,10 @@ export default function OverallSalesReports() {
             </div>
 
             {/* Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-2">
                 <MetricCard title="Total POS" value={metrics.totalPos} color="blue" />
                 <MetricCard title="Total Bulk" value={metrics.totalBulk} color="purple" />
-                <MetricCard title="Total Online" value={metrics.totalOnline} color="cyan" />
+                {/* <MetricCard title="Total Online" value={metrics.totalOnline} color="cyan" /> */}
                 <MetricCard title="Total Expenses" value={metrics.totalExpense} color="red" />
                 <MetricCard title="Net Profit" value={metrics.finalProfit} color="green" isPrimary />
             </div>
