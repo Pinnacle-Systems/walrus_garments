@@ -3,10 +3,15 @@
 
 import { useEffect, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
-import { getDateFromDateTimeToDisplay, reactPaginateIndexToPageNumber } from "../../../Utils/helper";
+import { getCommonParams, getDateFromDateTimeToDisplay, reactPaginateIndexToPageNumber } from "../../../Utils/helper";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Loader } from "lucide-react";
-import { useGetPaymentQuery } from "../../../redux/services/PaymentService";
+import { useGetPaymentByIdQuery, useGetPaymentQuery } from "../../../redux/services/PaymentService";
+import { FiPrinter } from "react-icons/fi";
+import { PDFViewer } from "@react-pdf/renderer";
+import Modal from "../../../UiComponents/Modal";
+import PaymentThermalPrint from "./PaymentThermalPrint";
+import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 
 
 
@@ -18,10 +23,9 @@ const PaymentFormReport = ({
     onDelete,
     rowActions = true,
 }) => {
-    const branchId = secureLocalStorage.getItem(
-        sessionStorage.getItem("sessionId") + "currentBranchId"
-    );
 
+
+    const { branchId, finYearId, userId, companyId } = getCommonParams();
 
     const [dataPerPage, setDataPerPage] = useState("1");
     const [serachDocNo, setSerachDocNo] = useState("");
@@ -36,9 +40,15 @@ const PaymentFormReport = ({
     const [searchProjectValue, setSearchProjectValue] = useState("");
     const [searchFollowedBy, setSearchFollowedBy] = useState("");
 
-    const handleOnclick = (e) => {
-        setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
-    };
+    const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
+    const [selectedPaymentId, setSelectedPaymentId] = useState(null);
+
+    const { data: singlePaymentData } = useGetPaymentByIdQuery(selectedPaymentId, { skip: !selectedPaymentId });
+    const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+
+
+
+    console.log(singlePaymentData, "singlePaymentData")
     const searchFields = {
         serachDocNo,
         searchClientName,
@@ -58,13 +68,6 @@ const PaymentFormReport = ({
         searchMaterial,
     ]);
 
-    const companyId = secureLocalStorage.getItem(
-        sessionStorage.getItem("sessionId") + "userCompanyId"
-    );
-    const params = {
-        branchId,
-        companyId,
-    };
 
 
 
@@ -190,6 +193,17 @@ const PaymentFormReport = ({
             //   id="registrationFormReport"
             className="flex flex-col w-full h-[78Vh] overflow-auto"
         >
+            <Modal isOpen={thermalPrintOpen} onClose={() => {
+                setThermalPrintOpen(false);
+                setSelectedPaymentId(null);
+            }} widthClass="w-[300pt] h-[95%]">
+                <PDFViewer style={{ width: "100%", height: "90vh" }}>
+                    <PaymentThermalPrint
+                        paymentData={singlePaymentData?.data}
+                        branchData={branchList?.data?.find(b => b.id === branchId)}
+                    />
+                </PDFViewer>
+            </Modal>
 
             <>
                 <div className="h-[100vh] rounded-lg bg-[#F1F1F0] shadow-sm">
@@ -340,13 +354,27 @@ const PaymentFormReport = ({
                                                         {onDelete && (
                                                             <button
                                                                 className=" text-red-800 flex items-center gap-1 px-1  bg-red-50 rounded"
-                                                                onClick={() => onDelete(dataObj.id)}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    onDelete(dataObj.id);
+                                                                }}
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                                     <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                                                 </svg>
                                                             </button>
                                                         )}
+                                                        <button
+                                                            className="text-orange-600 flex items-center px-1 bg-orange-50 rounded"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedPaymentId(dataObj.id);
+                                                                setThermalPrintOpen(true);
+                                                            }}
+                                                            title="Thermal Print"
+                                                        >
+                                                            <FiPrinter className="h-4 w-4" />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             )}

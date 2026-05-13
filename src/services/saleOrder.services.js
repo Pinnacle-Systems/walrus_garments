@@ -42,9 +42,14 @@ function buildRemainingSaleOrderItems(saleOrderItems = [], salesDeliveries = [],
             const saleOrderItemId = resolveSaleOrderItemId(deliveryItem, saleOrderItems);
             if (!saleOrderItemId) continue;
 
+            const returnedQty = (deliveryItem?.SalesReturnItems || []).reduce(
+                (sum, returnItem) => sum + parseQty(returnItem?.qty),
+                0
+            );
+
             deliveredQtyBySaleOrderItemId.set(
                 saleOrderItemId,
-                (deliveredQtyBySaleOrderItemId.get(saleOrderItemId) || 0) + parseQty(deliveryItem?.deliveryQty)
+                (deliveredQtyBySaleOrderItemId.get(saleOrderItemId) || 0) + (parseQty(deliveryItem?.deliveryQty) - returnedQty)
             );
         }
     }
@@ -68,16 +73,29 @@ function buildRemainingSaleOrderItems(saleOrderItems = [], salesDeliveries = [],
 }
 
 function getTotalReceivedAmountForSaleOrder(saleOrder) {
-    return ((saleOrder?.Quotation?.paymentData || []).reduce(
+    return roundMoney((saleOrder?.Quotation?.paymentData || []).reduce(
         (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
         0
     ) || 0);
 }
 
+function getTotalReturnedAmountForSaleOrder(saleOrder) {
+    const returnAmount = (saleOrder?.SalesDelivery || []).reduce((acc, delivery) => {
+        return acc + (delivery?.SalesReturn || []).reduce((srAcc, sr) => {
+            const ledgerCredit = (sr?.Ledger || []).find(l => l.EntryType === "Credit_Note")?.amount || 0;
+            return srAcc + parseFloat(ledgerCredit);
+        }, 0);
+    }, 0);
+
+    return roundMoney(returnAmount);
+}
+
 function calculateDeliveryNetAmount(deliveryItems = [], { packingChargeEnabled, packingCharge, shippingChargeEnabled, shippingCharge } = {}) {
+
+
     const lineNetAmount = (deliveryItems || []).reduce((acc, curr) => {
         const price = parseFloat(curr?.price || 0) || 0;
-        const qty = parseFloat(curr?.qty || 0) || 0;
+        const qty = parseFloat(curr?.deliveryQty || 0) || 0;
         const taxPercent = parseFloat(curr?.taxPercent || 0) || 0;
         const taxMethod = curr?.taxMethod || "Inclusive";
         const discountType = curr?.discountType;
@@ -109,11 +127,15 @@ function calculateDeliveryNetAmount(deliveryItems = [], { packingChargeEnabled, 
 
 function getRemainingPaymentCapacityForSaleOrder(saleOrder) {
     const totalReceivedAmount = getTotalReceivedAmountForSaleOrder(saleOrder);
+    const returnAmount = getTotalReturnedAmountForSaleOrder(saleOrder);
+    
     const consumedAmount = (saleOrder?.SalesDelivery || []).reduce((acc, salesDelivery) => (
         acc + calculateDeliveryNetAmount(salesDelivery?.SalesDeliveryItems, salesDelivery)
     ), 0);
+    
+    const netDeliveredAmount = consumedAmount - returnAmount;
 
-    return Math.max(0, totalReceivedAmount - consumedAmount);
+    return Math.max(0, totalReceivedAmount - netDeliveredAmount);
 }
 
 function getDeliveredQty(saleOrderItems = [], salesDeliveries = []) {
@@ -326,7 +348,21 @@ async function get(req) {
                             colorId: true,
                             uomId: true,
                             hsnId: true,
-                            deliveryQty: true
+                            deliveryQty: true,
+                            SalesReturnItems: {
+                                select: {
+                                    qty: true
+                                }
+                            }
+                        }
+                    },
+                    SalesReturn: {
+                        select: {
+                            Ledger: {
+                                where: {
+                                    EntryType: "Credit_Note"
+                                }
+                            }
                         }
                     }
                 }
@@ -422,14 +458,31 @@ async function getOne(id) {
                     taxMethod: true,
                     discountType: true,
                     discountValue: true,
-                    SalesDeliveryItems: true
+                    SalesDeliveryItems: {
+                        include: {
+                            SalesReturnItems: true
+                        }
+                    }
 
 
                 }
             },
             SalesDelivery: {
                 include: {
-                    SalesDeliveryItems: true,
+                    SalesDeliveryItems: {
+                        include: {
+                            SalesReturnItems: true
+                        }
+                    },
+                    SalesReturn: {
+                        include: {
+                            Ledger: {
+                                where: {
+                                    EntryType: "Credit_Note"
+                                }
+                            }
+                        }
+                    }
                 }
             },
             Quotation: {
@@ -476,9 +529,18 @@ async function getOne(id) {
     };
     const saleOrderItemsWithDeliveredQty = data.SaleOrderItems.map((item) => {
         const deliveredQty = item.SalesDeliveryItems.reduce(
-            (sum, deliveryItem) => sum + parseFloat(deliveryItem.deliveryQty || 0),
+            (sum, deliveryItem) => {
+                const returnedQty = (deliveryItem.SalesReturnItems || []).reduce(
+                    (rSum, returnItem) => rSum + parseFloat(returnItem.qty || 0),
+                    0
+                );
+                return sum + (parseFloat(deliveryItem.deliveryQty || 0) - returnedQty);
+            },
             0
         );
+
+
+
         const balanceQty = parseFloat(item.qty || 0) - deliveredQty;
 
         if (balanceQty > 0) {

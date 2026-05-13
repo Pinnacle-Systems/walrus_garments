@@ -65,6 +65,7 @@ WITH opening AS (
     SELECT
         p.id AS partyId,
         COALESCE(sd_sum.totalSales, 0)
+        - COALESCE(sr_sum.totalReturns, 0)
         - COALESCE(pmt_sum.totalPaid, 0) AS openingBalance
     FROM Party p
     -- 🔹 Old Sales Delivery (Summing Items: deliveryQty * price)
@@ -77,6 +78,16 @@ WITH opening AS (
           AND sd.isDeleted = 0
         GROUP BY sd.customerId
     ) sd_sum ON sd_sum.customerId = p.id
+    -- 🔹 Old Sales Return (Summing Items: qty * price)
+    LEFT JOIN (
+        SELECT sr.customerId, 
+               SUM(COALESCE(CAST(sri.qty AS DECIMAL(10,2)), 0) * COALESCE(CAST(sri.price AS DECIMAL(10,2)), 0)) AS totalReturns
+        FROM SalesReturn sr
+        JOIN SalesReturnItems sri ON sr.id = sri.salesReturnId
+        WHERE sr.createdAt < '${startDateFormatted}'
+          AND sr.isDeleted = 0
+        GROUP BY sr.customerId
+    ) sr_sum ON sr_sum.customerId = p.id
     -- 🔹 Old Payments (Before Start Date)
     LEFT JOIN (
         SELECT partyId, SUM(totalAmount) AS totalPaid
@@ -103,6 +114,23 @@ txns AS (
       AND sd.createdAt < DATE_ADD('${endDateFormatted}', INTERVAL 1 DAY)
       AND sd.isDeleted = 0
     GROUP BY sd.id, sd.docId, sd.createdAt
+
+    UNION ALL
+
+    -- 🔹 SALES RETURN (CREDIT - Summing Items)
+    SELECT
+        sr.docId AS transactionId,
+        sr.createdAt AS txnDateTime,
+        'RETURN' AS txnType,
+        0 AS debit,
+        SUM(COALESCE(CAST(sri.qty AS DECIMAL(10,2)), 0) * COALESCE(CAST(sri.price AS DECIMAL(10,2)), 0)) AS credit
+    FROM SalesReturn sr
+    JOIN SalesReturnItems sri ON sr.id = sri.salesReturnId
+    WHERE sr.customerId = ${partyId}
+      AND sr.createdAt >= '${startDateFormatted}'
+      AND sr.createdAt < DATE_ADD('${endDateFormatted}', INTERVAL 1 DAY)
+      AND sr.isDeleted = 0
+    GROUP BY sr.id, sr.docId, sr.createdAt
 
     UNION ALL
 

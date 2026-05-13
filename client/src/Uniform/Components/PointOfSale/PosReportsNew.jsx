@@ -13,9 +13,13 @@ import ReactPaginate from 'react-paginate';
 import { FaChevronLeft, FaChevronRight, FaEllipsisV } from 'react-icons/fa';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 import { useGetQuotationMasterQuery, useGetQuotationQuery } from '../../../redux/uniformService/quotationServices';
-import { useGetPointOfSalesQuery } from '../../../redux/uniformService/PointOfSalesService';
-
-
+import { useGetPointOfSalesQuery, useCancelPointOfSalesMutation } from '../../../redux/uniformService/PointOfSalesService';
+import { FiPrinter, FiXCircle } from 'react-icons/fi';
+import { PDFViewer } from '@react-pdf/renderer';
+import Modal from '../../../UiComponents/Modal';
+import PosThermalPrint from './PosThermalPrint';
+import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
+import Swal from 'sweetalert2';
 
 
 
@@ -93,11 +97,42 @@ const PosReportsNew = ({
     const [supplier, setSupplier] = useState("");
     const [searchMaterial, setSearchMaterial] = useState("")
     const [searchCustomerName, setSearchCustomerName] = useState("")
+    const [billStatus, setBillStatus] = useState("")
 
     const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
     const [activeActionMenuId, setActiveActionMenuId] = useState(null);
     const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
+    const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
+    const [printData, setPrintData] = useState(null);
+    const { branchId: currentBranchId, companyId } = getCommonParams();
+    const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+    const [cancelPointOfSales] = useCancelPointOfSalesMutation();
+
+    const handleCancel = async (id) => {
+        const result = await Swal.fire({
+            title: 'Cancel Bill?',
+            text: 'This will void the bill and restore stock. This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Yes, Cancel Bill'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await cancelPointOfSales(id).unwrap();
+                if (res.statusCode === 0) {
+                    Swal.fire('Canceled!', 'The bill has been canceled and stock restored.', 'success');
+                } else {
+                    Swal.fire('Error', res.message || 'Failed to cancel bill', 'error');
+                }
+            } catch (err) {
+                Swal.fire('Error', err.data?.message || 'Something went wrong', 'error');
+            }
+        }
+    };
 
 
     const searchFields = {
@@ -252,6 +287,14 @@ const PosReportsNew = ({
 
     return (
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+            <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
+                <PDFViewer style={{ width: "100%", height: "90vh" }}>
+                    <PosThermalPrint
+                        {...printData}
+                        branchData={branchList?.data?.find(b => b.id === branchId)}
+                    />
+                </PDFViewer>
+            </Modal>
 
             <>
                 <div className="flex h-full min-h-0 flex-col rounded-lg bg-[#F1F1F0] shadow-sm">
@@ -287,7 +330,9 @@ const PosReportsNew = ({
                                             }}
                                         /> */}
                                     </th>
-
+                                    <th className="w-24  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                                        <div>Bill Status</div>
+                                    </th>
                                     <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>Customer</div>
                                     </th>
@@ -326,8 +371,17 @@ const PosReportsNew = ({
                                             }}
                                         />
                                     </th>
-
-
+                                    <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
+                                        <input
+                                            type="text"
+                                            className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                            placeholder="Search"
+                                            value={billStatus}
+                                            onChange={(e) => {
+                                                setBillStatus(e.target.value);
+                                            }}
+                                        />
+                                    </th>
                                     <th className="w-1/2  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                                         <input
                                             type="text"
@@ -339,6 +393,8 @@ const PosReportsNew = ({
                                             }}
                                         />
                                     </th>
+
+
                                     <th className="w-32 px-1 font-bold text-[13px] text-gray-900 text-center"></th>
                                     {/* <th className="w-14  px-1  font-bold text-[13px]  text-gray-900  text-center "></th> */}
 
@@ -385,12 +441,18 @@ const PosReportsNew = ({
                                                 {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                                             </td>
 
+                                            <td className="py-1.5 text-left">
+                                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase border ${dataObj.bilStatus === "DRAFT" ? "bg-gray-100 text-gray-600 border-gray-300" :
+                                                    dataObj.bilStatus === "PAID" ? "bg-green-100 text-green-600 border-green-300" :
+                                                        dataObj.bilStatus === "UNPAID" ? "bg-red-100 text-red-600 border-red-300" :
+                                                            "bg-blue-100 text-blue-600 border-blue-300"
+                                                    } w-24 text-center `}>
+                                                    {dataObj.bilStatus || "DRAFT"}
+                                                </span>
+                                            </td>
 
                                             <td className="py-1.5 text-left">
-                                                {`${dataObj?.Party?.name}${dataObj?.Party?.BranchType?.name
-                                                    ? ` / ${dataObj?.Party?.BranchType?.name}`
-                                                    : ""
-                                                    }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`}
+                                                {`${dataObj?.Party?.name}`}
                                             </td>
 
 
@@ -469,6 +531,62 @@ const PosReportsNew = ({
                                                                 )}
 
                                                         </div>
+                                                        <button
+                                                            className="text-orange-600 flex items-center px-1 bg-orange-50 rounded hover:bg-orange-100 transition-colors"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                console.log(dataObj, "dataObj")
+                                                                // 1. தொகைகளை கணக்கிடுதல்
+                                                                const received = dataObj.PosPayments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
+                                                                const total = parseFloat(dataObj.netAmount || 0);
+                                                                const balance = received - total;
+
+                                                                // 2. Mapping
+                                                                setPrintData({
+                                                                    docId: dataObj.docId,
+                                                                    date: dataObj.createdAt,
+                                                                    customerData: dataObj.Party || { name: "Walk-in Customer" },
+                                                                    items: dataObj.PosItems || [], // Backend-ல் PosItems என்றுதான் வருகிறது
+                                                                    payments: {
+                                                                        cash: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Cash")?.amount || 0),
+                                                                        upi: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "UPI")?.amount || 0),
+                                                                        card: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Card")?.amount || 0),
+                                                                        online: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Online")?.amount || 0)
+                                                                    },
+                                                                    summary: {
+                                                                        subtotal: total + parseFloat(dataObj.discountValue || 0), // (ஒரு தோராய கணக்கு)
+                                                                        tax: 0,
+                                                                        discount: parseFloat(dataObj.discountValue || 0),
+                                                                        total: total,
+                                                                        received: received,
+                                                                        balance: balance,
+                                                                        roundOff: parseFloat(dataObj.roundOff || 0)
+                                                                    },
+                                                                    branchData: branchList?.data?.find(b => b.id === dataObj.branchId)
+                                                                });
+
+                                                                setThermalPrintOpen(true);
+                                                            }}
+                                                            title="Thermal Print"
+                                                        >
+                                                            <FiPrinter className="h-4 w-4" />
+                                                        </button>
+
+                                                        {dataObj.bilStatus === "UNPAID" && !dataObj.isCancel && (
+                                                            <button
+                                                                className="text-red-600 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleCancel(dataObj.id);
+                                                                }}
+                                                                title="Cancel Bill"
+                                                            >
+                                                                <FiXCircle className="h-4 w-4" />
+                                                            </button>
+                                                        )}
+                                                        {dataObj.isCancel && (
+                                                            <span className="text-red-500 text-[10px] font-bold uppercase border border-red-200 px-1 rounded bg-red-50">Canceled</span>
+                                                        )}
                                                     </div>
                                                 </td>
                                             )}

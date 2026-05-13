@@ -34,14 +34,15 @@ const styles = StyleSheet.create({
   },
 });
 
-const PosThermalPrint = ({ 
-  docId, 
-  date, 
-  branchData, 
-  customerData, 
-  items = [], 
+const PosThermalPrint = ({
+  docId,
+  date,
+  branchData,
+  customerData,
+  items = [],
   payments = { cash: 0, upi: 0, card: 0 },
-  summary = { subtotal: 0, tax: 0, discount: 0, total: 0, received: 0, balance: 0 }
+  summary = { subtotal: 0, tax: 0, discount: 0, total: 0, received: 0, balance: 0 },
+  returnReferences = []
 }) => {
 
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
@@ -60,19 +61,22 @@ const PosThermalPrint = ({
         </View>
 
         <View style={tw('flex flex-col items-center my-1')}>
-          <Text style={tw('font-bold text-xs underline')}>TAX INVOICE</Text>
+          <Text style={tw('font-bold text-xs underline')}>Cash Sale</Text>
         </View>
 
         {/* Transaction Info */}
         <View style={tw('flex flex-row justify-between mb-1 py-1 border-t border-b border-gray-200')}>
-            <View style={tw('flex flex-col w-1/2')}>
-                <Text style={tw('text-xxs font-bold')}>{customerData?.name?.toUpperCase() || "WALK-IN CUSTOMER"}</Text>
-                {customerData?.contact && <Text style={tw('text-[6pt]')}>M: {customerData.contact.toString()}</Text>}
-            </View>
-            <View style={tw('flex flex-col items-end w-1/2')}>
-                <Text style={tw('text-xxs')}># {docId}</Text>
-                <Text style={tw('text-xxs')}>Date: {moment(date).format('DD/MM/YYYY')}</Text>
-            </View>
+          <View style={tw('flex flex-col w-1/2')}>
+            <Text style={tw('text-xxs font-bold')}>{customerData?.name?.toUpperCase() || "WALK-IN CUSTOMER"}</Text>
+            {customerData?.contact && <Text style={tw('text-[6pt]')}>M: {customerData.contact.toString()}</Text>}
+          </View>
+          <View style={tw('flex flex-col items-end w-1/2')}>
+            <Text style={tw('text-xxs')}># {docId}</Text>
+            {returnReferences?.length > 0 && (
+              <Text style={tw('text-[7pt] font-bold italic')}>Against: {returnReferences.join(', ')}</Text>
+            )}
+            <Text style={tw('text-xxs')}>Date: {moment(date).format('DD/MM/YYYY')}</Text>
+          </View>
         </View>
 
         {/* Items Table Header */}
@@ -166,14 +170,8 @@ const PosThermalPrint = ({
               <Text style={tw('text-xxs')}>{payments.card.toFixed(2)}</Text>
             </View>
           )}
-          <View style={tw('flex flex-row justify-between border-t border-gray-300 pt-1 mt-1')}>
-            <Text style={tw('text-xxs font-bold')}>Total Received :</Text>
-            <Text style={tw('text-xxs font-bold')}>{summary.received.toFixed(2)}</Text>
-          </View>
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs font-bold')}>Balance Returned:</Text>
-            <Text style={tw('text-xxs font-bold')}>{summary.balance.toFixed(2)}</Text>
-          </View>
+
+          .
         </View>
 
         <View style={styles.dottedLine} />
@@ -186,7 +184,7 @@ const PosThermalPrint = ({
         </View>
 
         <View style={tw('flex flex-col items-center mt-4 border-t border-gray-100 pt-2')}>
-           <Text style={tw('text-[5pt] text-gray-400')}>Printed via Walrus ERP POS System</Text>
+          <Text style={tw('text-[5pt] text-gray-400')}>Printed via Walrus ERP POS System</Text>
         </View>
 
       </Page>

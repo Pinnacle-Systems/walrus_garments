@@ -24,8 +24,27 @@ function isSameDeliveryReturnLine(deliveryItem, returnItem) {
     return String(deliveryItem?.itemId || "") === String(returnItem?.itemId || "")
         && String(deliveryItem?.sizeId || "") === String(returnItem?.sizeId || "")
         && String(deliveryItem?.colorId || "") === String(returnItem?.colorId || "")
-        && String(deliveryItem?.uomId || "") === String(returnItem?.uomId || "")
-        && String(deliveryItem?.hsnId || "") === String(returnItem?.hsnId || "");
+        && String(deliveryItem?.uomId || "") === String(returnItem?.uomId || "");
+}
+
+function calculateLineNet(item) {
+    const qty = parseFloat(item.qty || 0);
+    const price = parseFloat(item.price || 0);
+    const taxPercent = parseFloat(item.tax || item.taxPercent || 0);
+    const taxMethod = item.taxMethod || "Inclusive";
+
+    const gross = qty * price;
+    if (taxMethod === "Inclusive") {
+        return gross;
+    } else {
+        const taxAmount = gross * (taxPercent / 100);
+        return gross + taxAmount;
+    }
+}
+
+function calculateTotalNet(items = [], charges = { packing: 0, shipping: 0 }) {
+    const itemsTotal = items.reduce((sum, item) => sum + calculateLineNet(item), 0);
+    return itemsTotal + parseFloat(charges.packing || 0) + parseFloat(charges.shipping || 0);
 }
 
 function buildRemainingReturnQtyByDeliveryItemId(salesDelivery, excludeSalesReturnId = null) {
@@ -204,6 +223,13 @@ async function getOne(id) {
                     },
                 }
             },
+            SalesExchangeItems: {
+                include: {
+                    Item: true,
+                    Color: true,
+                    Size: true,
+                }
+            },
             Party: true,
             Store: true,
         }
@@ -230,6 +256,7 @@ async function getOne(id) {
         statusCode: 0, data: {
             ...data,
             SalesReturnItems,
+            ExchangeItems: data.SalesExchangeItems,
             childRecord
         }
     };
@@ -263,9 +290,9 @@ async function getSearch(req) {
     return { statusCode: 0, data };
 }
 
-function mapSalesReturnItem(item = {}, id) {
+function mapSalesReturnItem(item = {}, isUpdate = false) {
     return {
-        salesDeliveryItemId: id ? item?.salesDeliveryItemId ? parseInt(item?.salesDeliveryItemId) : null : item.id ? parseInt(item.id) : null,
+        salesDeliveryItemId: isUpdate ? (item?.salesDeliveryItemId ? parseInt(item?.salesDeliveryItemId) : null) : (item.id ? parseInt(item.id) : null),
         itemId: item.itemId ? parseInt(item.itemId) : null,
         sizeId: item.sizeId ? parseInt(item.sizeId) : null,
         colorId: item.colorId ? parseInt(item.colorId) : null,
@@ -277,8 +304,46 @@ function mapSalesReturnItem(item = {}, id) {
         discountValue: item.discountValue ? item.discountValue.toString() : null,
         taxMethod: item.taxMethod,
         taxType: item.taxType,
-        // isExchange: isExchange,
-        // salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : null
+    };
+}
+
+async function checkExchangeStockAvailability(tx, exchangeItems, storeId, branchId) {
+    for (const item of exchangeItems) {
+        const stockSum = await tx.stock.aggregate({
+            _sum: { qty: true },
+            where: {
+                itemId: parseInt(item.itemId),
+                sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                colorId: item.colorId ? parseInt(item.colorId) : null,
+                uomId: item.uomId ? parseInt(item.uomId) : null,
+                storeId: parseInt(storeId),
+                branchId: parseInt(branchId),
+            }
+        });
+
+        const availableQty = parseFloat(stockSum._sum.qty || 0);
+        const requestedQty = parseFloat(item.qty || 0);
+
+        if (availableQty < requestedQty) {
+            const itemObj = await tx.item.findUnique({ where: { id: parseInt(item.itemId) }, select: { name: true } });
+            throw new Error(`Insufficient stock for ${itemObj?.name}. Available: ${availableQty}, Requested: ${requestedQty}`);
+        }
+    }
+}
+
+function mapSalesExchangeItem(item = {}) {
+    return {
+        itemId: item.itemId ? parseInt(item.itemId) : null,
+        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+        colorId: item.colorId ? parseInt(item.colorId) : null,
+        uomId: item.uomId ? parseInt(item.uomId) : null,
+        hsnId: item.hsnId ? parseInt(item.hsnId) : null,
+        qty: item.qty ? item.qty.toString() : "0",
+        price: item.price ? item.price.toString() : "0",
+        discountType: item.discountType,
+        discountValue: item.discountValue ? item.discountValue.toString() : null,
+        taxMethod: item.taxMethod,
+        taxType: item.taxType,
     };
 }
 
@@ -287,7 +352,10 @@ async function create(body) {
         const {
             customerId, branchId, salesDeliveryId, packingChargeEnabled, packingCharge,
             shippingChargeEnabled, shippingCharge, deliveryItems,
-            finYearId, storeId, userId
+            finYearId, storeId, userId,
+            returnChargeType,
+            returnCharge,
+            returnChargeEnabled
         } = await body;
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -309,18 +377,43 @@ async function create(body) {
                     branchId: branchId ? parseInt(branchId) : undefined,
                     salesDeliveryId: salesDeliveryId ? parseInt(salesDeliveryId) : undefined,
                     storeId: effectiveStoreId,
-                    packingChargeEnabled: Boolean(packingChargeEnabled),
-                    packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
-                    shippingChargeEnabled: Boolean(shippingChargeEnabled),
-                    shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
+                    returnChargeEnabled: Boolean(returnChargeEnabled),
+                    returnChargeType: returnChargeEnabled ? String(returnChargeType) : null,
+                    returnCharge: returnChargeEnabled ? String(returnCharge || 0) : null,
                     createdById: userId ? parseInt(userId) : undefined,
+                    returnType: body.salesType || "Return",
                     SalesReturnItems: {
-                        create: (deliveryItems || []).filter(i => i.itemId).map(i => mapSalesReturnItem(i, null)),
+                        create: (deliveryItems || []).filter(i => i.itemId).map(i => mapSalesReturnItem(i, false)),
+                    },
+                    SalesExchangeItems: {
+                        create: (body.exchangeItems || []).filter(i => i.itemId).map(i => mapSalesExchangeItem(i)),
                     }
                 },
             });
 
-            const stockEntries = (deliveryItems || []).filter(i => i.itemId).map(item => ({
+            if (body.salesType === "Exchange") {
+                await checkExchangeStockAvailability(tx, (body.exchangeItems || []).filter(i => i.itemId), effectiveStoreId, branchId);
+            }
+
+            if (body.salesType === "Return") {
+                const totalNetAmount = calculateTotalNet(deliveryItems, {
+                    packing: packingChargeEnabled ? packingCharge : 0,
+                    shipping: shippingChargeEnabled ? shippingCharge : 0
+                });
+
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Credit_Note",
+                        creditOrDebit: "Credit",
+                        partyBillNo: newSRDocId,
+                        amount: totalNetAmount,
+                        partyId: parseInt(customerId),
+                        salesReturnId: salesReturn.id
+                    }
+                });
+            }
+
+            const returnStockEntries = (deliveryItems || []).filter(i => i.itemId).map(item => ({
                 itemId: parseInt(item.itemId),
                 sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                 colorId: item.colorId ? parseInt(item.colorId) : null,
@@ -334,8 +427,26 @@ async function create(body) {
                 barcode: item.barcode
             }));
 
-            if (stockEntries.length > 0) {
-                await tx.stock.createMany({ data: stockEntries });
+            if (returnStockEntries.length > 0) {
+                await tx.stock.createMany({ data: returnStockEntries });
+            }
+
+            const exchangeStockEntries = (body.exchangeItems || []).filter(i => i.itemId).map(item => ({
+                itemId: parseInt(item.itemId),
+                sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                colorId: item.colorId ? parseInt(item.colorId) : null,
+                uomId: item.uomId ? parseInt(item.uomId) : null,
+                branchId: parseInt(branchId),
+                storeId: effectiveStoreId,
+                qty: -parseFloat(item.qty || 0),
+                price: parseFloat(item.price || 0),
+                inOrOut: "SalesExchange",
+                transactionId: salesReturn.id,
+                barcode: item.barcode
+            }));
+
+            if (exchangeStockEntries.length > 0) {
+                await tx.stock.createMany({ data: exchangeStockEntries });
             }
 
             return salesReturn;
@@ -357,8 +468,10 @@ async function update(id, body) {
         } = await body;
 
         const result = await prisma.$transaction(async (tx) => {
-            await tx.stock.deleteMany({ where: { transactionId: parseInt(id), inOrOut: "SalesReturn" } });
+            await tx.stock.deleteMany({ where: { transactionId: parseInt(id), inOrOut: { in: ["SalesReturn", "SalesExchange"] } } });
             await tx.salesReturnItems.deleteMany({ where: { salesReturnId: parseInt(id) } });
+            await tx.salesExchangeItems.deleteMany({ where: { salesReturnId: parseInt(id) } });
+            await tx.ledger.deleteMany({ where: { salesReturnId: parseInt(id) } });
 
             const effectiveStoreId = await validateReturnStore(tx, storeId, branchId);
             const validationState = await getSalesDeliveryReturnValidationState(tx, salesDeliveryId, id);
@@ -380,14 +493,40 @@ async function update(id, body) {
                     shippingChargeEnabled: Boolean(shippingChargeEnabled),
                     shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                     updatedById: userId ? parseInt(userId) : undefined,
+                    returnType: body.salesType || "Return",
                     SalesReturnItems: {
-                        create: (deliveryItems || []).filter(i => i.itemId).map(i => mapSalesReturnItem(i, id)),
+                        create: (deliveryItems || []).filter(i => i.itemId).map(i => mapSalesReturnItem(i, true)),
+                    },
+                    SalesExchangeItems: {
+                        create: (body.exchangeItems || []).filter(i => i.itemId).map(i => mapSalesExchangeItem(i)),
                     }
                 },
             });
 
+            if (body.salesType === "Exchange") {
+                await checkExchangeStockAvailability(tx, (body.exchangeItems || []).filter(i => i.itemId), effectiveStoreId, branchId);
+            }
+
+            if (body.salesType === "Return") {
+                const totalNetAmount = calculateTotalNet(deliveryItems, {
+                    packing: packingChargeEnabled ? packingCharge : 0,
+                    shipping: shippingChargeEnabled ? shippingCharge : 0
+                });
+
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Credit_Note",
+                        creditOrDebit: "Credit",
+                        partyBillNo: salesReturn.docId,
+                        amount: totalNetAmount,
+                        partyId: parseInt(customerId),
+                        salesReturnId: salesReturn.id
+                    }
+                });
+            }
+
             // 4. Stock Inward for returned goods
-            const stockEntries = (deliveryItems || []).filter(i => i.itemId).map(item => ({
+            const returnStockEntries = (deliveryItems || []).filter(i => i.itemId).map(item => ({
                 itemId: parseInt(item.itemId),
                 sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                 colorId: item.colorId ? parseInt(item.colorId) : null,
@@ -401,8 +540,26 @@ async function update(id, body) {
                 barcode: item.barcode
             }));
 
-            if (stockEntries.length > 0) {
-                await tx.stock.createMany({ data: stockEntries });
+            if (returnStockEntries.length > 0) {
+                await tx.stock.createMany({ data: returnStockEntries });
+            }
+
+            const exchangeStockEntries = (body.exchangeItems || []).filter(i => i.itemId).map(item => ({
+                itemId: parseInt(item.itemId),
+                sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                colorId: item.colorId ? parseInt(item.colorId) : null,
+                uomId: item.uomId ? parseInt(item.uomId) : null,
+                branchId: parseInt(branchId),
+                storeId: effectiveStoreId,
+                qty: -parseFloat(item.qty || 0),
+                price: parseFloat(item.price || 0),
+                inOrOut: "SalesExchange",
+                transactionId: salesReturn.id,
+                barcode: item.barcode
+            }));
+
+            if (exchangeStockEntries.length > 0) {
+                await tx.stock.createMany({ data: exchangeStockEntries });
             }
 
             return salesReturn;

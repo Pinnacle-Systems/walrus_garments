@@ -93,6 +93,9 @@ async function getOne(id) {
         where: {
             id: parseInt(id)
         },
+        include: {
+            Party: true
+        }
     })
     if (!data) return NoRecordFound("purchaseBill");
     return { statusCode: 0, data: { ...data, ...{ childRecord } } };
@@ -113,7 +116,8 @@ async function getSearch(req) {
                     },
                 },
             ],
-        }
+        },
+
     })
     return { statusCode: 0, data: data };
 }

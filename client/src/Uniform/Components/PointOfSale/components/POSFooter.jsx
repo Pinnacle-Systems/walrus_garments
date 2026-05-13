@@ -7,6 +7,7 @@ const POSFooter = ({
     discountRef,
     setShowReports,
     handlePayNow,
+    handleSaveUnpaid,
     scannerRef
 }) => {
     const shortcuts = [
@@ -33,6 +34,9 @@ const POSFooter = ({
         { key: 'F6', label: 'UoM', action: null },
         {
             key: 'F8', label: 'Pay', action: () => handlePayNow()
+        },
+        {
+            key: 'F9', label: 'Save', action: () => handleSaveUnpaid()
         },
         {
             key: 'F10', label: 'Scan', action: () => {

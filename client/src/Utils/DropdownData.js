@@ -389,6 +389,5 @@ export const challanTypeList = [
 
 export const TransactionType = [
     { show: "SALE", value: "SALE" },
-    { show: "EXCHNAGE", value: "EXCHNAGE" },
     { show: "RETURN", value: "RETURN" },
 ]

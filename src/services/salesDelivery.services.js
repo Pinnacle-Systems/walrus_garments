@@ -18,6 +18,38 @@ function roundMoney(value) {
     return Math.round((parseFloat(value || 0) || 0) * 100) / 100;
 }
 
+function calculateDeliveryNetAmount(deliveryItems = [], header = {}) {
+    const { packingChargeEnabled, packingCharge, shippingChargeEnabled, shippingCharge } = header;
+
+    const lineNetAmount = (deliveryItems || []).reduce((acc, curr) => {
+        const price = parseAmount(curr?.price);
+        const qty = parseAmount(curr?.deliveryQty || curr?.qty);
+        const taxPercent = parseAmount(curr?.taxPercent);
+        const taxMethod = curr?.taxMethod || "Inclusive";
+        const discountType = curr?.discountType;
+        const discountValue = parseAmount(curr?.discountValue);
+
+        let discountedAmount = price * qty;
+        if (discountType === "Percentage") {
+            discountedAmount -= (discountedAmount * discountValue) / 100;
+        } else if (discountType === "Flat") {
+            discountedAmount -= discountValue;
+        }
+
+        discountedAmount = Math.max(0, discountedAmount);
+
+        if (taxMethod === "Inclusive") {
+            return acc + discountedAmount;
+        }
+        return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+    }, 0);
+
+    const packing = packingChargeEnabled ? parseAmount(packingCharge) : 0;
+    const shipping = shippingChargeEnabled ? parseAmount(shippingCharge) : 0;
+
+    return roundMoney(lineNetAmount + packing + shipping);
+}
+
 function isSameDeliveryReturnLine(deliveryItem, returnItem) {
     if (returnItem?.salesDeliveryItemId) {
         return parseInt(returnItem.salesDeliveryItemId) === parseInt(deliveryItem?.id);
@@ -100,7 +132,11 @@ async function getSaleOrderValidationState(saleOrderId, excludeSalesDeliveryId =
             SaleOrderItems: true,
             SalesDelivery: {
                 include: {
-                    SalesDeliveryItems: true,
+                    SalesDeliveryItems: {
+                        include: {
+                            SalesReturnItems: true
+                        }
+                    },
                 }
             },
             Quotation: {
@@ -489,6 +525,21 @@ async function create(body) {
                     })
                 });
             }
+
+            const totalAmount = calculateDeliveryNetAmount(deliveryItems, body);
+
+            await tx.ledger.create({
+                data: {
+                    EntryType: "Sales",
+                    LedgerType: "Customer",
+                    creditOrDebit: "Debit",
+                    partyId: parseInt(customerId),
+                    amount: totalAmount,
+                    partyBillNo: docId,
+                    partyBillDate: new Date(),
+                    salesDeliveryId: data.id
+                }
+            });
         });
 
         return { statusCode: 0, data };
@@ -763,6 +814,27 @@ async function update(id, body) {
                     })
                 });
             }
+
+            const totalAmount = calculateDeliveryNetAmount(deliveryItems, body);
+
+            await tx.ledger.upsert({
+                where: { salesDeliveryId: parseInt(id) },
+                update: {
+                    amount: totalAmount,
+                    partyId: parseInt(customerId),
+                    partyBillNo: salesDeliveryData.docId,
+                },
+                create: {
+                    EntryType: "Sales",
+                    LedgerType: "Customer",
+                    creditOrDebit: "Debit",
+                    partyId: parseInt(customerId),
+                    amount: totalAmount,
+                    partyBillNo: salesDeliveryData.docId,
+                    partyBillDate: new Date(),
+                    salesDeliveryId: parseInt(id)
+                }
+            });
         });
         return { statusCode: 0, data: salesDeliveryData };
     } catch (error) {

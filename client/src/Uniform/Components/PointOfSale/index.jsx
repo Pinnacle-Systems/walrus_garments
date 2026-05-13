@@ -18,7 +18,8 @@ import {
     useAddPointOfSalesMutation,
     useUpdatePointOfSalesMutation,
     useGetPointOfSalesByIdQuery,
-    useLazyCheckReferenceNumberQuery
+    useLazyCheckReferenceNumberQuery,
+    useLazyGetPartyCreditBalanceQuery
 } from '../../../redux/uniformService/PointOfSalesService';
 import { useGetoffersPromotionsQuery } from '../../../redux/uniformService/Offer&PromotionsService';
 import { useGetEmployeeQuery } from '../../../redux/services/EmployeeMasterService';
@@ -53,6 +54,11 @@ const PointOfSale = () => {
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('Cash');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [availableCredit, setAvailableCredit] = useState(0);
+    const [availableReturnBills, setAvailableReturnBills] = useState([]);
+    const [selectedReturnBills, setSelectedReturnBills] = useState([]);
+    const [fetchCreditBalance] = useLazyGetPartyCreditBalanceQuery();
+    const [fetchPointOfSales] = useLazyGetPointOfSalesQuery();
     const [showCartMobile, setShowCartMobile] = useState(false);
 
     const [discount, setDiscount] = useState(0);
@@ -72,6 +78,7 @@ const PointOfSale = () => {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [docId, setDocId] = useState("");
     const [approvalStatus, setApprovalStatus] = useState("NONE");
+    const [currentBilStatus, setCurrentBilStatus] = useState("PAID");
 
 
 
@@ -80,7 +87,7 @@ const PointOfSale = () => {
 
 
 
-    const [barcodeResolution, setBarcodeResolution] = useState({ open: false, matches: [], resolve: null });
+
 
     const [showSalesPersonModal, setShowSalesPersonModal] = useState(false);
     const [salesPersonBarcode, setSalesPersonBarcode] = useState('');
@@ -97,6 +104,12 @@ const PointOfSale = () => {
     const [reportsTransactionType, setReportsTransactionType] = useState("SALE");
     const [showStockModal, setShowStockModal] = useState(false);
     const [selectedItemForStock, setSelectedItemForStock] = useState(null);
+
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    // Added for Search Mode Toggle
+    const [searchMode, setSearchMode] = useState('BARCODE'); // Default to BARCODE
+    const [barcodeResolution, setBarcodeResolution] = useState({ open: false, matches: [], resolve: null });
 
 
     const [checkRefNo] = useLazyCheckReferenceNumberQuery();
@@ -134,6 +147,22 @@ const PointOfSale = () => {
     const handlePayNow = async () => {
         if (cart.length === 0 || isProcessing) return;
 
+        // If it's a return, we don't need payment validation or modal
+        if (transactionType === 'RETURN') {
+            const result = await Swal.fire({
+                title: 'Save Return?',
+                text: 'Do you want to save this return transaction?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                confirmButtonText: 'Yes, Save'
+            });
+            if (result.isConfirmed) {
+                handleCheckout();
+            }
+            return;
+        }
+
         if (isAdmin && approvalStatus === 'PENDING') {
             if (discount <= 0) {
                 const result = await Swal.fire({
@@ -160,10 +189,7 @@ const PointOfSale = () => {
             return;
         }
 
-        if (isGuestCustomer && !guestName.trim()) {
-            Swal.fire({ title: "Error", text: "Customer name is required!", icon: "error" });
-            return;
-        }
+
 
         if (total === 0) {
             Swal.fire({
@@ -216,6 +242,7 @@ const PointOfSale = () => {
 
             if (e.key === 'F10') { e.preventDefault(); scannerRef.current?.focus(); return; }
             if (e.key === 'F8') { e.preventDefault(); handlePayNow(); return; }
+            if (e.key === 'F9') { e.preventDefault(); handleSaveUnpaid(); return; }
             if (e.key === 'F2') {
                 e.preventDefault();
                 if (cart.length > 0) {
@@ -330,6 +357,8 @@ const PointOfSale = () => {
         });
         return potential;
     }, [cart, activeOffers]);
+
+    console.log(cart, "cart")
 
     const { cartWithOffers, appliedOffers } = useMemo(() => {
         if (!cart.length) return { cartWithOffers: [], appliedOffers: [] };
@@ -529,6 +558,7 @@ const PointOfSale = () => {
             setDocId("");
             setUpiRefNo("");
             setApprovalStatus("NONE");
+            setCurrentBilStatus("PAID");
             return;
         }
 
@@ -601,6 +631,7 @@ const PointOfSale = () => {
         }
         if (sale.docId) setDocId(sale.docId);
         setApprovalStatus(sale.approvalStatus || "NONE");
+        setCurrentBilStatus(sale.bilStatus || "PAID");
         setShowReports(true);
     }, [selectedReportSaleId, items, employees, retailStoreId]);
 
@@ -634,61 +665,194 @@ const PointOfSale = () => {
     }, [reportsSearchDocNo, reportsSearchDate, reportsSearchCustomerName, dataPerPage]);
 
 
-    // Barcode Handling
-    const resolveBarcodeMatch = (matches = []) => {
-        return new Promise((resolve) => {
-            setBarcodeResolution({
-                open: true,
-                matches: matches.map(m => ({
-                    ...m,
-                    item_name: m.item_name || m?.Item?.name || "Item",
-                    size: m.size || m?.Size?.name || "-",
-                    color: m.color || m?.Color?.name || "-",
-                    location: m.location || "-",
-                    stockQty: m.stockQty || 0,
-                    storeId: m.storeId || m.locationId
-                })),
-                resolve
-            });
-        });
-    };
+
 
     const handleScan = async (e) => {
         if (e.key === 'Enter') {
             if (selectedReportSaleId) return;
             const barcode = searchQuery.trim();
             if (!barcode) return;
-            try {
-                const response = await getStockByBarcode({ params: { barcode, branchId } }).unwrap();
-                const resolvedData = response?.needsResolution ? await resolveBarcodeMatch(response.matches || []) : response?.data;
-                if (response?.needsResolution && !resolvedData) return;
-                if (response.statusCode === 0 && resolvedData) {
-                    if (Array.isArray(resolvedData)) resolvedData.forEach(item => addToCart({ ...item }));
-                    else addToCart({ ...resolvedData });
-                    setSearchQuery('');
-                    return;
+
+            // Barcode Mode Logic
+            if (searchMode === 'BARCODE') {
+                try {
+                    const response = await getStockByBarcode({ params: { barcode, branchId } }).unwrap();
+                    if (response.statusCode === 0) {
+                        const { data, matches, needsResolution } = response;
+
+                        if (needsResolution || (Array.isArray(matches) && matches.length > 1)) {
+                            // Multiple matches found - Show resolution modal
+                            setBarcodeResolution({
+                                open: true,
+                                matches: matches,
+                                resolve: (selectedItems) => {
+                                    if (Array.isArray(selectedItems)) {
+                                        selectedItems.forEach(item => addToCart(item));
+                                    } else if (selectedItems) {
+                                        addToCart(selectedItems);
+                                    }
+                                }
+                            });
+                            setSearchQuery('');
+                            setTimeout(() => scannerRef.current?.focus(), 100);
+
+                        } else if (data || (Array.isArray(matches) && matches.length === 1)) {
+                            // Single match found
+                            const resolvedData = data || matches[0];
+                            addToCart({ ...resolvedData });
+                            setSearchQuery('');
+                            setTimeout(() => scannerRef.current?.focus(), 100);
+                        } else {
+                            Swal.fire({ title: "Warning", text: "Barcode not found", icon: "warning" });
+                        }
+                        return;
+                    } else {
+                        Swal.fire({ title: "Warning", text: response.message || "Barcode not found", icon: "warning" });
+                    }
+                } catch (error) {
+                    console.error("Barcode search failed", error);
+                    Swal.fire({ title: "Error", text: "Failed to fetch barcode details", icon: "error" });
                 }
-            } catch (error) { console.error("Barcode search failed", error); }
-            const localItem = items.find(i =>
-                i.name?.toLowerCase() === barcode.toLowerCase() ||
-                i.code?.toLowerCase() === barcode.toLowerCase() ||
-                i.ItemPriceList?.some(row => row.ItemBarcodes?.some(b => b.barcode === barcode))
-            );
-            if (!localItem) { Swal.fire({ title: "Warning", text: "Barcode not found", icon: "warning" }); return; }
-            const normItem = normalizeLocalItemForPos(localItem, branchId, retailStoreId);
-            if (!normItem?.barcode) { Swal.fire({ title: "Warning", text: "Item missing barcode", icon: "warning" }); return; }
-            try {
-                const localRes = await getStockByBarcode({ params: { barcode: normItem.barcode, storeId: retailStoreId, branchId } }).unwrap();
-                const resLocalData = localRes?.needsResolution ? await resolveBarcodeMatch(localRes.matches || []) : localRes?.data;
-                if (localRes.statusCode === 0 && resLocalData) {
-                    if (Array.isArray(resLocalData)) resLocalData.forEach(item => addToCart({ ...item }));
-                    else addToCart({ ...resLocalData });
-                    setSearchQuery('');
-                    return;
-                }
-            } catch (error) { console.error("Local lookup failed", error); }
-            Swal.fire({ title: "Warning", text: "Product out of stock in this store", icon: "warning" });
+            } else {
+                // Name Mode Logic: Enter doesn't necessarily need to do anything 
+                // if users select from suggestions
+            }
         }
+    };
+
+    useEffect(() => {
+        const query = searchQuery?.trim().toLowerCase();
+        // suggestions logic should only run in NAME mode
+        if (!query || query.length < 2 || selectedReportSaleId || searchMode !== 'NAME') {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        const matchingItems = items.filter(i =>
+            i.name?.toLowerCase().includes(query) ||
+            i.code?.toLowerCase().includes(query)
+        );
+
+        let allMatches = [];
+        const barcodeMap = new Map();
+
+        const addMatch = (match) => {
+            if (!barcodeMap.has(match.barcode)) {
+                barcodeMap.set(match.barcode, true);
+                allMatches.push(match);
+            }
+        };
+
+        matchingItems.forEach(item => {
+            const variants = ItemPriceListData?.data?.filter(p => p.itemId === item.id) || [];
+            variants.forEach(variant => {
+                variant.ItemBarcodes?.forEach(bc => {
+                    addMatch({
+                        barcode: bc.barcode,
+                        barcodeType: bc.barcodeType,
+
+                        item_name: item.name,
+                        size: variant.Size?.name || "-",
+                        color: variant.Color?.name || "-",
+                        itemId: item.id,
+                        sizeId: variant.sizeId,
+                        colorId: variant.colorId,
+                        uomId: item.uomId,
+                        storeId: retailStoreId,
+                    });
+                });
+            });
+        });
+
+        const barcodeMatches = items.filter(i =>
+            i.ItemPriceList?.some(row => row.ItemBarcodes?.some(b => b.barcode.toLowerCase().includes(query)))
+        );
+
+        barcodeMatches.forEach(item => {
+            const variants = ItemPriceListData?.data?.filter(p => p.itemId === item.id) || [];
+            variants.forEach(variant => {
+                variant.ItemBarcodes?.forEach(bc => {
+                    if (bc.barcode.toLowerCase().includes(query)) {
+                        addMatch({
+                            barcode: bc.barcode,
+                            barcodeType: bc.barcodeType,
+                            item_name: item.name,
+                            size: variant.Size?.name || "-",
+                            color: variant.Color?.name || "-",
+                            itemId: item.id,
+                            sizeId: variant.sizeId,
+                            colorId: variant.colorId,
+                            uomId: item.uomId,
+                            storeId: retailStoreId,
+                        });
+                    }
+                });
+            });
+        });
+
+        setSuggestions(allMatches.slice(0, 10));
+        setShowSuggestions(allMatches.length > 0);
+
+        // Fetch stock for top suggestions to show in dropdown - Filtered by retailStoreId
+        if (allMatches.length > 0) {
+            (async () => {
+                const updated = await Promise.all(allMatches.slice(0, 15).map(async (m) => {
+                    try {
+                        const res = await getStockByBarcode({ params: { barcode: m.barcode, storeId: retailStoreId, branchId } }).unwrap();
+                        // If multiple matches, sum up their stock quantities
+                        const totalStock = res?.data?.stockQty || (res?.matches ? res.matches.reduce((sum, match) => sum + (match.stockQty || 0), 0) : 0);
+                        return { ...m, stockQty: totalStock, uomId: res?.data?.uomId || (res?.matches?.[0]?.uomId) };
+                    } catch { return m; }
+                }));
+                // Only show items that have stock in the retail store
+                const withStockOnly = updated.filter(item => item.stockQty > 0);
+                setSuggestions(withStockOnly);
+                setShowSuggestions(withStockOnly.length > 0);
+            })();
+        }
+    }, [searchQuery, items, ItemPriceListData, selectedReportSaleId, branchId, retailStoreId, searchMode]);
+
+    const handleSelectSuggestion = async (suggestion) => {
+        setSearchQuery('');
+        setSuggestions([]);
+        setShowSuggestions(false);
+        try {
+            // Re-verify stock and check for ambiguity in retail store
+            const res = await getStockByBarcode({ params: { barcode: suggestion.barcode, storeId: retailStoreId, branchId } }).unwrap();
+
+            if (res.statusCode === 0) {
+                const { data, matches, needsResolution } = res;
+
+                if (needsResolution || (Array.isArray(matches) && matches.length > 1)) {
+                    // Ambiguity found - show selection modal
+                    setBarcodeResolution({
+                        open: true,
+                        matches: matches,
+                        resolve: (selectedItems) => {
+                            if (Array.isArray(selectedItems)) {
+                                selectedItems.forEach(item => addToCart(item));
+                            } else if (selectedItems) {
+                                addToCart(selectedItems);
+                            }
+                        }
+                    });
+                } else if (data || (Array.isArray(matches) && matches.length === 1)) {
+                    // Unique match - add directly
+                    const resolvedData = data || matches[0];
+                    addToCart({ ...resolvedData });
+                } else {
+                    // Fallback to original suggestion if no stock found (though filtered out earlier)
+                    addToCart(suggestion);
+                }
+            } else {
+                addToCart(suggestion);
+            }
+        } catch (error) {
+            console.error("Suggestion selection failed", error);
+            addToCart(suggestion);
+        }
+        scannerRef.current?.focus();
     };
 
 
@@ -804,8 +968,22 @@ const PointOfSale = () => {
                 barcodeType: barcodeDetails?.barcodeType,
             }];
         });
-        setShowSalesPersonModal(true);
-        setTimeout(() => salesPersonScannerRef.current?.focus(), 500);
+        const existingItem = cart.find(item => {
+            const isIdMatch = (item.itemId == itemId) || (item.id == itemId);
+            const isSizeMatch = (item.sizeId || 0) == (sizeId || 0);
+            const isColorMatch = (item.colorId || 0) == (colorId || 0);
+            const isUomMatch = (item.uomId || 0) == (uomId || 0);
+            const isBarcodeMatch = (item.barcode || "") == (barcode || "");
+            const isReturnMatch = !!item.isReturn === !!product.isReturn;
+            return isIdMatch && isSizeMatch && isColorMatch && isUomMatch && isBarcodeMatch && isReturnMatch;
+        });
+
+        if (!existingItem || !existingItem.salesPersonId) {
+            setShowSalesPersonModal(true);
+            setTimeout(() => salesPersonScannerRef.current?.focus(), 500);
+        } else {
+            setTimeout(() => scannerRef.current?.focus(), 100);
+        }
     };
 
     const handleSalesPersonScan = (barcode) => {
@@ -880,9 +1058,20 @@ const PointOfSale = () => {
         setGuestMobile(cleanPhone);
         if (cleanPhone.length === 10) {
             const hit = customers.find(c => (c.contact || '').toString().replace(/\D/g, '') === cleanPhone);
-            if (hit) { setSelectedCustomer(hit); setIsGuestCustomer(false); setGuestName(hit.name); }
-            else { setSelectedCustomer(null); setIsGuestCustomer(true); }
-        } else if (selectedCustomer) { setSelectedCustomer(null); setIsGuestCustomer(true); }
+            if (hit) {
+                setSelectedCustomer(hit);
+                setIsGuestCustomer(false);
+                setGuestName(hit.name);
+                // Fetch credit balance and available returns
+                fetchCreditBalance(hit.id).unwrap().then(res => {
+                    if (res.statusCode === 0) setAvailableCredit(res.data);
+                });
+                fetchPointOfSales({ params: { customerId: hit.id, reportsTransactionType: 'RETURN', branchId } }).unwrap().then(res => {
+                    if (res.statusCode === 0) setAvailableReturnBills(res.data);
+                });
+            }
+            else { setSelectedCustomer(null); setIsGuestCustomer(true); setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills([]); }
+        } else if (selectedCustomer) { setSelectedCustomer(null); setIsGuestCustomer(true); setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills([]); }
     };
 
     // Totals Calculation
@@ -906,17 +1095,30 @@ const PointOfSale = () => {
     }, 0);
     const subtotal = totalWithoutRounding - tax;
 
+
+    console.log(purchaseTotalBeforeOffer, "purchaseTotalBeforeOffer")
+    console.log(totalOfferDiscount, "totalOfferDiscount")
+    console.log(totalBeforeDiscount, "totalBeforeDiscount")
+    console.log(discount, "discount")
+    console.log(totalWithoutRounding, "totalWithoutRounding")
+    console.log(total, "total")
+    console.log(roundOff, "roundOff")
+    console.log(tax, "tax")
+    console.log(subtotal, "subtotal")
+
     const [paidCash, setPaidCash] = useState(0);
     const [paidUPI, setPaidUPI] = useState(0);
     const [paidCard, setPaidCard] = useState(0);
     const [paidOnline, setPaidOnline] = useState(0);
     const [upiRefNo, setUpiRefNo] = useState('');
     const receivedAmount = paidCash + paidUPI + paidCard + paidOnline;
-    const balanceReturn = Math.max(0, receivedAmount - total);
+    const netPayableValue = total - availableCredit;
+    const absNetPayableValue = Math.abs(netPayableValue);
+    const balanceReturn = Math.max(0, receivedAmount - absNetPayableValue);
 
-    const handleCheckout = async (isApprovalOnly = false) => {
+    const handleCheckout = async (isApprovalOnly = false, isCreditSale = false) => {
         if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
-        if (!isApprovalOnly && receivedAmount < total) { Swal.fire({ title: "Error", text: "Incomplete payment", icon: "error" }); return; }
+        if (!isApprovalOnly && !isCreditSale && receivedAmount !== absNetPayableValue) { Swal.fire({ title: "Error", text: "Payment amount mismatch", icon: "error" }); return; }
 
 
         // const result = await Swal.fire({
@@ -942,7 +1144,12 @@ const PointOfSale = () => {
                 catch (e) { customerId = customers.find(c => c.contact === guestMobile)?.id; if (!customerId) throw new Error("Could not register guest."); }
             }
 
+            const totalPayableBeforeCredit = total; // This is the rounded total
+            const appliedCredit = total > 0 ? Math.min(availableCredit, totalPayableBeforeCredit) : 0;
+            const netPayable = totalPayableBeforeCredit - appliedCredit;
+
             const posPayments = [
+                ...(appliedCredit > 0 ? [{ amount: String(appliedCredit), paymentMode: 'STORE_CREDIT' }] : []),
                 ...(paidCash > 0 ? [{ amount: String(paidCash), paymentMode: 'Cash' }] : []),
                 ...(paidUPI > 0 ? [{ amount: String(paidUPI), paymentMode: 'UPI', reference_no: upiRefNo }] : []),
                 ...(paidCard > 0 ? [{ amount: String(paidCard), paymentMode: 'Card' }] : []),
@@ -963,6 +1170,7 @@ const PointOfSale = () => {
                 posPayments,
                 promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff, transactionType,
                 exchangeSalesNo,
+                bilStatus: isCreditSale ? "UNPAID" : "PAID",
                 // Stage Logic:
                 approvalStatus: (editMode && approvalStatus === 'PENDING' && isAdmin) ? "APPROVED" :
                     (editMode && docId === 'DRAFT' && isAdmin) ? "APPROVED" :
@@ -982,8 +1190,18 @@ const PointOfSale = () => {
             }
 
             Swal.fire({ title: editMode ? 'Updated Successfully!' : 'Payment Successful!', icon: 'success', timer: 2000, showConfirmButton: false });
-            setPrintData({ docId: apiResponse?.data?.docId || docId, date: new Date(), customerData: selectedCustomer || { name: guestName, contact: guestMobile }, items: cart, payments: { cash: paidCash, upi: paidUPI, card: paidCard }, summary: { subtotal, tax, discount, total, received: receivedAmount, balance: balanceReturn, roundOff }, branchData: locations.find(l => l.id === retailStoreId) });
+            setPrintData(
+                {
+                    docId: apiResponse?.data?.docId || docId,
+                    date: new Date(),
+                    customerData: selectedCustomer || { name: guestName, contact: guestMobile },
+                    items: cart,
+                    payments: { cash: paidCash, upi: paidUPI, card: paidCard },
+                    summary: { subtotal, tax, discount, total, received: Math.abs(receivedAmount), balance: Math.abs(balanceReturn), roundOff }, branchData: locations.find(l => l.id === retailStoreId),
+                    returnReferences: selectedReturnBills.length > 0 ? selectedReturnBills.map(b => b.label) : (exchangeSalesNo ? [exchangeSalesNo] : [])
+                });
             setCart([]); setDiscount(0); setSelectedCustomer(null); setPaidCash(0); setPaidUPI(0); setPaidCard(0); setUpiRefNo("");
+            setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills([]);
             setEditMode(false); setEditingInvoiceId(null); setSelectedReportSaleId(null);
         } catch (error) { Swal.fire({ title: "Error", text: error.message || "Failed to save invoice.", icon: "error" }); }
 
@@ -1045,6 +1263,28 @@ const PointOfSale = () => {
         }
     };
 
+    const handleSaveUnpaid = async () => {
+        if (cart.length === 0 || isProcessing) return;
+
+        if (isGuestCustomer && !guestMobile) {
+            Swal.fire({ title: "Error", text: "Customer mobile is required for credit sales!", icon: "error" });
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: 'Save as Unpaid?',
+            text: 'This bill will be saved as a Credit Sale. Ledger entry will not be created.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            confirmButtonText: 'Yes, Save'
+        });
+
+        if (result.isConfirmed) {
+            handleCheckout(false, true); // isApprovalOnly = false, isCreditSale = true
+        }
+    };
+
     const handleBillSelected = (bill) => {
 
         console.log(bill, "bill");
@@ -1055,11 +1295,16 @@ const PointOfSale = () => {
             setIsGuestCustomer(false);
             setGuestName(bill.Party.name);
             setGuestMobile(bill.Party.contact);
+            // Fetch credit balance for this customer
+            fetchCreditBalance(bill.Party.id).unwrap().then(res => {
+                if (res.statusCode === 0) setAvailableCredit(res.data);
+            });
         } else {
             setSelectedCustomer(null);
             setIsGuestCustomer(true);
             setGuestName(bill.customerName || "Walk-in");
             setGuestMobile(bill.customerMobile || "");
+            setAvailableCredit(0);
         }
 
         const returnItems = (bill.PosItems || []).map(item => {
@@ -1078,7 +1323,15 @@ const PointOfSale = () => {
             };
         });
 
-        setCart(prev => [...prev, ...returnItems]);
+        setCart(prev => {
+            // Remove any existing return items for this specific bill first
+            const filteredCart = prev.filter(item =>
+                !(item.isReturn && item.retunBillId === bill.id)
+            );
+
+            // Add all currently selected return items
+            return [...filteredCart, ...returnItems];
+        });
         Swal.fire({
             title: 'Items Added',
             text: `${returnItems.length} items from Bill ${bill.docId} added as returns.`,
@@ -1100,6 +1353,10 @@ const PointOfSale = () => {
         setGuestName("Walk-in")
         setIsGuestCustomer(true)
         setSelectedCustomer(null)
+        setTransactionType("SALE")
+        setSearchQuery("")
+        setCurrentBilStatus("PAID")
+        setAvailableCredit(0)
     }
 
     const onViewStock = (item) => {
@@ -1125,13 +1382,12 @@ const PointOfSale = () => {
                 Swal={Swal}
                 salesNo={exchangeSalesNo}
                 setSalesNo={setExchangeSalesNo}
+                setTransactionType={setTransactionType}
+                cart={cart}
             />
 
 
-            <BarcodeResolutionModal
-                barcodeResolution={barcodeResolution}
-                setBarcodeResolution={setBarcodeResolution}
-            />
+
 
             {showReports ? (
                 <div className="flex flex-col h-[85vh] bg-[#f1f5f9] text-slate-800 overflow-hidden font-sans select-none border border-slate-200">
@@ -1150,6 +1406,13 @@ const PointOfSale = () => {
                         selectedReportSaleId={selectedReportSaleId}
                         approvalStatus={approvalStatus}
                         isAdmin={isAdmin}
+                        onNew={onNew}
+                        suggestions={suggestions}
+                        showSuggestions={showSuggestions}
+                        setShowSuggestions={setShowSuggestions}
+                        onSelectSuggestion={handleSelectSuggestion}
+                        searchMode={searchMode}
+                        setSearchMode={setSearchMode}
                     />
 
                     <div className="flex-1 flex overflow-hidden">
@@ -1196,7 +1459,14 @@ const PointOfSale = () => {
                             selectedReportSaleId={selectedReportSaleId}
                             isAdmin={isAdmin}
                             handleRequestDiscount={handleRequestDiscount}
+                            handleSaveUnpaid={handleSaveUnpaid}
                             approvalStatus={approvalStatus}
+                            currentBilStatus={currentBilStatus}
+                            transactionType={transactionType}
+                            availableCredit={availableCredit}
+                            availableReturnBills={availableReturnBills}
+                            selectedReturnBills={selectedReturnBills}
+                            setSelectedReturnBills={setSelectedReturnBills}
                         />
 
                     </div>
@@ -1208,6 +1478,7 @@ const PointOfSale = () => {
                         discountRef={discountRef}
                         setShowReports={setShowReports}
                         handlePayNow={handlePayNow}
+                        handleSaveUnpaid={handleSaveUnpaid}
                         scannerRef={scannerRef}
                     />
                 </div>
@@ -1226,7 +1497,7 @@ const PointOfSale = () => {
                                 <option value="RETURN">Returns Only</option>
                             </select>
                         </div>
-                        <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => { onNew() }}>
+                        <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => { onNew() }}>
                             <Plus size={14} /> Create New
                         </button>
                     </div>
@@ -1279,6 +1550,7 @@ const PointOfSale = () => {
                 checkRefNo={checkRefNo}
                 isAdmin={isAdmin}
                 setIsProcessing={setIsProcessing}
+                availableCredit={availableCredit}
             />
 
             <ReceiptViewerModal
@@ -1310,6 +1582,11 @@ const PointOfSale = () => {
                         fulfillments
                     );
                 }}
+            />
+
+            <BarcodeResolutionModal
+                barcodeResolution={barcodeResolution}
+                setBarcodeResolution={setBarcodeResolution}
             />
         </>
     );
