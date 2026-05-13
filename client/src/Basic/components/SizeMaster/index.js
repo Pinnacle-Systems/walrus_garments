@@ -372,7 +372,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                         />
                                     </div>
                                     <div className=''>
-                                        <TextInputNew1 name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly} disabled={(childRecord > 0)}
+                                        <TextInputNew1 name="Code" type="text" value={code} setValue={setCode} required={true} readOnly={readOnly}
                                         />
                                     </div>
 

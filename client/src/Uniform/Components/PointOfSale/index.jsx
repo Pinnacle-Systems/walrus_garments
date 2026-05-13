@@ -1118,7 +1118,7 @@ const PointOfSale = () => {
 
     const handleCheckout = async (isApprovalOnly = false, isCreditSale = false) => {
         if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
-        if (!isApprovalOnly && !isCreditSale && receivedAmount !== absNetPayableValue) { Swal.fire({ title: "Error", text: "Payment amount mismatch", icon: "error" }); return; }
+        if (!isApprovalOnly && !isCreditSale && transactionType !== "RETURN" && receivedAmount !== absNetPayableValue) { Swal.fire({ title: "Error", text: "Payment amount mismatch", icon: "error" }); return; }
 
 
         // const result = await Swal.fire({
