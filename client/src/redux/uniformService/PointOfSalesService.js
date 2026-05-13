@@ -74,11 +74,25 @@ const pointOfSalesApi = createApi({
             }),
             invalidatesTags: ["pointOfSales"],
         }),
+        cancelPointOfSales: builder.mutation({
+            query: (id) => ({
+                url: `${POINT_OF_SALES}/cancel/${id}`,
+                method: "PUT",
+            }),
+            invalidatesTags: ["pointOfSales"],
+        }),
         checkReferenceNumber: builder.query({
             query: (refNo) => ({
                 url: `${POINT_OF_SALES}/check-ref`,
                 method: "GET",
                 params: { refNo }
+            })
+        }),
+        getPartyCreditBalance: builder.query({
+            query: (partyId) => ({
+                url: `${POINT_OF_SALES}/credit-balance`,
+                method: "GET",
+                params: { partyId }
             })
         }),
     }),
@@ -92,7 +106,9 @@ export const {
     useAddPointOfSalesMutation,
     useUpdatePointOfSalesMutation,
     useDeletePointOfSalesMutation,
-    useLazyCheckReferenceNumberQuery
+    useCancelPointOfSalesMutation,
+    useLazyCheckReferenceNumberQuery,
+    useLazyGetPartyCreditBalanceQuery
 } = pointOfSalesApi;
 
 export default pointOfSalesApi;

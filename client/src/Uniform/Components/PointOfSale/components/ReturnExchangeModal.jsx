@@ -12,11 +12,13 @@ const ReturnExchangeModal = ({
     Swal,
     salesNo,
     setSalesNo,
-    setShowReturnExchnageModal
+    setShowReturnExchnageModal,
+    setTransactionType,
+    cart
 }) => {
     const { branchId, companyId, finYearId } = getCommonParams();
     const [selectedBill, setSelectedBill] = useState(null);
-    const [selectedIndices, setSelectedIndices] = useState([]);
+    const [selectedItemIds, setSelectedItemIds] = useState([]);
     const [fetchBillById, {
         isFetching: isSingleFetching,
     }] = useLazyGetPointOfSalesByIdQuery();
@@ -35,19 +37,33 @@ const ReturnExchangeModal = ({
         }
     }, [isOpen, branchId, companyId, finYearId, fetchBills]);
 
-    const billOptions = (billsData?.data || [])?.filter(item => !item.isReturn)?.map(b => ({
-        value: String(b.id),
-        label: `${b.docId}`,
-        bill: b
-    }));
+    useEffect(() => {
+        if (isOpen && salesNo && !selectedBill) {
+            handleSearch(salesNo);
+        }
+    }, [isOpen, salesNo]);
+
+    const billOptions = (billsData?.data || [])
+        ?.filter(item =>
+            !item.isReturn &&
+            item?.bilStatus === "PAID")?.map(b => ({
+                value: String(b.id),
+                label: `${b.docId}`,
+                bill: b
+            }));
 
     useEffect(() => {
         if (selectedBill) {
-            setSelectedIndices(selectedBill.PosItems?.map((_, i) => i) || []);
+            const itemsInCart = cart?.filter(item => item.isReturn && item.retunBillId === selectedBill.id) || [];
+            if (itemsInCart.length > 0) {
+                setSelectedItemIds(itemsInCart.map(item => item.originalItemId));
+            } else {
+                setSelectedItemIds([]);
+            }
         } else {
-            setSelectedIndices([]);
+            setSelectedItemIds([]);
         }
-    }, [selectedBill]);
+    }, [selectedBill, cart]);
 
     const handleSearch = async (id = salesNo) => {
         const searchId = id?.trim();
@@ -68,37 +84,49 @@ const ReturnExchangeModal = ({
     };
 
     const handleConfirm = () => {
-        if (!selectedBill || selectedIndices.length === 0) return;
+        if (!selectedBill || selectedItemIds.length === 0) return;
         const filteredBill = {
             ...selectedBill,
-            PosItems: selectedBill.PosItems.filter((item, i) => selectedIndices.includes(i) && !item.retunBillId)
+            PosItems: selectedBill.PosItems.filter((item) => selectedItemIds.includes(item.id))
         };
+        console.log(selectedBill, "selectedBill")
         onBillSelected(filteredBill);
-        handleModalClose();
+        setSelectedBill(null);
+        setSelectedItemIds([]);
+        setShowReturnExchnageModal(false);
+
     };
 
     const handleModalClose = () => {
         setSelectedBill(null);
-        setSelectedIndices([]);
+        setSelectedItemIds([]);
         setShowReturnExchnageModal(false);
+
+        // Only reset to SALE if no return items are in the cart
+        const hasReturnItems = cart?.some(item => item.isReturn);
+        if (!hasReturnItems) {
+            setTransactionType("SALE")
+            setSalesNo(null);
+        }
     };
 
-    const toggleItem = (idx) => {
-        setSelectedIndices(prev =>
-            prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    const toggleItem = (id) => {
+        setSelectedItemIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
         );
     };
 
     const toggleAll = () => {
-        if (selectedIndices.length === selectedBill?.PosItems?.length) {
-            setSelectedIndices([]);
+        const returnableItems = selectedBill?.PosItems?.filter(i => !i.retunBillId) || [];
+        if (selectedItemIds.length === returnableItems.length) {
+            setSelectedItemIds([]);
         } else {
-            setSelectedIndices(selectedBill?.PosItems?.map((_, i) => i) || []);
+            setSelectedItemIds(returnableItems.map(item => item.id));
         }
     };
 
     return (
-        <Modal isOpen={isOpen} widthClass="w-[850px]" onClose={handleModalClose}>
+        <Modal isOpen={isOpen} widthClass="w-[90%] h-[90%]" onClose={handleModalClose}>
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="p-4 bg-gradient-to-br from-indigo-900 to-slate-900 text-white flex justify-between items-center shrink-0">
@@ -111,10 +139,8 @@ const ReturnExchangeModal = ({
                             <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-tighter">Reference Original Bill</p>
                         </div>
                     </div>
-                    <button onClick={handleModalClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                        <X size={18} />
-                    </button>
-                </div>
+
+                </div>{console.log(salesNo, "salesNo", billOptions)}
 
                 <div className="p-4 border-b border-slate-100 bg-slate-50/50">
                     <div className="flex gap-2">
@@ -191,14 +217,14 @@ const ReturnExchangeModal = ({
 
                             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
                                 <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                                    <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">Select Stock Row</h3>
-                                    <button
+                                    <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">Select Return Items</h3>
+                                    {/* <button
                                         onClick={handleConfirm}
-                                        disabled={selectedIndices.length === 0}
+                                        disabled={selectedItemIds.length === 0}
                                         className="px-4 py-1.5 border border-green-500 text-green-600 bg-white rounded-md text-[10px] font-bold hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
                                     >
                                         Done
-                                    </button>
+                                    </button> */}
                                 </div>
 
                                 <div className="overflow-x-auto">
@@ -207,7 +233,7 @@ const ReturnExchangeModal = ({
                                             <tr>
                                                 <th className="p-2 border-r border-slate-200 w-10 text-center">
                                                     <button onClick={toggleAll} className="p-0.5 hover:bg-slate-200 rounded transition-colors inline-flex items-center">
-                                                        {selectedIndices.length === selectedBill.PosItems?.filter(i => !i.retunBillId).length && selectedIndices.length > 0 ?
+                                                        {selectedItemIds.length === selectedBill.PosItems?.filter(i => !i.retunBillId).length && selectedItemIds.length > 0 ?
                                                             <CheckSquare size={14} className="text-indigo-600" /> : <Square size={14} className="text-slate-400" />}
                                                     </button>
                                                 </th>
@@ -215,19 +241,21 @@ const ReturnExchangeModal = ({
                                                 <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase">Item</th>
                                                 <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-16">Size</th>
                                                 <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-20">Color</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-24">Location</th>
-                                                <th className="p-2 text-[9px] font-black text-slate-500 uppercase text-right w-32 px-4">Available Stock</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-20">Qty</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-20">Balance Qty</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {selectedBill.PosItems?.filter(i => !i.retunBillId).map((item, idx) => {
-                                                const isSelected = selectedIndices.includes(idx);
-                                                const availableQty = parseFloat(item.qty || 0) - (item.returnedQty || 0);
+                                                const isSelected = selectedItemIds.includes(item.id);
+                                                const availableQty = parseFloat(item.qty || 0) - parseFloat(item.returnedQty || 0);
+
+                                                { console.log("availableQty", availableQty) }
 
                                                 return (
                                                     <tr
-                                                        key={idx}
-                                                        onClick={() => availableQty > 0 && toggleItem(idx)}
+                                                        key={item.id}
+                                                        onClick={() => availableQty > 0 && toggleItem(item.id)}
                                                         className={`border-b border-slate-100 hover:bg-indigo-50/30 transition-colors cursor-pointer ${isSelected ? 'bg-indigo-50/50' : ''} ${availableQty <= 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}`}
                                                     >
                                                         <td className="p-2 border-r border-slate-200 text-center">
@@ -247,11 +275,17 @@ const ReturnExchangeModal = ({
                                                             {item.color || item.Color?.name || '-'}
                                                         </td>
                                                         <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
+                                                            {item.qty}
+                                                        </td>
+                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
+                                                            {availableQty}
+                                                        </td>
+                                                        {/* <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
                                                             RETAIL
                                                         </td>
                                                         <td className="p-2 text-[10px] font-black text-slate-700 text-right px-4">
                                                             {availableQty.toFixed(2)}
-                                                        </td>
+                                                        </td> */}
                                                     </tr>
                                                 );
                                             })}
@@ -281,15 +315,13 @@ const ReturnExchangeModal = ({
                     )}
                 </div>
 
-                <div className="p-4 bg-slate-50 border-t border-slate-100 shrink-0 md:hidden">
-                    <button
-                        onClick={handleConfirm}
-                        disabled={!selectedBill || selectedIndices.length === 0}
-                        className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg ${selectedBill && selectedIndices.length > 0 ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 active:scale-[0.98]' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
-                    >
-                        Fill {selectedIndices.length} Item(s) <ArrowRight size={16} />
-                    </button>
-                </div>
+                <button
+                    onClick={handleConfirm}
+                    disabled={!selectedBill || selectedItemIds.length === 0}
+                    className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg ${selectedBill && selectedItemIds.length > 0 ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 active:scale-[0.98]' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`}
+                >
+                    Fill {selectedItemIds.length} Item(s) <ArrowRight size={16} />
+                </button>
             </div>
         </Modal>
     );

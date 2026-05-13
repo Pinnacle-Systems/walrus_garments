@@ -8,7 +8,7 @@ import { getTableRecordWithId } from '../utils/helperQueries.js';
 
 
 
-async function getNextDocId(branchId, shortCode, startTime, endTime, transactionType) {
+async function getNextDocId(branchId, shortCode, startTime, endTime, isReturn) {
 
 
 
@@ -16,7 +16,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, transaction
     let lastObject = await prisma.pos.findFirst({
         where: {
             branchId: parseInt(branchId),
-            isReturn: transactionType == "RETURN" ? true : false,
+            isReturn: isReturn ? true : false,
             AND: [
                 {
                     createdAt: {
@@ -38,7 +38,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, transaction
 
     let prefix = "POS"
 
-    if (transactionType == "RETURN") {
+    if (isReturn) {
         prefix = "RE"
     }
 
@@ -60,6 +60,7 @@ async function get(req) {
         docId: serachDocNo ? { contains: serachDocNo } : undefined,
         Party: searchCustomerName ? { name: { contains: searchCustomerName } } : undefined,
         approvalStatus: approvalStatus ? approvalStatus : undefined,
+        customerId: req.query.customerId ? parseInt(req.query.customerId) : undefined,
         isReturn: reportsTransactionType === "RETURN" ? true : reportsTransactionType === "SALE" ? false : undefined,
 
 
@@ -93,7 +94,8 @@ async function get(req) {
                     Color: true,
                     Size: true
                 }
-            }
+            },
+            PosPayments: true,
         },
         orderBy: {
             id: "desc"
@@ -191,7 +193,8 @@ async function create(body) {
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
         const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-        let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, transactionType);
+        const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE/RETURN" && parseFloat(netAmount || 0) < 0);
+        let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
 
         const result = await prisma.$transaction(async (tx) => {
             // Stage 1: Initial Request from Salesperson
@@ -205,8 +208,9 @@ async function create(body) {
                     createdById: body.userId ? parseInt(body.userId) : undefined,
                     netAmount: netAmount ? String(netAmount) : "0",
                     approvalStatus: approvalStatus || "NONE",
+                    bilStatus: body.bilStatus || "PAID",
                     transactionType: transactionType ? transactionType : "DEFAULT",
-                    isReturn: transactionType === "RETURN" ? true : false,
+                    isReturn: isReturn,
                     PosItems: {
                         createMany: {
                             data: (posItems || []).map((item) => ({
@@ -281,9 +285,21 @@ async function create(body) {
                                 colorId: baseEntry.colorId,
                                 uomId: baseEntry.uomId,
                                 storeId: fStoreId,
-                                branchId: baseEntry.branchId
+                                branchId: baseEntry.branchId,
+                                barcode: baseEntry?.barcode
+
                             }
                         });
+
+                        console.log({
+                            itemId,
+                            sizeId: baseEntry.sizeId,
+                            colorId: baseEntry.colorId,
+                            uomId: baseEntry.uomId,
+                            storeId: fStoreId,
+                            branchId: baseEntry.branchId,
+                            barcode: baseEntry?.barcode
+                        }, "currentStock")
 
                         const available = parseFloat(currentStock._sum.qty || 0);
                         if (available < fQty) {
@@ -306,6 +322,19 @@ async function create(body) {
 
             await tx.stock.createMany({
                 data: stockEntries
+            });
+
+            await tx.ledger.create({
+                data: {
+                    EntryType: isReturn ? "Credit_Note" : "Sales",
+                    LedgerType: "Customer",
+                    creditOrDebit: isReturn ? "Credit" : "Debit",
+                    partyId: parseInt(customerId),
+                    amount: Math.abs(parseFloat(netAmount || 0)),
+                    partyBillNo: posRecord.docId,
+                    partyBillDate: new Date(),
+                    posId: posRecord.id
+                }
             });
 
             return posRecord;
@@ -339,18 +368,20 @@ async function update(id, body) {
         const result = await prisma.$transaction(async (tx) => {
             let finalDocId = dataFound.docId;
 
+            const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE/RETURN" && parseFloat(netAmount || 0) < 0);
+
             // Transition logic
             if (finalDocId === 'DRAFT' && body.approvalStatus === 'APPROVED') {
                 finalDocId = 'PROCEED';
             } else if (finalDocId === 'PROCEED' && body.approvalStatus === 'COMPLETED') {
                 const finYearDate = await getFinYearStartTimeEndTime(body.finYearId);
                 const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-                finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+                finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
             } else if (!finalDocId && body.approvalStatus === 'NONE') {
                 // For regular sales
                 const finYearDate = await getFinYearStartTimeEndTime(body.finYearId);
                 const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-                finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+                finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
             }
 
             // DELETE existing stock only if we are doing a real stock transaction
@@ -374,10 +405,11 @@ async function update(id, body) {
                     branchId: branchId ? parseInt(branchId) : undefined,
                     docId: finalDocId,
                     approvalStatus: body.approvalStatus || dataFound.approvalStatus,
-                    discountValue: String(discountValue || dataFound.discountValue),
+                    bilStatus: body.bilStatus || dataFound.bilStatus || "PAID",
+                    discountValue: discountValue ? String(discountValue) : undefined,
                     netAmount: String(netAmount || dataFound.netAmount),
                     transactionType: transactionType ? transactionType : "DEFAULT",
-                    isReturn: transactionType === "RETURN" ? true : false,
+                    isReturn: isReturn,
 
                     // updatedBy: body.userId ? { connect: { id: parseInt(body.userId) } } : undefined,
                 }
@@ -471,6 +503,34 @@ async function update(id, body) {
                 await tx.stock.createMany({ data: stockEntries });
             }
 
+            const existingLedger = await tx.ledger.findFirst({
+                where: { posId: parseInt(id) }
+            });
+
+            const ledgerData = {
+                EntryType: isReturn ? "Credit_Note" : "Sales",
+                creditOrDebit: isReturn ? "Credit" : "Debit",
+                amount: Math.abs(parseFloat(netAmount || updatedPos.netAmount || 0)),
+                partyId: parseInt(customerId || updatedPos.customerId),
+                partyBillNo: updatedPos.docId,
+            };
+
+            if (existingLedger) {
+                await tx.ledger.update({
+                    where: { id: existingLedger.id },
+                    data: ledgerData
+                });
+            } else {
+                await tx.ledger.create({
+                    data: {
+                        ...ledgerData,
+                        LedgerType: "Customer",
+                        partyBillDate: new Date(),
+                        posId: parseInt(id)
+                    }
+                });
+            }
+
             return updatedPos;
         });
 
@@ -518,6 +578,88 @@ async function checkReferenceNumber(req) {
     };
 }
 
+async function getPartyCreditBalance(req) {
+    const { partyId } = req.query;
+    if (!partyId) return { statusCode: 0, data: 0 };
+
+    const ledgerDebit = await prisma.ledger.aggregate({
+        _sum: { amount: true },
+        where: { partyId: parseInt(partyId), creditOrDebit: 'Debit' }
+    });
+
+    const ledgerCredit = await prisma.ledger.aggregate({
+        _sum: { amount: true },
+        where: { partyId: parseInt(partyId), creditOrDebit: 'Credit' }
+    });
+
+    const posPayments = await prisma.posPayments.findMany({
+        where: {
+            Pos: { customerId: parseInt(partyId) },
+            paymentMode: { not: 'STORE_CREDIT' }
+        },
+        select: { amount: true }
+    });
+
+    const totalDebit = ledgerDebit._sum.amount || 0;
+    const totalCredit = ledgerCredit._sum.amount || 0;
+    const totalPayments = posPayments.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+    // Balance = (Returns + Payments) - Sales
+    const availableCredit = (totalCredit + totalPayments) - totalDebit;
+
+    return { statusCode: 0, data: Math.max(0, availableCredit) };
+}
+
+async function cancel(id) {
+    try {
+        const dataFound = await prisma.pos.findUnique({
+            where: { id: parseInt(id) },
+            include: { PosItems: true }
+        });
+
+        if (!dataFound) return NoRecordFound("POS");
+        if (dataFound.bilStatus !== 'UNPAID') {
+            return { statusCode: 1, message: "Only unpaid bills can be canceled." };
+        }
+        if (dataFound.isCancel) {
+            return { statusCode: 1, message: "Bill is already canceled." };
+        }
+
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Mark as canceled
+            const updatedPos = await tx.pos.update({
+                where: { id: parseInt(id) },
+                data: { isCancel: true }
+            });
+
+            // 2. Reverse Stock
+            // We delete the existing stock entries for this POS transaction
+            await tx.stock.deleteMany({
+                where: {
+                    transactionId: parseInt(id),
+                    OR: [
+                        { inOrOut: "POS" },
+                        { inOrOut: "StockTransferOut" },
+                        { inOrOut: "StockTransferIn" }
+                    ]
+                }
+            });
+
+            // 3. Reverse Ledger
+            await tx.ledger.deleteMany({
+                where: { posId: parseInt(id) }
+            });
+
+            return updatedPos;
+        });
+
+        return { statusCode: 0, data: result };
+    } catch (error) {
+        console.error("POS Cancellation Error:", error);
+        return { statusCode: 1, message: "Failed to cancel sale: " + error.message };
+    }
+}
+
 export {
     get,
     getOne,
@@ -525,5 +667,7 @@ export {
     create,
     update,
     remove,
-    checkReferenceNumber
+    cancel,
+    checkReferenceNumber,
+    getPartyCreditBalance
 }

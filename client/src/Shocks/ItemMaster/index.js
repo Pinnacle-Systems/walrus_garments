@@ -31,6 +31,9 @@ import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavi
 import { SubCategoryMaster } from "..";
 import MasterPageLayout from "../../Basic/components/MasterPageLayout";
 import { toast } from "react-toastify";
+import { Reports } from "./ItemMasterReport";
+import ItemBarcodePrintModal from "./ItemBarcodePrintModal";
+
 
 
 const createStandardPriceRow = () => ({
@@ -88,6 +91,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [barcode, setBarcode] = useState("");
   const [childRecord, setChildRecord] = useState("")
   const [isSameAsBarcode, setIsSameAsBarcode] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [printId, setPrintId] = useState("");
+  const { data: printItemData } = useGetItemMasterByIdQuery(printId, { skip: !printId });
+
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
   const {
     firstInputRef: nameRef,
@@ -689,6 +696,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     setForm(true);
     setReadOnly(false);
   };
+
+  const handlePrintReport = (id) => {
+    setPrintId(id);
+    setIsPrintModalOpen(true);
+  };
+
 
 
 
@@ -1629,14 +1642,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       onKeyDown={handleKeyDown}
       titleClassName="text-xl font-bold font-segoe text-gray-800"
     >
-      <ReusableTable
+      <Reports
         columns={columns}
         data={allData?.data || []}
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        printData={handlePrintReport}
         itemsPerPage={15}
       />
+
       {form && (
         <Modal
           isOpen={form}
@@ -2212,6 +2227,20 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           }}
         />
       )}
+
+      {isPrintModalOpen && (
+        <ItemBarcodePrintModal
+          isOpen={isPrintModalOpen}
+          onClose={() => {
+            setIsPrintModalOpen(false);
+            setPrintId("");
+          }}
+          item={printItemData?.data}
+          sizeData={sizeData}
+          colorData={colorData}
+        />
+      )}
     </MasterPageLayout>
+
   );
 }

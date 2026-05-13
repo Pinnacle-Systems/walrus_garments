@@ -81,7 +81,8 @@ async function get(req) {
             },
             Payment: {
                 where: { isDeleted: false }
-            }
+            },
+            Ledger: true
         }
 
     });
@@ -171,34 +172,11 @@ async function get(req) {
 
     if (isPaymentOutstanding === true || isPaymentOutstanding === "true") {
         data = data.map(party => {
-            const totalDeliveryValue = (party.SalesDelivery || []).reduce((acc, sale) => {
-                const itemsAmount = (sale.SalesDeliveryItems || []).reduce((itemAcc, curr) => {
-                    const price = parseFloat(curr.price || 0);
-                    const qty = parseFloat(curr.deliveryQty || 0);
-                    const taxPercent = parseFloat(curr.taxPercent || 0);
-                    const taxMethod = curr.taxMethod || "Inclusive";
-                    const lineDiscountType = curr.discountType;
-                    const lineDiscountValue = parseFloat(curr.discountValue || 0);
+            const ledgerDebit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Debit').reduce((acc, l) => acc + (l.amount || 0), 0);
+            const ledgerCredit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Credit').reduce((acc, l) => acc + (l.amount || 0), 0);
 
-                    let rowTotal = price * qty;
-                    if (lineDiscountType === "Percentage") {
-                        rowTotal -= (rowTotal * lineDiscountValue) / 100;
-                    } else if (lineDiscountType === "Flat") {
-                        rowTotal -= lineDiscountValue;
-                    }
-                    rowTotal = Math.max(0, rowTotal);
-
-                    if (taxMethod === "Exclusive") {
-                        rowTotal += (rowTotal * taxPercent) / 100;
-                    }
-
-                    return itemAcc + rowTotal;
-                }, 0);
-
-                const packingCharge = sale.packingChargeEnabled ? parseFloat(sale.packingCharge || 0) : 0;
-                const shippingCharge = sale.shippingChargeEnabled ? parseFloat(sale.shippingCharge || 0) : 0;
-                return acc + itemsAmount + packingCharge + shippingCharge;
-            }, 0);
+            // 🔹 Consolidated Delivery Value from Ledger (Now includes Sales Delivery, Returns, and POS)
+            const totalDeliveryValue = ledgerDebit - ledgerCredit;
 
             const totalPayments = (party.Payment || []).reduce((acc, pay) => {
                 return acc + (parseFloat(pay.paidAmount || 0));

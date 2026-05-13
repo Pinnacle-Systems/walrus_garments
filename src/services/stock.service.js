@@ -990,46 +990,7 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
     console.log("normalizedBarcode:", normalizedBarcode);
     console.log("normalizedBranchId:", normalizedBranchId);
 
-    // const stockRecords = await prisma.stock.findMany({
-    //     where: {
-    //         OR: [
-    //             { barcode: normalizedBarcode },
-    //             {
-    //                 Item: {
-    //                     ItemPriceList: {
-    //                         some: {              // ← LIST RELATION = use "some"
-    //                             ItemBarcodes: {
-    //                                 some: {     // ← LIST RELATION = use "some"
-    //                                     barcode: normalizedBarcode,
-    //                                     active: true
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         ],
-    //         branchId: normalizedBranchId,
-    //         // storeId: normalizedStoreId,
-    //     },
-    //     include: {
-    //         Item: {
-    //             include: {
-    //                 Hsn: true,
-    //                 ItemPriceList: {
-    //                     include: {
-    //                         ItemBarcodes: true
-    //                     }
-    //                 }
-    //             }
-    //         },
-    //         Size: true,
-    //         Color: true,
-    //         Uom: true,
-    //         Store: true,
 
-    //     }
-    // });
     const stockRecords = await prisma.stock.findMany({
         // where: {
         //     OR: [
@@ -1054,6 +1015,7 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
         where: {
             barcode: normalizedBarcode,
             branchId: normalizedBranchId,
+            storeId: normalizedStoreId,
         },
         include: {
             Item: {

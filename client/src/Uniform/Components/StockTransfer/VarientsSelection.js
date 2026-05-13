@@ -163,12 +163,13 @@ const VarientsSelection = ({ matches = [], onConfirm, onClose, stockDrivenFields
                                 currentItems.map((item, index) => (
                                     <tr
                                         key={matches.indexOf(item)}
-                                        className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] cursor-pointer ${index % 2 === 0 ? "bg-white" : "bg-gray-100"} ${isItemSelected(item) ? "bg-blue-50" : ""}`}
-                                        onClick={() => handleToggle(item)}
+                                        className={`hover:bg-gray-50 py-1 transition-colors border-b border-gray-200 text-[12px] ${item.stockQty <= 0 ? 'opacity-50 cursor-not-allowed bg-red-50/30' : 'cursor-pointer'} ${index % 2 === 0 ? "bg-white" : "bg-gray-100"} ${isItemSelected(item) ? "bg-blue-50" : ""}`}
+                                        onClick={() => item.stockQty > 0 && handleToggle(item)}
                                     >
                                         <td className='py-1 text-center' onClick={(e) => e.stopPropagation()}>
                                             <input
                                                 type="checkbox"
+                                                disabled={item.stockQty <= 0}
                                                 checked={isItemSelected(item)}
                                                 onChange={() => handleToggle(item)}
                                             />

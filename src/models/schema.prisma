@@ -824,6 +824,7 @@ model Hsn {
   PriceTemplateDetails PriceTemplateDetails[]
   PosItems             PosItems[]
   DeliveryChallanItems DeliveryChallanItems[]
+  SalesExchangeItems   SalesExchangeItems[]
 }
 
 model YarnBlend {
@@ -1149,6 +1150,7 @@ model Color {
   SalesReturnItems                   SalesReturnItems[]
   PosItems                           PosItems[]
   DeliveryChallanItems               DeliveryChallanItems[]
+  SalesExchangeItems                 SalesExchangeItems[]
 }
 
 model UnitOfMeasurement {
@@ -1203,6 +1205,7 @@ model UnitOfMeasurement {
   SalesReturnItems                          SalesReturnItems[]
   PosItems                                  PosItems[]
   DeliveryChallanItems                      DeliveryChallanItems[]
+  SalesExchangeItems                        SalesExchangeItems[]
 }
 
 enum DeliveryType {
@@ -1890,6 +1893,7 @@ model Size {
   SalesReturnItems                          SalesReturnItems[]
   PosItems                                  PosItems[]
   DeliveryChallanItems                      DeliveryChallanItems[]
+  SalesExchangeItems                        SalesExchangeItems[]
 }
 
 model SocksMaterial {
@@ -2830,8 +2834,12 @@ model Ledger {
   updatedAt         DateTime         @updatedAt
   CreditDebitNote   CreditDebitNote? @relation(fields: [creditDebitNoteId], references: [id], onDelete: Cascade)
   creditDebitNoteId Int?             @unique
-  SalesInvoice      SalesInvoice?    @relation(fields: [salesInvoiceId], references: [id], onDelete: Cascade)
-  salesInvoiceId    Int?             @unique
+  SalesDelivery     SalesDelivery?   @relation(fields: [salesDeliveryId], references: [id], onDelete: Cascade)
+  salesDeliveryId   Int?
+  SalesReturn       SalesReturn?     @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
+  salesReturnId     Int?
+  Pos               Pos?             @relation(fields: [posId], references: [id], onDelete: Cascade)
+  posId             Int?
 }
 
 model ProcessDeliveryReturn {
@@ -3502,7 +3510,7 @@ model CreditDebitNote {
   supplierId    Int?
   Branch        Branch       @relation(fields: [branchId], references: [id])
   branchId      Int
-  Ledger        Ledger?
+  Ledger        Ledger[]
   taxTemplateId Int?
 }
 
@@ -4980,6 +4988,7 @@ model Item {
   PosItems                           PosItems[]
   CollectionItems                    CollectionItems[]
   DeliveryChallanItems               DeliveryChallanItems[]
+  SalesExchangeItems                 SalesExchangeItems[]
 }
 
 model ItemBarcode {
@@ -5252,6 +5261,7 @@ model SalesDelivery {
   SalesDeliveryItems     SalesDeliveryItems[]
   FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
   SalesReturn            SalesReturn[]
+  Ledger                 Ledger[]
 }
 
 model SalesDeliveryItems {
@@ -5280,6 +5290,7 @@ model SalesDeliveryItems {
   priceType              String?
   FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
   SalesReturnItems       SalesReturnItems[]
+  SalesExchangeItems     SalesExchangeItems[]
 }
 
 model SalesDeliveryFulfillmentAllocation {
@@ -5333,7 +5344,6 @@ model SalesInvoice {
   saleOrderId           Int?
   Saleorder             Saleorder?          @relation(fields: [saleOrderId], references: [id])
   SalesInvoiceItems     SalesInvoiceItems[]
-  Ledger                Ledger?
 }
 
 model SalesInvoiceItems {
@@ -5360,40 +5370,69 @@ model SalesInvoiceItems {
 }
 
 model SalesReturn {
-  id                    Int                @id @default(autoincrement())
+  id                    Int                  @id @default(autoincrement())
   docId                 String?
   date                  DateTime?
-  Branch                Branch?            @relation(fields: [branchId], references: [id])
+  Branch                Branch?              @relation(fields: [branchId], references: [id])
   branchId              Int?
-  Party                 Party?             @relation(fields: [customerId], references: [id])
+  Party                 Party?               @relation(fields: [customerId], references: [id])
   customerId            Int?
-  createdAt             DateTime?          @default(now())
-  updatedAt             DateTime?          @updatedAt
-  createdBy             User?              @relation("createdBy", fields: [createdById], references: [id])
+  createdAt             DateTime?            @default(now())
+  updatedAt             DateTime?            @updatedAt
+  createdBy             User?                @relation("createdBy", fields: [createdById], references: [id])
   createdById           Int?
-  updatedBy             User?              @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy             User?                @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById           Int?
   taxType               String?
-  packingChargeEnabled  Boolean?           @default(false)
+  packingChargeEnabled  Boolean?             @default(false)
   packingCharge         String?
-  shippingChargeEnabled Boolean?           @default(false)
+  shippingChargeEnabled Boolean?             @default(false)
   shippingCharge        String?
-  Store                 Location?          @relation(fields: [storeId], references: [id])
+  returnChargeEnabled   Boolean?             @default(false)
+  returnChargeType      String?
+  returnCharge          String?
+  Store                 Location?            @relation(fields: [storeId], references: [id])
   storeId               Int?
   salesDeliveryId       Int?
   returnType            String?
   posId                 Int?
-  Pos                   Pos?               @relation("OriginalBill", fields: [posId], references: [id])
+  Pos                   Pos?                 @relation("OriginalBill", fields: [posId], references: [id])
   exchangePosId         Int?
-  ExchangePos           Pos?               @relation("ExchangeNewBill", fields: [exchangePosId], references: [id])
+  ExchangePos           Pos?                 @relation("ExchangeNewBill", fields: [exchangePosId], references: [id])
   refundType            String?
-  SalesDelivery         SalesDelivery?     @relation(fields: [salesDeliveryId], references: [id])
-  isDeleted             Boolean?           @default(false)
+  SalesDelivery         SalesDelivery?       @relation(fields: [salesDeliveryId], references: [id])
+  isDeleted             Boolean?             @default(false)
   SalesReturnItems      SalesReturnItems[]
   Expense               Expense[]
+  SalesExchangeItems    SalesExchangeItems[]
+  Ledger                Ledger[]
 }
 
 model SalesReturnItems {
+  id                  Int                 @id @default(autoincrement())
+  SalesReturn         SalesReturn?        @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
+  salesReturnId       Int?
+  SalesDeliveryItems  SalesDeliveryItems? @relation(fields: [salesDeliveryItemId], references: [id])
+  salesDeliveryItemId Int?
+  Item                Item?               @relation(fields: [itemId], references: [id])
+  itemId              Int?
+  Size                Size?               @relation(fields: [sizeId], references: [id])
+  sizeId              Int?
+  Color               Color?              @relation(fields: [colorId], references: [id])
+  colorId             Int?
+  Uom                 UnitOfMeasurement?  @relation(fields: [uomId], references: [id])
+  uomId               Int?
+  Hsn                 Hsn?                @relation(fields: [hsnId], references: [id])
+  hsnId               Int?
+  qty                 String?
+  price               String?
+  discountType        String?
+  discountValue       String?
+  taxMethod           String?
+  taxType             String?
+}
+
+model SalesExchangeItems {
   id                  Int                 @id @default(autoincrement())
   SalesReturn         SalesReturn?        @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
   salesReturnId       Int?
@@ -5496,11 +5535,6 @@ model Pos {
   discountValue       String?
   manualDiscount      String?
   netAmount           String?
-  paidCard            String?
-  paidCash            String?
-  paidOnline          String?
-  paidUPI             String?
-  paymentMethod       String?
   promotionalDiscount String?
   receivedAmount      String?
   roundOff            String?
@@ -5509,6 +5543,9 @@ model Pos {
   bilStatus           String?
   transactionType     String?
   isReturn            Boolean?      @default(false)
+  isRetrunBillId      Int?
+  isCancel            Boolean?      @default(false)
+  cancelReason        String?
   OriginalBill        SalesReturn[] @relation("OriginalBill")
   ExchangeNewBill     SalesReturn[] @relation("ExchangeNewBill")
   PosItems            PosItems[]    @relation("Bill")
@@ -5518,7 +5555,9 @@ model Pos {
   approvalStatus      String?       @default("NONE")
   approvedById        Int?
   approvedAt          DateTime?
+  availableCredit     Int?
   approver            User?         @relation("approver", fields: [approvedById], references: [id])
+  Ledger              Ledger[]
 }
 
 model PosItems {

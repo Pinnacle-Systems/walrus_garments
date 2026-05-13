@@ -19,6 +19,10 @@ import { useGetQuotationQuery } from "../../../redux/uniformService/quotationSer
 import { useGetSalesInvoiceQuery } from "../../../redux/uniformService/salesInvoiceServices";
 import { push } from "../../../redux/features/opentabs";
 import { useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
+import { PDFViewer } from "@react-pdf/renderer";
+import Modal from "../../../UiComponents/Modal";
+import PaymentThermalPrint from "./PaymentThermalPrint";
+import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 
 const PaymentForm = ({
     id, setId, onClose, initialReadOnly = false, initialTransactionType, initialTransactionId,
@@ -132,8 +136,9 @@ const PaymentForm = ({
 
     const today = new Date().toISOString().split('T')[0];
 
-    const { branchId, finYearId, userId } = getCommonParams();
-
+    const { branchId, finYearId, userId, companyId } = getCommonParams();
+    const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+    const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
 
     const hasLinkedTransaction = Boolean(transactionType && transactionId);
     const areLinkedFieldsLocked = readOnly || lockPrefilledTransactionFields;
@@ -157,8 +162,11 @@ const PaymentForm = ({
 
             console.log(data, "data in sync")
             // if (!id) return
-            // if (id) setReadOnly(true);
-            // else setReadOnly(false);
+            if (id) {
+                setTransactionType(data?.transactionType)
+                setTransactionId(data?.transactionId)
+            }
+
             setDocId(data?.docId ? data?.docId : "New");
             // if (data?.createdAt) setDate(moment.utc(data?.createdAt).format("YYYY-MM-DD"));
             setPaidAmount(data?.paidAmount || '');
@@ -173,8 +181,7 @@ const PaymentForm = ({
             setPartyId(data?.partyId || '');
             setTotalBillAmount(data?.totalBillAmount || '')
             setBillAmount(data?.billAmount || '')
-            setTransactionType(data?.transactionType)
-            setTransactionId(data?.transactionId)
+
             setCvv(data?.cvv ? moment.utc(data?.cvv).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"))
             setPaymentFlow(data?.paymentFlow ? data?.paymentFlow : "Receipt")
             childRecord.current = data?.childRecord ? data?.childRecord : 0;
@@ -377,9 +384,9 @@ const PaymentForm = ({
 
 
 
-    const { data: quotationList } = useGetQuotationQuery({ params: { branchId, finYearId } }, { skip: !supplierId });
-    const { data: salesInvoiceList } = useGetSalesInvoiceQuery({ params: { branchId, finYearId } }, { skip: !supplierId });
-    const { data: salesOrderList } = useGetsaleOrderQuery({ params: { branchId, finYearId } }, { skip: !supplierId });
+    const { data: quotationList } = useGetQuotationQuery({ params: { branchId, finYearId } });
+    const { data: salesInvoiceList } = useGetSalesInvoiceQuery({ params: { branchId, finYearId } });
+    const { data: salesOrderList } = useGetsaleOrderQuery({ params: { branchId, finYearId } });
 
     // const paymentHistory = (paymentList?.data || [])
     //     .filter((payment) =>
@@ -596,6 +603,14 @@ const PaymentForm = ({
 
     return (
         <>
+            <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
+                <PDFViewer style={{ width: "100%", height: "90vh" }}>
+                    <PaymentThermalPrint
+                        paymentData={singleData?.data}
+                        branchData={branchList?.data?.find(b => b.id === branchId)}
+                    />
+                </PDFViewer>
+            </Modal>
 
 
             <div onKeyDown={handleKeyDown} className='md:items-start md:justify-items-center grid h-[85vh] relative'>
@@ -951,6 +966,15 @@ const PaymentForm = ({
                                     <FiEdit2 className="w-4 h-4 mr-2" />
                                     Edit
                                 </button>
+                                {id && (
+                                    <button
+                                        className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm"
+                                        onClick={() => setThermalPrintOpen(true)}
+                                    >
+                                        <FiPrinter className="w-4 h-4 mr-2" />
+                                        Print Receipt
+                                    </button>
+                                )}
                             </div>
 
                             {linkedPaymentOverrideEnabled && !readOnly && (

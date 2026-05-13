@@ -27,6 +27,7 @@ import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import PosItemsSelection from "./posItemsSelection";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import SalesExchangeItems from "./SalesExchangeItems";
 
 
 
@@ -49,10 +50,9 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   const [remarks, setRemarks] = useState("")
   const [terms, setTerms] = useState("")
   const [term, setTerm] = useState("")
-  const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
-  const [packingCharge, setPackingCharge] = useState("");
-  const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
-  const [shippingCharge, setShippingCharge] = useState("");
+  const [returnChargeEnabled, setReturnChargeEnabled] = useState(false);
+  const [returnCharge, setReturnCharge] = useState("");
+  const [returnChargeType, setReturnChargeType] = useState("Flat");
   const [searchValue, setSearchValue] = useState("")
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
@@ -62,6 +62,8 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
   const [isHeaderOpen, setIsHeaderOpen] = useState(true);
   const [linkedDeliveryId, setLinkedDeliveryId] = useState(convertSalesDeliveryId || "");
+  const [salesType, setSalesType] = useState("Return");
+  const [exchangeItems, setExchangeItems] = useState([]);
 
 
 
@@ -75,9 +77,18 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   };
   const getWarehouseLocationId = useCallback(() => {
     const locations = locationData?.data || [];
-    return locations.find((location) => (
+    // Priority: Retail > Warehouse > First Active
+    const retail = locations.find((location) => (
+      String(location?.storeName || "").toLowerCase().includes("retail")
+    ));
+    if (retail) return retail.id;
+
+    const warehouse = locations.find((location) => (
       String(location?.storeName || "").toLowerCase().includes("warehouse")
-    ))?.id || "";
+    ));
+    if (warehouse) return warehouse.id;
+
+    return locations.find(l => l.active)?.id || "";
   }, [locationData]);
   const parseChargeAmount = (value) => {
     const parsedValue = parseFloat(value);
@@ -116,10 +127,9 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   useEffect(() => {
     if (!id) {
       setTerm("");
-      setPackingChargeEnabled(false);
-      setPackingCharge("");
-      setShippingChargeEnabled(false);
-      setShippingCharge("");
+      setReturnChargeEnabled(false);
+      setReturnCharge("");
+      setReturnChargeType("Flat");
     }
   }, [id]);
 
@@ -198,10 +208,9 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
         setRemarks("");
         setTerms("");
         setTerm("");
-        setPackingChargeEnabled(false);
-        setPackingCharge("");
-        setShippingChargeEnabled(false);
-        setShippingCharge("");
+        setReturnChargeEnabled(false);
+        setReturnCharge("");
+        setReturnChargeType("Flat");
         if (onNew) onNew();
         toast.success("Form cleared successfully");
       }
@@ -232,12 +241,12 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
     setRemarks(data?.remarks ? data?.remarks : "")
     setTerms(data?.terms ? data?.terms : "")
-    const nextPackingCharge = formatChargeValue(data?.packingCharge);
-    const nextShippingCharge = formatChargeValue(data?.shippingCharge);
-    setPackingCharge(nextPackingCharge);
-    setShippingCharge(nextShippingCharge);
-    setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
-    setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
+    const nextReturnCharge = formatChargeValue(data?.packingCharge);
+    setReturnCharge(nextReturnCharge);
+    setReturnChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextReturnCharge) > 0);
+    setReturnChargeType("Flat");
+    setSalesType(data?.returnType ? data?.returnType : "Return");
+    setExchangeItems(data?.ExchangeItems || []);
     if (data?.branchId) {
       branchIdFromApi.current = data?.branchId
     }
@@ -251,13 +260,64 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+  const getLineTotals = (line) => {
+    const quantity = Math.max(0, Number(line.qty));
+    const unitPrice = Math.max(0, Number(line.price));
+    const taxRate = Number(line.tax) || 0;
+    const taxMethod = line.taxMethod || "Inclusive";
+
+    const grossAmount = quantity * unitPrice;
+
+    if (taxMethod === "Inclusive" && taxRate > 0) {
+      const subtotal = grossAmount / (1 + taxRate / 100);
+      const taxAmount = grossAmount - subtotal;
+      return { subtotal, taxAmount, netAmount: grossAmount };
+    }
+
+    const subtotal = grossAmount;
+    const taxAmount = subtotal * (taxRate / 100);
+    return { subtotal, taxAmount, netAmount: subtotal + taxAmount };
+  };
+
+  const calculateTotals = () => {
+    const returnTotals = (deliveryItems || [])?.reduce((acc, curr) => {
+      const { subtotal, taxAmount, netAmount } = getLineTotals(curr);
+      acc.subtotal += subtotal;
+      acc.taxAmount += taxAmount;
+      acc.netAmount += netAmount;
+      return acc;
+    }, { subtotal: 0, taxAmount: 0, netAmount: 0 });
+
+    if (salesType === "Return") return returnTotals;
+
+    const exchangeTotals = (exchangeItems || [])?.reduce((acc, curr) => {
+      const { subtotal, taxAmount, netAmount } = getLineTotals(curr);
+      acc.subtotal += subtotal;
+      acc.taxAmount += taxAmount;
+      acc.netAmount += netAmount;
+      return acc;
+    }, { subtotal: 0, taxAmount: 0, netAmount: 0 });
+
+    return {
+      subtotal: exchangeTotals.subtotal - returnTotals.subtotal,
+      taxAmount: exchangeTotals.taxAmount - returnTotals.taxAmount,
+      netAmount: exchangeTotals.netAmount - returnTotals.netAmount,
+      rawReturnNet: returnTotals.netAmount,
+      rawExchangeNet: exchangeTotals.netAmount
+    };
+  }
+
+  const { subtotal, taxAmount, netAmount } = calculateTotals();
+
   const data = {
     docId,
     poType: transType,
     poInwardOrDirectInward,
-    supplierId: customerId, dcDate,
+    supplierId: customerId,
+    dcDate,
     payTermId,
-    id, userId,
+    id,
+    userId,
     storeId: getWarehouseLocationId(),
     deliveryItems: (deliveryItems || [])?.filter(i => i.itemId),
     discountType,
@@ -272,12 +332,18 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     customerId,
     terms,
     salesDeliveryId,
-    packingChargeEnabled,
-    packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
-    shippingChargeEnabled,
-    shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
-
-  }
+    packingChargeEnabled: returnChargeEnabled,
+    packingCharge: returnChargeEnabled
+      ? String((returnChargeType === "Percentage" ? (netAmount * parseChargeAmount(returnCharge)) / 100 : parseChargeAmount(returnCharge)).toFixed(2))
+      : "",
+    shippingChargeEnabled: false,
+    shippingCharge: "",
+    salesType,
+    exchangeItems: (exchangeItems || [])?.filter(i => i.itemId),
+    returnChargeType,
+    returnCharge,
+    returnChargeEnabled
+  };
 
   console.log(data, "data")
   const validateData = (data) => {
@@ -384,30 +450,51 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     }
     if (!data?.storeId) {
       Swal.fire({
-        title: "Warehouse return location not found",
-        text: "Please configure an active warehouse location before saving a sales return.",
+        title: "Return location not found",
+        text: "Please configure an active retail or warehouse location before saving.",
         icon: "warning",
       });
       return;
     }
     if (!isGridDatasValid(salesRows, false, finalMandatoryFields)) {
       Swal.fire({
-        title: "Please fill all Delivery Items Mandatory fields...!",
+        title: "Please fill all Return Items Mandatory fields...!",
         icon: "warning",
       });
       return;
+    }
+    if (salesType === "Exchange") {
+      const exchangeRows = (data?.exchangeItems || []).filter(i => i.itemId);
+      if (!isGridDatasValid(exchangeRows, false, finalMandatoryFields)) {
+        Swal.fire({
+          title: "Please fill all Exchange Items Mandatory fields...!",
+          icon: "warning",
+        });
+        return;
+      }
+
+      const { rawReturnNet, rawExchangeNet } = calculateTotals();
+
+      if (Math.abs(rawReturnNet - rawExchangeNet) > 0.01) {
+        Swal.fire({
+          icon: "warning",
+          title: "Exchange Value Mismatch",
+          text: `The Exchange Total (₹${rawExchangeNet.toFixed(2)}) must exactly match the Return Total (₹${rawReturnNet.toFixed(2)}).`,
+        });
+        return;
+      }
     }
     if (!window.confirm("Are you sure save the details ...?")) {
       return
     }
     if (nextProcess == "draft" && !id) {
-      handleSubmitCustom(addData, data = { ...data, draftSave: true }, "Added", nextProcess);
+      handleSubmitCustom(addData, { ...data, draftSave: true }, "Added", nextProcess);
     }
 
 
     else if (id && nextProcess == "draft") {
 
-      handleSubmitCustom(updateData, data = { ...data, draftSave: true }, "Updated", nextProcess);
+      handleSubmitCustom(updateData, { ...data, draftSave: true }, "Updated", nextProcess);
     }
     else if (id) {
 
@@ -419,59 +506,45 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
   function getTotalQty() {
     let qty = deliveryItems?.reduce((acc, curr) => { return acc + parseFloat(curr?.qty ? curr?.qty : 0) }, 0)
+    if (salesType === "Exchange") {
+      qty -= exchangeItems?.reduce((acc, curr) => { return acc + parseFloat(curr?.qty ? curr?.qty : 0) }, 0)
+    }
     return parseFloat(qty || 0).toFixed(3)
   }
 
-  const calculateTotals = () => {
-    return deliveryItems?.reduce((acc, curr) => {
-      const price = parseFloat(curr.price || 0);
-      const qty = parseFloat(curr.qty || 0);
-      const taxPercent = parseFloat(curr.tax || 0);
-      const subtotal = price * qty;
-      const taxAmount = (subtotal * taxPercent) / 100;
+  const extraCharges = !returnChargeEnabled ? 0 : (
+    returnChargeType === "Percentage"
+      ? (netAmount * parseChargeAmount(returnCharge)) / 100
+      : parseChargeAmount(returnCharge)
+  );
 
-      acc.subtotal += subtotal;
-      acc.taxAmount += taxAmount;
-      acc.netAmount += (subtotal + taxAmount);
-      return acc;
-    }, { subtotal: 0, taxAmount: 0, netAmount: 0 }) || { subtotal: 0, taxAmount: 0, netAmount: 0 };
-  }
-
-  const { subtotal, taxAmount, netAmount } = calculateTotals();
-  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
   const adjustedNetAmount = netAmount + extraCharges;
   const chargeRows = [
-    ...(packingChargeEnabled
+    ...(returnChargeEnabled
       ? [{
-        key: "packingCharge",
-        label: "Packing Charge",
+        key: "returnCharge",
+        label: "Return Charges",
         summaryColumn: "right",
         renderValue: () => (
-          <input
-            type="number"
-            value={packingCharge}
-            onChange={(event) => setPackingCharge(event.target.value)}
-            onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
-            readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
-          />
-        ),
-      }]
-      : []),
-    ...(shippingChargeEnabled
-      ? [{
-        key: "shippingCharge",
-        label: "Shipping Charge",
-        summaryColumn: "right",
-        renderValue: () => (
-          <input
-            type="number"
-            value={shippingCharge}
-            onChange={(event) => setShippingCharge(event.target.value)}
-            onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
-            readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
-          />
+          <div className="flex items-center gap-1">
+            <select
+              value={returnChargeType}
+              onChange={(e) => setReturnChargeType(e.target.value)}
+              disabled={readOnly}
+              className={`h-7 rounded border border-slate-300 bg-white px-1 text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : ""}`}
+            >
+              <option value="Flat">₹</option>
+              <option value="Percentage">%</option>
+            </select>
+            <input
+              type="number"
+              value={returnCharge}
+              onChange={(event) => setReturnCharge(event.target.value)}
+              onBlur={() => setReturnCharge(formatChargeValue(returnCharge))}
+              readOnly={readOnly}
+              className={`h-7 w-16 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            />
+          </div>
         ),
       }]
       : []),
@@ -546,28 +619,16 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       }))}
       chargeOptions={[
         {
-          key: "packingChargeToggle",
-          label: "Packing",
-          checked: packingChargeEnabled,
+          key: "returnChargeToggle",
+          label: "Return Charges",
+          checked: returnChargeEnabled,
           onToggle: (checked) => {
-            setPackingChargeEnabled(checked);
+            setReturnChargeEnabled(checked);
             if (!checked) {
-              setPackingCharge("");
-            } else if (!packingCharge) {
-              setPackingCharge("0.00");
-            }
-          },
-        },
-        {
-          key: "shippingChargeToggle",
-          label: "Shipping",
-          checked: shippingChargeEnabled,
-          onToggle: (checked) => {
-            setShippingChargeEnabled(checked);
-            if (!checked) {
-              setShippingCharge("");
-            } else if (!shippingCharge) {
-              setShippingCharge("0.00");
+              setReturnCharge("");
+              setReturnChargeType("Flat");
+            } else if (!returnCharge) {
+              setReturnCharge("0.00");
             }
           },
         },
@@ -726,9 +787,22 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
         headerContent={(
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 
-            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-2">
+            <TransactionHeaderSection title="Basic Details" className="col-span-1" bodyClassName="grid-cols-3">
               <ReusableInput label="Sales Return No" readOnly value={docId} />
               <ReusableInput label="Sales Return Date" value={date} type={"date"} required={true} readOnly={true} disabled />
+              <div className="col-span-1">
+                <DropdownInput
+                  name="Return Type"
+                  options={[
+                    { value: "Return", show: "Return" },
+                    { value: "Exchange", show: "Exchange" }
+                  ]}
+                  value={salesType}
+                  setValue={setSalesType}
+                  readOnly={readOnly || id}
+                  required={true}
+                />
+              </div>
             </TransactionHeaderSection>
 
             <TransactionHeaderSection title="Customer Details" className="col-span-2 overflow-visible" bodyClassName="grid-cols-7 gap-1 overflow-visible">
@@ -813,14 +887,30 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
           </div>
         )}
       >
-        <div className="min-h-0 flex-1 overflow-hidden">
-          <fieldset className="h-full min-h-0">
-            <SalesReturnItems
-              deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
-              handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
-              itemList={itemList} sizeList={sizeList}
-            />
-          </fieldset>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className={`h-full flex ${salesType === "Exchange" ? "flex-col gap-4" : "flex-col"}`}>
+            <div className={salesType === "Exchange" ? "h-1/2" : "h-full"}>
+              <SalesReturnItems
+                title={salesType === "Exchange" ? "Return Items" : ""}
+                type="Return"
+                deliveryItems={deliveryItems} setDeliveryItems={setDeliveryItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={handleRightClick} contextMenu={contextMenu}
+                handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
+                itemList={itemList} sizeList={sizeList}
+                handlers={handlers} movedToNextSaveNewRef={movedToNextSaveNewRef}
+              />
+            </div>
+            {salesType === "Exchange" && (
+              <div className="h-1/2">
+                <SalesExchangeItems
+                  title="Exchange Items"
+                  deliveryItems={exchangeItems} setDeliveryItems={setExchangeItems} setInwardItemSelection={setInwardItemSelection} supplierId={customerId} handleRightClick={(e, index) => handleRightClick(e, index, "exchange")} contextMenu={contextMenu}
+                  handleCloseContextMenu={handleCloseContextMenu} yarnList={yarnList} colorList={colorList} uomList={uomList}
+                  itemList={itemList} sizeList={sizeList}
+                  handlers={handlers} movedToNextSaveNewRef={movedToNextSaveNewRef}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </TransactionEntryShell>
     </>

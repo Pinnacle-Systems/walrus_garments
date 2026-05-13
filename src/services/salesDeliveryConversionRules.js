@@ -164,9 +164,14 @@ export function getRemainingQtyBySaleOrderItemId(saleOrder, excludeSalesDelivery
       const saleOrderItemId = resolveSaleOrderItemId(deliveryItem, saleOrderItems);
       if (!saleOrderItemId) continue;
 
+      const returnedQty = (deliveryItem?.SalesReturnItems || []).reduce(
+        (sum, returnItem) => sum + parseAmount(returnItem?.qty),
+        0
+      );
+
       deliveredQtyBySaleOrderItemId.set(
         saleOrderItemId,
-        (deliveredQtyBySaleOrderItemId.get(saleOrderItemId) || 0) + parseAmount(deliveryItem?.qty)
+        (deliveredQtyBySaleOrderItemId.get(saleOrderItemId) || 0) + (parseAmount(deliveryItem?.qty) - returnedQty)
       );
     }
   }

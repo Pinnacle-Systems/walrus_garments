@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ReusableSearchableInputNewCustomerwithBranches, TextInput, TextInputNew } from '../../../Inputs';
+import { DropdownInputNew, ReusableSearchableInputNewCustomerwithBranches, TextInput, TextInputNew } from '../../../Inputs';
 import { GenerateButton } from '../../../Buttons';
 import Modal from '../../../UiComponents/Modal';
 import tw from '../../../Utils/tailwind-react-pdf';
@@ -15,10 +15,12 @@ import { useGetBranchByIdQuery } from '../../../redux/services/BranchMasterServi
 import { FaPlus } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import { useGetFinYearByIdQuery } from '../../../redux/services/FinYearMasterService';
+import { dropDownListObject } from '../../../Utils/contructObject';
 
 
 const Ledger = () => {
     const openTabs = useSelector((state) => state.openTabs);
+    const { token, ...params } = getCommonParams();
 
     const currentDate = moment(new Date()).format("YYYY-MM-DD");
     const [partyId, setPartyId] = useState('');
@@ -26,9 +28,8 @@ const Ledger = () => {
     const [endDate, setEndDate] = useState(currentDate);
     const [printModalOpen, setPrintModalOpen] = useState(false);
     const { data } = useGetPartyQuery({ params: { isPartyLedgerReport: true, partyId, startDate, endDate } }, { skip: !partyId || !startDate || !endDate })
-    const { token, ...params } = getCommonParams();
 
-
+    const { data: customerList } = useGetPartyQuery({ params: { ...params } });
     const { branchId, finYearId } = getCommonParams()
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
 
@@ -102,7 +103,7 @@ const Ledger = () => {
                             />
                         </div> */}
 
-                        <div className='col-span-3'>
+                        {/* <div className='col-span-3'>
 
                             <ReusableSearchableInputNewCustomerwithBranches
                                 label="Customer Name"
@@ -113,9 +114,21 @@ const Ledger = () => {
                                 searchTerm={partyId}
                                 show={"isClient"}
                                 required={true}
-                            // disabled={id}
-                            // ref={firstInputRef}
-                            // nextRef={secondInputRef}
+
+                            />
+                        </div> */}
+
+                        <div className="col-span-2">
+                            <DropdownInputNew
+                                name="Customer"
+                                options={dropDownListObject(
+                                    customerList?.data?.filter(item => item.active),
+                                    "name",
+                                    "id"
+                                )}
+                                value={partyId}
+                                setValue={setPartyId}
+
                             />
                         </div>
 

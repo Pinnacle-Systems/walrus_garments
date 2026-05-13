@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
@@ -9,7 +9,6 @@ import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import Swal from "sweetalert2";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
-import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import { useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService";
 import {
     getCatalogColorOptions,
@@ -35,10 +34,10 @@ import TransactionLineItemsSection, {
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 import { ItemMaster } from "../../../Shocks";
 
-const SalesReturnItems = ({
+const SalesExchangeItems = ({
     id,
     transType,
-    deliveryItems,
+    deliveryItems, // These are exchangeItems
     setDeliveryItems,
     readOnly,
     params,
@@ -52,8 +51,7 @@ const SalesReturnItems = ({
     supplierId,
     itemList,
     sizeList,
-    title = "",
-    type = "Return",
+    title = "Exchange Items",
     handlers,
     movedToNextSaveNewRef
 }) => {
@@ -87,7 +85,7 @@ const SalesReturnItems = ({
         const taxMethod = line.taxMethod || "Inclusive";
 
         const grossAmount = quantity * unitPrice;
-        let discountedAmount = grossAmount;
+        let discountedAmount = grossAmount; // No discount for now as per current structure
 
         if (taxMethod === "Inclusive" && taxRate > 0) {
             const subTotal = discountedAmount / (1 + taxRate / 100);
@@ -100,7 +98,7 @@ const SalesReturnItems = ({
         return { subTotal, taxTotal, total: subTotal + taxTotal };
     };
 
-    const handleInputChange = (value, index, field, item) => {
+    const handleInputChange = (value, index, field) => {
         const newBlend = structuredClone(deliveryItems);
         if (field === "itemId") {
             const selectedItem = findSelectedItem(value);
@@ -146,17 +144,6 @@ const SalesReturnItems = ({
                 } else if (field === "itemId") {
                     newBlend[index]["price"] = 0;
                 }
-            }
-        }
-
-        if (field === "qty") {
-            if (parseFloat(item?.balanceQty || 0) < parseFloat(value || 0)) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Return Quantity cannot be greater than Balance Quantity",
-                });
-                return
             }
         }
 
@@ -266,8 +253,7 @@ const SalesReturnItems = ({
                                 )}
                                 <th className={`${compactHeaderCellClassName} w-20`}>Hsn</th>
                                 <th className={`${compactHeaderCellClassName} w-12`}>UOM</th>
-                                <th className={`${compactHeaderCellClassName} w-16`}>Balance Qty</th>
-                                <th className={`${compactHeaderCellClassName} w-16`}>Return Qty</th>
+                                <th className={`${compactHeaderCellClassName} w-16`}>Exchange Qty</th>
                                 <th className={`${compactHeaderCellClassName} w-16`}>Price</th>
                                 <th className={`${compactHeaderCellClassName} w-24`}>Barcode Type</th>
                                 <th className={`${compactHeaderCellClassName} w-20`}>Tax Type</th>
@@ -293,7 +279,7 @@ const SalesReturnItems = ({
                                         key={index}
                                         className={`${transactionTableRowClassName}  ${index % 2 === 0 ? "bg-white" : "bg-gray-100"} `} onContextMenu={(e) => {
                                             if (!readOnly) {
-                                                handleRightClick(e, index, type);
+                                                handleRightClick(e, index, "exchange");
                                             }
                                         }}
                                     >
@@ -359,14 +345,10 @@ const SalesReturnItems = ({
                                         </td>
 
                                         <td className={`${compactFocusCellClassName} w-40 text-right`}>
-                                            {parseFloat(row?.balanceQty || 0).toFixed(2)}
-                                        </td>
-
-                                        <td className={`${compactFocusCellClassName} w-40 text-right`}>
                                             <input
                                                 onKeyDown={e => {
                                                     if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault()
-                                                    if (e.key === "Delete") { handleInputChange("0.000", index, "qty", row) }
+                                                    if (e.key === "Delete") { handleInputChange("0.000", index, "qty") }
                                                 }}
                                                 min={"0"}
                                                 type="number"
@@ -375,10 +357,10 @@ const SalesReturnItems = ({
                                                 value={row?.qty}
                                                 disabled={readOnly || !row.uomId}
                                                 onChange={(e) =>
-                                                    handleInputChange(e.target.value, index, "qty", row)
+                                                    handleInputChange(e.target.value, index, "qty")
                                                 }
                                                 onBlur={(e) => {
-                                                    handleInputChange(parseFloat(e.target.value).toFixed(2), index, "qty", row);
+                                                    handleInputChange(parseFloat(e.target.value).toFixed(2), index, "qty");
                                                 }
                                                 }
                                             />
@@ -468,7 +450,7 @@ const SalesReturnItems = ({
                             })}
                         </tbody>
                     </table>
-                    {contextMenu && contextMenu.type === type && (
+                    {contextMenu && contextMenu.type === "exchange" && (
                         <div
                             style={{
                                 position: "absolute",
@@ -510,4 +492,4 @@ const SalesReturnItems = ({
     );
 };
 
-export default SalesReturnItems;
+export default SalesExchangeItems;
