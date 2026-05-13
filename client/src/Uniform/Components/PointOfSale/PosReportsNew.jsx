@@ -572,21 +572,20 @@ const PosReportsNew = ({
                                                             <FiPrinter className="h-4 w-4" />
                                                         </button>
 
-                                                        {dataObj.bilStatus === "UNPAID" && !dataObj.isCancel && (
-                                                            <button
-                                                                className="text-red-600 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleCancel(dataObj.id);
-                                                                }}
-                                                                title="Cancel Bill"
-                                                            >
-                                                                <FiXCircle className="h-4 w-4" />
-                                                            </button>
-                                                        )}
-                                                        {dataObj.isCancel && (
+                                                        <button
+                                                            className="text-red-600 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleCancel(dataObj.id);
+                                                            }}
+                                                            disabled={dataObj.bilStatus !== "UNPAID"}
+                                                            title="Cancel Bill"
+                                                        >
+                                                            <FiXCircle className="h-4 w-4" />
+                                                        </button>
+                                                        {/* {dataObj.isCancel && (
                                                             <span className="text-red-500 text-[10px] font-bold uppercase border border-red-200 px-1 rounded bg-red-50">Canceled</span>
-                                                        )}
+                                                        )} */}
                                                     </div>
                                                 </td>
                                             )}
