@@ -494,7 +494,8 @@ const DeliveryChallanItems = ({
                                         //     4 +
                                         //     (stockReportControlData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))
                                         // }
-                                        colSpan={showSize ? 1 : 0 + showColor ? 1 : 0}
+                                        // colSpan={showSize ? 1 : 0 + showColor ? 1 : 0 + 3}
+                                        colSpan={2 + (showSize ? 1 : 0) + (showColor ? 1 : 0)}
                                         className="bg-gray-300 px-1 py-1 text-right text-[12px]"
                                     >
                                     </td>
