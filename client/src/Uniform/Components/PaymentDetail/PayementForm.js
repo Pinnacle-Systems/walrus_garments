@@ -239,9 +239,11 @@ const PaymentForm = ({
         }
     }, [paymentType, PartyData, id, transactionType, transactionId]);
 
-    const [addData] = useAddPaymentMutation();
-    const [updateData] = useUpdatePaymentMutation();
-    const [removeData] = useDeletePaymentMutation();
+    const [addData, { isLoading: isAdding }] = useAddPaymentMutation();
+    const [updateData, { isLoading: isUpdating }] = useUpdatePaymentMutation();
+    const [removeData, { isLoading: isDeleting }] = useDeletePaymentMutation();
+
+    const isSaving = isAdding || isUpdating;
 
 
 
@@ -424,13 +426,13 @@ const PaymentForm = ({
     };
 
     useEffect(() => {
-        if (id) return;
-
         if (!transactionType || !transactionId) {
-            setTotalBillAmount('');
-            setBillAmount('');
-            setRefDocId('');
-            setRefId('');
+            if (!id) {
+                setTotalBillAmount('');
+                setBillAmount('');
+                setRefDocId('');
+                setRefId('');
+            }
             return;
         }
 
@@ -444,26 +446,39 @@ const PaymentForm = ({
 
         if (!selectedTransaction) return;
 
+        if (!id) {
+            setRefId(selectedTransaction.id);
+            setRefDocId(selectedTransaction.docId || "");
 
-        setRefId(selectedTransaction.id);
-        setRefDocId(selectedTransaction.docId || "");
-
-        if (selectedTransaction.customerId && String(supplierId || "") !== String(selectedTransaction.customerId)) {
-            setSupplierId(selectedTransaction.customerId);
+            if (selectedTransaction.customerId && String(supplierId || "") !== String(selectedTransaction.customerId)) {
+                setSupplierId(selectedTransaction.customerId);
+            }
         }
 
         if (transactionType === "QUOTATION") {
             const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems);
-            setBillAmount(billVal.toFixed(2));
-            setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+            if (!id) {
+                setBillAmount(billVal.toFixed(2));
+                setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+            } else {
+                setPaymentHistory(selectedTransaction?.paymentData || []);
+            }
         } else if (transactionType === "SALESINVOICE") {
             const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems);
-            setBillAmount(billVal.toFixed(2));
-            setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+            if (!id) {
+                setBillAmount(billVal.toFixed(2));
+                setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+            } else {
+                setPaymentHistory(selectedTransaction?.paymentData || []);
+            }
         } else if (transactionType === "SALESORDER") {
             const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems);
-            setBillAmount(billVal.toFixed(2));
-            setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+            if (!id) {
+                setBillAmount(billVal.toFixed(2));
+                setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+            } else {
+                setPaymentHistory(selectedTransaction?.paymentData || []);
+            }
         }
     }, [id, transactionId, transactionType, quotationList, salesInvoiceList, salesOrderList]);
 
@@ -748,9 +763,34 @@ const PaymentForm = ({
                                     readOnly={areLinkedFieldsLocked}
                                     setValue={(val) => {
                                         setTransactionId(val);
+                                        setRefId(val);
                                         const options = getDocIdOptions();
-                                        const selected = options.find(opt => opt.value === val);
+                                        const selected = options.find(opt => String(opt.value) === String(val));
                                         if (selected) setRefDocId(selected.show);
+
+                                        let transactionList = [];
+                                        if (transactionType === "QUOTATION") transactionList = quotationList?.data || [];
+                                        else if (transactionType === "SALESINVOICE") transactionList = salesInvoiceList?.data || [];
+                                        else if (transactionType === "SALESORDER") transactionList = salesOrderList?.data || [];
+                                        const selectedTransaction = transactionList.find(
+                                            (item) => String(item.id) === String(val)
+                                        );
+
+                                        if (selectedTransaction) {
+                                            if (transactionType === "QUOTATION") {
+                                                const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems);
+                                                setBillAmount(billVal.toFixed(2));
+                                                setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                                            } else if (transactionType === "SALESINVOICE") {
+                                                const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems);
+                                                setBillAmount(billVal.toFixed(2));
+                                                setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                                            } else if (transactionType === "SALESORDER") {
+                                                const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems);
+                                                setBillAmount(billVal.toFixed(2));
+                                                setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                                            }
+                                        }
                                     }}
                                     required
                                 />
@@ -928,13 +968,13 @@ const PaymentForm = ({
                     <div className="flex flex-col md:flex-row gap-2 justify-between mt-4">
                         {/* Left Buttons */}
                         <div className="flex gap-2 ml-2 flex-wrap">
-                            <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                                <HiOutlineRefresh className="w-4 h-4 mr-2" />
-                                Save & Close
+                            <button disabled={isSaving} onClick={() => saveData("close")} className={`text-white px-4 py-1 rounded-md flex items-center text-sm ${isSaving ? 'bg-indigo-300 cursor-not-allowed' : 'bg-indigo-500 hover:bg-indigo-600'}`}>
+                                <HiOutlineRefresh className={`w-4 h-4 mr-2 ${isSaving ? 'animate-spin' : ''}`} />
+                                {isSaving ? 'Saving...' : 'Save & Close'}
                             </button>
-                            <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-                                <FiSave className="w-4 h-4 mr-2" />
-                                Save & New
+                            <button disabled={isSaving} onClick={() => saveData("new")} className={`text-white px-4 py-1 rounded-md flex items-center text-sm ${isSaving ? 'bg-indigo-300 cursor-not-allowed' : 'bg-indigo-500 hover:bg-indigo-600'}`}>
+                                <FiSave className={`w-4 h-4 mr-2 ${isSaving ? 'animate-spin' : ''}`} />
+                                {isSaving ? 'Saving...' : 'Save & New'}
                             </button>
 
                             {/* <button onClick={() => saveData("draft")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
