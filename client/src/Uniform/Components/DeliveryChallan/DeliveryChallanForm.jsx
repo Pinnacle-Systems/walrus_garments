@@ -149,7 +149,18 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
     }
   }, [id]);
 
+  const handleChallanTypeChange = (val) => {
+    setChallanType(val);
+    if (val === "DcOutward") {
+      const retailStore = locationData?.data?.find(s => s.storeName.toUpperCase().includes("RETAIL"));
+      if (retailStore) {
+        setStoreId(retailStore.id);
+      }
+    }
+  }
 
+
+  console.log(storeId, "storeid")
   const syncFormWithDb = useCallback((data) => {
     const today = moment();
     setChallanType(data?.challanType ? data?.challanType : "")
@@ -211,7 +222,11 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
         returnData = await callback(data).unwrap();
       }
       if (returnData.statusCode === 1) {
-        toast.error(returnData.message);
+        // toast.error(returnData.message);
+        Swal.fire({
+          icon: 'error',
+          text: returnData.message,
+        });
       } else {
 
 
@@ -226,11 +241,9 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
             syncFormWithDb(undefined);
             onNew()
           }
-          else if (nextProcess == "close") {
-            onClose()
-          }
+
           else {
-            setId(returnData?.data?.id);
+            onClose()
 
           }
 
@@ -238,7 +251,10 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
 
 
         } else {
-          toast.error(returnData?.message);
+          Swal.fire({
+            icon: 'error',
+            text: returnData.message,
+          });
         }
 
       }
@@ -547,7 +563,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
               <div className="grid grid-cols-1">
                 <DropdownInputNew
                   value={challanType}
-                  setValue={setChallanType}
+                  setValue={handleChallanTypeChange}
                   options={challanTypeList}
                   name="Challan Type"
                   required={true}

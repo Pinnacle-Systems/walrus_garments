@@ -117,6 +117,32 @@ async function create(body) {
 
 
     const data = await prisma.$transaction(async (tx) => {
+        // Validation: Check stock for outward challans
+        if (challanType === "DcOutward") {
+            for (const item of invoiceItems) {
+                const stockSum = await tx.stock.aggregate({
+                    _sum: { qty: true },
+                    where: {
+                        itemId: item.itemId ? parseInt(item.itemId) : undefined,
+                        sizeId: item.sizeId ? parseInt(item.sizeId) : undefined,
+                        colorId: item.colorId ? parseInt(item.colorId) : undefined,
+                        storeId: storeId ? parseInt(storeId) : undefined,
+                    }
+                });
+
+                const available = stockSum._sum.qty || 0;
+                const requested = parseFloat(item.qty || 0);
+
+                if (available < requested) {
+                    const itemInfo = await tx.item.findUnique({
+                        where: { id: parseInt(item.itemId) },
+                        select: { name: true }
+                    });
+                    throw new Error(`Insufficient stock for ${itemInfo?.name || 'item'}. Available: ${available}, Required: ${requested}`);
+                }
+            }
+        }
+
         const challan = await tx.deliveryChallan.create({
             data: {
                 docId,
@@ -148,6 +174,7 @@ async function create(body) {
                     storeId: storeId ? parseInt(storeId) : undefined,
                     qty: stockQty,
                     price: priceValue,
+                    barcode: item.barcode ? String(item.barcode) : undefined,
                     // Use a placeholder or appropriate type if needed
                     // itemType: "Accessory", 
                 }
@@ -289,7 +316,6 @@ async function update(id, body) {
                         discountValue: String(item.discountValue),
                         taxMethod: item.taxMethod,
                         taxType: item.taxType,
-                        stockId: stockRecord.id
                     }
                 });
             }
