@@ -1,7 +1,7 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
-import { getRemovedItems, getYearShortCodeForFinYear } from '../utils/helper.js';
+import { getDateFromDateTime, getDateFromDateTimeYear, getRemovedItems, getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 
 
@@ -50,10 +50,26 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, isReturn) {
     return newDocId
 }
 
-async function get(req) {
-    const { branchId, active, pagination, pageNumber, dataPerPage, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus, userRole, reportsTransactionType } = req.query;
 
-    console.log(reportsTransactionType, "reportsTransactionType")
+function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data) {
+    return data.filter(item =>
+        (searchPoDate ? (
+            String(getDateFromDateTime(item.createdAt)).includes(searchPoDate) ||
+            String(getDateFromDateTimeYear(item.createdAt)).includes(searchPoDate)
+        ) : true) &&
+        (searchDueDate ? (
+            String(getDateFromDateTime(item.dueDate)).includes(searchDueDate) ||
+            String(getDateFromDateTimeYear(item.dueDate)).includes(searchDueDate)
+        ) : true) &&
+        (searchPoType ? (item.poType.toLowerCase().includes(searchPoType.toLowerCase())) : true)
+    )
+}
+
+async function get(req) {
+
+
+    const { branchId, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus, userRole, reportsTransactionType } = req.query;
+
 
     let where = {
         branchId: branchId ? parseInt(branchId) : undefined,
@@ -63,15 +79,9 @@ async function get(req) {
         customerId: req.query.customerId ? parseInt(req.query.customerId) : undefined,
         isReturn: reportsTransactionType === "RETURN" ? true : reportsTransactionType === "SALE" ? false : undefined,
 
-
     };
 
-    // if (searchDate) {
-    //     where.date = {
-    //         gte: new Date(`${searchDate}T00:00:00.000Z`),
-    //         lte: new Date(`${searchDate}T23:59:59.999Z`),
-    //     };
-    // }
+
 
     let totalCount = 0;
 
@@ -100,9 +110,19 @@ async function get(req) {
         orderBy: {
             id: "desc"
         },
-        // skip: pagination ? (parseInt(pageNumber) - 1) * parseInt(dataPerPage) : undefined,
-        // take: pagination ? parseInt(dataPerPage) : undefined,
     });
+
+    // Resolve LinkedReturnBill for each record (Self-join for reports)
+    data = await Promise.all(data.map(async (item) => {
+        if (item.isRetrunBillId) {
+            const linked = await prisma.pos.findUnique({
+                where: { id: item.isRetrunBillId },
+                select: { id: true, docId: true }
+            });
+            return { ...item, LinkedReturnBill: linked };
+        }
+        return item;
+    }));
 
     // console.log(data, "data")
 
@@ -116,6 +136,7 @@ async function get(req) {
         }
 
     }
+    data = manualFilterSearchData(searchDate, "", "", data)
 
 
     return { statusCode: 0, data, totalCount };
@@ -151,6 +172,13 @@ async function getOne(id) {
             PosPayments: true
         }
     })
+
+    if (data && data.isRetrunBillId) {
+        data.LinkedReturnBill = await prisma.pos.findUnique({
+            where: { id: data.isRetrunBillId },
+            select: { id: true, docId: true }
+        });
+    }
 
 
 
@@ -211,6 +239,8 @@ async function create(body) {
                     bilStatus: body.bilStatus || "PAID",
                     transactionType: transactionType ? transactionType : "DEFAULT",
                     isReturn: isReturn,
+                    isRetrunBillId: body.isRetrunBillId ? parseInt(body.isRetrunBillId) : undefined,
+                    availableCredit: body.availableCredit ? parseInt(body.availableCredit) : undefined,
                     PosItems: {
                         createMany: {
                             data: (posItems || []).map((item) => ({
@@ -337,6 +367,33 @@ async function create(body) {
                 }
             });
 
+            const originalCreditAmount = parseFloat(body.availableCredit || 0);
+            const billAmount = Math.abs(parseFloat(netAmount || 0));
+
+            const totalRefunds = (posPayments || [])
+                .filter(p => (p.paymentMode || "").toLowerCase().includes('refund'))
+                .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+
+            if (billAmount < originalCreditAmount) {
+                const remainingToAdjust = (originalCreditAmount - billAmount) - totalRefunds;
+
+                if (remainingToAdjust > 0) {
+                    await tx.ledger.create({
+                        data: {
+                            EntryType: "Debit_Note",
+                            LedgerType: "Customer",
+                            creditOrDebit: "Debit",
+                            partyId: parseInt(customerId),
+                            amount: remainingToAdjust,
+                            partyBillNo: posRecord.docId,
+                            partyBillDate: new Date(),
+                            posId: posRecord.id
+                        }
+                    });
+                }
+            }
+
+
             return posRecord;
         });
 
@@ -410,6 +467,8 @@ async function update(id, body) {
                     netAmount: String(netAmount || dataFound.netAmount),
                     transactionType: transactionType ? transactionType : "DEFAULT",
                     isReturn: isReturn,
+                    isRetrunBillId: body.isRetrunBillId ? parseInt(body.isRetrunBillId) : undefined,
+                    availableCredit: body.availableCredit ? parseInt(body.availableCredit) : undefined,
 
                     // updatedBy: body.userId ? { connect: { id: parseInt(body.userId) } } : undefined,
                 }
@@ -503,32 +562,48 @@ async function update(id, body) {
                 await tx.stock.createMany({ data: stockEntries });
             }
 
-            const existingLedger = await tx.ledger.findFirst({
+            // Refresh Ledger Entries
+            await tx.ledger.deleteMany({
                 where: { posId: parseInt(id) }
             });
 
-            const ledgerData = {
-                EntryType: isReturn ? "Credit_Note" : "Sales",
-                creditOrDebit: isReturn ? "Credit" : "Debit",
-                amount: Math.abs(parseFloat(netAmount || updatedPos.netAmount || 0)),
-                partyId: parseInt(customerId || updatedPos.customerId),
-                partyBillNo: updatedPos.docId,
-            };
+            await tx.ledger.create({
+                data: {
+                    EntryType: isReturn ? "Credit_Note" : "Sales",
+                    LedgerType: "Customer",
+                    creditOrDebit: isReturn ? "Credit" : "Debit",
+                    partyId: parseInt(customerId || updatedPos.customerId),
+                    amount: Math.abs(parseFloat(netAmount || updatedPos.netAmount || 0)),
+                    partyBillNo: updatedPos.docId,
+                    partyBillDate: new Date(),
+                    posId: parseInt(id)
+                }
+            });
 
-            if (existingLedger) {
-                await tx.ledger.update({
-                    where: { id: existingLedger.id },
-                    data: ledgerData
-                });
-            } else {
-                await tx.ledger.create({
-                    data: {
-                        ...ledgerData,
-                        LedgerType: "Customer",
-                        partyBillDate: new Date(),
-                        posId: parseInt(id)
-                    }
-                });
+            if (body.isRetrunBillId && body.availableCredit) {
+                const originalCreditAmount = parseFloat(body.availableCredit || 0);
+                const billAmount = Math.abs(parseFloat(netAmount || updatedPos.netAmount || 0));
+
+                const totalRefunds = (posPayments || [])
+                    .filter(p => (p.paymentMode || "").toLowerCase().includes('refund'))
+                    .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+
+                const remainingToAdjust = (originalCreditAmount - billAmount) - totalRefunds;
+
+                if (remainingToAdjust > 0) {
+                    await tx.ledger.create({
+                        data: {
+                            EntryType: "Adjustment",
+                            LedgerType: "Customer",
+                            creditOrDebit: "Debit",
+                            partyId: parseInt(customerId || updatedPos.customerId),
+                            amount: remainingToAdjust,
+                            partyBillNo: updatedPos.docId,
+                            partyBillDate: new Date(),
+                            posId: parseInt(id)
+                        }
+                    });
+                }
             }
 
             return updatedPos;
@@ -595,14 +670,27 @@ async function getPartyCreditBalance(req) {
     const posPayments = await prisma.posPayments.findMany({
         where: {
             Pos: { customerId: parseInt(partyId) },
-            paymentMode: { not: 'STORE_CREDIT' }
+            // paymentMode: { not: 'STORE_CREDIT' }
         },
-        select: { amount: true }
+        select: { amount: true, paymentMode: true }
     });
+
+
+    console.log("ledgerCredit", ledgerCredit)
+    console.log("ledgerDebit", ledgerDebit)
+    console.log("posPayments", posPayments)
 
     const totalDebit = ledgerDebit._sum.amount || 0;
     const totalCredit = ledgerCredit._sum.amount || 0;
-    const totalPayments = posPayments.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+    const totalPayments = posPayments.reduce((acc, curr) => {
+        const amt = parseFloat(curr.amount) || 0;
+        const mode = (curr.paymentMode || "").toLowerCase();
+
+        if (mode === 'store_credit') return acc;
+        if (mode.includes('refund')) return acc - amt;
+        return acc + amt;
+    }, 0);
 
     // Balance = (Returns + Payments) - Sales
     const availableCredit = (totalCredit + totalPayments) - totalDebit;

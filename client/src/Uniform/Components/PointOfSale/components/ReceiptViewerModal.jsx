@@ -1,7 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { PDFViewer } from '@react-pdf/renderer';
-import PosThermalPrint from '../PosThermalPrint';
+import PosMultiCopyPrint from '../PosMultiCopyPrint';
 
 const ReceiptViewerModal = ({
     printData,
@@ -23,7 +23,7 @@ const ReceiptViewerModal = ({
                 <div className="flex-1 bg-slate-100 p-4 sm:p-8 flex items-center justify-center overflow-hidden">
                     <div className="w-[300px] h-full shadow-2xl rounded-sm overflow-hidden border border-slate-200">
                         <PDFViewer width="100%" height="100%" showToolbar={true} className="border-none">
-                            <PosThermalPrint {...printData} />
+                            <PosMultiCopyPrint {...printData} />
                         </PDFViewer>
                     </div>
                 </div>

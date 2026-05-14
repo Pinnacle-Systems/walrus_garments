@@ -14,10 +14,10 @@ import { FaChevronLeft, FaChevronRight, FaEllipsisV } from 'react-icons/fa';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 import { useGetQuotationMasterQuery, useGetQuotationQuery } from '../../../redux/uniformService/quotationServices';
 import { useGetPointOfSalesQuery, useCancelPointOfSalesMutation } from '../../../redux/uniformService/PointOfSalesService';
-import { FiPrinter, FiXCircle } from 'react-icons/fi';
+import { FiPrinter, FiXCircle, FiRefreshCw, FiCalendar } from 'react-icons/fi';
 import { PDFViewer } from '@react-pdf/renderer';
 import Modal from '../../../UiComponents/Modal';
-import PosThermalPrint from './PosThermalPrint';
+import PosMultiCopyPrint from './PosMultiCopyPrint';
 import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import Swal from 'sweetalert2';
 
@@ -32,8 +32,10 @@ const PosReportsNew = ({
     onConvertToSaleOrder,
     onConvertToInvoice,
     onMakePayment,
+    reportsTransactionType = "SALE",
+    lastRefresh,
     rowActions = true,
-    reportsTransactionType = "SALE"
+
 }) => {
 
     const calculateQuotationNetAmount = (quotationItems = []) => {
@@ -170,7 +172,7 @@ const PosReportsNew = ({
 
 
 
-    const { data: allData, isFetching, isLoading } = useGetPointOfSalesQuery({
+    const { data: allData, isFetching, isLoading, refetch } = useGetPointOfSalesQuery({
         params: {
             branchId,
             ...searchFields,
@@ -188,6 +190,12 @@ const PosReportsNew = ({
             setTotalCount(allData?.totalCount);
         }
     }, [allData, isLoading, isFetching]);
+
+    useEffect(() => {
+        if (lastRefresh) {
+            refetch();
+        }
+    }, [lastRefresh, refetch]);
 
     const isLoadingIndicator =
         isLoading || isFetching
@@ -289,7 +297,7 @@ const PosReportsNew = ({
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
             <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
                 <PDFViewer style={{ width: "100%", height: "90vh" }}>
-                    <PosThermalPrint
+                    <PosMultiCopyPrint
                         {...printData}
                         branchData={branchList?.data?.find(b => b.id === branchId)}
                     />
@@ -302,43 +310,29 @@ const PosReportsNew = ({
                         <table>
                             <thead className="bg-gray-200 text-gray-800 ">
                                 <tr className="">
+
                                     <th className=" px-1 py-1.5  font-bold text-[13px]  text-gray-900  text-center  w-12">
                                         <div className="">S No</div>
                                     </th>
 
                                     <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
                                         <div>Pos No</div>
-                                        {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={serachDocNo}
-                                            onChange={(e) => {
-                                                setSerachDocNo(e.target.value);
-                                            }}
-                                        /> */}
+
                                     </th>
+
                                     <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
                                         <div>Pos Date</div>
-                                        {/* <input
-                                            type="text"
-                                            className="text-black h-5   w-full py-1.5  px-1 focus:outline-none border  border-gray-400 rounded-lg"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        /> */}
                                     </th>
+
+
                                     <th className="w-24  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>Bill Status</div>
                                     </th>
+
                                     <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>Customer</div>
                                     </th>
-                                    {/* <th className="w-36 px-3 font-bold text-[13px] text-gray-900 text-center">
-                                        <div>Payment Method</div>
-                                    </th> */}
+
                                     <th className="w-14   px-3  font-bold text-[13px]  text-gray-900  text-center ">
                                         <div>Actions</div>
                                     </th>
@@ -346,7 +340,18 @@ const PosReportsNew = ({
                                 </tr>
                                 <tr className="">
                                     <th className=" px-1  font-bold text-[13px] justify-end  text-gray-900  text-center  w-12">
-                                        <div className="h-3"></div>
+                                        <button 
+                                            onClick={() => {
+                                                setSerachDocNo("");
+                                                setSearchDate("");
+                                                setBillStatus("");
+                                                setSearchCustomerName("");
+                                            }}
+                                            className="p-1 text-gray-500 hover:text-indigo-600 transition-colors"
+                                            title="Reset Filters"
+                                        >
+                                            <FiRefreshCw className="h-3.5 w-3.5" />
+                                        </button>
                                     </th>
 
                                     <th className=" px-1 font-bold text-[13px] border  text-gray-900  text-center w-32">
@@ -361,15 +366,27 @@ const PosReportsNew = ({
                                         />
                                     </th>
                                     <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
-                                        <input
-                                            type="text"
-                                            className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                                            placeholder="Search"
-                                            value={searchDate}
-                                            onChange={(e) => {
-                                                setSearchDate(e.target.value);
-                                            }}
-                                        />
+                                        <div className="relative flex items-center">
+                                            <input
+                                                type="text"
+                                                className="text-black h-5 w-full px-1 pr-6 focus:outline-none border border-gray-400 rounded-md"
+                                                placeholder="Search"
+                                                value={searchDate}
+                                                onChange={(e) => {
+                                                    setSearchDate(e.target.value);
+                                                }}
+                                            />
+                                            <div className="absolute right-1 cursor-pointer text-gray-500 hover:text-indigo-600">
+                                                <input
+                                                    type="date"
+                                                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                                                    onChange={(e) => {
+                                                        setSearchDate(e.target.value);
+                                                    }}
+                                                />
+                                                <FiCalendar className="h-3 w-3" />
+                                            </div>
+                                        </div>
                                     </th>
                                     <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                                         <input
@@ -442,12 +459,14 @@ const PosReportsNew = ({
                                             </td>
 
                                             <td className="py-1.5 text-left">
-                                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase border ${dataObj.bilStatus === "DRAFT" ? "bg-gray-100 text-gray-600 border-gray-300" :
+                                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase border ${
+                                                    dataObj.isCancel ? "bg-red-50 text-red-500 border-red-200" :
+                                                    dataObj.bilStatus === "DRAFT" ? "bg-gray-100 text-gray-600 border-gray-300" :
                                                     dataObj.bilStatus === "PAID" ? "bg-green-100 text-green-600 border-green-300" :
-                                                        dataObj.bilStatus === "UNPAID" ? "bg-red-100 text-red-600 border-red-300" :
-                                                            "bg-blue-100 text-blue-600 border-blue-300"
+                                                    dataObj.bilStatus === "UNPAID" ? "bg-red-100 text-red-600 border-red-300" :
+                                                    "bg-blue-100 text-blue-600 border-blue-300"
                                                     } w-24 text-center `}>
-                                                    {dataObj.bilStatus || "DRAFT"}
+                                                    {dataObj.isCancel ? "CANCELLED" : (dataObj.bilStatus || "DRAFT")}
                                                 </span>
                                             </td>
 
@@ -562,7 +581,10 @@ const PosReportsNew = ({
                                                                         balance: balance,
                                                                         roundOff: parseFloat(dataObj.roundOff || 0)
                                                                     },
-                                                                    branchData: branchList?.data?.find(b => b.id === dataObj.branchId)
+                                                                    branchData: branchList?.data?.find(b => b.id === dataObj.branchId),
+                                                                    bilStatus: dataObj.bilStatus,
+                                                                    printCopies: 2,
+                                                                    showSummarySlip: true
                                                                 });
 
                                                                 setThermalPrintOpen(true);

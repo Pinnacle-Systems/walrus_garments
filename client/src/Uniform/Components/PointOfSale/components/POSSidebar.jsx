@@ -88,16 +88,22 @@ const POSSidebar = ({
                                 className="w-full px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 transition-all disabled:opacity-50"
                             />
                         </div>
-
-                        {availableReturnBills.length > 0 && (
+                        {(availableReturnBills.length > 0 || selectedReturnBills) && (
                             <div className="mt-2 space-y-1">
                                 <label className="text-[9px] font-black text-indigo-600 uppercase tracking-widest px-1">Against Returns</label>
                                 <Select
-                                    isMulti
-                                    options={availableReturnBills.map(b => ({ value: b.id, label: b.docId }))}
+                                    // Current list + linked bill-ai merge panrom
+                                    options={(() => {
+                                        const opts = availableReturnBills.map(b => ({ value: b.id, label: b.docId }));
+                                        if (selectedReturnBills && !opts.some(o => o.value === selectedReturnBills.value)) {
+                                            opts.push(selectedReturnBills);
+                                        }
+                                        return opts;
+                                    })()}
                                     value={selectedReturnBills}
                                     onChange={setSelectedReturnBills}
                                     placeholder="Link bills..."
+                                    isDisabled={!!selectedReportSaleId} // Edit mode-la change panna mudiyaadhu
                                     className="text-[10px] font-bold"
                                     styles={{
                                         control: (base) => ({
@@ -116,6 +122,7 @@ const POSSidebar = ({
                                 />
                             </div>
                         )}
+
                     </div>
                     <div className={`mt-2 p-2 rounded-xl flex items-center justify-between border border-dashed transition-all ${availableCredit > 0 ? 'bg-emerald-50 border-emerald-200 animate-in slide-in-from-top-1' : 'bg-slate-50/50 border-slate-100'}`}>
                         <div className="flex items-center gap-2">

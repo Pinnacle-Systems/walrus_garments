@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import {
-    Plus,
+    Plus, RefreshCw
 } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
@@ -56,7 +56,7 @@ const PointOfSale = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [availableCredit, setAvailableCredit] = useState(0);
     const [availableReturnBills, setAvailableReturnBills] = useState([]);
-    const [selectedReturnBills, setSelectedReturnBills] = useState([]);
+    const [selectedReturnBills, setSelectedReturnBills] = useState(null);
     const [fetchCreditBalance] = useLazyGetPartyCreditBalanceQuery();
     const [fetchPointOfSales] = useLazyGetPointOfSalesQuery();
     const [showCartMobile, setShowCartMobile] = useState(false);
@@ -104,6 +104,7 @@ const PointOfSale = () => {
     const [reportsTransactionType, setReportsTransactionType] = useState("SALE");
     const [showStockModal, setShowStockModal] = useState(false);
     const [selectedItemForStock, setSelectedItemForStock] = useState(null);
+    const [lastRefresh, setLastRefresh] = useState(Date.now());
 
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -585,6 +586,13 @@ const PointOfSale = () => {
 
         setCart(mappedCart);
         setEditingInvoiceId(sale.id);
+        if (sale.LinkedReturnBill) {
+            setSelectedReturnBills({ value: sale.LinkedReturnBill.id, label: sale.LinkedReturnBill.docId });
+        } else if (sale.isRetrunBillId) {
+            setSelectedReturnBills({ value: sale.isRetrunBillId, label: `Bill ID: ${sale.isRetrunBillId}` });
+        } else {
+            setSelectedReturnBills(null);
+        }
 
         const payments = sale.PosPayments || [];
         let cash = 0, upi = 0, card = 0, online = 0;
@@ -1070,8 +1078,8 @@ const PointOfSale = () => {
                     if (res.statusCode === 0) setAvailableReturnBills(res.data);
                 });
             }
-            else { setSelectedCustomer(null); setIsGuestCustomer(true); setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills([]); }
-        } else if (selectedCustomer) { setSelectedCustomer(null); setIsGuestCustomer(true); setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills([]); }
+            else { setSelectedCustomer(null); setIsGuestCustomer(true); setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills(null); }
+        } else if (selectedCustomer) { setSelectedCustomer(null); setIsGuestCustomer(true); setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills(null); }
     };
 
     // Totals Calculation
@@ -1148,12 +1156,14 @@ const PointOfSale = () => {
             const appliedCredit = total > 0 ? Math.min(availableCredit, totalPayableBeforeCredit) : 0;
             const netPayable = totalPayableBeforeCredit - appliedCredit;
 
+            const isRefundMode = netPayableValue < 0;
+
             const posPayments = [
                 ...(appliedCredit > 0 ? [{ amount: String(appliedCredit), paymentMode: 'STORE_CREDIT' }] : []),
-                ...(paidCash > 0 ? [{ amount: String(paidCash), paymentMode: 'Cash' }] : []),
-                ...(paidUPI > 0 ? [{ amount: String(paidUPI), paymentMode: 'UPI', reference_no: upiRefNo }] : []),
-                ...(paidCard > 0 ? [{ amount: String(paidCard), paymentMode: 'Card' }] : []),
-                ...(paidOnline > 0 ? [{ amount: String(paidOnline), paymentMode: 'Online', }] : []),
+                ...(paidCash > 0 ? [{ amount: String(paidCash), paymentMode: isRefundMode ? 'Cash Refund' : 'Cash' }] : []),
+                ...(paidUPI > 0 ? [{ amount: String(paidUPI), paymentMode: isRefundMode ? 'UPI Refund' : 'UPI', reference_no: upiRefNo }] : []),
+                ...(paidCard > 0 ? [{ amount: String(paidCard), paymentMode: isRefundMode ? 'Card Refund' : 'Card' }] : []),
+                ...(paidOnline > 0 ? [{ amount: String(paidOnline), paymentMode: isRefundMode ? 'Online Refund' : 'Online', }] : []),
             ];
 
             const invoicePayload = {
@@ -1171,6 +1181,8 @@ const PointOfSale = () => {
                 promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff, transactionType,
                 exchangeSalesNo,
                 bilStatus: isCreditSale ? "UNPAID" : "PAID",
+                isRetrunBillId: selectedReturnBills?.value || null,
+                availableCredit,
                 // Stage Logic:
                 approvalStatus: (editMode && approvalStatus === 'PENDING' && isAdmin) ? "APPROVED" :
                     (editMode && docId === 'DRAFT' && isAdmin) ? "APPROVED" :
@@ -1198,10 +1210,13 @@ const PointOfSale = () => {
                     items: cart,
                     payments: { cash: paidCash, upi: paidUPI, card: paidCard },
                     summary: { subtotal, tax, discount, total, received: Math.abs(receivedAmount), balance: Math.abs(balanceReturn), roundOff }, branchData: locations.find(l => l.id === retailStoreId),
-                    returnReferences: selectedReturnBills.length > 0 ? selectedReturnBills.map(b => b.label) : (exchangeSalesNo ? [exchangeSalesNo] : [])
+                    returnReferences: selectedReturnBills ? [selectedReturnBills.label] : (exchangeSalesNo ? [exchangeSalesNo] : []),
+                    bilStatus: isCreditSale ? "UNPAID" : "PAID",
+                    printCopies: 2,
+                    showSummarySlip: true
                 });
             setCart([]); setDiscount(0); setSelectedCustomer(null); setPaidCash(0); setPaidUPI(0); setPaidCard(0); setUpiRefNo("");
-            setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills([]);
+            setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills(null);
             setEditMode(false); setEditingInvoiceId(null); setSelectedReportSaleId(null);
         } catch (error) { Swal.fire({ title: "Error", text: error.message || "Failed to save invoice.", icon: "error" }); }
 
@@ -1497,9 +1512,18 @@ const PointOfSale = () => {
                                 <option value="RETURN">Returns Only</option>
                             </select>
                         </div>
-                        <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => { onNew() }}>
-                            <Plus size={14} /> Create New
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                className="hover:bg-indigo-700 bg-white border border-indigo-700 hover:text-white text-indigo-800 px-2 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm"
+                                onClick={() => setLastRefresh(Date.now())}
+                                disabled={isRecentSalesFetching}
+                            >
+                                <RefreshCw size={14} className={isRecentSalesFetching ? 'animate-spin' : ''} /> Refresh
+                            </button>
+                            <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => { onNew() }}>
+                                <Plus size={14} /> Create New
+                            </button>
+                        </div>
                     </div>
                     <div className="bg-white rounded-xl shadow-sm overflow-hidden h-[85vh] mt-2 border-2">
                         {/* <PosReports
@@ -1525,6 +1549,7 @@ const PointOfSale = () => {
                             onDelete={true}
                             onView={true}
                             reportsTransactionType={reportsTransactionType}
+                            lastRefresh={lastRefresh}
                         />
                     </div>
                 </div>
