@@ -800,7 +800,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       for (const sizeName of missingSizes) {
         const response = await addSize({
           name: sizeName,
-          code: sizeName,
+          code: "",
           companyId,
           branchId,
           active: true,
@@ -814,7 +814,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       for (const color of reviewedColors) {
         const response = await addColor({
           name: color.name,
-          code: normalizeCodeValue(color.code),
+          code: "",
           companyId,
           branchId,
           active: true,
@@ -1036,7 +1036,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     await processStockSave({
       missingItems: reviewState.items,
       missingSizes: reviewState.sizes,
-      reviewedColors: [],
+      reviewedColors: reviewState.colors,
     });
   }, [buildMissingReviewState, processStockSave, stockItems]);
 

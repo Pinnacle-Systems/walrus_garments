@@ -229,6 +229,8 @@ const DeliveryChallanItems = ({
     const catalogPriceRows = itemPriceList?.data || [];
     const { showSize, showColor } = getCatalogColumnVisibility(catalogItems, catalogPriceRows);
 
+    console.log(showSize, "showSize")
+
     const getSelectableItems = () => {
         const items = [];
         const itemMap = new Map(catalogItems.map(item => [String(item.id), item]));
@@ -492,7 +494,7 @@ const DeliveryChallanItems = ({
                                         //     4 +
                                         //     (stockReportControlData?.data?.reduce((acc, element) => acc + Object.keys(element)?.filter(k => k.toLowerCase().includes("field") && !!element[k]).length, 0))
                                         // }
-                                        colSpan={4}
+                                        colSpan={showSize ? 1 : 0 + showColor ? 1 : 0}
                                         className="bg-gray-300 px-1 py-1 text-right text-[12px]"
                                     >
                                     </td>

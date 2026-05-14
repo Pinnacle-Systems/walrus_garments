@@ -48,7 +48,7 @@ async function get(req) {
 
 
 async function getOne(id) {
-    const childRecord = await prisma.directInwardOrReturn.count({ where: { storeId: parseInt(id) } });
+    const childRecord = await prisma.stock.count({ where: { storeId: parseInt(id) } });
     const data = await prisma.location.findUnique({
         where: {
             id: parseInt(id)

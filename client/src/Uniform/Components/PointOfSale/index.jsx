@@ -79,7 +79,7 @@ const PointOfSale = () => {
     const [docId, setDocId] = useState("");
     const [approvalStatus, setApprovalStatus] = useState("NONE");
     const [currentBilStatus, setCurrentBilStatus] = useState("PAID");
-
+    const [isCancelBill, setIsCancelBill] = useState(false);
 
 
     const [transactionType, setTransactionType] = useState("SALE");
@@ -560,6 +560,7 @@ const PointOfSale = () => {
             setUpiRefNo("");
             setApprovalStatus("NONE");
             setCurrentBilStatus("PAID");
+            setIsCancelBill(false)
             return;
         }
 
@@ -641,7 +642,11 @@ const PointOfSale = () => {
         setApprovalStatus(sale.approvalStatus || "NONE");
         setCurrentBilStatus(sale.bilStatus || "PAID");
         setShowReports(true);
+        setIsCancelBill(sale?.isCancel ? sale?.isCancel : false)
+
     }, [selectedReportSaleId, items, employees, retailStoreId]);
+
+    console.log(isCancelBill, "isCancelBill")
 
 
     useEffect(() => {
@@ -684,7 +689,7 @@ const PointOfSale = () => {
             // Barcode Mode Logic
             if (searchMode === 'BARCODE') {
                 try {
-                    const response = await getStockByBarcode({ params: { barcode, branchId } }).unwrap();
+                    const response = await getStockByBarcode({ params: { barcode, branchId, } }).unwrap();
                     if (response.statusCode === 0) {
                         const { data, matches, needsResolution } = response;
 
@@ -1482,6 +1487,7 @@ const PointOfSale = () => {
                             availableReturnBills={availableReturnBills}
                             selectedReturnBills={selectedReturnBills}
                             setSelectedReturnBills={setSelectedReturnBills}
+                            isCancelBill={isCancelBill}
                         />
 
                     </div>

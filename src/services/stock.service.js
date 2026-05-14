@@ -984,38 +984,33 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
     }
 
     const normalizedBarcode = String(barcode).trim();
-    const normalizedBranchId = branchId ? Number(branchId) : undefined;
-    const normalizedStoreId = storeId ? Number(storeId) : undefined;
-
-    console.log("normalizedBarcode:", normalizedBarcode);
-    console.log("normalizedBranchId:", normalizedBranchId);
+    const normalizedBranchId = Number(branchId);
 
 
     const stockRecords = await prisma.stock.findMany({
-        // where: {
-        //     OR: [
-        //         { barcode: normalizedBarcode },
-        //         {
-        //             Item: {
-        //                 ItemPriceList: {
-        //                     some: {
-        //                         ItemBarcodes: {
-        //                             some: {
-        //                                 barcode: normalizedBarcode,
-        //                                 active: true
-        //                             }
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     ],
-        //     branchId: normalizedBranchId,
-        // },
         where: {
-            barcode: normalizedBarcode,
+            OR: [
+                { barcode: normalizedBarcode },
+                {
+                    Item: {
+                        ItemPriceList: {
+                            some: {
+                                ItemBarcodes: {
+                                    some: {
+                                        barcode: normalizedBarcode,
+                                        active: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
             branchId: normalizedBranchId,
-            storeId: normalizedStoreId,
+            Store: {
+                storeName: { in: ["RETAIL", "DISCOUNT SECTION"] },
+                active: true
+            }
         },
         include: {
             Item: {
@@ -1045,7 +1040,9 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
     const matches = buildBarcodeSnapshotMatches(stockRecords);
 
     // Attach barcodeType from the matched barcode
-    const matchedBarcodeRecord = stockRecords.flatMap(r => r.ItemPriceList?.ItemBarcodes || [])
+    const matchedBarcodeRecord = stockRecords
+        .flatMap(r => r.Item?.ItemPriceList || [])
+        .flatMap(pl => pl.ItemBarcodes || [])
         .find(b => b.barcode === normalizedBarcode);
 
     matches.forEach(m => {
