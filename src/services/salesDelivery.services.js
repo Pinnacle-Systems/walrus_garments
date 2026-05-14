@@ -461,6 +461,30 @@ async function create(body) {
             const persistedDeliveryItems = [];
 
             for (const temp of sourceDeliveryItems) {
+                let resolvedBarcodeType = temp.barcodeType || "REGULAR";
+                let resolvedBarcode = temp?.barcode || null;
+                
+                if (!resolvedBarcode && resolvedBarcodeType) {
+                    const priceListRow = await tx.itemPriceList.findFirst({
+                        where: {
+                            itemId: temp.itemId ? parseInt(temp.itemId) : undefined,
+                            sizeId: temp.sizeId ? parseInt(temp.sizeId) : null,
+                            colorId: temp.colorId ? parseInt(temp.colorId) : null,
+                        },
+                        include: {
+                            ItemBarcodes: {
+                                where: {
+                                    barcodeType: resolvedBarcodeType
+                                }
+                            }
+                        }
+                    });
+
+                    if (priceListRow?.ItemBarcodes?.[0]?.barcode) {
+                        resolvedBarcode = priceListRow.ItemBarcodes[0].barcode;
+                    }
+                }
+
                 const savedItem = await tx.salesDeliveryItems.create({
                     data: {
                         salesDeliveryId: parseInt(data.id),
@@ -482,7 +506,7 @@ async function create(body) {
 
                 persistedDeliveryItems.push({
                     ...savedItem,
-                    barcode: temp?.barcode || null,
+                    barcode: resolvedBarcode,
                     fulfillmentAllocations: temp?.fulfillmentAllocations || temp?.allocations || [],
                 });
             }
@@ -725,6 +749,30 @@ async function update(id, body) {
             const persistedDeliveryItems = [];
 
             for (const item of (deliveryItems || []).filter(i => i.itemId)) {
+                let resolvedBarcodeType = item.barcodeType || "REGULAR";
+                let resolvedBarcode = item?.barcode || null;
+                
+                if (!resolvedBarcode && resolvedBarcodeType) {
+                    const priceListRow = await tx.itemPriceList.findFirst({
+                        where: {
+                            itemId: item.itemId ? parseInt(item.itemId) : undefined,
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                        },
+                        include: {
+                            ItemBarcodes: {
+                                where: {
+                                    barcodeType: resolvedBarcodeType
+                                }
+                            }
+                        }
+                    });
+
+                    if (priceListRow?.ItemBarcodes?.[0]?.barcode) {
+                        resolvedBarcode = priceListRow.ItemBarcodes[0].barcode;
+                    }
+                }
+
                 if (item.id) {
                     const savedItem = await tx.salesDeliveryItems.update({
                         where: { id: parseInt(item.id) },
@@ -746,7 +794,7 @@ async function update(id, body) {
                     });
                     persistedDeliveryItems.push({
                         ...savedItem,
-                        barcode: item?.barcode || null,
+                        barcode: resolvedBarcode,
                         fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
                     });
                 } else {
@@ -770,7 +818,7 @@ async function update(id, body) {
                     });
                     persistedDeliveryItems.push({
                         ...savedItem,
-                        barcode: item?.barcode || null,
+                        barcode: resolvedBarcode,
                         fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
                     });
                 }
