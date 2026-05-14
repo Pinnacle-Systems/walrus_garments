@@ -382,6 +382,10 @@ async function getOne(id) {
     })
     if (!data) return NoRecordFound("item");
 
+    for (const variant of data.ItemPriceList) {
+        variant.inUse = await isItemVariantUsed(prisma, variant);
+    }
+
     return { statusCode: 0, data: { ...data, childRecord } };
 }
 
@@ -607,6 +611,34 @@ async function deleteItemPanelId(tx, removeItemPanelIds) {
 
 
 
+async function isItemVariantUsed(tx, variant) {
+    if (!variant || !variant.itemId) return false;
+
+    const whereClause = {
+        itemId: variant.itemId,
+        colorId: variant.colorId || null,
+        sizeId: variant.sizeId || null,
+    };
+
+    if (await tx.saleOrderItems.findFirst({ where: whereClause })) return true;
+    if (await tx.salesInvoiceItems?.findFirst({ where: whereClause })) return true;
+    if (await tx.salesDeliveryItems.findFirst({ where: whereClause })) return true;
+    if (await tx.salesReturnItems.findFirst({ where: whereClause })) return true;
+    if (await tx.directItems.findFirst({ where: whereClause })) return true;
+    if (await tx.directReturnItems.findFirst({ where: whereClause })) return true;
+    if (await tx.quotationItems.findFirst({ where: whereClause })) return true;
+    if (await tx.stock.findFirst({ where: whereClause })) return true;
+
+    return false;
+}
+
+async function checkIsItemVariantUsed(tx, variant) {
+    if (await isItemVariantUsed(tx, variant)) {
+        throw Error("This Item Variant is already used in a transaction or stock and cannot be deleted.");
+    }
+}
+
+
 async function updateItemPriceList(tx, itemPriceList, item) {
     let removedItems = item?.ItemPriceList?.filter(oldItem => {
         let result = itemPriceList.find(newItem => newItem.id === oldItem.id)
@@ -617,6 +649,10 @@ async function updateItemPriceList(tx, itemPriceList, item) {
     console.log(itemPriceList, "item");
 
     let removedItemsId = removedItems.map(item => parseInt(item.id))
+
+    for (let removedItem of removedItems) {
+        await checkIsItemVariantUsed(tx, removedItem);
+    }
 
     await tx.ItemPriceList.deleteMany({
         where: {
