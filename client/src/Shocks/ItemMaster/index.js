@@ -1336,6 +1336,13 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 return
                               }
 
+                              if (code?.length !== 4) {
+                                Swal.fire({
+                                  icon: "error",
+                                  text: "Please enter 4 digit item code",
+                                })
+                                return
+                              }
                               if (sizeList.length === 0) {
                                 // toast.error("Please select at least one size")
                                 Swal.fire({
