@@ -103,7 +103,7 @@ const POSCartTable = ({
                                     <td className="px-2 py-1 text-center border-r border-slate-200">
                                         <div className="flex items-center justify-center gap-1.5">
                                             <span className="text-[10px] font-black text-slate-500 uppercase">{item?.stockQty || '0'}</span>
-                                            {!item.isReturn && (
+                                            {/* {!item.isReturn && (
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onViewStock(item); }}
                                                     className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-all"
@@ -111,7 +111,7 @@ const POSCartTable = ({
                                                 >
                                                     <Eye size={12} />
                                                 </button>
-                                            )}
+                                            )} */}
                                         </div>
                                     </td>
                                     <td className="px-2 py-0.5 border-r border-slate-200">

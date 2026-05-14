@@ -36,6 +36,7 @@ const POSSidebar = ({
     availableReturnBills = [],
     selectedReturnBills = [],
     setSelectedReturnBills,
+    isCancelBill
 }) => {
     const netPayable = (parseFloat(total) - parseFloat(availableCredit));
     const isRefund = netPayable < 0;
@@ -214,14 +215,7 @@ const POSSidebar = ({
                                 <span className="text-emerald-600 font-black">₹{(totalOfferDiscount + discount).toLocaleString()}</span>
                             </div>
                         )}
-                        {/* <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-400">CGST</span>
-                            <span>₹{(tax / 2).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                            <span className="text-[11px] uppercase tracking-wider text-slate-400">SGST</span>
-                            <span>₹{(tax / 2).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div> */}
+
                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                             <span className="text-[11px] uppercase tracking-wider text-slate-400">Tax Amount</span>
                             <span>₹{tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -263,7 +257,7 @@ const POSSidebar = ({
                         </button>
                     )}
                     <button
-                        disabled={isProcessing || cart.length === 0 || isReportOnly}
+                        disabled={isProcessing || cart.length === 0 || isReportOnly || isCancelBill}
                         onClick={() => handlePayNow()}
                         className={`${(isUnpaidBill || isReturnMode) ? 'w-full' : ''} py-2 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all shadow-lg ${(cart.length === 0 || isProcessing || isReportOnly) ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : (isRefund ? 'bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.98] shadow-rose-100' : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] shadow-indigo-100')}`}
                     >

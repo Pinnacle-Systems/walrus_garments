@@ -14,7 +14,7 @@ import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMaste
 import { useGetYarnMasterQuery } from "../../../redux/uniformService/YarnMasterServices";
 import { FiEdit2, FiPrinter, FiSave } from "react-icons/fi";
 import Swal from "sweetalert2";
-import { useAddStockTransferMutation, useGetStockTransferByIdQuery, useUpdateStockTransferMutation } from "../../../redux/uniformService/StockTransferService";
+import { useAddStockTransferMutation, useGetStockTransferByIdQuery, useGetStockTransferQuery, useUpdateStockTransferMutation } from "../../../redux/uniformService/StockTransferService";
 import { Loader } from "../../../Basic/components";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { useGetLocationMasterQuery } from "../../../redux/uniformService/LocationMasterServices";
@@ -82,6 +82,11 @@ const StockTransferForm = ({
     const stockDrivenFields = getConfiguredStockDrivenFields(stockReportControlData?.data?.[0]);
 
     const { data: singleData, isLoading: isSingleDataLoading, isFetching: isSingleDataFetching, refetch } = useGetStockTransferByIdQuery(id, { skip: !id });
+
+
+
+
+    const { data: allData, isFetching: isAllDataFetching, isLoading: isAllDataLoading } = useGetStockTransferQuery({});
 
 
     const { data: allStockData, isLoading, isFetching } = useGetUnifiedStockQuery(
@@ -332,6 +337,23 @@ const StockTransferForm = ({
     const saveData = (nextProcess) => {
 
 
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.deliveryChallanNo.toUpperCase() === deliveryChallanNo);
+        } else {
+            foundItem = allData?.data?.some(item => item?.deliveryChallanNo.toUpperCase() === deliveryChallanNo);
+        }
+
+
+        if (foundItem) {
+            Swal.fire({
+                text: "The Delivery Challan No already exists.",
+                icon: "warning",
+
+            });
+            return false;
+        }
+
         if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
             const selectedItems = stockItems?.filter(i => i.itemId);
             for (const item of selectedItems) {
@@ -392,21 +414,6 @@ const StockTransferForm = ({
             return;
         }
 
-
-
-        // if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
-        //     const hasMismatch = stockItems?.filter(i => i.itemId)?.some(i => 
-        //         parseFloat(i.stockQty || 0).toFixed(3) !== parseFloat(i.transferQty || 0).toFixed(3)
-        //     );
-        //     if (hasMismatch) {
-        //         Swal.fire({
-        //             title: "Validation Error",
-        //             text: "For DISCOUNT SECTION, Stock Quantity and Transfer Quantity must match exactly for all items.",
-        //             icon: "error",
-        //         });
-        //         return;
-        //     }
-        // }
 
 
 

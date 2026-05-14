@@ -54,6 +54,7 @@ const QuickAddSizeModal = ({ isOpen, onClose, sizeName, onCreated }) => {
         name,
         active,
         companyId: params.companyId,
+        code
       };
 
       const response = await addSize(payload).unwrap();

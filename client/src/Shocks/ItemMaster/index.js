@@ -93,6 +93,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [isSameAsBarcode, setIsSameAsBarcode] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [printId, setPrintId] = useState("");
+  const syncedIdRef = useRef(null);
   const { data: printItemData } = useGetItemMasterByIdQuery(printId, { skip: !printId });
 
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
@@ -289,7 +290,13 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   console.log(itemPriceList, "itemPriceList")
 
   useEffect(() => {
-    syncFormWithDb(singleData?.data);
+    if (id && singleData?.data && !isSingleFetching && syncedIdRef.current !== id) {
+      syncFormWithDb(singleData.data);
+      syncedIdRef.current = id;
+    }
+    if (!id) {
+      syncedIdRef.current = null;
+    }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   // Sync the 'barcode' state with the primary barcode of the first price row (for UI conditions)
@@ -1266,7 +1273,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                   name="Sizes"
                                   required={true}
                                   disabled={readOnly || isLegacyItem}
-                                  options={multiSelectOption(id ? sizeData?.data : sizeData?.data?.filter(i => i.active) || [], "name", "id")}
+                                  options={multiSelectOption(id ? sizeData?.data?.filter(i => i.code) : sizeData?.data?.filter(i => i.active && i.code) || [], "name", "id")}
                                   selected={sizeList}
                                   setSelected={(value) => {
                                     setSizeList(value)
@@ -1292,7 +1299,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                   name="Colors"
                                   required={true}
                                   disabled={readOnly || isLegacyItem}
-                                  options={multiSelectOption(id ? colorData?.data : colorData?.data?.filter(i => i.active) || [], "name", "id")}
+                                  options={multiSelectOption(id ? colorData?.data?.filter(i => i.code) : colorData?.data?.filter(i => i.active && i.code) || [], "name", "id")}
                                   selected={colorList}
                                   setSelected={(value) => {
                                     setColorList(value)
