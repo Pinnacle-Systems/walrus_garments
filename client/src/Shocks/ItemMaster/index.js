@@ -444,7 +444,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         setForm(false)
       }
     } catch (error) {
-      console.log("handle");
+      console.log("handle error", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error?.data?.message || 'Something went wrong!',
+      });
+      // Re-sync form with original data so deleted variants reappear
+      if (id && singleData?.data) {
+        syncFormWithDb(singleData.data);
+      }
     }
   };
 
@@ -803,6 +812,23 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       const removedCombinations = existingCombinationsKeys.filter(key => !newCombinationKeys.includes(key));
 
       if (removedCombinations.length) {
+        // Prevent removal if any of the removed variants are in use
+        const inUseRemoved = itemPriceList.find(item => removedCombinations.includes(`${item.sizeId}-${item.colorId}`) && item.inUse);
+        if (inUseRemoved) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Cannot remove variant',
+            text: 'One or more of the size/color variants you are trying to remove is already used in a transaction and cannot be deleted.',
+          });
+          
+          // Re-sync dropdowns with current itemPriceList
+          const uniqueSizes = [...new Set(itemPriceList.map(item => item.sizeId))];
+          const uniqueColors = [...new Set(itemPriceList.map(item => item.colorId))];
+          setSizeList(uniqueSizes.map(item => ({ value: item, label: findFromList(item, sizeData?.data, "name") })));
+          setColorList(uniqueColors.filter(c => c !== null).map(item => ({ value: item, label: findFromList(item, colorData?.data, "name") })));
+          return;
+        }
+
         if (!window.confirm("Changing size/color will remove existing price details for the removed combinations. Do you want to proceed?")) {
           return;
         }
@@ -871,6 +897,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     setContextMenu(null);
   };
   const handleDeleteRow = (id) => {
+    if (itemPriceList[id]?.inUse) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Cannot delete variant',
+        text: 'This variant is already used in sales, purchase, or stock and cannot be removed.',
+      });
+      return;
+    }
     console.log(id, "idddddddddddddddd");
 
     setItemPriceList((prevItemPriceList) => {
