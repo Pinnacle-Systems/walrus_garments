@@ -65,23 +65,29 @@ const DeliveryChallanItems = ({
     const stockControldata = stockReportControlData?.data?.[0]
 
     const getBarcodeFromList = (itemId, sizeId, colorId) => {
-        if (!itemPriceList?.data || !itemId) return null;
+        if (!itemPriceList?.data || !itemId) return "";
         const itemRows = itemPriceList?.data?.filter(item => String(item.itemId) === String(itemId));
-        if (!itemRows?.length) return null;
+        if (!itemRows?.length) return "";
 
+        let foundRow = null;
         if (!sizeId) {
-            return itemRows.find(item => !item.sizeId && !item.colorId) || itemRows[0];
-        }
-
-        if (!colorId) {
-            return itemRows.find(item =>
+            foundRow = itemRows.find(item => !item.sizeId && !item.colorId) || itemRows[0];
+        } else if (!colorId) {
+            foundRow = itemRows.find(item =>
                 String(item.sizeId) === String(sizeId) && !item.colorId
             ) || itemRows.find(item => String(item.sizeId) === String(sizeId));
+        } else {
+            foundRow = itemRows.find(item =>
+                String(item.sizeId) === String(sizeId) && String(item.colorId) === String(colorId)
+            );
         }
 
-        return itemRows.find(item =>
-            String(item.sizeId) === String(sizeId) && String(item.colorId) === String(colorId)
-        ) || null;
+        if (foundRow?.ItemBarcodes) {
+            const regularBarcode = foundRow.ItemBarcodes.find(b => b.barcodeType === "REGULAR");
+            return regularBarcode ? regularBarcode.barcode : "";
+        }
+
+        return "";
     };
 
     const getPriceFromTemplate = (itemId, qty) => {
@@ -141,6 +147,11 @@ const DeliveryChallanItems = ({
             const currentSize = newBlend[index].sizeId;
             const currentColor = newBlend[index].colorId;
             const currentQty = newBlend[index].qty;
+
+            // Update barcode automatically
+            if (currentItem) {
+                newBlend[index]["barcode"] = getBarcodeFromList(currentItem, currentSize, currentColor);
+            }
 
             const isLegacySelection = isLegacyCatalogItem(catalogItems, currentItem);
             const requiresSize = itemUsesSize(catalogItems, catalogPriceRows, currentItem);
