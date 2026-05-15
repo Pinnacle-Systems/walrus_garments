@@ -138,7 +138,17 @@ async function create(body) {
                         where: { id: parseInt(item.itemId) },
                         select: { name: true }
                     });
-                    throw new Error(`Insufficient stock for ${itemInfo?.name || 'item'}. Available: ${available}, Required: ${requested}`);
+                    const sizeInfo = item.sizeId ? await tx.size.findUnique({
+                        where: { id: parseInt(item.sizeId) },
+                        select: { name: true }
+                    }) : null;
+                    const colorInfo = item.colorId ? await tx.color.findUnique({
+                        where: { id: parseInt(item.colorId) },
+                        select: { name: true }
+                    }) : null;
+
+                    const fullName = `${itemInfo?.name || 'item'}${sizeInfo ? ` - ${sizeInfo.name}` : ''}${colorInfo ? ` - ${colorInfo.name}` : ''}`;
+                    throw new Error(`Insufficient stock for ${fullName}. Available: ${available}, Required: ${requested}`);
                 }
             }
         }
@@ -175,8 +185,8 @@ async function create(body) {
                     qty: stockQty,
                     price: priceValue,
                     barcode: item.barcode ? String(item.barcode) : undefined,
-                    // Use a placeholder or appropriate type if needed
-                    // itemType: "Accessory", 
+                    transactionId: challan.id ? parseInt(challan.id) : undefined,
+
                 }
             });
 
@@ -194,7 +204,7 @@ async function create(body) {
                     discountValue: String(item.discountValue),
                     taxMethod: item.taxMethod,
                     taxType: item.taxType,
-                    // stockId: stockRecord.id
+                    stockId: stockRecord.id ? stockRecord.id : undefined
                 }
             });
         }
@@ -218,7 +228,57 @@ async function update(id, body) {
     if (!dataFound) return NoRecordFound("Delivery Challan");
 
     const data = await prisma.$transaction(async (tx) => {
-        // 1. Update main record
+
+        if (challanType === "DcOutward") {
+            for (const item of invoiceItems) {
+                const stockSum = await tx.stock.aggregate({
+                    _sum: { qty: true },
+                    where: {
+                        itemId: item.itemId ? parseInt(item.itemId) : undefined,
+                        sizeId: item.sizeId ? parseInt(item.sizeId) : undefined,
+                        colorId: item.colorId ? parseInt(item.colorId) : undefined,
+                        storeId: storeId ? parseInt(storeId) : undefined,
+                    }
+                });
+
+                let available = stockSum._sum.qty || 0;
+
+                // Add back the quantity this challan was already taking for this exact combination
+                const existingItem = dataFound.DeliveryChallanItems.find(i =>
+                    i.id === parseInt(item.id) &&
+                    String(i.itemId) === String(item.itemId) &&
+                    String(i.sizeId) === String(item.sizeId) &&
+                    String(i.colorId) === String(item.colorId)
+                );
+
+                if (existingItem) {
+                    // Since outward stock is negative, adding absolute value gives it back to available pool
+                    available += Math.abs(parseFloat(existingItem.qty || 0));
+                }
+
+                const requested = parseFloat(item.qty || 0);
+
+                if (available < requested) {
+                    const itemInfo = await tx.item.findUnique({
+                        where: { id: parseInt(item.itemId) },
+                        select: { name: true }
+                    });
+                    const sizeInfo = item.sizeId ? await tx.size.findUnique({
+                        where: { id: parseInt(item.sizeId) },
+                        select: { name: true }
+                    }) : null;
+                    const colorInfo = item.colorId ? await tx.color.findUnique({
+                        where: { id: parseInt(item.colorId) },
+                        select: { name: true }
+                    }) : null;
+
+                    const fullName = `${itemInfo?.name || 'item'}${sizeInfo ? ` - ${sizeInfo.name}` : ''}${colorInfo ? ` - ${colorInfo.name}` : ''}`;
+                    throw new Error(`Insufficient stock for ${fullName}. Available: ${available}, Required: ${requested}`);
+                }
+            }
+        }
+
+
         const updatedChallan = await tx.deliveryChallan.update({
             where: { id: parseInt(id) },
             data: {
@@ -234,7 +294,6 @@ async function update(id, body) {
             }
         });
 
-        // 2. Identify removed items and delete their stock records
         const currentItemIds = invoiceItems.filter(i => i.id).map(i => parseInt(i.id));
         const removedItems = dataFound.DeliveryChallanItems.filter(i => !currentItemIds.includes(i.id));
 
@@ -245,15 +304,17 @@ async function update(id, body) {
             await tx.deliveryChallanItems.delete({ where: { id: item.id } });
         }
 
-        // 3. Update or Create items
         for (const item of invoiceItems) {
             const qtyValue = parseFloat(item.qty || 0);
             const priceValue = parseFloat(item.price || 0);
+
+
             const stockQty = challanType === "DcOutward" ? -qtyValue : qtyValue;
 
             if (item.id) {
-                // Update existing item
                 const existingItem = dataFound.DeliveryChallanItems.find(i => i.id === parseInt(item.id));
+                console.log(existingItem, "existingItem")
+
                 if (existingItem?.stockId) {
                     await tx.stock.update({
                         where: { id: existingItem.stockId },
@@ -287,7 +348,6 @@ async function update(id, body) {
                     }
                 });
             } else {
-                // Create new item
                 const stockRecord = await tx.stock.create({
                     data: {
                         inOrOut: challanType,
@@ -299,6 +359,7 @@ async function update(id, body) {
                         storeId: storeId ? parseInt(storeId) : undefined,
                         qty: stockQty,
                         price: priceValue,
+                        barcode: item.barcode ? String(item.barcode) : undefined,
                     }
                 });
 
@@ -316,6 +377,8 @@ async function update(id, body) {
                         discountValue: String(item.discountValue),
                         taxMethod: item.taxMethod,
                         taxType: item.taxType,
+                        stockId: stockRecord.id ? stockRecord.id : undefined
+
                     }
                 });
             }

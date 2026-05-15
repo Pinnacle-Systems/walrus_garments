@@ -222,7 +222,6 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
         returnData = await callback(data).unwrap();
       }
       if (returnData.statusCode === 1) {
-        // toast.error(returnData.message);
         Swal.fire({
           icon: 'error',
           text: returnData.message,
