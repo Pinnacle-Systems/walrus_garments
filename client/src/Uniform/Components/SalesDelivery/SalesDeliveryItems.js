@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { push } from "../../../redux/features/opentabs";
 import { setLastTab, setOpenPartyModal } from "../../../redux/features/openModel";
 import { useGetHsnMasterQuery } from "../../../redux/services/HsnMasterServices";
+import { useGetUnifiedStockQuery } from "../../../redux/services/StockService";
 import {
     getCatalogColorOptions,
     getCatalogColumnVisibility,
@@ -55,7 +56,9 @@ const SalesDeliveryItems = ({
     restrictSourceLineEdits = false,
     movedToNextSaveNewRef,
     handlers,
-    convertSaleOrderId
+    convertSaleOrderId,
+    storeId,
+    branchId
 }) => {
     const compactHeaderCellClassName = transactionTableHeaderCellClassName;
     const compactCellClassName = transactionTableCellClassName;
@@ -67,7 +70,86 @@ const SalesDeliveryItems = ({
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false);
     const catalogItems = itemList?.data || [];
     const catalogPriceRows = itemPriceList?.data || [];
-    const { showSize, showColor } = getCatalogColumnVisibility(catalogItems, catalogPriceRows);
+    const catalogShowConfig = getCatalogColumnVisibility(catalogItems, catalogPriceRows);
+
+    const { data: storeStockData } = useGetUnifiedStockQuery(
+        // Query with storeId when available (scopes to that store);
+        // falls back to all branch stock when storeId is not yet selected.
+        { params: { storeId: storeId || undefined, branchId } },
+        { skip: !branchId }
+    );
+
+    // Build size options directly from the stock table for the selected item.
+    // This supports items whose stock was recorded with size granularity
+    // even though the item master itself may not define size variants.
+    const getStockSizeOptions = (itemId) => {
+        if (!itemId || !storeStockData?.data) return [];
+        const sizeIds = [...new Set(
+            storeStockData.data
+                .filter(s => String(s.itemId) === String(itemId) && s.sizeId)
+                .map(s => String(s.sizeId))
+        )];
+        return (sizeList?.data || []).filter(sz => sizeIds.includes(String(sz.id)));
+    };
+
+    // Whether the item has any stock without a size (the "no size" bucket).
+    const itemHasNoSizeStock = (itemId) => {
+        if (!itemId || !storeStockData?.data) return false;
+        return storeStockData.data.some(
+            s => String(s.itemId) === String(itemId) && !s.sizeId
+        );
+    };
+
+    const getStockColorOptions = (itemId, sizeId) => {
+        if (!itemId || !storeStockData?.data) return [];
+        // sizeId="none" = user explicitly chose no-size stock
+        // sizeId="" or null = no size chosen yet (show nothing to avoid ambiguity)
+        // sizeId=<id>  = user chose a specific size
+        const noSizeExplicit = sizeId === "none";
+        const realSizeId = !noSizeExplicit && sizeId;
+        const colorIds = [...new Set(
+            storeStockData.data
+                .filter(s =>
+                    String(s.itemId) === String(itemId) &&
+                    s.colorId &&
+                    (noSizeExplicit
+                        ? !s.sizeId                           // only no-size stock colors
+                        : realSizeId
+                            ? String(s.sizeId) === String(realSizeId)  // specific size colors
+                            : false)                          // nothing selected → no colors
+                )
+                .map(s => String(s.colorId))
+        )];
+        return (colorList?.data || []).filter(c => colorIds.includes(String(c.id)));
+    };
+
+    // Whether the item has any stock without a color (for the current size context).
+    const itemHasNoColorStock = (itemId, sizeId) => {
+        if (!itemId || !storeStockData?.data) return false;
+        const noSizeExplicit = sizeId === "none";
+        const realSizeId = !noSizeExplicit && sizeId;
+        return storeStockData.data.some(
+            s => String(s.itemId) === String(itemId) &&
+                 (noSizeExplicit
+                     ? !s.sizeId
+                     : realSizeId
+                         ? String(s.sizeId) === String(realSizeId)
+                         : false) &&
+                 !s.colorId
+        );
+    };
+
+    // Column visibility: show size/color columns if either the item catalog
+    // or any stock entry in this store has size/color values.
+    const stockHasAnySize = Boolean(storeStockData?.data?.some(s => s.sizeId));
+    const stockHasAnyColor = Boolean(storeStockData?.data?.some(s => s.colorId));
+    const showSize = catalogShowConfig.showSize || stockHasAnySize;
+    const showColor = catalogShowConfig.showColor || stockHasAnyColor;
+
+    // Whether stock for this item has any size granularity (determines if size
+    // must be selected before color/UOM becomes available)
+    const stockHasSizesForItem = (itemId) => getStockSizeOptions(itemId).length > 0;
+    const stockHasColorsForItem = (itemId, sizeId) => getStockColorOptions(itemId, sizeId).length > 0;
 
     const getPriceFromTemplate = (itemId, qty) => {
         if (!priceTemplateList?.data || !itemId || !qty) return null;
@@ -87,17 +169,14 @@ const SalesDeliveryItems = ({
 
     const handleInputChange = (value, index, field, item) => {
         const newBlend = structuredClone(deliveryItems);
+
         if (field === "itemId") {
             const selectedItem = catalogItems?.find(item => String(item.id) === String(value));
+            newBlend[index]["sizeId"] = "";
+            newBlend[index]["colorId"] = "";
             if (selectedItem) {
                 newBlend[index]["sectionId"] = selectedItem.sectionId;
                 newBlend[index]["hsnId"] = selectedItem.hsnId;
-                if (!itemUsesSize(catalogItems, catalogPriceRows, selectedItem.id)) {
-                    newBlend[index]["sizeId"] = "";
-                }
-                if (!itemUsesColor(catalogItems, catalogPriceRows, selectedItem.id)) {
-                    newBlend[index]["colorId"] = "";
-                }
                 const selectedHsn = hsnList?.data?.find(hsn => parseInt(hsn.id) === parseInt(selectedItem.hsnId));
                 newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
                 newBlend[index]["taxMethod"] = newBlend[index]["taxMethod"] || "Inclusive";
@@ -111,6 +190,11 @@ const SalesDeliveryItems = ({
             newBlend[index]["taxPercent"] = selectedHsn?.tax || 0;
         }
 
+        if (field === "sizeId") {
+            // Reset color whenever size changes so it re-filters for the new size
+            newBlend[index]["colorId"] = "";
+        }
+
         if (field === "deliveryQty") {
             if (parseFloat(item.balanceQty || 0) < parseFloat(value || 0)) {
                 Swal.fire({
@@ -121,7 +205,6 @@ const SalesDeliveryItems = ({
                 return
             }
         }
-
 
         newBlend[index][field] = value;
         setDeliveryItems(newBlend);
@@ -176,14 +259,20 @@ const SalesDeliveryItems = ({
     const { data: colorList } = useGetColorMasterQuery({ params: { ...params, isGrey: greyFilter ? true : undefined } });
     const { data: hsnList } = useGetHsnMasterQuery({ params });
     const isLegacyRow = (row) => isLegacyCatalogItem(catalogItems, row?.itemId);
-    const rowRequiresSize = (row) => itemUsesSize(catalogItems, catalogPriceRows, row?.itemId);
-    const rowRequiresColor = (row) => itemUsesColor(catalogItems, catalogPriceRows, row?.itemId);
-    const isSizeReady = (row) => !rowRequiresSize(row) || Boolean(row.itemId);
-    const isColorReady = (row) => !rowRequiresColor(row) || Boolean(rowRequiresSize(row) ? row.sizeId : row.itemId);
+    // For delivery: size/color readiness is driven by stock availability, not just item-master config.
+    // Size is ready to select if an item is chosen.
+    const isSizeReady = (row) => Boolean(row.itemId);
+    // Color is ready after size is selected (if this item has size-granular stock) or just after item.
+    const isColorReady = (row) => {
+        if (!row.itemId) return false;
+        return !stockHasSizesForItem(row.itemId) || Boolean(row.sizeId);
+    };
+    // UOM is ready after color (if stock has color), after size (if stock has size), or just after item.
     const isUomReady = (row) => {
-        if (rowRequiresColor(row)) return Boolean(row.colorId);
-        if (rowRequiresSize(row)) return Boolean(row.sizeId);
-        return Boolean(row.itemId);
+        if (!row.itemId) return false;
+        if (stockHasColorsForItem(row.itemId, row.sizeId)) return Boolean(row.colorId);
+        if (stockHasSizesForItem(row.itemId)) return Boolean(row.sizeId);
+        return true;
     };
 
     const dispatch = useDispatch();
@@ -297,13 +386,18 @@ const SalesDeliveryItems = ({
                                                         onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "sizeId"); }}
                                                         tabIndex="0"
                                                         className={compactSelectClassName}
-                                                        value={row.sizeId}
+                                                        value={row.sizeId || ""}
                                                         onChange={e => handleInputChange(e.target.value, index, "sizeId")}
                                                         onBlur={e => handleInputChange(e.target.value, index, "sizeId")}
-                                                        disabled={readOnly || restrictSourceLineEdits || !isSizeReady(row) || isLegacyRow(row)}
+                                                        disabled={readOnly || restrictSourceLineEdits || !isSizeReady(row)}
                                                     >
-                                                        <option></option>
-                                                        {(isLegacyRow(row) ? [] : getCatalogSizeOptions(catalogItems, catalogPriceRows, sizeList?.data, row?.itemId))?.map(blend => (
+                                                        {/* "No Size" option — represents stock recorded without a size.
+                                                            Uses value="none" so state can distinguish "explicitly chosen
+                                                            no-size" (truthy) from "nothing selected yet" (falsy ""). */}
+                                                        {itemHasNoSizeStock(row.itemId) && (
+                                                            <option value="none">— No Size —</option>
+                                                        )}
+                                                        {getStockSizeOptions(row.itemId)?.map(blend => (
                                                             <option value={blend.id} key={blend.id}>{blend?.name}</option>
                                                         ))}
                                                     </select>
@@ -316,13 +410,18 @@ const SalesDeliveryItems = ({
                                                     <select
                                                         onKeyDown={e => { if (e.key === "Delete") handleInputChange("", index, "colorId"); }}
                                                         className={compactSelectClassName}
-                                                        value={row.colorId}
+                                                        value={row.colorId || ""}
                                                         onChange={e => handleInputChange(e.target.value, index, "colorId")}
                                                         onBlur={e => handleInputChange(e.target.value, index, "colorId")}
-                                                        disabled={readOnly || restrictSourceLineEdits || !isColorReady(row) || isLegacyRow(row)}
+                                                        disabled={readOnly || restrictSourceLineEdits || !isColorReady(row)}
                                                     >
-                                                        <option hidden></option>
-                                                        {(isLegacyRow(row) ? [] : getCatalogColorOptions(catalogItems, catalogPriceRows, colorList?.data, row?.itemId, row?.sizeId))?.map(blend => (
+                                                        {/* "No Color" option — represents stock recorded without a color.
+                                                            Uses value="none" so state can distinguish "explicitly chosen
+                                                            no-color" from "nothing selected yet". */}
+                                                        {itemHasNoColorStock(row.itemId, row.sizeId) && (
+                                                            <option value="none">— No Color —</option>
+                                                        )}
+                                                        {getStockColorOptions(row.itemId, row.sizeId)?.map(blend => (
                                                             <option value={blend.id} key={blend.id}>{blend?.name}</option>
                                                         ))}
                                                     </select>

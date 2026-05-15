@@ -485,6 +485,30 @@ async function create(body) {
                     }
                 }
 
+                // Fallback: read the barcode from the actual stock entry being reduced.
+                // This covers items that have no ItemPriceList row (e.g. legacy / stock-only
+                // granularity items) but whose stock rows do carry a barcode. Without this,
+                // the stock-out entry gets barcode=null and the stock report can't net it
+                // against the original stock-in entry (which groups by barcode).
+                if (!resolvedBarcode) {
+                    const effectiveStoreId = retailStore?.id || (storeId ? parseInt(storeId) : undefined);
+                    const stockRow = await tx.stock.findFirst({
+                        where: {
+                            itemId: temp.itemId ? parseInt(temp.itemId) : undefined,
+                            sizeId: temp.sizeId ? parseInt(temp.sizeId) : null,
+                            colorId: temp.colorId ? parseInt(temp.colorId) : null,
+                            branchId: branchId ? parseInt(branchId) : undefined,
+                            storeId: effectiveStoreId,
+                            barcode: { not: null },
+                            qty: { gt: 0 },
+                        },
+                        select: { barcode: true },
+                    });
+                    if (stockRow?.barcode) {
+                        resolvedBarcode = stockRow.barcode;
+                    }
+                }
+
                 const savedItem = await tx.salesDeliveryItems.create({
                     data: {
                         salesDeliveryId: parseInt(data.id),
@@ -773,6 +797,29 @@ async function update(id, body) {
                     }
                 }
 
+                // Fallback: read the barcode from the actual stock entry being reduced.
+                // Covers items with no ItemPriceList row (legacy / stock-only granularity)
+                // so that the stock-out entry carries the same barcode as the stock-in
+                // entry and the stock report nets them correctly.
+                if (!resolvedBarcode) {
+                    const effectiveStoreId = retailStore?.id || (storeId ? parseInt(storeId) : undefined);
+                    const stockRow = await tx.stock.findFirst({
+                        where: {
+                            itemId: item.itemId ? parseInt(item.itemId) : undefined,
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                            branchId: branchId ? parseInt(branchId) : undefined,
+                            storeId: effectiveStoreId,
+                            barcode: { not: null },
+                            qty: { gt: 0 },
+                        },
+                        select: { barcode: true },
+                    });
+                    if (stockRow?.barcode) {
+                        resolvedBarcode = stockRow.barcode;
+                    }
+                }
+
                 if (item.id) {
                     const savedItem = await tx.salesDeliveryItems.update({
                         where: { id: parseInt(item.id) },
@@ -783,7 +830,7 @@ async function update(id, body) {
                             colorId: item.colorId ? parseInt(item.colorId) : null,
                             uomId: item.uomId ? parseInt(item.uomId) : null,
                             hsnId: item.hsnId ? parseInt(item.hsnId) : null,
-                            qty: item.qty ? item.qty.toString() : "0",
+                            deliveryQty: item.deliveryQty ? item.deliveryQty.toString() : (item.qty ? item.qty.toString() : "0"),
                             price: item.price ? item.price.toString() : "0",
                             discountType: item.discountType || null,
                             discountValue: item.discountValue || null,
@@ -807,7 +854,7 @@ async function update(id, body) {
                             colorId: item.colorId ? parseInt(item.colorId) : null,
                             uomId: item.uomId ? parseInt(item.uomId) : null,
                             hsnId: item.hsnId ? parseInt(item.hsnId) : null,
-                            qty: item.qty ? item.qty.toString() : "0",
+                            deliveryQty: item.deliveryQty ? item.deliveryQty.toString() : (item.qty ? item.qty.toString() : "0"),
                             price: item.price ? item.price.toString() : "0",
                             discountType: item.discountType || null,
                             discountValue: item.discountValue || null,
@@ -835,7 +882,8 @@ async function update(id, body) {
                 storeId: retailStore?.id || 9,
                 branchId: branchId ? parseInt(branchId) : null,
                 barcode: item.barcode || null,
-                allocatedQty: parseAmount(item.qty),
+                // deliveryQty is the authoritative field; fall back to qty for older records
+                allocatedQty: parseAmount(item.deliveryQty ?? item.qty),
             }));
 
             if (allocations.length > 0) {
@@ -865,24 +913,37 @@ async function update(id, body) {
 
             const totalAmount = calculateDeliveryNetAmount(deliveryItems, body);
 
-            await tx.ledger.upsert({
+            // salesDeliveryId is not a @unique field on Ledger so it can't be used
+            // in an upsert where clause. Find the existing entry manually then update
+            // or create as appropriate.
+            const existingLedger = await tx.ledger.findFirst({
                 where: { salesDeliveryId: parseInt(id) },
-                update: {
-                    amount: totalAmount,
-                    partyId: parseInt(customerId),
-                    partyBillNo: salesDeliveryData.docId,
-                },
-                create: {
-                    EntryType: "Sales",
-                    LedgerType: "Customer",
-                    creditOrDebit: "Debit",
-                    partyId: parseInt(customerId),
-                    amount: totalAmount,
-                    partyBillNo: salesDeliveryData.docId,
-                    partyBillDate: new Date(),
-                    salesDeliveryId: parseInt(id)
-                }
+                select: { id: true },
             });
+
+            if (existingLedger) {
+                await tx.ledger.update({
+                    where: { id: existingLedger.id },
+                    data: {
+                        amount: totalAmount,
+                        partyId: parseInt(customerId),
+                        partyBillNo: salesDeliveryData.docId,
+                    },
+                });
+            } else {
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Sales",
+                        LedgerType: "Customer",
+                        creditOrDebit: "Debit",
+                        partyId: parseInt(customerId),
+                        amount: totalAmount,
+                        partyBillNo: salesDeliveryData.docId,
+                        partyBillDate: new Date(),
+                        salesDeliveryId: parseInt(id),
+                    },
+                });
+            }
         });
         return { statusCode: 0, data: salesDeliveryData };
     } catch (error) {
