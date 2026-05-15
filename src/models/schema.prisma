@@ -1977,6 +1977,7 @@ model Stock {
   field10                String?
   barcode                String?
   cuttingDeliveryDetails CuttingDeliveryDetails[]
+  DeliveryChallanItems   DeliveryChallanItems[]
 }
 
 model AccessoryStock {
@@ -5716,7 +5717,7 @@ model DeliveryChallan {
 }
 
 model DeliveryChallanItems {
-  id                Int     @id @default(autoincrement())
+  id                Int                @id @default(autoincrement())
   deliveryChallanId Int?
   itemId            Int?
   sizeId            Int?
@@ -5729,7 +5730,8 @@ model DeliveryChallanItems {
   discountValue     String?
   taxMethod         String?
   taxType           String?
-
+  Stock             Stock?             @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  stockId           Int?
   DeliveryChallan   DeliveryChallan?   @relation(fields: [deliveryChallanId], references: [id], onDelete: Cascade)
   Item              Item?              @relation(fields: [itemId], references: [id])
   Size              Size?              @relation(fields: [sizeId], references: [id])
