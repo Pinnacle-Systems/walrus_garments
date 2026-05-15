@@ -380,10 +380,25 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       handleSubmitCustom(updateData, data = { ...data, draftSave: true }, "Updated", nextProcess);
     }
     else if (id) {
-
-      handleSubmitCustom(updateData, data, "Updated", nextProcess);
+      const normalizedData = {
+        ...data,
+        deliveryItems: (data.deliveryItems || []).map(item => ({
+          ...item,
+          sizeId: item.sizeId === "none" ? "" : item.sizeId,
+          colorId: item.colorId === "none" ? "" : item.colorId,
+        })),
+      };
+      handleSubmitCustom(updateData, normalizedData, "Updated", nextProcess);
     } else {
-      handleSubmitCustom(addData, data, "Added", nextProcess);
+      const normalizedData = {
+        ...data,
+        deliveryItems: (data.deliveryItems || []).map(item => ({
+          ...item,
+          sizeId: item.sizeId === "none" ? "" : item.sizeId,
+          colorId: item.colorId === "none" ? "" : item.colorId,
+        })),
+      };
+      handleSubmitCustom(addData, normalizedData, "Added", nextProcess);
     }
   }
 
@@ -838,6 +853,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
               itemPriceList={itemPriceList}
               priceTemplateList={priceTemplateList}
               convertSaleOrderId={convertSaleOrderId}
+              storeId={storeId}
+              branchId={branchId}
             />
           </fieldset>
         </div>
