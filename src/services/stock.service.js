@@ -278,14 +278,13 @@ async function get(req) {
 }
 
 export async function getUnifiedStock(req) {
-    const { storeId } = req.query;
-
-    if (!storeId) {
-        return { statusCode: 1, message: "storeId is required" };
-    }
-
+    // storeId is optional — when provided, stock is scoped to that store.
+    // When omitted, all stock for the branch is returned. This lets callers
+    // such as the sales delivery form fetch stock for option-building without
+    // requiring a store to have been selected first.
     return await get(req);
 }
+
 
 
 
