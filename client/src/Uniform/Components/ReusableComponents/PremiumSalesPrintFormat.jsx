@@ -96,7 +96,7 @@ const PremiumSalesPrintFormat = ({
   const formattedDate = moment(date).format("DD-MM-YYYY");
   const formattedTime = moment(date).format("hh:mm A");
 
-  console.log(branchData, "branchData")
+  console.log(branchData, "branchDatabranchData")
 
   // ── Tax calculation ────────────────────────────────────────────────────
   const getTaxBreakup = () => {

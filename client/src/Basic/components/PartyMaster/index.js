@@ -395,7 +395,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       return data?.parentId && data?.branchTypeId;
     }
 
-    const baseFields = (data?.isClient || data?.isSupplier) && data.name && data?.partyCode && data?.address && data?.cityId && data?.pincode;
+    const baseFields = (data?.isClient || data?.isSupplier) && data.name && data?.address && data?.cityId && data?.pincode;
 
     if (!baseFields) return false;
 
@@ -546,11 +546,11 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       });
       return;
     }
-    if (!data?.gstNo?.trim() && !data?.panNo?.trim() && !data?.aadharNo?.trim()) {
+    if (!data?.gstNo?.trim() && !data?.panNo?.trim() && !data?.aadharNo?.trim() && !data?.contactNumber?.trim()) {
       Swal.fire({
         icon: 'error',
         title: 'Required Field Missing',
-        text: 'Please fill in at least one: GST, PAN, or Aadhar number.',
+        text: 'Please fill in at least one: PAN, Aadhar, GST or Contact Number',
         didClose: () => {
           nameRef.current?.focus();
         }
@@ -1136,7 +1136,6 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                         name="Code"
                         type="text"
                         value={partyCode}
-                        required={true}
                         setValue={setPartyCode}
                         readOnly={readOnly}
                         // disabled={childRecord.current > 0}
@@ -1959,7 +1958,6 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                           name="Code"
                           type="text"
                           value={partyCode}
-                          required={true}
                           setValue={setPartyCode}
                           readOnly={readOnly}
                           // disabled={childRecord.current > 0}

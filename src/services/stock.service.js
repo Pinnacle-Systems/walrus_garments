@@ -1006,6 +1006,7 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
                 }
             ],
             branchId: normalizedBranchId,
+            barcode: normalizedBarcode,
             Store: {
                 storeName: { in: ["RETAIL", "DISCOUNT SECTION"] },
                 active: true

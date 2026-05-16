@@ -43,20 +43,16 @@ const PosMultiCopyPrint = ({
   showSummarySlip = true
 }) => {
 
+  console.log(branchData, "branchData")
+
+
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
 
   const BillPage = () => (
     <Page size={[226, 1200]} style={tw('p-1 bg-white flex flex-col')}>
-      {/* UNPAID Label */}
-      {bilStatus === 'UNPAID' && (
-        <View style={tw('border-2 border-black p-1 mb-2 items-center')}>
-          <Text style={tw('text-lg font-black tracking-[0.2em]')}>*** UNPAID ***</Text>
-        </View>
-      )}
 
-      {/* Header */}
       <View style={tw('flex flex-col items-center mb-2')}>
-        <Text style={tw('font-bold text-base')}>{branchData?.branchName || "WALRUS GARMENTS"}</Text>
+        <Text style={tw('font-bold text-base')}>{branchData?.branchName || "WALRUS"}</Text>
         <Text style={tw('text-xxs text-center w-full px-2')}>
           {branchData?.address || "Address details not available"}
         </Text>
@@ -195,12 +191,12 @@ const PosMultiCopyPrint = ({
       <View style={tw('border-2 border-black p-3 items-center w-full')}>
         <Text style={tw('text-[10pt] font-bold mb-1')}>BILL SUMMARY SLIP</Text>
         <View style={tw('w-full border-b border-black mb-2')} />
-        
+
         <Text style={tw('text-[8pt] font-bold uppercase')}>Bill Number</Text>
         <Text style={tw('text-lg font-black')}>{docId}</Text>
-        
+
         <View style={tw('h-2')} />
-        
+
         <Text style={tw('text-[8pt] font-bold uppercase')}>Total Quantity</Text>
         <Text style={tw('text-xl font-black')}>{totalQty}</Text>
 

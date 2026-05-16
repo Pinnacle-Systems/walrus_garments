@@ -34,13 +34,13 @@ const styles = StyleSheet.create({
   },
 });
 
-const ThermalSalesPrintFormat = ({ 
+const ThermalSalesPrintFormat = ({
   title = "INVOICE",
-  docId, 
-  date, 
-  branchData, 
-  customerData, 
-  items = [], 
+  docId,
+  date,
+  branchData,
+  customerData,
+  items = [],
   remarks,
   itemList = [],
   sizeList = [],
@@ -51,6 +51,8 @@ const ThermalSalesPrintFormat = ({
   isSupplierOutside = false,
   taxDetails = {}
 }) => {
+
+  console.log(branchData, "branchData")
   const findFromList = (id, list, key) => {
     if (!id || !list) return "";
     const item = list.find(l => parseInt(l.id) === parseInt(id));
@@ -129,14 +131,13 @@ const ThermalSalesPrintFormat = ({
         </View>
 
         <View style={tw('flex flex-col mb-1')}>
-          <Text style={tw('text-xxs')}>Order No: {docId}</Text>
-          <Text style={tw('text-xxs')}>PO No.: {remarks || ""}</Text>
+          <Text style={tw('text-xxs')}>DocId: {docId}</Text>
         </View>
 
         {/* Items Table Header */}
         <View style={styles.dottedLine} />
         <View style={tw('flex flex-row justify-between py-1')}>
-          <Text style={tw('text-xxs font-bold w-[10%]')}>#</Text>
+          <Text style={tw('text-xxs font-bold w-[10%]')}>S.No</Text>
           <Text style={tw('text-xxs font-bold w-[45%]')}>Name</Text>
           <Text style={tw('text-xxs font-bold w-[15%] text-right')}>Qty</Text>
           <Text style={tw('text-xxs font-bold w-[15%] text-right')}>Price</Text>
@@ -180,8 +181,8 @@ const ThermalSalesPrintFormat = ({
             <Text style={tw('text-xxs')}>Sub Total :</Text>
             <Text style={tw('text-xxs')}>{taxableAmount.toFixed(2)}</Text>
           </View>
-          
-          {isSupplierOutside ? (
+
+          {/* {isSupplierOutside ? (
             igstTotal > 0 && (
               <View style={tw('flex flex-row w-full justify-between')}>
                 <Text style={tw('text-xxs')}>IGST :</Text>
@@ -203,7 +204,7 @@ const ThermalSalesPrintFormat = ({
                 </View>
               )}
             </>
-          )}
+          )} */}
 
           <View style={tw('flex flex-row w-full justify-between')}>
             <Text style={tw('text-xxs')}>Tax Amount :</Text>
@@ -224,9 +225,9 @@ const ThermalSalesPrintFormat = ({
         <View style={styles.dottedLine} />
 
         {/* Payment & Footer */}
-        <View style={tw('flex flex-col mb-4')}>
+        {/* <View style={tw('flex flex-col mb-4')}>
           <Text style={tw('text-xxs font-bold')}>ADV {taxDetails.advance || "0"} GPAY {moment(date).format('DD/MM/YY')}</Text>
-        </View>
+        </View> */}
 
         <View style={tw('flex flex-col items-center')}>
           <Text style={tw('text-xxs')}>Terms & Conditions</Text>

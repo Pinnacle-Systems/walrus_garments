@@ -127,6 +127,7 @@ const PointOfSale = () => {
 
 
 
+
     const userRoleId = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + 'userRoleId')
 
     const isAdmin = findFromList(userRoleId, roledData?.data, "name") == 'ADMIN' || findFromList(userRoleId, roledData?.data, "name") == 'DEFAULT ADMIN'

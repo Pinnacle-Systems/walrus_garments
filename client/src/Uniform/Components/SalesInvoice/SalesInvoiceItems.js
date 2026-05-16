@@ -266,7 +266,7 @@ const SalesInvoiceItems = ({
                                     return (
                                         <tr
                                             key={index}
-                                            className={transactionTableRowClassName}
+                                            className={`${transactionTableRowClassName} ${contextMenu && contextMenu.rowId === index ? "!bg-blue-200" : (index % 2 === 0 ? "bg-white" : "bg-gray-100")} `}
                                             onContextMenu={(e) => {
                                                 if (!readOnly) handleRightClick(e, index, "shiftTimeHrs");
                                             }}

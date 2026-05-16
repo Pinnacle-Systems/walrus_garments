@@ -60,6 +60,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [packingCharge, setPackingCharge] = useState("");
   const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
   const [shippingCharge, setShippingCharge] = useState("");
+  const [courierChargeEnabled, setCourierChargeEnabled] = useState(false);
+  const [courierCharge, setCourierCharge] = useState("");
   const [contextMenu, setContextMenu] = useState(false)
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
@@ -166,6 +168,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       setPackingCharge("");
       setShippingChargeEnabled(false);
       setShippingCharge("");
+      setCourierChargeEnabled(false);
+      setCourierCharge("");
     }
   }, [id]);
 
@@ -202,10 +206,13 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     setTerms(data?.terms ? data?.terms : "")
     const nextPackingCharge = formatChargeValue(data?.packingCharge);
     const nextShippingCharge = formatChargeValue(data?.shippingCharge);
+    const nextCourierCharge = formatChargeValue(data?.courierCharge);
     setPackingCharge(nextPackingCharge);
     setShippingCharge(nextShippingCharge);
+    setCourierCharge(nextCourierCharge);
     setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
     setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
+    setCourierChargeEnabled(Boolean(data?.courierChargeEnabled) || parseChargeAmount(nextCourierCharge) > 0);
     if (data?.branchId) {
       branchIdFromApi.current = data?.branchId
     }
@@ -244,6 +251,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
     shippingChargeEnabled,
     shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
+    courierChargeEnabled,
+    courierCharge: courierChargeEnabled ? String(parseChargeAmount(courierCharge).toFixed(2)) : "",
 
   }
 
@@ -462,7 +471,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   };
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
-  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
+  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0) + (courierChargeEnabled ? parseChargeAmount(courierCharge) : 0);
   const adjustedNetAmount = netAmount + extraCharges;
   const activeLinkedSaleOrder = selectedSaleOrderData?.data || linkedSaleOrder || singleData?.data?.Saleorder;
   const linkedSaleOrderDocId = activeLinkedSaleOrder?.docId || "";
@@ -495,6 +504,23 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
             value={shippingCharge}
             onChange={(event) => setShippingCharge(event.target.value)}
             onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
+      : []),
+    ...(courierChargeEnabled
+      ? [{
+        key: "courierCharge",
+        label: "Courier Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={courierCharge}
+            onChange={(event) => setCourierCharge(event.target.value)}
+            onBlur={() => setCourierCharge(formatChargeValue(courierCharge))}
             readOnly={readOnly}
             className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
@@ -601,6 +627,19 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
               setShippingCharge("");
             } else if (!shippingCharge) {
               setShippingCharge("0.00");
+            }
+          },
+        },
+        {
+          key: "courierChargeToggle",
+          label: "Courier",
+          checked: courierChargeEnabled,
+          onToggle: (checked) => {
+            setCourierChargeEnabled(checked);
+            if (!checked) {
+              setCourierCharge("");
+            } else if (!courierCharge) {
+              setCourierCharge("0.00");
             }
           },
         },

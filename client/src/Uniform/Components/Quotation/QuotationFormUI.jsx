@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { findFromList, getCommonParams, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInput } from "../../../Inputs";
 import { directOrPo } from "../../../Utils/DropdownData";
@@ -26,7 +26,7 @@ import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import { useGetItemControlPanelMasterQuery } from "../../../redux/uniformService/ItemControlPanelService";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
-import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
+import { areSalesRowsValid, checkDuplicateRows } from "../../../Utils/salesCatalogRules";
 import { useGetoffersPromotionsQuery } from "../../../redux/uniformService/Offer&PromotionsService";
 import ItemOfferModal from "../PointOfSale/components/ItemOfferModal";
 import { calculateCartWithOffers, getPotentialOffers } from "../../../Utils/offerEngine";
@@ -62,6 +62,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const [packingCharge, setPackingCharge] = useState("");
   const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
   const [shippingCharge, setShippingCharge] = useState("");
+  const [courierChargeEnabled, setCourierChargeEnabled] = useState(false);
+  const [courierCharge, setCourierCharge] = useState("");
   const [taxMethod, setTaxMethod] = useState("WithoutTax")
   const [contextMenu, setContextMenu] = useState(false)
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
@@ -152,6 +154,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       setPackingCharge("");
       setShippingChargeEnabled(false);
       setShippingCharge("");
+      setCourierChargeEnabled(false);
+      setCourierCharge("");
     }
   }, [id]);
 
@@ -173,10 +177,13 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     setTerms(data?.termsAndCondition || "");
     const nextPackingCharge = formatChargeValue(data?.packingCharge);
     const nextShippingCharge = formatChargeValue(data?.shippingCharge);
+    const nextCourierCharge = formatChargeValue(data?.courierCharge);
     setPackingCharge(nextPackingCharge);
     setShippingCharge(nextShippingCharge);
+    setCourierCharge(nextCourierCharge);
     setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
     setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
+    setCourierChargeEnabled(Boolean(data?.courierChargeEnabled) || parseChargeAmount(nextCourierCharge) > 0);
     setMinimumAdvancePayment(data?.minimumAdvancePayment ? String(data?.minimumAdvancePayment) : "");
     setIsMinimumAdvanceManuallyEdited(data?.isMinAdvanceEdited ? Boolean(data?.isMinAdvanceEdited) : false)
     setSelectedOffersByRow(data?.selectedOffersByRow || {});
@@ -216,6 +223,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
     shippingChargeEnabled,
     shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
+    courierChargeEnabled,
+    courierCharge: courierChargeEnabled ? String(parseChargeAmount(courierCharge).toFixed(2)) : "",
     taxMethod,
     selectedOffersByRow,
     isMinAdvanceEdited: isMinimumAdvanceManuallyEdited
@@ -317,7 +326,29 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       });
       return
     }
-    if (!areSalesRowsValid((data?.quoteItems)?.filter(i => i.itemId), itemList?.data, itemPriceList?.data)) {
+
+
+    const duplicateCheck = checkDuplicateRows(data?.quoteItems?.filter(i => i.itemId), ['itemId', 'sizeId', 'colorId', "barcodeType"]);
+    if (duplicateCheck.isDuplicate) {
+      Swal.fire({
+        title: "Duplicate Items Found",
+        text: duplicateCheck.message,
+        icon: "warning",
+      });
+      return;
+    }
+
+    // if (!areSalesRowsValid((data?.quoteItems)?.filter(i => i.itemId), itemList?.data, itemPriceList?.data)) {
+    //   Swal.fire({
+    //     title: "Please fill all Quote Items Mandatory fields...!",
+    //     icon: "warning",
+    //   });
+    //   return;
+    // }
+
+    if (
+      !isGridDatasValid(data?.quoteItems?.filter((i) => i.itemId), false, ["itemId", "uomId", "qty", "price",])
+    ) {
       Swal.fire({
         title: "Please fill all Quote Items Mandatory fields...!",
         icon: "warning",
@@ -408,13 +439,17 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   };
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
-  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
+  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0) + (courierChargeEnabled ? parseChargeAmount(courierCharge) : 0);
   const adjustedNetAmount = netAmount + extraCharges;
 
   const defaultMinimumAdvancePayment = (parseFloat(adjustedNetAmount || 0) * 0.25).toFixed(2);
 
+  console.log(defaultMinimumAdvancePayment, "minimumAdvancePayment", minimumAdvancePayment)
 
+  useEffect(() => {
+    setMinimumAdvancePayment(defaultMinimumAdvancePayment);
 
+  }, [netAmount])
 
 
 
@@ -448,6 +483,23 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             value={shippingCharge}
             onChange={(event) => setShippingCharge(event.target.value)}
             onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
+      : []),
+    ...(courierChargeEnabled
+      ? [{
+        key: "courierCharge",
+        label: "Courier Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={courierCharge}
+            onChange={(event) => setCourierCharge(event.target.value)}
+            onBlur={() => setCourierCharge(formatChargeValue(courierCharge))}
             readOnly={readOnly}
             className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
@@ -528,6 +580,19 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             }
           },
         },
+        {
+          key: "courierChargeToggle",
+          label: "Courier",
+          checked: courierChargeEnabled,
+          onToggle: (checked) => {
+            setCourierChargeEnabled(checked);
+            if (!checked) {
+              setCourierCharge("");
+            } else if (!courierCharge) {
+              setCourierCharge("0.00");
+            }
+          },
+        },
       ]}
       totalsRows={[
         {
@@ -583,7 +648,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             />
           </div>
           <input
-            // type="number"
+            type="number"
             value={minimumAdvancePayment}
             onChange={(e) => {
               setMinimumAdvancePayment(e.target.value);
@@ -716,7 +781,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             title="QUOTATION"
             docId={docId}
             date={date}
-            branchData={findFromList(branchId, branchList?.data, "all")}
+            branchData={branchList?.data?.find(i => i.id == branchId)}
             customerData={supplierDetails?.data}
             items={quoteItems?.filter(i => i.itemId)}
             remarks={remarks}
