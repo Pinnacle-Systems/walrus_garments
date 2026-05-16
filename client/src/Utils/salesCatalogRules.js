@@ -169,3 +169,27 @@ export function areSalesRowsValid(rows = [], items = [], itemPriceList = []) {
     });
   });
 }
+
+export function checkDuplicateRows(rows = [], uniqueFields = []) {
+  const seen = {}; // Track keys and their first seen original index
+
+  for (let i = 0; i < (rows || []).length; i++) {
+    const row = rows[i];
+    // Skip rows that don't have the primary unique field (usually itemId)
+    if (!row[uniqueFields[0]]) continue;
+
+    const key = uniqueFields.map(field => String(row[field] || "")).join('|');
+
+    if (seen[key] !== undefined) {
+      return {
+        isDuplicate: true,
+        firstIndex: seen[key],
+        duplicateIndex: i,
+        message: `Duplicate entry found at row ${i + 1} (matches row ${seen[key] + 1})`
+      };
+    }
+    seen[key] = i;
+  }
+
+  return { isDuplicate: false };
+}

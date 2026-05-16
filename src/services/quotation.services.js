@@ -228,7 +228,9 @@ async function create(body) {
         packingCharge,
         shippingChargeEnabled,
         shippingCharge,
-        isMinAdvanceEdited
+        isMinAdvanceEdited,
+        courierChargeEnabled,
+        courierCharge
     } = await body
 
 
@@ -251,6 +253,8 @@ async function create(body) {
                 packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
                 shippingChargeEnabled: Boolean(shippingChargeEnabled),
                 shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
+                courierChargeEnabled: Boolean(courierChargeEnabled),
+                courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
                 remarks: remarks ? remarks : undefined,
                 termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
                 isMinAdvanceEdited: isMinAdvanceEdited ? isMinAdvanceEdited : false,
@@ -362,7 +366,9 @@ async function update(id, body) {
         packingCharge,
         shippingChargeEnabled,
         shippingCharge,
-        isMinAdvanceEdited
+        isMinAdvanceEdited,
+        courierChargeEnabled,
+        courierCharge
     } = await body
 
     const dataFound = await prisma.quotation.findUnique({

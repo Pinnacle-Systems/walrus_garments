@@ -58,6 +58,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [packingCharge, setPackingCharge] = useState("");
   const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
   const [shippingCharge, setShippingCharge] = useState("");
+  const [courierChargeEnabled, setCourierChargeEnabled] = useState(false);
+  const [courierCharge, setCourierCharge] = useState("");
   const [contextMenu, setContextMenu] = useState(false)
   const [printOpen, setPrintOpen] = useState(false);
   const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
@@ -147,6 +149,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       setPackingCharge("");
       setShippingChargeEnabled(false);
       setShippingCharge("");
+      setCourierChargeEnabled(false);
+      setCourierCharge("");
     }
   }, [id, linkedQuoteId]);
 
@@ -176,6 +180,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     setPackingCharge(quoteData?.packingChargeEnabled ? formatChargeValue(quoteData?.packingCharge) : "");
     setShippingChargeEnabled(Boolean(quoteData?.shippingChargeEnabled) || parseChargeAmount(quoteData?.shippingCharge) > 0);
     setShippingCharge(quoteData?.shippingChargeEnabled ? formatChargeValue(quoteData?.shippingCharge) : "");
+    setCourierChargeEnabled(Boolean(quoteData?.courierChargeEnabled) || parseChargeAmount(quoteData?.courierCharge) > 0);
+    setCourierCharge(quoteData?.courierChargeEnabled ? formatChargeValue(quoteData?.courierCharge) : "");
   }, [id, linkedQuotationData, linkedQuoteId, setCustomerId, setSaleOrderItems]);
 
 
@@ -196,6 +202,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     setPackingCharge(shouldEnablePacking ? nextPackingCharge : "");
     setShippingChargeEnabled(shouldEnableShipping);
     setShippingCharge(shouldEnableShipping ? nextShippingCharge : "");
+    setCourierChargeEnabled(Boolean(data?.courierChargeEnabled) || parseChargeAmount(data?.courierCharge) > 0);
+    setCourierCharge(data?.courierChargeEnabled ? formatChargeValue(data?.courierCharge) : "");
   }, [
     id,
     quoteId,
@@ -226,10 +234,13 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     setTerms(data?.termsAndCondition || "");
     const nextPackingCharge = formatChargeValue(data?.packingCharge);
     const nextShippingCharge = formatChargeValue(data?.shippingCharge);
+    const nextCourierCharge = formatChargeValue(data?.courierCharge);
     setPackingCharge(nextPackingCharge);
     setShippingCharge(nextShippingCharge);
+    setCourierCharge(nextCourierCharge);
     setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
     setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
+    setCourierChargeEnabled(Boolean(data?.courierChargeEnabled) || parseChargeAmount(nextCourierCharge) > 0);
     setSelectedOffersByRow(data?.selectedOffersByRow || {});
     setLinkedQuoteId(data?.quotationId || "")
     setSaleOrderItems(data?.SaleOrderItems ? data.SaleOrderItems : []);
@@ -270,6 +281,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     packingCharge: packingChargeEnabled ? String(parseChargeAmount(packingCharge).toFixed(2)) : "",
     shippingChargeEnabled,
     shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
+    courierChargeEnabled,
+    courierCharge: courierChargeEnabled ? String(parseChargeAmount(courierCharge).toFixed(2)) : "",
     selectedOffersByRow,
     termsAndCondition: terms,
   }
@@ -478,7 +491,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   };
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
-  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0);
+  const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0) + (courierChargeEnabled ? parseChargeAmount(courierCharge) : 0);
   const adjustedNetAmount = netAmount + extraCharges;
   const chargeRows = [
     ...(packingChargeEnabled
@@ -509,6 +522,23 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             value={shippingCharge}
             onChange={(event) => setShippingCharge(event.target.value)}
             onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
+            readOnly={readOnly}
+            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+          />
+        ),
+      }]
+      : []),
+    ...(courierChargeEnabled
+      ? [{
+        key: "courierCharge",
+        label: "Courier Charge",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={courierCharge}
+            onChange={(event) => setCourierCharge(event.target.value)}
+            onBlur={() => setCourierCharge(formatChargeValue(courierCharge))}
             readOnly={readOnly}
             className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
@@ -604,6 +634,19 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
               setShippingCharge("");
             } else if (!shippingCharge) {
               setShippingCharge("0.00");
+            }
+          },
+        },
+        {
+          key: "courierChargeToggle",
+          label: "Courier",
+          checked: courierChargeEnabled,
+          onToggle: (checked) => {
+            setCourierChargeEnabled(checked);
+            if (!checked) {
+              setCourierCharge("");
+            } else if (!courierCharge) {
+              setCourierCharge("0.00");
             }
           },
         },

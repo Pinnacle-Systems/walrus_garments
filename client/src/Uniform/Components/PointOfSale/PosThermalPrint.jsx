@@ -45,6 +45,7 @@ const PosThermalPrint = ({
   returnReferences = []
 }) => {
 
+
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
 
   return (
@@ -52,7 +53,7 @@ const PosThermalPrint = ({
       <Page size={[226, 1200]} style={tw('p-1 bg-white flex flex-col')}>
         {/* Header */}
         <View style={tw('flex flex-col items-center mb-2')}>
-          <Text style={tw('font-bold text-base')}>{branchData?.branchName || "WALRUS GARMENTS"}</Text>
+          <Text style={tw('font-bold text-base')}>{branchData?.branchName || "WALRUS"}</Text>
           <Text style={tw('text-xxs text-center w-full px-2')}>
             {branchData?.address || "Address details not available"}
           </Text>

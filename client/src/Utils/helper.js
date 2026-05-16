@@ -309,19 +309,28 @@ export function convertSpaceToUnderScore(str) {
 }
 
 export function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = []) {
+  console.log(datas, "isGridDatasValid");
 
-  console.log(datas, "isGridDatasValid")
+  const isInvalidValue = (value) =>
+    value === "" ||
+    value === null ||
+    value === undefined ||
+    value === "NaN" ||
+    (typeof value === "number" && isNaN(value)) ||   // catches NaN (number)
+    (typeof value === "string" && value.trim() !== "" && isNaN(Number(value)) && value !== "NaN") || // catches unparseable strings
+    value === 0 ||
+    value === "0" ||
+    parseFloat(value) === 0;
 
   if (isRequiredAllData) {
-    let gridDatasValid = datas.every(obj =>
-      Object.values(obj).every(value => value !== "" && value !== null && value !== 0))
-    return gridDatasValid
-  }
-  else {
-    let gridDatasValid = datas.every(obj =>
-      mandatoryFields.every(field => (obj[field]) && (obj[field] !== "") && (obj[field] !== null) && (parseFloat(obj[field]) !== 0)
-      ))
-    return gridDatasValid;
+    return datas.every(obj => Object.values(obj).every(value => !isInvalidValue(value)));
+  } else {
+    return datas.every(obj =>
+      mandatoryFields.every(field => {
+        const value = obj[field];
+        return value !== undefined && !isInvalidValue(value);
+      })
+    );
   }
 }
 

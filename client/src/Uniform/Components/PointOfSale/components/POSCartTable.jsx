@@ -19,6 +19,7 @@ const POSCartTable = ({
     approvalStatus,
     isAdmin
 }) => {
+
     const isPendingApproval = approvalStatus === 'PENDING';
     const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval);
 

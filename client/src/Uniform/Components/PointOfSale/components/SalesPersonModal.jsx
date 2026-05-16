@@ -12,6 +12,9 @@ const SalesPersonModal = ({
     handleSalesPersonScan,
     employees
 }) => {
+
+    console.log(employees, "employees", salesPersonBarcode)
+
     return (
         <Modal
             isOpen={isOpen}
@@ -60,15 +63,15 @@ const SalesPersonModal = ({
                         >
                             {employees
                                 .filter(emp =>
-                                    emp.name?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
-                                    emp.employeeId?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
-                                    emp.regNo?.toLowerCase().includes(salesPersonBarcode.toLowerCase())
+                                    emp.active &&
+                                    (emp.name?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
+                                        emp.employeeId?.toLowerCase().includes(salesPersonBarcode.toLowerCase()))
                                 )
-                                .slice(0, 5) // Show top 5 matches
+                                // .slice(0, 5) 
                                 .map(emp => (
                                     <button
                                         key={emp.id}
-                                        onClick={() => handleSalesPersonScan(emp.employeeId || emp.regNo)}
+                                        onClick={() => handleSalesPersonScan(emp.employeeId)}
                                         className="w-full p-4 text-left hover:bg-white transition-all flex items-center justify-between group"
                                     >
                                         <div className="flex items-center gap-3">
@@ -77,7 +80,7 @@ const SalesPersonModal = ({
                                             </div>
                                             <div>
                                                 <div className="text-xs font-black text-slate-800 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">{emp.name}</div>
-                                                <div className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">{emp.employeeId || emp.regNo}</div>
+                                                <div className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">{emp.employeeId}</div>
                                             </div>
                                         </div>
                                         <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-500 transition-all transform group-hover:translate-x-1" />
