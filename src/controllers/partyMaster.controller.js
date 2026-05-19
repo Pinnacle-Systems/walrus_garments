@@ -4,7 +4,7 @@ import {
     get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, upload as _upload,
     kycForm as kycFormService, removePartyBranch as _removePartyBranch , removePartyMaterial as _removePartyMaterial , getMaterialOne  as _getMaterialOne
     ,updateMaterial  as  _updateMaterial  , getContactOne  as _getContactOne , updateContact as _updateContact , removePartyContact as _removePartyContact ,
-getPartyBranchOne  as _getPartyBranchOne ,
+getPartyBranchOne  as _getPartyBranchOne, getPartyOutstandingBalance as _getPartyOutstandingBalance ,
 
 
 
@@ -259,6 +259,15 @@ async function updateContact(req, res, next) {
     }
 }
 
+async function getPartyOutstandingBalance(req, res, next) {
+    try {
+        res.json(await _getPartyOutstandingBalance(req.params.id));
+    } catch (err) {
+        console.error(`Error`, err.message);
+        res.json({ statusCode: 1, message: err.message });
+    }
+}
+
 export {
     get,
     getOne,
@@ -277,5 +286,6 @@ export {
     removePartyMaterial,
  
     updateMaterial,
-    updateContact
+    updateContact,
+    getPartyOutstandingBalance
 };

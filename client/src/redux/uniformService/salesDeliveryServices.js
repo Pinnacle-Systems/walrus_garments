@@ -74,6 +74,13 @@ const salesDeliveryApi = createApi({
             }),
             invalidatesTags: ["salesDelivery"],
         }),
+        approveSalesDelivery: builder.mutation({
+            query: ({ id, finYearId }) => ({
+                url: `${SALES_DELIVERY_API}/approve/${id}/${finYearId}`,
+                method: "PUT",
+            }),
+            invalidatesTags: ["salesDelivery"],
+        }),
     }),
 });
 
@@ -83,6 +90,7 @@ export const {
     useAddSalesDeliveryMutation,
     useUpdateSalesDeliveryMutation,
     useDeleteSalesDeliveryMutation,
+    useApproveSalesDeliveryMutation,
 } = salesDeliveryApi;
 
 export default salesDeliveryApi;

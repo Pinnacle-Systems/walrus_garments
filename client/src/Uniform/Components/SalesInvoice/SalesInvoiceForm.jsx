@@ -636,6 +636,9 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
             colorList={colorList?.data}
             uomList={uomList?.data}
             hsnList={hsnList?.data}
+            packingCharge={packingChargeEnabled ? packingCharge : 0}
+            shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
+            terms={terms}
           />
         </PDFViewer>
       </Modal>

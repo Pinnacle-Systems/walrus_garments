@@ -5061,29 +5061,30 @@ model ItemControlPanel {
 }
 
 model Quotation {
-  id                    Int       @id @default(autoincrement())
+  id                    Int                    @id @default(autoincrement())
   docId                 String?
-  createdAt             DateTime? @default(now())
-  updatedAt             DateTime? @updatedAt
-  createdBy             User?     @relation("createdBy", fields: [createdById], references: [id])
+  createdAt             DateTime?              @default(now())
+  updatedAt             DateTime?              @updatedAt
+  createdBy             User?                  @relation("createdBy", fields: [createdById], references: [id])
   createdById           Int?
-  updatedBy             User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedBy             User?                  @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById           Int?
-  Branch                Branch?   @relation(fields: [branchId], references: [id])
+  Branch                Branch?                @relation(fields: [branchId], references: [id])
   branchId              Int?
-  Party                 Party?    @relation(fields: [customerId], references: [id])
+  Party                 Party?                 @relation(fields: [customerId], references: [id])
   customerId            Int?
   discountType          String?
   discountValue         String?
   taxType               String?
   minimumAdvancePayment String?
-  packingChargeEnabled  Boolean?  @default(false)
+  packingChargeEnabled  Boolean?               @default(false)
   packingCharge         String?
-  shippingChargeEnabled Boolean?  @default(false)
+  shippingChargeEnabled Boolean?               @default(false)
   shippingCharge        String?
   remarks               String?
   termsAndCondition     String?
-
+  courierChargeEnabled  Boolean?               @default(false)
+  courierCharge         String?
   QuotationItems        QuotationItems[]
   Saleorder             Saleorder[]
   TermsAndConditionsNew TermsAndConditionsNew? @relation(fields: [termsAndConditionsId], references: [id])
@@ -5144,10 +5145,11 @@ model Saleorder {
   TermsAndConditionsNew TermsAndConditionsNew? @relation(fields: [termsAndConditionsId], references: [id])
   termsAndConditionsId  Int?
   isDeleted             Boolean?               @default(false)
-
-  SaleOrderItems SaleOrderItems[]
-  SalesDelivery  SalesDelivery[]
-  SalesInvoice   SalesInvoice[]
+  courierChargeEnabled  Boolean?               @default(false)
+  courierCharge         String?
+  SaleOrderItems        SaleOrderItems[]
+  SalesDelivery         SalesDelivery[]
+  SalesInvoice          SalesInvoice[]
 }
 
 model SaleOrderItems {
@@ -5233,32 +5235,37 @@ model StockAdjustmentItems {
 }
 
 model SalesDelivery {
-  id                    Int                    @id @default(autoincrement())
-  docId                 String?
-  date                  DateTime?
-  Branch                Branch?                @relation(fields: [branchId], references: [id])
-  branchId              Int?
-  Party                 Party?                 @relation(fields: [customerId], references: [id])
-  customerId            Int?
-  createdAt             DateTime?              @default(now())
-  updatedAt             DateTime?              @updatedAt
-  createdBy             User?                  @relation("createdBy", fields: [createdById], references: [id])
-  createdById           Int?
-  updatedBy             User?                  @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById           Int?
-  taxType               String?
-  packingChargeEnabled  Boolean?               @default(false)
-  packingCharge         String?
-  shippingChargeEnabled Boolean?               @default(false)
-  shippingCharge        String?
-  remarks               String?
-  termsAndCondition     String?
-  TermsAndConditionsNew TermsAndConditionsNew? @relation(fields: [termsAndConditionsId], references: [id])
-  termsAndConditionsId  Int?
-  saleOrderId           Int?
-  Saleorder             Saleorder?             @relation(fields: [saleOrderId], references: [id])
-  isDeleted             Boolean?               @default(false)
-
+  id                     Int                                  @id @default(autoincrement())
+  docId                  String?
+  date                   DateTime?
+  Branch                 Branch?                              @relation(fields: [branchId], references: [id])
+  branchId               Int?
+  Party                  Party?                               @relation(fields: [customerId], references: [id])
+  customerId             Int?
+  createdAt              DateTime?                            @default(now())
+  updatedAt              DateTime?                            @updatedAt
+  createdBy              User?                                @relation("createdBy", fields: [createdById], references: [id])
+  createdById            Int?
+  updatedBy              User?                                @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById            Int?
+  taxType                String?
+  packingChargeEnabled   Boolean?                             @default(false)
+  packingCharge          String?
+  shippingChargeEnabled  Boolean?                             @default(false)
+  shippingCharge         String?
+  remarks                String?
+  termsAndCondition      String?
+  TermsAndConditionsNew  TermsAndConditionsNew?               @relation(fields: [termsAndConditionsId], references: [id])
+  termsAndConditionsId   Int?
+  saleOrderId            Int?
+  Saleorder              Saleorder?                           @relation(fields: [saleOrderId], references: [id])
+  isDeleted              Boolean?                             @default(false)
+  courierChargeEnabled   Boolean?                             @default(false)
+  courierCharge          String?
+  status                 String?                              @default("APPROVED")
+  isOverDelivery         Boolean?                             @default(false)
+  approvedBy             Int?
+  approvedAt             DateTime?
   SalesDeliveryItems     SalesDeliveryItems[]
   FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
   SalesReturn            SalesReturn[]
@@ -5514,6 +5521,7 @@ model Payment {
   refDocId        String?
   transaction     String?
   transactionId   Int?
+  outstandingAmount Float?
 }
 
 model Pos {

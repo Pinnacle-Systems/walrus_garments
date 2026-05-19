@@ -35,7 +35,15 @@ import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardN
 
 const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setDeliveryItems, deliveryItems,
-  yarnList, colorList, uomList, hsnList, convertSaleOrderId, linkedSaleOrder, invalidateTagsDispatch, termsData, dispatch, totalReceivedAmount = 0, remainingPaymentCapacity = 0
+  yarnList, colorList, uomList, hsnList, convertSaleOrderId, linkedSaleOrder, invalidateTagsDispatch, termsData, dispatch, totalReceivedAmount = 0, remainingPaymentCapacity = 0,
+
+
+  packingChargeEnabled, setPackingChargeEnabled,
+  packingCharge, setPackingCharge,
+  shippingChargeEnabled, setShippingChargeEnabled,
+  shippingCharge, setShippingCharge,
+  courierChargeEnabled, setCourierChargeEnabled,
+  courierCharge, setCourierCharge,
 
 
 
@@ -56,12 +64,12 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
   const [term, setTerm] = useState("")
-  const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
-  const [packingCharge, setPackingCharge] = useState("");
-  const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
-  const [shippingCharge, setShippingCharge] = useState("");
-  const [courierChargeEnabled, setCourierChargeEnabled] = useState(false);
-  const [courierCharge, setCourierCharge] = useState("");
+  // const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
+  // const [packingCharge, setPackingCharge] = useState("");
+  // const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
+  // const [shippingCharge, setShippingCharge] = useState("");
+  // const [courierChargeEnabled, setCourierChargeEnabled] = useState(false);
+  // const [courierCharge, setCourierCharge] = useState("");
   const [contextMenu, setContextMenu] = useState(false)
   const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
@@ -135,21 +143,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     }
   }, [convertSaleOrderId, linkedSaleOrderId]);
 
-  // useEffect(() => {
-  //   if (id || !linkedSaleOrderId || !selectedSaleOrderData?.data) return;
-
-  //   console.log("convertSaleOrderId", convertSaleOrderId)
-
-  //   const saleOrderData = selectedSaleOrderData.data;
-  //   setCustomerId(saleOrderData.customerId || "");
-  //   setDeliveryItems(saleOrderData.remainingSaleOrderItems || []);
-  //   setPackingChargeEnabled(Boolean(saleOrderData?.packingChargeEnabled) || parseChargeAmount(saleOrderData?.packingCharge) > 0);
-  //   setPackingCharge(saleOrderData?.packingChargeEnabled ? formatChargeValue(saleOrderData?.packingCharge) : "");
-  //   setShippingChargeEnabled(Boolean(saleOrderData?.shippingChargeEnabled) || parseChargeAmount(saleOrderData?.shippingCharge) > 0);
-  //   setShippingCharge(saleOrderData?.shippingChargeEnabled ? formatChargeValue(saleOrderData?.shippingCharge) : "");
-  // }, [id, linkedSaleOrderId, selectedSaleOrderData, setCustomerId, setDeliveryItems]);
-
-
 
 
   const inwardTyperef = useRef(null);
@@ -161,17 +154,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     }
   }, []);
 
-  useEffect(() => {
-    if (!id) {
-      setTerm("");
-      setPackingChargeEnabled(false);
-      setPackingCharge("");
-      setShippingChargeEnabled(false);
-      setShippingCharge("");
-      setCourierChargeEnabled(false);
-      setCourierCharge("");
-    }
-  }, [id]);
 
 
 
@@ -179,7 +161,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
 
     const today = new Date()
-    if (convertSaleOrderId || !id) return
+    if (linkedSaleOrderId && !id) return
+
     if (id) {
       setReadOnly(true);
     } else {
@@ -213,6 +196,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
     setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
     setCourierChargeEnabled(Boolean(data?.courierChargeEnabled) || parseChargeAmount(nextCourierCharge) > 0);
+    setLinkedSaleOrderId(data?.saleOrderId ? data?.saleOrderId : '')
     if (data?.branchId) {
       branchIdFromApi.current = data?.branchId
     }
@@ -376,8 +360,18 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       });
       return;
     }
-    if (!window.confirm("Are you sure you want to save these details?")) {
-      return
+    const isOverDelivery = (data?.deliveryItems || []).some(item =>
+      item.itemId && parseFloat(item.deliveryQty || 0) > parseFloat(item.balanceQty || 0)
+    );
+
+    if (isOverDelivery) {
+      if (!window.confirm("One or more items exceed the balance quantity. This delivery will be sent for Admin approval and an invoice will NOT be generated immediately. Do you want to proceed?")) {
+        return;
+      }
+    } else {
+      if (!window.confirm("Are you sure you want to save these details?")) {
+        return;
+      }
     }
     if (nextProcess == "draft" && !id) {
       handleSubmitCustom(addData, data = { ...data, draftSave: true }, "Added", nextProcess);
@@ -761,6 +755,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
             colorList={colorList?.data}
             uomList={uomList?.data}
             hsnList={hsnList?.data}
+            packingCharge={packingChargeEnabled ? packingCharge : 0}
+            shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
+            courierCharge={courierChargeEnabled ? courierCharge : 0}
+            terms={terms}
           />
         </PDFViewer>
       </Modal>
@@ -810,7 +808,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                   searchTerm={customerId}
                   show={"isClient"}
                   required={true}
-                  disabled={id}
+                  disabled={id || linkedSaleOrderId}
                   ref={firstInputRef}
                   nextRef={secondInputRef}
                 />

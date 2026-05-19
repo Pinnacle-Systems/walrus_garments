@@ -4,7 +4,7 @@ import multerUpload, { multerUploadForGrid } from '../utils/multerUpload.js';
 
 import { get, getOne, getSearch, create, update, remove, upload, kycFormController, removePartyBranch ,removePartyMaterial , getMaterialOne ,
 updateMaterial
-,getContactOne , updateContact ,  removePartyContact  , getPartyBranchOne
+,getContactOne , updateContact ,  removePartyContact  , getPartyBranchOne, getPartyOutstandingBalance
 
  } from '../controllers/partyMaster.controller.js';
 
@@ -17,6 +17,8 @@ router.post('/kycform', multerUpload.single('image'), kycFormController);
 router.get('/', get);
 
 router.get('/:id', getOne);
+
+router.get('/:id/outstanding-balance', getPartyOutstandingBalance);
 
 router.get('/search/:searchKey', getSearch);
 

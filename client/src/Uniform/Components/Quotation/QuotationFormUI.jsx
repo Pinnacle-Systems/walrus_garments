@@ -790,6 +790,10 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             colorList={colorList?.data}
             uomList={uomList?.data}
             hsnList={hsnList?.data}
+            packingCharge={packingChargeEnabled ? packingCharge : 0}
+            shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
+            courierCharge={courierChargeEnabled ? courierCharge : 0}
+            terms={terms}
           />
         </PDFViewer>
       </Modal>

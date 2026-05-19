@@ -36,9 +36,22 @@ import { useGetcollectionsQuery } from "../../../redux/uniformService/Collection
 
 const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setSaleOrderItems, saleOrderItems,
-  yarnList, colorList, uomList, quoteId, sourceQuotationDocId, sourceQuotationAdvanceReceived = 0, sourceQuotationPackingChargeEnabled = false, sourceQuotationPackingCharge = "", sourceQuotationShippingChargeEnabled = false, sourceQuotationShippingCharge = "", termsData, invalidateTagsDispatch, dispatch
+  yarnList, colorList, uomList, quoteId, sourceQuotationDocId, sourceQuotationAdvanceReceived = 0, sourceQuotationPackingChargeEnabled = false, sourceQuotationPackingCharge = "", sourceQuotationShippingChargeEnabled = false, sourceQuotationShippingCharge = "", termsData, invalidateTagsDispatch, dispatch,
 
 
+
+  packingChargeEnabled,
+  packingCharge,
+  setPackingChargeEnabled,
+  setPackingCharge,
+  shippingChargeEnabled,
+  shippingCharge,
+  setShippingChargeEnabled,
+  setShippingCharge,
+  courierChargeEnabled,
+  courierCharge,
+  setCourierChargeEnabled,
+  setCourierCharge,
 }) => {
 
 
@@ -54,12 +67,12 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
   const [terms, setTerms] = useState("")
-  const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
-  const [packingCharge, setPackingCharge] = useState("");
-  const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
-  const [shippingCharge, setShippingCharge] = useState("");
-  const [courierChargeEnabled, setCourierChargeEnabled] = useState(false);
-  const [courierCharge, setCourierCharge] = useState("");
+  // const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
+  // const [packingCharge, setPackingCharge] = useState("");
+  // const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
+  // const [shippingCharge, setShippingCharge] = useState("");
+  // const [courierChargeEnabled, setCourierChargeEnabled] = useState(false);
+  // const [courierCharge, setCourierCharge] = useState("");
   const [contextMenu, setContextMenu] = useState(false)
   const [printOpen, setPrintOpen] = useState(false);
   const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
@@ -70,6 +83,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [showItemOfferModal, setShowItemOfferModal] = useState(false);
   const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
   const [linkedQuoteId, setLinkedQuoteId] = useState(quoteId || "");
+  const [childRecord, setChildRecord] = useState(0);
+
+
+
 
   const { branchId, companyId, userId, finYearId } = getCommonParams()
   const params = {
@@ -244,6 +261,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     setSelectedOffersByRow(data?.selectedOffersByRow || {});
     setLinkedQuoteId(data?.quotationId || "")
     setSaleOrderItems(data?.SaleOrderItems ? data.SaleOrderItems : []);
+    setChildRecord(data?.SalesDelivery?.length > 0 ? true : false)
 
 
   }, [id, linkedQuoteId]);
@@ -716,6 +734,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         <>
           <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
             onClick={() => setReadOnly(false)}
+            disabled={childRecord}
           >
             <FiEdit2 className="w-4 h-4 mr-2" />
             Edit
@@ -739,7 +758,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
           <button
             className="bg-orange-600 text-white px-4 py-1 rounded-md hover:bg-orange-700 flex items-center text-sm ml-2"
             onClick={() => {
-              if (saleOrderItems?.filter(i => i.itemId).length) {
+              if (!saleOrderItems?.filter(i => i.itemId).length) {
                 Swal.fire({
                   icon: 'warning',
                   title: `Please add some items first`,
@@ -793,6 +812,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             colorList={colorList?.data}
             uomList={uomList?.data}
             hsnList={hsnList?.data}
+            packingCharge={packingChargeEnabled ? packingCharge : 0}
+            shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
+            courierCharge={courierChargeEnabled ? courierCharge : 0}
+            terms={terms}
           />
         </PDFViewer>
       </Modal>

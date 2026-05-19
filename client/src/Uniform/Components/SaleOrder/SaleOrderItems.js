@@ -498,6 +498,7 @@ const SaleOrderItems = ({
                                                         if (e.key === "Delete") handleInputChange("0.00", index, "price");
                                                     }}
                                                     min="0" type="number"
+                                                    disabled={readOnly || true}
                                                     className={compactNumberInputClassName}
                                                     onFocus={e => e.target.select()}
                                                     value={(!row.price) ? 0 : row.price}

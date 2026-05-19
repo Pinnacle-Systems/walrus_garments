@@ -130,12 +130,12 @@ const SalesDeliveryItems = ({
         const realSizeId = !noSizeExplicit && sizeId;
         return storeStockData.data.some(
             s => String(s.itemId) === String(itemId) &&
-                 (noSizeExplicit
-                     ? !s.sizeId
-                     : realSizeId
-                         ? String(s.sizeId) === String(realSizeId)
-                         : false) &&
-                 !s.colorId
+                (noSizeExplicit
+                    ? !s.sizeId
+                    : realSizeId
+                        ? String(s.sizeId) === String(realSizeId)
+                        : false) &&
+                !s.colorId
         );
     };
 
@@ -195,16 +195,15 @@ const SalesDeliveryItems = ({
             newBlend[index]["colorId"] = "";
         }
 
-        if (field === "deliveryQty") {
-            if (parseFloat(item.balanceQty || 0) < parseFloat(value || 0)) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Delivery Quantity cannot be greater than balance quantity",
-                });
-                return
-            }
-        }
+        // if (field === "deliveryQty") {
+        //     if (parseFloat(item.balanceQty || 0) < parseFloat(value || 0)) {
+        //         Swal.fire({
+        //             icon: "warning",
+        //             title: "Over Delivery Warning",
+        //             text: "Delivery Quantity is greater than balance quantity. This will require Admin approval and no invoice will be generated immediately.",
+        //         });
+        //     }
+        // }
 
         newBlend[index][field] = value;
         setDeliveryItems(newBlend);
@@ -283,6 +282,7 @@ const SalesDeliveryItems = ({
     };
 
     const getLineTotals = (line) => {
+
         const quantity = Math.max(0, Number(line.deliveryQty));
         const unitPrice = Math.max(0, Number(line.price));
         const taxRate = Number(line.taxPercent) || 0;
@@ -304,6 +304,9 @@ const SalesDeliveryItems = ({
         }
         const subTotal = discountedAmount || 0;
         const taxTotal = subTotal * (taxRate / 100 || 0);
+
+        console.log(line, subTotal, "subTotal")
+
         return { subTotal, taxTotal, total: subTotal + taxTotal };
     };
 
@@ -351,6 +354,7 @@ const SalesDeliveryItems = ({
                                     const selectedItemData = itemList?.data?.find(i => i.id === row.itemId);
                                     const isLegacy = row.itemId ? selectedItemData?.isLegacy : true;
                                     const priceList = selectedItemData?.ItemPriceList || [];
+                                    const isItem = row.itemId
                                     const currentPriceEntry = isLegacy
                                         ? priceList[0]
                                         : priceList.find(p => String(p.sizeId) === String(row.sizeId) && String(p.colorId) === String(row.colorId));
@@ -370,7 +374,7 @@ const SalesDeliveryItems = ({
                                                 <SearchableTableCellSelect
                                                     value={row.itemId}
                                                     options={itemOptions}
-                                                    disabled={readOnly}
+                                                    disabled={readOnly || true}
                                                     onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
                                                     addNewModalWidth="w-[90%] h-[95%]"
                                                     childComponent={ItemMaster}
@@ -436,7 +440,7 @@ const SalesDeliveryItems = ({
                                                     value={row.hsnId}
                                                     onChange={e => handleInputChange(e.target.value, index, "hsnId")}
                                                     onBlur={e => handleInputChange(e.target.value, index, "hsnId")}
-                                                    disabled={readOnly || restrictSourceLineEdits || !row.itemId}
+                                                    disabled={readOnly || restrictSourceLineEdits || !row.itemId || true}
                                                 >
                                                     <option hidden></option>
                                                     {hsnList?.data?.map(blend => (
@@ -453,7 +457,7 @@ const SalesDeliveryItems = ({
                                                     value={row.uomId}
                                                     onChange={e => handleInputChange(e.target.value, index, "uomId")}
                                                     onBlur={e => handleInputChange(e.target.value, index, "uomId")}
-                                                    disabled={readOnly || restrictSourceLineEdits || !isUomReady(row)}
+                                                    disabled={readOnly || restrictSourceLineEdits || !isUomReady(row) || true}
                                                 >
                                                     <option hidden></option>
                                                     {(id ? uomList?.data : uomList?.data?.filter(item => item.active))?.map(blend => (
@@ -465,7 +469,13 @@ const SalesDeliveryItems = ({
                                                 {parseFloat(row?.balanceQty || 0).toFixed(2)}
 
                                             </td>
-                                            <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                                            <td className={`${compactFocusCellClassName} w-40 text-right`}
+                                                style={
+                                                    parseFloat(row?.deliveryQty || 0) > parseFloat(row?.balanceQty || 0)
+                                                        ? { backgroundColor: "#fee2e2", border: "1px solid #ef4444" }
+                                                        : undefined
+                                                }
+                                            >
                                                 <input
                                                     onKeyDown={e => {
                                                         if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
@@ -491,7 +501,7 @@ const SalesDeliveryItems = ({
                                                     className={compactNumberInputClassName}
                                                     onFocus={e => e.target.select()}
                                                     value={(!row.price) ? 0 : row.price}
-                                                    disabled={readOnly || restrictSourceLineEdits || !row.qty}
+                                                    disabled={readOnly || restrictSourceLineEdits || !row.qty || true}
                                                     onChange={e => handleInputChange(e.target.value, index, "price")}
                                                     onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(2), index, "price")}
                                                 />
@@ -501,6 +511,7 @@ const SalesDeliveryItems = ({
                                                     className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 shadow-none outline-none focus:bg-transparent focus:outline-none"
                                                     value={row.barcodeType || "REGULAR"}
                                                     onChange={(e) => handleInputChange(e.target.value, index, "barcodeType")}
+                                                    disabled={readOnly || true}
                                                 >
                                                     {availableBarcodes.length > 0 ? (
                                                         availableBarcodes.map((b) => (
@@ -522,7 +533,7 @@ const SalesDeliveryItems = ({
                                                     className={compactDropdownClassName}
                                                     value={row.itemId ? (row.taxMethod || "Inclusive") : (row.taxMethod || "")}
                                                     onChange={e => handleInputChange(e.target.value, index, "taxMethod")}
-                                                    disabled={readOnly || restrictSourceLineEdits}
+                                                    disabled={readOnly || restrictSourceLineEdits || true}
                                                 >
                                                     <option value=""></option>
                                                     <option value="Inclusive">Inclusive</option>
@@ -558,6 +569,7 @@ const SalesDeliveryItems = ({
 
                                                         }
                                                     }}
+                                                    disabled={true}
                                                     className="h-full w-full rounded-none bg-blue-50 py-0"
                                                 >
                                                     +

@@ -38,15 +38,24 @@ function calculateQuotationNetAmount(quotationItems = [], quotation = {}) {
 
     const packingAmount = quotation?.packingChargeEnabled ? parseAmount(quotation?.packingCharge) : 0;
     const shippingAmount = quotation?.shippingChargeEnabled ? parseAmount(quotation?.shippingCharge) : 0;
+    const courierAmount = quotation?.courierChargeEnabled ? parseAmount(quotation?.courierCharge) : 0;
 
-    return Math.round((lineNetAmount + packingAmount + shippingAmount) * 100) / 100;
+    return Math.round((lineNetAmount + packingAmount + shippingAmount + courierAmount) * 100) / 100;
 }
 
 function enrichQuotationConversionState(quotation, paymentData = []) {
-    const paidAmount = Math.round((paymentData || []).reduce(
+    const paidAmount = Math.round((paymentData || [])?.filter(i => i.paymentFlow == 'Receipt')?.reduce(
         (acc, curr) => acc + parseAmount(curr?.paidAmount),
         0
     ) * 100) / 100;
+
+    const totalRefundAmount = Math.round((paymentData || [])?.filter(i => i.paymentFlow == 'Payout')?.reduce(
+        (acc, curr) => acc + parseAmount(curr?.paidAmount),
+        0
+    ) * 100) / 100;
+
+    const totalPaidAmount = paidAmount - totalRefundAmount;
+
     const minimumAdvanceAmount = parseAmount(quotation?.minimumAdvancePayment);
     const requiredAdvanceAmount = minimumAdvanceAmount > 0
         ? minimumAdvanceAmount
@@ -54,15 +63,16 @@ function enrichQuotationConversionState(quotation, paymentData = []) {
     const saleOrderExists = (quotation?.Saleorder || []).length > 0;
     const quotationStatus = saleOrderExists
         ? "Order Taken"
-        : (paidAmount < requiredAdvanceAmount ? "Pending Advance" : "Ready for Order");
+        : (totalPaidAmount < requiredAdvanceAmount ? "Pending Advance" : "Ready for Order");
 
     return {
         ...quotation,
         paymentData,
-        paidAmount,
+        paidAmount: totalPaidAmount,
+        totalRefundAmount,
         requiredAdvanceAmount,
         quotationStatus,
-        canConvertToSaleOrder: !saleOrderExists && paidAmount >= requiredAdvanceAmount,
+        canConvertToSaleOrder: !saleOrderExists && totalPaidAmount >= requiredAdvanceAmount,
     };
 }
 
@@ -151,6 +161,8 @@ async function get(req) {
                 },
             });
 
+
+
             const SaleOrderpaymentData = await prisma.payment.findMany({
                 where: {
                     transactionType: "SALESORDER",
@@ -159,7 +171,15 @@ async function get(req) {
             });
 
 
-            return enrichQuotationConversionState(item, [...paymentData, ...SaleOrderpaymentData]);
+            const RefundAmount = await prisma.payment.findMany({
+                where: {
+                    paymentFlow: "Payout",
+                    partyId: data.customerId,
+                },
+            });
+
+
+            return enrichQuotationConversionState(item, [...paymentData, ...SaleOrderpaymentData, ...RefundAmount]);
         })
     );
 
@@ -418,7 +438,8 @@ async function update(id, body) {
                 remarks: remarks || null,
                 termsAndCondition: termsAndCondition || null,
                 isMinAdvanceEdited: isMinAdvanceEdited ? isMinAdvanceEdited : false,
-
+                courierChargeEnabled: Boolean(courierChargeEnabled),
+                courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
             },
         })
 

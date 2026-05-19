@@ -47,9 +47,12 @@ const ThermalSalesPrintFormat = ({
   colorList = [],
   uomList = [],
   hsnList = [],
-  taxMethod = "WithoutTax",
   isSupplierOutside = false,
-  taxDetails = {}
+  taxDetails = {},
+  packingCharge = 0,
+  shippingCharge = 0,
+  courierCharge = 0,
+  terms = ""
 }) => {
 
   console.log(branchData, "branchData")
@@ -67,7 +70,11 @@ const ThermalSalesPrintFormat = ({
       const price = parseFloat(item.price || 0);
       let taxableAmount = 0;
       let taxAmount = 0;
-      if (taxMethod === "inclusive" || taxMethod === "With Tax") {
+      const itemTaxMethod = item.taxMethod;
+      const isInclusive = (typeof itemTaxMethod === 'string') &&
+        (itemTaxMethod.toLowerCase() === "inclusive" || itemTaxMethod.toLowerCase() === "with tax" || itemTaxMethod.toLowerCase() === "withtax");
+
+      if (isInclusive) {
         const netTotal = price * qty;
         taxableAmount = netTotal / (1 + taxRate / 100);
         taxAmount = netTotal - taxableAmount;
@@ -105,8 +112,10 @@ const ThermalSalesPrintFormat = ({
   const cgstTotal = taxBreakup.reduce((acc, b) => acc + b.cgst, 0);
   const sgstTotal = taxBreakup.reduce((acc, b) => acc + b.sgst, 0);
   const igstTotal = taxBreakup.reduce((acc, b) => acc + b.igst, 0);
-  const netAmount = Math.round(taxableAmount + totalTax);
+  const extraCharges = parseFloat(packingCharge || 0) + parseFloat(shippingCharge || 0) + parseFloat(courierCharge || 0);
+  const netAmount = Math.round(taxableAmount + totalTax + extraCharges);
 
+  console.log(taxableAmount, "taxableAmount")
   return (
     <Document title={`${title}_${docId}`}>
       <Page size={[216, 800]} style={tw('p-1 bg-white flex flex-col')}>
@@ -123,7 +132,15 @@ const ThermalSalesPrintFormat = ({
 
         {/* Customer & Info */}
         <View style={tw('flex flex-row justify-between mb-1')}>
-          <Text style={tw('text-xxs font-bold w-1/2')}>{customerData?.name?.toUpperCase() || "CASH"}</Text>
+          <View style={tw('flex flex-col w-1/2')}>
+            <Text style={tw('text-xxs font-bold')}>{customerData?.name?.toUpperCase() || "CASH"}</Text>
+            {(customerData?.contactPersonNumber || customerData?.phone) && (
+              <Text style={tw('text-xxs')}>Mob: {customerData?.contactPersonNumber || customerData?.phone}</Text>
+            )}
+            {customerData?.gstNo && (
+              <Text style={tw('text-xxs')}>GST: {customerData?.gstNo}</Text>
+            )}
+          </View>
           <View style={tw('flex flex-col items-end w-1/2')}>
             <Text style={tw('text-xxs')}>Date: {moment(date).format('DD/MM/YYYY')}</Text>
             <Text style={tw('text-xxs')}>Time: {moment().format('HH:mm A')}</Text>
@@ -178,7 +195,7 @@ const ThermalSalesPrintFormat = ({
 
         <View style={tw('flex flex-col items-end py-1 space-y-0.5')}>
           <View style={tw('flex flex-row w-full justify-between')}>
-            <Text style={tw('text-xxs')}>Sub Total :</Text>
+            <Text style={tw('text-xxs')}>Taxable Amount :</Text>
             <Text style={tw('text-xxs')}>{taxableAmount.toFixed(2)}</Text>
           </View>
 
@@ -211,10 +228,36 @@ const ThermalSalesPrintFormat = ({
             <Text style={tw('text-xxs')}>{totalTax.toFixed(2)}</Text>
           </View>
 
+          <View style={tw('flex flex-row w-full justify-between font-bold border-t border-black border-dashed mt-1 pt-1')}>
+            <Text style={tw('text-xxs font-bold')}>Total Amount :</Text>
+            <Text style={tw('text-xxs font-bold')}>{(taxableAmount + totalTax).toFixed(2)}</Text>
+          </View>
+
           <View style={tw('flex flex-row w-full justify-between')}>
             <Text style={tw('text-xxs')}>Round off :</Text>
-            <Text style={tw('text-xxs')}>{(netAmount - (taxableAmount + totalTax)).toFixed(2)}</Text>
+            <Text style={tw('text-xxs')}>{(netAmount - (taxableAmount + totalTax + extraCharges)).toFixed(2)}</Text>
           </View>
+
+          {parseFloat(packingCharge || 0) > 0 && (
+            <View style={tw('flex flex-row w-full justify-between')}>
+              <Text style={tw('text-xxs')}>Packing Charge :</Text>
+              <Text style={tw('text-xxs')}>{parseFloat(packingCharge).toFixed(2)}</Text>
+            </View>
+          )}
+
+          {parseFloat(shippingCharge || 0) > 0 && (
+            <View style={tw('flex flex-row w-full justify-between')}>
+              <Text style={tw('text-xxs')}>Shipping Charge :</Text>
+              <Text style={tw('text-xxs')}>{parseFloat(shippingCharge).toFixed(2)}</Text>
+            </View>
+          )}
+
+          {parseFloat(courierCharge || 0) > 0 && (
+            <View style={tw('flex flex-row w-full justify-between')}>
+              <Text style={tw('text-xxs')}>Courier Charge :</Text>
+              <Text style={tw('text-xxs')}>{parseFloat(courierCharge).toFixed(2)}</Text>
+            </View>
+          )}
 
           <View style={tw('flex flex-row w-full justify-between py-1 border-t border-black border-dashed mt-1')}>
             <Text style={tw('text-xs font-bold')}>NET TOTAL :</Text>
@@ -230,7 +273,13 @@ const ThermalSalesPrintFormat = ({
         </View> */}
 
         <View style={tw('flex flex-col items-center')}>
-          <Text style={tw('text-xxs')}>Terms & Conditions</Text>
+          {terms && (
+            <View style={tw('flex flex-col items-center mb-2 w-full')}>
+              <Text style={tw('text-xxs font-bold border-b border-black mb-1')}>Terms & Conditions</Text>
+              <Text style={tw('text-xxs text-center')}>{terms}</Text>
+            </View>
+          )}
+          {!terms && <Text style={tw('text-xxs')}>Terms & Conditions</Text>}
           <Text style={tw('text-xxs font-bold mt-1')}>Thanks for doing business with us!</Text>
         </View>
       </Page>

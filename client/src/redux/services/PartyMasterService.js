@@ -45,6 +45,18 @@ const partyMasterApi = createApi({
       },
       providesTags: ["Party"],
     }),
+    getPartyOutstandingBalance: builder.query({
+      query: (id) => {
+        return {
+          url: `${PARTY_API}/${id}/outstanding-balance`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        };
+      },
+      providesTags: ["Party"],
+    }),
     getPartyMaterialById: builder.query({
       query: (id) => {
         return {
@@ -174,6 +186,7 @@ export const {
   useGetPartyQuery,
 
   useGetPartyByIdQuery,
+  useGetPartyOutstandingBalanceQuery,
   useGetPartyBranchByIdQuery,
   useGetPartyMaterialByIdQuery,
   useGetPartyContactByIdQuery,
