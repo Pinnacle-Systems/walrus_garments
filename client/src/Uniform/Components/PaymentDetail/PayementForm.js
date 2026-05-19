@@ -3,7 +3,7 @@ import FormHeader from "../../../Basic/components/FormHeader"
 import { amountInWords, findFromList, formatAmountIN, getCommonParams, getDateFromDateTime } from "../../../Utils/helper";
 import { PaymentFlow, paymentModes, PaymentType, TransactionAgainst } from "../../../Utils/DropdownData";
 import { useDispatch } from "react-redux";
-import { useGetPartyByIdQuery, useGetPartyQuery } from "../../../redux/services/PartyMasterService";
+import { useGetPartyByIdQuery, useGetPartyQuery, useGetPartyOutstandingBalanceQuery } from "../../../redux/services/PartyMasterService";
 import moment from "moment";
 import { toast } from "react-toastify";
 import { DropdownInputNew, ReusableSearchableInputNewCustomerwithBranches, TextInputNew } from "../../../Inputs";
@@ -40,11 +40,16 @@ const PaymentForm = ({
     refId, setRefId, refDocId, setRefDocId,
     currentHistoryPage, setCurrentHistoryPage,
     readOnly, setReadOnly, childRecord,
-    onNew, paymentHistory, setPaymentHistory, invalidateTagsDispatch
+    onNew, paymentHistory, setPaymentHistory, invalidateTagsDispatch,
+    outstandingAmount, setOutStandingAmount
 }) => {
 
-    const calculateQuotationNetAmount = (quotationItems = []) => {
-        return quotationItems.reduce((acc, curr) => {
+    const calculateQuotationNetAmount = (quotationItems = [], quotation) => {
+        const packingCharge = parseFloat(quotation?.packingCharge || 0);
+        const shippingCharge = parseFloat(quotation?.shippingCharge || 0);
+        const courierCharge = parseFloat(quotation?.courierCharge || 0);
+
+        const itemsTotal = quotationItems.reduce((acc, curr) => {
             const price = parseFloat(curr?.price || 0);
             const qty = parseFloat(curr?.qty || 0);
             const taxPercent = parseFloat(curr?.taxPercent || 0);
@@ -69,21 +74,23 @@ const PaymentForm = ({
 
             return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
         }, 0);
+
+        return itemsTotal + packingCharge + shippingCharge + courierCharge;
     };
 
     const getQuotationOutstandingAmount = (quotation) => {
         if (!quotation) return 0;
 
-        const quotationNetAmount = calculateQuotationNetAmount(quotation?.QuotationItems);
+        const quotationNetAmount = calculateQuotationNetAmount(quotation?.QuotationItems, quotation);
 
         setPaymentHistory(quotation?.paymentData);
 
-        const receivedAmount = (quotation?.paymentData || []).reduce(
+        const receivedAmount = (quotation?.paymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
             (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
             0
         );
 
-        console.log(quotationNetAmount, "quotationNetAmount", receivedAmount, "receivedAmount", Math.max(0, quotationNetAmount - receivedAmount))
+
 
 
         return Math.max(0, quotationNetAmount - receivedAmount);
@@ -92,10 +99,10 @@ const PaymentForm = ({
     const getSalesInvoiceOutstandingAmount = (salesInvoice) => {
         if (!salesInvoice) return 0;
 
-        const salesInvoiceNetAmount = calculateQuotationNetAmount(salesInvoice?.SalesInvoiceItems);
+        const salesInvoiceNetAmount = calculateQuotationNetAmount(salesInvoice?.SalesInvoiceItems, salesInvoice);
         setPaymentHistory(salesInvoice?.paymentData);
 
-        const receivedAmount = (salesInvoice?.paymentData || []).reduce(
+        const receivedAmount = (salesInvoice?.paymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
             (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
             0
         );
@@ -108,17 +115,16 @@ const PaymentForm = ({
         return Math.max(0, salesInvoiceNetAmount - receivedAmount - advanceReceivedAmount);
     };
 
-    console.log(id, "idfffffffffffffffffffffffffffffff")
 
     const getSalesOrderOutstandingAmount = (salesOrder) => {
         if (!salesOrder) return 0;
 
 
 
-        const salesOrderNetAmount = calculateQuotationNetAmount(salesOrder?.SaleOrderItems);
+        const salesOrderNetAmount = calculateQuotationNetAmount(salesOrder?.SaleOrderItems, salesOrder);
         setPaymentHistory(salesOrder?.paymentData);
 
-        const receivedAmount = (salesOrder?.paymentData || []).reduce(
+        const receivedAmount = (salesOrder?.paymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
             (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
             0
         );
@@ -128,13 +134,12 @@ const PaymentForm = ({
             0
         );
 
-        console.log(salesOrderNetAmount, receivedAmount, advanceReceivedAmount, "salesOrderNetAmount", salesOrderNetAmount - receivedAmount - advanceReceivedAmount)
+
 
         return Math.max(0, salesOrderNetAmount - receivedAmount - advanceReceivedAmount);
     };
 
 
-    const today = new Date().toISOString().split('T')[0];
 
     const { branchId, finYearId, userId, companyId } = getCommonParams();
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
@@ -148,14 +153,27 @@ const PaymentForm = ({
     const dispatch = useDispatch()
 
 
+    const { data: allData, isLoading, isFetching } = useGetPaymentQuery({ params: { branchId, } });
 
     const { data: singleData } = useGetPaymentByIdQuery(id, { skip: !id });
-    const {
-        data: PartyData,
-        isFetching: isSingleFetching,
-        isLoading: isSingleLoading,
-    } = useGetPartyByIdQuery(supplierId, { skip: !supplierId });
+    // const {
+    //     data: PartyData,
+    //     isFetching: isSingleFetching,
+    //     isLoading: isSingleLoading,
+    // } = useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
+    const { data: outstandingData, isFetching: isOutstandingFetching, isLoading: isOutstandingLoading } = useGetPartyOutstandingBalanceQuery(supplierId, {
+        skip: !supplierId || paymentFlow !== "Payout"
+    });
+
+    useEffect(() => {
+        if (paymentFlow === "Payout") {
+            // setTotalBillAmount(outstandingData?.data?.outstandingBalance || 0);
+            setOutStandingAmount(outstandingData?.data?.outstandingBalance || 0);
+        }
+    }, [outstandingData, isOutstandingFetching, isOutstandingLoading, supplierId])
+
+    console.log(transactionType, "transactionType")
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -177,10 +195,9 @@ const PaymentForm = ({
             setPaymentRefNo(data?.paymentRefNo || '');
             setRefId(data?.refId || '');
             setRefDocId(data?.refDocId || '');
-            setTotalPayAmount(PartyData?.data?.soa ? data?.totalPaymentPurchaseBill : data?.totalPaymentSalesBill)
             setPartyId(data?.partyId || '');
             setTotalBillAmount(data?.totalBillAmount || '')
-            setBillAmount(data?.billAmount || '')
+            // setBillAmount(data?.totalBillAmount || '')
 
             setCvv(data?.cvv ? moment.utc(data?.cvv).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"))
             setPaymentFlow(data?.paymentFlow ? data?.paymentFlow : "Receipt")
@@ -188,8 +205,13 @@ const PaymentForm = ({
             setLinkedPaymentOverrideEnabled(false);
             setLockPrefilledTransactionFields(Boolean(data?.transactionType && data?.transactionId));
 
+            setOutStandingAmount(data?.outstandingAmount ? data?.outstandingAmount : 0)
+
+
         }, [id])
 
+
+    console.log(totalBillAmount, "totalBillAmount")
 
     useEffect(() => {
         if (id && singleData?.data) {
@@ -229,15 +251,15 @@ const PaymentForm = ({
     };
 
 
-    useEffect(() => {
-        if (!id) {
-            if (transactionType && transactionId) {
-                return;
-            }
+    // useEffect(() => {
+    //     if (!id) {
+    //         if (transactionType && transactionId) {
+    //             return;
+    //         }
 
-            setTotalBillAmount(PartyData?.data?.coa + PartyData?.data?.totaloutstanding - PartyData?.data?.totalPaymentAgainstInvoice);
-        }
-    }, [paymentType, PartyData, id, transactionType, transactionId]);
+    //         setTotalBillAmount(PartyData?.data?.coa + PartyData?.data?.totaloutstanding - PartyData?.data?.totalPaymentAgainstInvoice);
+    //     }
+    // }, [paymentType, PartyData, id, transactionType, transactionId]);
 
     const [addData, { isLoading: isAdding }] = useAddPaymentMutation();
     const [updateData, { isLoading: isUpdating }] = useUpdatePaymentMutation();
@@ -266,11 +288,15 @@ const PaymentForm = ({
         totalAmount: parseFloat(paidAmount || 0) + parseFloat(discount || 0),
         paymentFlow,
         transactionId,
-        billAmount
+        billAmount,
+        outstandingAmount
 
     }
     const validateData = (data) => {
-        return data?.supplierId && data?.paidAmount && data?.paymentType && data?.paymentMode && data?.cvv && data?.paymentFlow
+        if (data?.paymentFlow === "Payout") {
+            return data?.supplierId && data?.paidAmount && data?.paymentMode && data?.cvv && data?.paymentFlow;
+        }
+        return data?.supplierId && data?.paidAmount && data?.paymentType && data?.paymentMode && data?.cvv && data?.paymentFlow;
     }
 
     const handleSubmitCustom = async (callback, data, text, nextProcess) => {
@@ -322,6 +348,30 @@ const PaymentForm = ({
 
             }); return
         }
+
+        let foundItem;
+        if (id) {
+            foundItem = allData?.data
+                ?.filter((i) => i.id !== id)
+                ?.some(
+                    (item) =>
+                        item.paymentRefNo?.trim().toLowerCase() == paymentRefNo?.trim().toLowerCase());
+        } else {
+            foundItem = allData?.data?.some(
+                (item) => item.paymentRefNo?.trim().toLowerCase() === paymentRefNo?.trim().toLowerCase()
+            );
+        }
+        if (foundItem) {
+            Swal.fire({
+                text: "The Payment Ref No already exists.",
+                icon: "warning",
+                didClose: () => {
+                    inputRef?.current?.focus();
+                }
+            });
+            return false;
+        }
+
         if (data?.amount < 0) {
             // toast.info("Amount Cannot be Negative...!!!", { position: "top-center" })
             Swal.fire({
@@ -374,6 +424,18 @@ const PaymentForm = ({
 
     const handleChange = (e) => {
         const value = e.target.value;
+
+        if (paymentFlow == "Payout") {
+            if (value > outstandingAmount) {
+                Swal.fire({
+                    title: `Amount Cannot be Greater than Outstanding Amount(${formatAmountIN(outstandingAmount)})!!!`,
+                    icon: "error",
+
+                });
+                return
+            }
+        }
+
         setPaidAmount(value);
     };
 
@@ -428,7 +490,8 @@ const PaymentForm = ({
     useEffect(() => {
         if (!transactionType || !transactionId) {
             if (!id) {
-                setTotalBillAmount('');
+                // setTotalBillAmount('');
+                setOutStandingAmount('')
                 setBillAmount('');
                 setRefDocId('');
                 setRefId('');
@@ -444,6 +507,7 @@ const PaymentForm = ({
             (item) => String(item.id) === String(transactionId)
         );
 
+        console.log(transactionList, "transactionList")
         if (!selectedTransaction) return;
 
         if (!id) {
@@ -456,26 +520,30 @@ const PaymentForm = ({
         }
 
         if (transactionType === "QUOTATION") {
-            const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems);
+            const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems, selectedTransaction);
             if (!id) {
-                setBillAmount(billVal.toFixed(2));
-                setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                setTotalBillAmount(billVal.toFixed(2));
+                // setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+
             } else {
                 setPaymentHistory(selectedTransaction?.paymentData || []);
             }
         } else if (transactionType === "SALESINVOICE") {
-            const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems);
+            const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems, selectedTransaction);
             if (!id) {
-                setBillAmount(billVal.toFixed(2));
-                setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                setTotalBillAmount(billVal.toFixed(2));
+                // setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                setOutStandingAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
             } else {
                 setPaymentHistory(selectedTransaction?.paymentData || []);
             }
         } else if (transactionType === "SALESORDER") {
-            const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems);
+            const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
             if (!id) {
-                setBillAmount(billVal.toFixed(2));
-                setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                setTotalBillAmount(billVal.toFixed(2));
+                // setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
             } else {
                 setPaymentHistory(selectedTransaction?.paymentData || []);
             }
@@ -694,46 +762,50 @@ const PaymentForm = ({
 
                                 <div className="col-span-3 overflow-visible">
                                     <ReusableSearchableInputNewCustomerwithBranches
-                                        label={`${paymentFlow == "Receipt" ? "Customer" : "Supplier"}`}
+                                        label={"Customer Name"}
                                         component="PartyMaster"
-                                        placeholder={`Search ${paymentFlow == "Receipt" ? "Customer" : "Supplier"} Name...`}
+                                        placeholder={`Search Customer Name...`}
                                         // optionList={supplierData}
                                         setSearchTerm={(value) => setSupplierId(value)}
                                         searchTerm={supplierId}
-                                        show={`${paymentFlow == "Receipt" ? "isClient" : "isSupplier"}`}
-                                        required disabled={areLinkedFieldsLocked}
-                                        isBillable={true}
+                                        show={"both"}
+                                        required
+                                        disabled={areLinkedFieldsLocked}
+                                        isBillable={paymentFlow == "Payout" ? false : true}
+                                        isRetunBillable={paymentFlow == "Payout" ? true : false}
                                     // ref={partyRef}
                                     />
                                 </div>
                             </div>
-                            <div className="mb-2">
-                                <label htmlFor="paymentType" className="block text-xs font-bold text-gray-600 mb-1">
-                                    Payment Type <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    value={paymentType}
-                                    onChange={(e) => setPaymentType(e.target.value)}
-                                    disabled={areLinkedFieldsLocked}
-                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
-                                >
-                                    <option value="" disabled>Select a payment type</option>
-                                    {PaymentType.filter(type => {
-                                        if (type.value === "ADVANCE") {
-                                            // Show Advance only if there are pending quotations for this customer
-                                            const pendingQuos = (quotationList?.data || []).filter(
-                                                q => String(q.customerId) === String(supplierId) && (!q.Saleorder || q.Saleorder.length === 0)
-                                            );
-                                            return pendingQuos.length > 0;
-                                        }
-                                        return true;
-                                    }).map((type) => (
-                                        <option key={type.value} value={type.value}>
-                                            {type.show}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            {paymentFlow !== "Payout" && (
+                                <div className="mb-2">
+                                    <label htmlFor="paymentType" className="block text-xs font-bold text-gray-600 mb-1">
+                                        Payment Type <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        value={paymentType}
+                                        onChange={(e) => setPaymentType(e.target.value)}
+                                        disabled={areLinkedFieldsLocked}
+                                        className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
+                                    >
+                                        <option value="" disabled>Select a payment type</option>
+                                        {PaymentType.filter(type => {
+                                            if (type.value === "ADVANCE") {
+                                                // Show Advance only if there are pending quotations for this customer
+                                                const pendingQuos = (quotationList?.data || []).filter(
+                                                    q => String(q.customerId) === String(supplierId) && (!q.Saleorder || q.Saleorder.length === 0)
+                                                );
+                                                return pendingQuos.length > 0;
+                                            }
+                                            return true;
+                                        }).map((type) => (
+                                            <option key={type.value} value={type.value}>
+                                                {type.show}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                             {/* <div className="mb-2" >
                                 <label htmlFor="transactionType" className="block text-xs font-bold text-gray-600 mb-1">
                                     Against Transaction
@@ -752,49 +824,55 @@ const PaymentForm = ({
                                     ))}
                                 </select>
                             </div> */}
-                            <div className="mb-2">
-                                <label htmlFor="refDocId" className="block text-xs font-bold text-gray-600 mb-1 ">
-                                    Against Doc No
-                                </label>
-                                <DropdownInputNew
-                                    className="block text-gray-600 font-medium mb-2"
-                                    options={getDocIdOptions()}
-                                    value={transactionId}
-                                    readOnly={areLinkedFieldsLocked}
-                                    setValue={(val) => {
-                                        setTransactionId(val);
-                                        setRefId(val);
-                                        const options = getDocIdOptions();
-                                        const selected = options.find(opt => String(opt.value) === String(val));
-                                        if (selected) setRefDocId(selected.show);
+                            {paymentFlow !== "Payout" && (
+                                <div className="mb-2">
+                                    <label htmlFor="refDocId" className="block text-xs font-bold text-gray-600 mb-1 ">
+                                        Against Doc No
+                                    </label>
+                                    <DropdownInputNew
+                                        className="block text-gray-600 font-medium mb-2"
+                                        options={getDocIdOptions()}
+                                        value={transactionId}
+                                        readOnly={areLinkedFieldsLocked}
+                                        setValue={(val) => {
+                                            setTransactionId(val);
+                                            setRefId(val);
+                                            const options = getDocIdOptions();
+                                            const selected = options.find(opt => String(opt.value) === String(val));
+                                            if (selected) setRefDocId(selected.show);
 
-                                        let transactionList = [];
-                                        if (transactionType === "QUOTATION") transactionList = quotationList?.data || [];
-                                        else if (transactionType === "SALESINVOICE") transactionList = salesInvoiceList?.data || [];
-                                        else if (transactionType === "SALESORDER") transactionList = salesOrderList?.data || [];
-                                        const selectedTransaction = transactionList.find(
-                                            (item) => String(item.id) === String(val)
-                                        );
+                                            let transactionList = [];
+                                            if (transactionType === "QUOTATION") transactionList = quotationList?.data || [];
+                                            else if (transactionType === "SALESINVOICE") transactionList = salesInvoiceList?.data || [];
+                                            else if (transactionType === "SALESORDER") transactionList = salesOrderList?.data || [];
+                                            const selectedTransaction = transactionList.find(
+                                                (item) => String(item.id) === String(val)
+                                            );
+                                            console.log(transactionType, "transactionType")
 
-                                        if (selectedTransaction) {
-                                            if (transactionType === "QUOTATION") {
-                                                const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems);
-                                                setBillAmount(billVal.toFixed(2));
-                                                setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
-                                            } else if (transactionType === "SALESINVOICE") {
-                                                const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems);
-                                                setBillAmount(billVal.toFixed(2));
-                                                setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
-                                            } else if (transactionType === "SALESORDER") {
-                                                const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems);
-                                                setBillAmount(billVal.toFixed(2));
-                                                setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                                            if (selectedTransaction) {
+                                                if (transactionType === "QUOTATION") {
+                                                    const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems, selectedTransaction);
+                                                    setTotalBillAmount(billVal.toFixed(2));
+                                                    // setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                                                    setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                                                } else if (transactionType === "SALESINVOICE") {
+                                                    const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems, selectedTransaction);
+                                                    setTotalBillAmount(billVal.toFixed(2));
+                                                    // setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                                                    setOutStandingAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                                                } else if (transactionType === "SALESORDER") {
+                                                    const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
+                                                    setTotalBillAmount(billVal.toFixed(2));
+                                                    // setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                                                    setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                                                }
                                             }
-                                        }
-                                    }}
-                                    required
-                                />
-                            </div>
+                                        }}
+                                        required
+                                    />
+                                </div>
+                            )}
                             <div className="mb-4">
                                 <label htmlFor="paymentType" className="block text-xs font-bold text-gray-600 mb-1">
                                     Payment Mode <span className="text-red-500">*</span>
@@ -821,23 +899,27 @@ const PaymentForm = ({
                                     placeholder="Reference No"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">Total Bill Amount</label>
-                                <input
-                                    type="text"
-                                    value={formatAmountIN((Number(billAmount || 0)).toFixed(2))}
-                                    className="w-full px-3 py-1 border border-gray-300 bg-slate-100 text-gray-800 font-semibold rounded-lg focus:outline-none focus:ring-emerald-500"
-                                    placeholder="0"
-                                    disabled
-                                />
-                            </div>
+                            {paymentFlow !== "Payout" && (
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-1">Total Bill Amount</label>
+                                    <input
+                                        type="text"
+                                        value={formatAmountIN((Number(totalBillAmount || 0)).toFixed(2))}
+                                        className="w-full px-3 py-1 border border-gray-300 bg-slate-100 text-gray-800 font-semibold rounded-lg focus:outline-none focus:ring-emerald-500"
+                                        placeholder="0"
+                                        disabled
+                                    />
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-xs font-bold text-gray-600 mb-1">Outstanding Amount</label>
                                 <input
                                     type="text"
 
-                                    value={formatAmountIN((Number(totalBillAmount || 0)).toFixed(2))}
-                                    onChange={(e) => setTotalBillAmount(e.target.value)}
+                                    value={formatAmountIN((Number(outstandingAmount || 0)).toFixed(2))}
+                                    // onChange={(e) => setTotalBillAmount(e.target.value)}
+                                    onChange={(e) => setOutStandingAmount(e.target.value)}
+
                                     className="w-full px-3 py-1 border border-gray-300 bg-slate-100 text-red-500 font-semibold rounded-lg focus:outline-none focus:ring-emerald-500"
                                     placeholder="0"
                                     disabled
@@ -860,9 +942,9 @@ const PaymentForm = ({
                                 <label className="block text-xs font-bold text-gray-600 mb-1">Balance Amount</label>
                                 <input
                                     type="text"
-                                    value={formatAmountIN(((Number(totalBillAmount || 0) - Number(paidAmount || 0) - Number(discount || 0)) || 0).toFixed(2))}
+                                    value={formatAmountIN(((Number(outstandingAmount || 0) - Number(paidAmount || 0) - Number(discount || 0)) || 0).toFixed(2))}
                                     onChange={(e) => setBalanceAmount(e.target.value)}
-                                    className={`w-full px-3 py-1 border border-gray-300 bg-slate-100 rounded-lg ${(Number(totalBillAmount) - Number(paidAmount)) < 0 ? 'text-red-500' : 'text-green-800'
+                                    className={`w-full px-3 py-1 border border-gray-300 bg-slate-100 rounded-lg ${(Number(outstandingAmount) - Number(paidAmount)) < 0 ? 'text-red-500' : 'text-green-800'
                                         } focus:outline-none focus:ring-emerald-500 font-semibold`}
                                     placeholder="0"
                                     disabled

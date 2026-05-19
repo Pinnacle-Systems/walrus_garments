@@ -286,10 +286,10 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
       Swal.fire({ title: "Please fill all adjustment Items...!", icon: "warning" });
       return;
     }
-    if (!isGridDatasValid(data?.stockAdjustmentItems?.filter((i) => i.itemId), false, mandatoryFields)) {
-      Swal.fire({ title: "Please fill all Po Items Mandatory fields...!", icon: "warning" });
-      return;
-    }
+    // if (!isGridDatasValid(data?.stockAdjustmentItems?.filter((i) => i.itemId), false, mandatoryFields)) {
+    //   Swal.fire({ title: "Please fill all Po Items Mandatory fields...!", icon: "warning" });
+    //   return;
+    // }
     if (!window.confirm("Are you sure save the details ...?")) return;
 
     if (nextProcess === "draft" && !id)

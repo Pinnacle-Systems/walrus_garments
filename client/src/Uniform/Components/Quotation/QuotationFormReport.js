@@ -32,8 +32,12 @@ const QuotationPrintFormat = ({
   rowActions = true,
 }) => {
 
-  const calculateQuotationNetAmount = (quotationItems = []) => {
-    return quotationItems.reduce((acc, curr) => {
+  const calculateQuotationNetAmount = (quotationItems = [], quotation = {}) => {
+    const packingCharge = parseFloat(quotation?.packingCharge || 0);
+    const shippingCharge = parseFloat(quotation?.shippingCharge || 0);
+    const courierCharge = parseFloat(quotation?.courierCharge || 0);
+
+    const itemsTotal = quotationItems.reduce((acc, curr) => {
       const price = parseFloat(curr?.price || 0);
       const qty = parseFloat(curr?.qty || 0);
       const taxPercent = parseFloat(curr?.taxPercent || 0);
@@ -58,6 +62,8 @@ const QuotationPrintFormat = ({
 
       return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
     }, 0);
+
+    return itemsTotal + packingCharge + shippingCharge + courierCharge;
   };
 
   const getPaidAmount = (paymentData = []) => {
@@ -73,13 +79,14 @@ const QuotationPrintFormat = ({
       return minimumAdvanceAmount;
     }
 
-    return calculateQuotationNetAmount(dataObj?.QuotationItems) * 0.25;
+    return calculateQuotationNetAmount(dataObj?.QuotationItems, dataObj) * 0.25;
   };
 
   const shouldShowAdvanceReceipt = (dataObj) => {
-    const paidAmount = getPaidAmount(dataObj?.paymentData);
+    const paidAmount = getPaidAmount(dataObj?.paymentData?.filter(i => i.paymentFlow !== 'Payout'));
     const requiredAdvanceAmount = getRequiredAdvanceAmount(dataObj);
-    return paidAmount < requiredAdvanceAmount;
+    console.log(paidAmount, dataObj.totalRefundAmount, "dataObj.totalRefundAmount")
+    return (paidAmount - dataObj.totalRefundAmount) < requiredAdvanceAmount;
   };
 
 
@@ -431,50 +438,50 @@ const QuotationPrintFormat = ({
                             </div>
                             <div className="flex items-center gap-1 pl-2">
                               {onView && (
-                              <Tooltip title="View" arrow>
-                                <span>
-                                  <button
-                                    className="text-blue-600 flex items-center px-1 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
-                                    onClick={(e) => { e.stopPropagation(); onView(dataObj.id); }}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                    </svg>
-                                  </button>
-                                </span>
-                              </Tooltip>
-                            )}
-                            {onEdit && (
-                              <Tooltip title={dataObj?.Saleorder?.length > 0 ? "Cannot Edit. Child Record Exists" : "Edit"} arrow>
-                                <span>
-                                  <button
-                                    disabled={dataObj?.Saleorder?.length > 0}
-                                    className={`flex items-center px-1 rounded transition-colors ${dataObj?.Saleorder?.length > 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "text-green-600 bg-green-50 hover:bg-green-100"}`}
-                                    onClick={(e) => { e.stopPropagation(); if (!(dataObj?.Saleorder?.length > 0)) onEdit(dataObj.id); }}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                    </svg>
-                                  </button>
-                                </span>
-                              </Tooltip>
-                            )}
-                            {onDelete && (
-                              <Tooltip title={dataObj?.Saleorder?.length > 0 ? "Cannot Delete. Child Record Exists" : "Delete"} arrow>
-                                <span>
-                                  <button
-                                    disabled={dataObj?.Saleorder?.length > 0}
-                                    className={`flex items-center px-1 rounded transition-colors ${dataObj?.Saleorder?.length > 0 ? "bg-red-50 text-red-500 opacity-40 cursor-not-allowed" : "text-red-800 bg-red-50 hover:bg-red-100"}`}
-                                    onClick={(e) => { e.stopPropagation(); if (!(dataObj?.Saleorder?.length > 0)) onDelete(dataObj.id, dataObj?._count); }}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                  </button>
-                                </span>
-                              </Tooltip>
-                            )}
+                                <Tooltip title="View" arrow>
+                                  <span>
+                                    <button
+                                      className="text-blue-600 flex items-center px-1 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
+                                      onClick={(e) => { e.stopPropagation(); onView(dataObj.id); }}
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                      </svg>
+                                    </button>
+                                  </span>
+                                </Tooltip>
+                              )}
+                              {onEdit && (
+                                <Tooltip title={dataObj?.Saleorder?.length > 0 ? "Cannot Edit. Child Record Exists" : "Edit"} arrow>
+                                  <span>
+                                    <button
+                                      disabled={dataObj?.Saleorder?.length > 0}
+                                      className={`flex items-center px-1 rounded transition-colors ${dataObj?.Saleorder?.length > 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "text-green-600 bg-green-50 hover:bg-green-100"}`}
+                                      onClick={(e) => { e.stopPropagation(); if (!(dataObj?.Saleorder?.length > 0)) onEdit(dataObj.id); }}
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                      </svg>
+                                    </button>
+                                  </span>
+                                </Tooltip>
+                              )}
+                              {onDelete && (
+                                <Tooltip title={dataObj?.Saleorder?.length > 0 ? "Cannot Delete. Child Record Exists" : "Delete"} arrow>
+                                  <span>
+                                    <button
+                                      disabled={dataObj?.Saleorder?.length > 0}
+                                      className={`flex items-center px-1 rounded transition-colors ${dataObj?.Saleorder?.length > 0 ? "bg-red-50 text-red-500 opacity-40 cursor-not-allowed" : "text-red-800 bg-red-50 hover:bg-red-100"}`}
+                                      onClick={(e) => { e.stopPropagation(); if (!(dataObj?.Saleorder?.length > 0)) onDelete(dataObj.id, dataObj?._count); }}
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                      </svg>
+                                    </button>
+                                  </span>
+                                </Tooltip>
+                              )}
                             </div>
                           </div>
                         </td>

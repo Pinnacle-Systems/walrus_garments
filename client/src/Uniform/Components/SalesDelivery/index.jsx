@@ -44,6 +44,14 @@ const SalesDelivery = () => {
     const [deliveryItems, setDeliveryItems] = useState([]);
     const [partyId, setPartyId] = useState('')
 
+
+    const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
+    const [packingCharge, setPackingCharge] = useState("");
+    const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
+    const [shippingCharge, setShippingCharge] = useState("");
+    const [courierChargeEnabled, setCourierChargeEnabled] = useState(false);
+    const [courierCharge, setCourierCharge] = useState("");
+
     const { branchId, userId, companyId, finYearId } = getCommonParams();
 
     const dispatch = useDispatch();
@@ -56,6 +64,20 @@ const SalesDelivery = () => {
 
     console.log(saleOrderToConvertData, "saleOrderToConvertData");
 
+
+    const parseChargeAmount = (value) => {
+        const parsedValue = parseFloat(value);
+        return Number.isFinite(parsedValue) ? parsedValue : 0;
+    };
+    const formatChargeValue = (value) => {
+        if (value === "" || value === null || value === undefined) {
+            return "";
+        }
+        return parseChargeAmount(value).toFixed(2);
+    };
+
+
+
     useEffect(() => {
         if (saleOrderToConvertData?.data && convertSaleOrderId) {
             const saleOrderData = saleOrderToConvertData?.data;
@@ -67,9 +89,20 @@ const SalesDelivery = () => {
             setStoreId(saleOrderData.storeId || "");
             setReadOnly(false);
             setShowManufacturer(true);
-            // dispatch(push({ name: "SALES DELIVERY", projectId: null }));
+            const nextPackingCharge = formatChargeValue(saleOrderData?.packingCharge);
+            const nextShippingCharge = formatChargeValue(saleOrderData?.shippingCharge);
+            const nextCourierCharge = formatChargeValue(saleOrderData?.courierCharge);
+            setPackingCharge(nextPackingCharge);
+            setShippingCharge(nextShippingCharge);
+            setCourierCharge(nextCourierCharge);
+            setPackingChargeEnabled(Boolean(saleOrderData?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
+            setShippingChargeEnabled(Boolean(saleOrderData?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
+            setCourierChargeEnabled(Boolean(saleOrderData?.courierChargeEnabled) || parseChargeAmount(nextCourierCharge) > 0);
         }
     }, [saleOrderToConvertData, convertSaleOrderId, dispatch]);
+
+
+    console.log(courierCharge, "courierCharge")
 
     const params = {
         branchId, userId, finYearId
@@ -167,7 +200,24 @@ const SalesDelivery = () => {
                         totalReceivedAmount={saleOrderToConvertData?.data?.totalReceivedAmount || 0}
                         remainingPaymentCapacity={saleOrderToConvertData?.data?.remainingPaymentCapacity || 0}
                         termsData={termsData}
+
+                        packingChargeEnabled={packingChargeEnabled}
+                        setPackingChargeEnabled={setPackingChargeEnabled}
+                        packingCharge={packingCharge}
+                        setPackingCharge={setPackingCharge}
+                        shippingChargeEnabled={shippingChargeEnabled}
+                        setShippingChargeEnabled={setShippingChargeEnabled}
+                        shippingCharge={shippingCharge}
+                        setShippingCharge={setShippingCharge}
+                        courierChargeEnabled={courierChargeEnabled}
+                        setCourierChargeEnabled={setCourierChargeEnabled}
+                        courierCharge={courierCharge}
+                        setCourierCharge={setCourierCharge}
+
+
                     />
+
+
                 </div>
 
             ) : (
@@ -191,6 +241,7 @@ const SalesDelivery = () => {
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             onConvertToReturn={handleConvertToReturn}
+                            finYearId={finYearId}
                         />
                     </div>
 

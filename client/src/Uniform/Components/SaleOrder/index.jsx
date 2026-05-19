@@ -48,6 +48,15 @@ const SaleOrder = () => {
     const [saleOrderItems, setSaleOrderItems] = useState([]);
     const [partyId, setPartyId] = useState('')
 
+
+    const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
+    const [packingCharge, setPackingCharge] = useState("");
+    const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
+    const [shippingCharge, setShippingCharge] = useState("");
+    const [courierChargeEnabled, setCourierChargeEnabled] = useState(false);
+    const [courierCharge, setCourierCharge] = useState("");
+
+
     const { branchId, userId, companyId, finYearId } = getCommonParams();
     const dispatch = useDispatch();
     const openTabsState = useSelector((state) => state.openTabs);
@@ -60,7 +69,16 @@ const SaleOrder = () => {
         useGetQuotationByIdQuery(convertQuotationId, { skip: !convertQuotationId });
 
 
-
+    const parseChargeAmount = (value) => {
+        const parsedValue = parseFloat(value);
+        return Number.isFinite(parsedValue) ? parsedValue : 0;
+    };
+    const formatChargeValue = (value) => {
+        if (value === "" || value === null || value === undefined) {
+            return "";
+        }
+        return parseChargeAmount(value).toFixed(2);
+    };
 
     useEffect(() => {
         if (quotationToConvertData?.data && convertQuotationId) {
@@ -73,6 +91,16 @@ const SaleOrder = () => {
             setStoreId(quoteData.storeId || "");
             setReadOnly(false);
             setShowManufacturer(true);
+
+            const nextPackingCharge = formatChargeValue(quoteData?.packingCharge);
+            const nextShippingCharge = formatChargeValue(quoteData?.shippingCharge);
+            const nextCourierCharge = formatChargeValue(quoteData?.courierCharge);
+            setPackingCharge(nextPackingCharge);
+            setShippingCharge(nextShippingCharge);
+            setCourierCharge(nextCourierCharge);
+            setPackingChargeEnabled(Boolean(quoteData?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
+            setShippingChargeEnabled(Boolean(quoteData?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
+            setCourierChargeEnabled(Boolean(quoteData?.courierChargeEnabled) || parseChargeAmount(nextCourierCharge) > 0);
 
             // dispatch(push({ name: "SALE ORDER", projectId: null }));
         }
@@ -199,6 +227,19 @@ const SaleOrder = () => {
                         sourceQuotationShippingChargeEnabled={Boolean(quotationToConvertData?.data?.shippingChargeEnabled)}
                         sourceQuotationShippingCharge={quotationToConvertData?.data?.shippingCharge || ""}
                         invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch} termsData={termsData}
+
+                        packingChargeEnabled={packingChargeEnabled}
+                        packingCharge={packingCharge}
+                        setPackingChargeEnabled={setPackingChargeEnabled}
+                        setPackingCharge={setPackingCharge}
+                        shippingChargeEnabled={shippingChargeEnabled}
+                        shippingCharge={shippingCharge}
+                        setShippingChargeEnabled={setShippingChargeEnabled}
+                        setShippingCharge={setShippingCharge}
+                        courierChargeEnabled={courierChargeEnabled}
+                        courierCharge={courierCharge}
+                        setCourierChargeEnabled={setCourierChargeEnabled}
+                        setCourierCharge={setCourierCharge}
                     />
                 </div>
 

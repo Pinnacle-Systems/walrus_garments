@@ -97,7 +97,7 @@ function getSalesDeliveryReturnState(salesDelivery, excludeSalesReturnId = null)
         excludeSalesReturnId
     );
 
-    console.log(salesDelivery, "salesDelivery")
+    // console.log(salesDelivery, "salesDelivery")
 
     const deliveredQty = (salesDelivery?.SalesDeliveryItems || []).reduce((acc, curr) => acc + parseAmount(curr?.deliveryQty), 0);
     const remainingQty = remainingReturnItems.reduce((acc, curr) => acc + parseAmount(curr?.remainingQty), 0);
@@ -107,10 +107,10 @@ function getSalesDeliveryReturnState(salesDelivery, excludeSalesReturnId = null)
         : (remainingQty > 0.0001 ? "Partially Returned" : "Fully Returned");
 
 
-    console.log({
-        deliveredQty,
-        remainingQty
-    })
+    // console.log({
+    //     deliveredQty,
+    //     remainingQty
+    // })
 
     return {
         // remainingReturnItems,
@@ -182,6 +182,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
     let lastObject = await prisma.SalesDelivery.findFirst({
         where: {
             branchId: parseInt(branchId),
+            docId: {
+                not: "DRAFT"
+            },
             AND: [
                 {
                     createdAt: {
@@ -200,11 +203,16 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
             id: 'desc'
         }
     });
+
+    // console.log(lastObject, "lastObject")
+
     const branchObj = await getTableRecordWithId(branchId, "branch")
     let newDocId = `${branchObj.branchCode}/${shortCode}/SD/1`
     if (lastObject) {
         newDocId = `${branchObj.branchCode}/${shortCode}/SD/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
     }
+    // console.log(shortCode, "shortCode")
+    // console.log(newDocId, "newDocId")
     return newDocId
 }
 
@@ -212,7 +220,7 @@ async function get(req) {
 
     const { companyId, active } = req.query
 
-    console.log(companyId, active, "companyId, active ")
+    // console.log(companyId, active, "companyId, active ")
 
     let data = await prisma.salesDelivery.findMany({
         where: {
@@ -293,7 +301,6 @@ async function getOne(id) {
                     discountType: true,
                     discountValue: true,
                     deliveryQty: true,
-
                     SalesReturnItems: true,
 
                     SaleOrderItems: {
@@ -349,7 +356,7 @@ async function getOne(id) {
         return null;
     }).filter(Boolean);
 
-    console.log(deliveryItemsWithReturnedQty, "deliveryItemsWithReturnedQty")
+    // console.log(deliveryItemsWithReturnedQty, "deliveryItemsWithReturnedQty")
 
     return {
         statusCode: 0,
@@ -398,6 +405,8 @@ async function create(body) {
         packingCharge,
         shippingChargeEnabled,
         shippingCharge,
+        courierChargeEnabled,
+        courierCharge
     } = await body
 
 
@@ -405,8 +414,17 @@ async function create(body) {
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-    let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
 
+    const isOverDeliveryDetected = (deliveryItems || []).some(item => {
+        return parseAmount(item.deliveryQty) > parseAmount(item.balanceQty || 0) + 0.0001;
+    });
+
+    console.log("isOverDeliveryDetected:", isOverDeliveryDetected);
+
+    let docId = "DRAFT";
+    if (!isOverDeliveryDetected) {
+        docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime);
+    }
 
     try {
         let data;
@@ -421,6 +439,10 @@ async function create(body) {
                     shippingChargeEnabled: Boolean(shippingChargeEnabled),
                     shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
                     docId: docId,
+                    courierChargeEnabled: Boolean(courierChargeEnabled),
+                    courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
+                    status: isOverDeliveryDetected ? "PENDING_APPROVAL" : "APPROVED",
+                    isOverDelivery: isOverDeliveryDetected,
                 }
             });
 
@@ -428,7 +450,7 @@ async function create(body) {
                 where: { storeName: "RETAIL" }
             });
 
-            if (retailStore) {
+            if (retailStore && !isOverDeliveryDetected) {
                 for (const item of (deliveryItems || []).filter(i => i.itemId && parseAmount(i.deliveryQty) > 0)) {
                     const stockRows = await tx.stock.findMany({
                         where: {
@@ -457,13 +479,13 @@ async function create(body) {
                 }
             }
 
-            const sourceDeliveryItems = (deliveryItems || []).filter((temp) => temp?.itemId && parseAmount(temp?.qty) > 0);
+            const sourceDeliveryItems = (deliveryItems || []).filter((temp) => temp?.itemId && parseAmount(temp?.deliveryQty ?? temp?.qty) > 0);
             const persistedDeliveryItems = [];
 
             for (const temp of sourceDeliveryItems) {
                 let resolvedBarcodeType = temp.barcodeType || "REGULAR";
                 let resolvedBarcode = temp?.barcode || null;
-                
+
                 if (!resolvedBarcode && resolvedBarcodeType) {
                     const priceListRow = await tx.itemPriceList.findFirst({
                         where: {
@@ -485,11 +507,6 @@ async function create(body) {
                     }
                 }
 
-                // Fallback: read the barcode from the actual stock entry being reduced.
-                // This covers items that have no ItemPriceList row (e.g. legacy / stock-only
-                // granularity items) but whose stock rows do carry a barcode. Without this,
-                // the stock-out entry gets barcode=null and the stock report can't net it
-                // against the original stock-in entry (which groups by barcode).
                 if (!resolvedBarcode) {
                     const effectiveStoreId = retailStore?.id || (storeId ? parseInt(storeId) : undefined);
                     const stockRow = await tx.stock.findFirst({
@@ -549,12 +566,12 @@ async function create(body) {
                 allocatedQty: parseAmount(item.deliveryQty),
             }));
 
-            if (allocations.length > 0) {
+            if (allocations.length > 0 && !isOverDeliveryDetected) {
                 await tx.salesDeliveryFulfillmentAllocation.createMany({
                     data: allocations.map((allocation) => ({
                         salesDeliveryId: parseInt(data.id),
                         salesDeliveryItemId: allocation.salesDeliveryItemId,
-                        saleOrderItemId: allocation.id,
+                        saleOrderItemId: allocation.saleOrderItemId,
                         itemId: allocation.itemId,
                         sizeId: allocation.sizeId,
                         colorId: allocation.colorId,
@@ -574,20 +591,22 @@ async function create(body) {
                 });
             }
 
-            const totalAmount = calculateDeliveryNetAmount(deliveryItems, body);
+            if (!isOverDeliveryDetected) {
+                const totalAmount = calculateDeliveryNetAmount(deliveryItems, body);
 
-            await tx.ledger.create({
-                data: {
-                    EntryType: "Sales",
-                    LedgerType: "Customer",
-                    creditOrDebit: "Debit",
-                    partyId: parseInt(customerId),
-                    amount: totalAmount,
-                    partyBillNo: docId,
-                    partyBillDate: new Date(),
-                    salesDeliveryId: data.id
-                }
-            });
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Sales",
+                        LedgerType: "Customer",
+                        creditOrDebit: "Debit",
+                        partyId: parseInt(customerId),
+                        amount: totalAmount,
+                        partyBillNo: docId,
+                        partyBillDate: new Date(),
+                        salesDeliveryId: data.id
+                    }
+                });
+            }
         });
 
         return { statusCode: 0, data };
@@ -670,9 +689,13 @@ async function update(id, body) {
         packingCharge,
         shippingChargeEnabled,
         shippingCharge,
+        courierChargeEnabled,
+        courierCharge,
+        docId,
+        finYearId
     } = await body
 
-    // Validation removed as per user request
+
 
 
     const dataFound = await prisma.SalesDelivery.findUnique({
@@ -733,6 +756,8 @@ async function update(id, body) {
                             colorId: item.colorId ? parseInt(item.colorId) : null,
                             storeId: retailStore.id,
                             branchId: branchId ? parseInt(branchId) : undefined,
+                            courierChargeEnabled: Boolean(courierChargeEnabled),
+                            courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
                         }
                     });
 
@@ -760,7 +785,7 @@ async function update(id, body) {
                 },
                 data: {
                     customerId: customerId ? parseInt(customerId) : undefined,
-
+                    docId,
                     branchId: branchId ? parseInt(branchId) : undefined,
                     saleOrderId: saleOrderId ? parseInt(saleOrderId) : dataFound?.saleOrderId,
                     packingChargeEnabled: Boolean(packingChargeEnabled),
@@ -775,7 +800,7 @@ async function update(id, body) {
             for (const item of (deliveryItems || []).filter(i => i.itemId)) {
                 let resolvedBarcodeType = item.barcodeType || "REGULAR";
                 let resolvedBarcode = item?.barcode || null;
-                
+
                 if (!resolvedBarcode && resolvedBarcodeType) {
                     const priceListRow = await tx.itemPriceList.findFirst({
                         where: {
@@ -978,11 +1003,66 @@ async function remove(id) {
     return { statusCode: 0, data };
 }
 
+async function approve(id, finYearId) {
+    const dataFound = await prisma.SalesDelivery.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+            SalesDeliveryItems: true,
+            Branch: true
+        }
+    });
+
+    console.log(finYearId, "finYearId")
+
+    if (!dataFound) return NoRecordFound("Sales Delivery");
+    if (dataFound.status !== "PENDING_APPROVAL") {
+        return { statusCode: 1, message: "Delivery is not in pending approval state." };
+    }
+
+    const draft = true
+
+    const finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
+    const docId = await getNextDocId(dataFound.branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, draft);
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            await tx.salesDelivery.update({
+                where: { id: parseInt(id) },
+                data: {
+                    docId: docId,
+                    status: "APPROVED",
+                }
+            });
+
+            const totalAmount = calculateDeliveryNetAmount(dataFound.SalesDeliveryItems, dataFound);
+
+            await tx.ledger.create({
+                data: {
+                    EntryType: "Sales",
+                    LedgerType: "Customer",
+                    creditOrDebit: "Debit",
+                    partyId: parseInt(dataFound.customerId),
+                    amount: totalAmount,
+                    partyBillNo: docId,
+                    partyBillDate: new Date(),
+                    salesDeliveryId: dataFound.id
+                }
+            });
+        });
+
+        return { statusCode: 0, message: "Delivery Approved successfully." };
+    } catch (error) {
+        return { statusCode: 1, message: error.message || "Failed to approve delivery." };
+    }
+}
+
 export {
     get,
     getOne,
     getSearch,
     create,
     update,
-    remove
+    remove,
+    approve
 }

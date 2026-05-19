@@ -90,7 +90,8 @@ WITH opening AS (
     ) sr_sum ON sr_sum.customerId = p.id
     -- 🔹 Old Payments (Before Start Date)
     LEFT JOIN (
-        SELECT partyId, SUM(totalAmount) AS totalPaid
+        SELECT partyId, 
+               SUM(CASE WHEN paymentFlow = 'Payout' THEN -totalAmount ELSE totalAmount END) AS totalPaid
         FROM Payment
         WHERE cvv < '${startDateFormatted}'
           AND isDeleted = 0
@@ -134,13 +135,13 @@ txns AS (
 
     UNION ALL
 
-    -- 🔹 PAYMENT (CREDIT)
+    -- 🔹 PAYMENT (CREDIT/DEBIT based on flow)
     SELECT
         docId AS transactionId,
         cvv AS txnDateTime, 
         'PAYMENT' AS txnType,
-        0 AS debit,
-        totalAmount AS credit
+        CASE WHEN paymentFlow = 'Payout' THEN totalAmount ELSE 0 END AS debit,
+        CASE WHEN paymentFlow = 'Payout' THEN 0 ELSE totalAmount END AS credit
     FROM Payment
     WHERE partyId = ${partyId}
       AND cvv >= '${startDateFormatted}'

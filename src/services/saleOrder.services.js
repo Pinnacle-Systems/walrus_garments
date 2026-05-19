@@ -128,11 +128,11 @@ function calculateDeliveryNetAmount(deliveryItems = [], { packingChargeEnabled, 
 function getRemainingPaymentCapacityForSaleOrder(saleOrder) {
     const totalReceivedAmount = getTotalReceivedAmountForSaleOrder(saleOrder);
     const returnAmount = getTotalReturnedAmountForSaleOrder(saleOrder);
-    
+
     const consumedAmount = (saleOrder?.SalesDelivery || []).reduce((acc, salesDelivery) => (
         acc + calculateDeliveryNetAmount(salesDelivery?.SalesDeliveryItems, salesDelivery)
     ), 0);
-    
+
     const netDeliveredAmount = consumedAmount - returnAmount;
 
     return Math.max(0, totalReceivedAmount - netDeliveredAmount);
@@ -204,8 +204,9 @@ function calculateQuotationNetAmount(quotationItems = [], quotation = {}) {
 
     const packingAmount = quotation?.packingChargeEnabled ? parseQty(quotation?.packingCharge) : 0;
     const shippingAmount = quotation?.shippingChargeEnabled ? parseQty(quotation?.shippingCharge) : 0;
+    const courierAmount = quotation?.courierChargeEnabled ? parseQty(quotation?.courierCharge) : 0;
 
-    return roundMoney(lineNetAmount + packingAmount + shippingAmount);
+    return roundMoney(lineNetAmount + packingAmount + shippingAmount + courierAmount);
 }
 
 async function validateQuotationConversion(quotationId, excludeSaleOrderId = null, db = prisma) {
@@ -288,11 +289,24 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 }
 
 async function get(req) {
-    const { companyId, active } = req.query
+    const { companyId, active, serachDocNo, searchQuotation, searchDate, supplier } = req.query
     let data = await prisma.saleorder.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
-            isDeleted: false
+            isDeleted: false,
+            docId: serachDocNo ? {
+                contains: serachDocNo,
+            } : undefined,
+            Quotation: {
+                docId: searchQuotation ? {
+                    contains: searchQuotation,
+                } : undefined,
+            },
+            Party: {
+                name: supplier ? {
+                    contains: supplier,
+                } : undefined,
+            }
 
         },
         include: {
@@ -402,16 +416,23 @@ async function get(req) {
             });
         }
 
-        quotationWithPayments = {
-            ...saleOrder.Quotation,
-            paymentData: [...paymentData, ...saleOrderPaymentData],
-        };
 
-        // console.log({
-        //     quotationId: saleOrder?.Quotation?.id,
-        //     saleOrderId: saleOrder?.id
-        // })
-        console.log(saleOrderPaymentData, "saleOrderPaymentData")
+        // quotationWithPayments = {
+        //     ...saleOrder.Quotation,
+        //     paymentData: [...paymentData, ...saleOrderPaymentData],
+        // };
+
+
+        quotationWithPayments = saleOrder.Quotation
+            ? {
+                ...saleOrder.Quotation,   // id, docId will now appear
+                paymentData: [...paymentData, ...saleOrderPaymentData],
+            }
+            : {
+                paymentData: [...paymentData, ...saleOrderPaymentData],
+            };
+        console.log(quotationWithPayments, "quotationWithPayments")
+
         const state = getSaleOrderDeliveryState(saleOrder, quotationWithPayments);
 
 
@@ -523,10 +544,15 @@ async function getOne(id) {
             },
         });
     }
+
+    console.log(paymentData, "paymentData")
+    console.log(saleOrderPaymentData, "saleOrderPaymentData")
+
     quotationWithPayments = {
         ...data.Quotation,
         paymentData: [...paymentData, ...saleOrderPaymentData],
     };
+
     const saleOrderItemsWithDeliveredQty = data.SaleOrderItems.map((item) => {
         const deliveredQty = item.SalesDeliveryItems.reduce(
             (sum, deliveryItem) => {
@@ -602,7 +628,9 @@ async function create(body) {
         shippingChargeEnabled,
         shippingCharge,
         termsAndCondition,
-        termId
+        termId,
+        courierChargeEnabled,
+        courierCharge
     } = await body
 
     const quotationValidationMessage = await validateQuotationConversion(quoteId);
@@ -635,7 +663,8 @@ async function create(body) {
                     docId: docId,
                     termId: termId ? parseInt(termId) : undefined,
                     termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
-
+                    courierChargeEnabled: Boolean(courierChargeEnabled),
+                    courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
                     SaleOrderItems: {
                         createMany: saleOrderItems?.length > 0 ? {
                             data: saleOrderItems?.filter(temp => temp.itemId).map((temp) => {
@@ -682,7 +711,9 @@ async function update(id, body) {
         shippingCharge,
         quoteId,
         termsAndCondition,
-        termId
+        termId,
+        courierChargeEnabled,
+        courierCharge
     } = await body
 
     const dataFound = await prisma.saleorder.findUnique({
@@ -739,6 +770,8 @@ async function update(id, body) {
                     quotationId: quoteId ? parseInt(quoteId) : dataFound?.quotationId,
                     termId: termId ? parseInt(termId) : undefined,
                     termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
+                    courierChargeEnabled: Boolean(courierChargeEnabled),
+                    courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
                 },
             })
 

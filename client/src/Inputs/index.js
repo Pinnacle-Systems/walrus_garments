@@ -3309,7 +3309,8 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       isShow = true,
       isInwardRetuenParties = false,
       isBillable = false,
-      supplierId
+      supplierId,
+      isRetunBillable
     },
     ref
   ) => {
@@ -3323,7 +3324,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     );
 
     const { data: partyList } = useGetPartyQuery({
-      params: { companyId, userId, isAddressCombined: true, isInwardRetuenParties, isBillable },
+      params: { companyId, userId, isAddressCombined: true, isInwardRetuenParties, isBillable, isRetunBillable },
     });
     const [removeData] = useDeletePartyMutation();
 
@@ -3384,7 +3385,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       if (!partyList?.data) return;
 
       if (!search.trim()) {
-        setFilteredPages(partyList?.data?.filter(i => i[show] && !i.isB2C));
+        setFilteredPages(partyList?.data?.filter(i => show !== "both" ? i[show] : true && !i.isB2C));
         return;
       }
 

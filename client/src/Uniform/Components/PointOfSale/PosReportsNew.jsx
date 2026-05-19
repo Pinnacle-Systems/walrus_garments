@@ -38,8 +38,12 @@ const PosReportsNew = ({
 
 }) => {
 
-    const calculateQuotationNetAmount = (quotationItems = []) => {
-        return quotationItems.reduce((acc, curr) => {
+    const calculateQuotationNetAmount = (quotationItems = [], quotation = {}) => {
+        const packingCharge = parseFloat(quotation?.packingCharge || 0);
+        const shippingCharge = parseFloat(quotation?.shippingCharge || 0);
+        const courierCharge = parseFloat(quotation?.courierCharge || 0);
+
+        const itemsTotal = quotationItems.reduce((acc, curr) => {
             const price = parseFloat(curr?.price || 0);
             const qty = parseFloat(curr?.qty || 0);
             const taxPercent = parseFloat(curr?.taxPercent || 0);
@@ -64,6 +68,8 @@ const PosReportsNew = ({
 
             return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
         }, 0);
+
+        return itemsTotal + packingCharge + shippingCharge + courierCharge;
     };
 
     const getPaidAmount = (paymentData = []) => {
@@ -79,7 +85,7 @@ const PosReportsNew = ({
             return minimumAdvanceAmount;
         }
 
-        return calculateQuotationNetAmount(dataObj?.QuotationItems) * 0.25;
+        return calculateQuotationNetAmount(dataObj?.QuotationItems, dataObj) * 0.25;
     };
 
     const shouldShowAdvanceReceipt = (dataObj) => {

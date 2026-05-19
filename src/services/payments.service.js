@@ -78,14 +78,47 @@ async function get(req) {
         }
     });
     data = manualFilterSearchData(searchDate, searchMobileNo, searchType, searchDueDate, data)
-    const totalCount = data.length
+
+    const enrichedData = await Promise.all(data.map(async (payment) => {
+        let isDeletable = true;
+
+        if (payment.transactionType === "QUOTATION" && payment.transactionId) {
+            const saleOrder = await prisma.saleorder.findFirst({
+                where: { quotationId: payment.transactionId },
+                include: {
+                    _count: {
+                        select: { SalesDelivery: true }
+                    }
+                }
+            });
+            if (saleOrder && saleOrder._count.SalesDelivery > 0) {
+                isDeletable = false;
+            }
+        } else if (payment.transactionType === "SALESORDER" && payment.transactionId) {
+            const saleOrder = await prisma.saleorder.findUnique({
+                where: { id: payment.transactionId },
+                include: {
+                    _count: {
+                        select: { SalesDelivery: true }
+                    }
+                }
+            });
+            if (saleOrder && saleOrder._count.SalesDelivery > 0) {
+                isDeletable = false;
+            }
+        }
+
+        return { ...payment, isDeletable };
+    }));
+
+    const totalCount = enrichedData.length
     // if (pagination) {
     //     data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     // }
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let newDocId = finYearDate ? (await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime)) : "";
-    return { statusCode: 0, nextDocId: newDocId, data, totalCount };
+    return { statusCode: 0, nextDocId: newDocId, data: enrichedData, totalCount };
 }
 async function getOne(id) {
     const childRecord = 0;
@@ -98,7 +131,27 @@ async function getOne(id) {
         }
     })
     if (!data) return NoRecordFound("purchaseBill");
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+
+    let isDeletable = true;
+    if (data.transactionType === "QUOTATION" && data.transactionId) {
+        const saleOrder = await prisma.saleorder.findFirst({
+            where: { quotationId: data.transactionId },
+            include: { _count: { select: { SalesDelivery: true } } }
+        });
+        if (saleOrder && saleOrder._count.SalesDelivery > 0) {
+            isDeletable = false;
+        }
+    } else if (data.transactionType === "SALESORDER" && data.transactionId) {
+        const saleOrder = await prisma.saleorder.findUnique({
+            where: { id: data.transactionId },
+            include: { _count: { select: { SalesDelivery: true } } }
+        });
+        if (saleOrder && saleOrder._count.SalesDelivery > 0) {
+            isDeletable = false;
+        }
+    }
+
+    return { statusCode: 0, data: { ...data, ...{ childRecord }, isDeletable } };
 }
 
 
@@ -127,7 +180,7 @@ async function getSearch(req) {
 async function create(body) {
     let data;
     try {
-        const { branchId, id, paymentMode, cvv, paymentType, paidAmount, discount, paymentRefNo, supplierId, userId, finYearId, totalBillAmount, totalAmount, paymentFlow, transactionType, refId, refDocId, transaction, transactionId } = body;
+        const { branchId, id, paymentMode, cvv, paymentType, paidAmount, discount, paymentRefNo, supplierId, userId, finYearId, totalBillAmount, totalAmount, paymentFlow, transactionType, refId, refDocId, transaction, transactionId, outstandingAmount } = body;
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
         const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -158,6 +211,7 @@ async function create(body) {
                     transaction: transaction ? transaction : "",
                     transactionId: transactionId ? parseInt(transactionId) : undefined,
                     date: dateOnly ? new Date(dateOnly) : null,
+                    outstandingAmount: outstandingAmount ? parseFloat(outstandingAmount) : undefined,
                 }
             });
         });
@@ -175,7 +229,7 @@ async function update(id, body) {
     let data
     const {
         branchId, paymentMode, cvv, paymentType, paidAmount, discount, supplierId, userId, paymentRefNo, partyId, finYearId, totalAmount,
-        paymentFlow, transactionType, refId, refDocId, transaction, transactionId
+        paymentFlow, transactionType, refId, refDocId, transaction, transactionId, outstandingAmount, totalBillAmount
     } = await body
 
 
@@ -209,6 +263,8 @@ async function update(id, body) {
                 refDocId: refDocId ? refDocId : "",
                 transaction: transaction ? transaction : "",
                 transactionId: transactionId ? parseInt(transactionId) : undefined,
+                outstandingAmount: outstandingAmount ? parseFloat(outstandingAmount) : undefined,
+                totalBillAmount: totalBillAmount ? parseInt(totalBillAmount) : undefined,
 
 
             },
@@ -218,11 +274,58 @@ async function update(id, body) {
 };
 
 async function remove(id) {
+    const payment = await prisma.payment.findUnique({
+        where: { id: parseInt(id) }
+    });
+
+    if (!payment) return NoRecordFound("payment");
+
+    // If payment is against a Quotation, check if the resulting Sale Order has deliveries
+    if (payment.transactionType === "QUOTATION" && payment.transactionId) {
+        const saleOrder = await prisma.saleorder.findFirst({
+            where: { quotationId: payment.transactionId },
+            include: {
+                _count: {
+                    select: { SalesDelivery: true }
+                }
+            }
+        });
+
+        if (saleOrder && saleOrder._count.SalesDelivery > 0) {
+            return {
+                statusCode: 1,
+                data: {
+                    message: "Cannot delete payment: Linked Sale Order has active deliveries."
+                }
+            };
+        }
+    }
+
+    // If payment is against a Sale Order, check if it has deliveries
+    if (payment.transactionType === "SALESORDER" && payment.transactionId) {
+        const saleOrder = await prisma.saleorder.findUnique({
+            where: { id: payment.transactionId },
+            include: {
+                _count: {
+                    select: { SalesDelivery: true }
+                }
+            }
+        });
+
+        if (saleOrder && saleOrder._count.SalesDelivery > 0) {
+            return {
+                statusCode: 1,
+                data: {
+                    message: "Cannot delete payment: Sale Order has active deliveries."
+                }
+            };
+        }
+    }
+
     const data = await prisma.payment.delete({
         where: {
             id: parseInt(id)
         },
-
     })
     return { statusCode: 0, data };
 }

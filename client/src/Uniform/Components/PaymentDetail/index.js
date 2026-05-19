@@ -48,7 +48,7 @@ export default function Form() {
   const [paidAmount, setPaidAmount] = useState('');
   const [discount, setDiscount] = useState('')
   const [balanceAmount, setBalanceAmount] = useState('');
-  const [totalBillAmount, setTotalBillAmount] = useState('');
+  const [totalBillAmount, setTotalBillAmount] = useState(0);
   const [billAmount, setBillAmount] = useState('');
   const [totalPayAmount, setTotalPayAmount] = useState('')
   const [purchaseOrderForm, setPurchaseOrderForm] = useState("")
@@ -65,8 +65,10 @@ export default function Form() {
   const [refDocId, setRefDocId] = useState("");
   const [currentHistoryPage, setCurrentHistoryPage] = useState(1);
   const childRecord = useRef(0);
-
   const [paymentHistory, setPaymentHistory] = useState([])
+  const [outstandingAmount, setOutStandingAmount] = useState(0)
+
+
 
 
   const dispatch = useDispatch()
@@ -89,21 +91,15 @@ export default function Form() {
   const [invalidateTagsDispatch] = useInvalidateTags();
 
 
-  const {
-    data: PartyData,
-    isFetching: isSingleFetching,
-    isLoading: isSingleLoading,
-  } = useGetPartyByIdQuery(supplierId, { skip: !supplierId });
+  // const {
+  //   data: PartyData,
+  //   isFetching: isSingleFetching,
+  //   isLoading: isSingleLoading,
+  // } = useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
 
 
-  const handleKeyDown = (event) => {
-    let charCode = String.fromCharCode(event.which).toLowerCase();
-    if ((event.ctrlKey || event.metaKey) && charCode === 's') {
-      event.preventDefault();
-      saveData();
-    }
-  }
+
 
   const onNew = () => {
     setId("");
@@ -131,6 +127,7 @@ export default function Form() {
     setTotalBillAmount("");
     setBillAmount("");
     setPaymentHistory([])
+    setOutStandingAmount(0)
   }
 
 
@@ -138,18 +135,6 @@ export default function Form() {
 
 
 
-
-  // useEffect(() => {
-  //   if (!id) {
-
-
-  //     setTotalBillAmount(PartyData?.data?.coa + PartyData?.data?.totaloutstanding - PartyData?.data?.totalPaymentAgainstInvoice);
-  //   }
-  // }, [paymentType, PartyData]);
-
-  console.log(totalBillAmount, "totalBillAmount")
-  console.log(PartyData?.data?.totaloutstanding, "outstanding")
-  console.log(PartyData?.data?.totalPaymentAgainstInvoice, "totalPaymentAgainstInvoice")
 
 
 
@@ -262,6 +247,8 @@ export default function Form() {
           setPaymentHistory={setPaymentHistory}
           paymentHistory={paymentHistory}
           invalidateTagsDispatch={invalidateTagsDispatch}
+          outstandingAmount={outstandingAmount}
+          setOutStandingAmount={setOutStandingAmount}
         />
       ) : (
         <div className="bg-[#F1F1F0]">
