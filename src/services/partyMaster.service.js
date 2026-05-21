@@ -55,7 +55,9 @@ async function get(req) {
                     Saleorder: true,
                     SalesDelivery: true,
                     SalesReturn: true,
-                    children: true
+                    children: true,
+                    Pos: true,
+
 
                 }
             },

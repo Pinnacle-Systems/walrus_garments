@@ -23,7 +23,8 @@ const POSHeader = ({
     setShowSuggestions,
     onSelectSuggestion,
     searchMode,
-    setSearchMode
+    setSearchMode,
+    cart
 }) => {
     return (
         <header className="h-14 bg-white border-b border-slate-200 px-4 flex items-center shrink-0 z-30 justify-between shadow-sm">
@@ -50,7 +51,7 @@ const POSHeader = ({
                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Transaction Type</label>
                     <div className="relative group w-24">
                         <select
-                            disabled={selectedReportSaleId}
+                            disabled={selectedReportSaleId || cart?.length > 0}
                             value={transactionType}
                             onChange={(e) => {
                                 setTransactionType(e.target.value);

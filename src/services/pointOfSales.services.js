@@ -17,6 +17,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, isReturn) {
         where: {
             branchId: parseInt(branchId),
             isReturn: isReturn ? true : false,
+            docId: { not: "DRAFT" },
             AND: [
                 {
                     createdAt: {
@@ -43,6 +44,9 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, isReturn) {
     }
 
     const branchObj = await getTableRecordWithId(branchId, "branch")
+
+    console.log(branchObj, 'branchObj')
+
     let newDocId = `${branchObj.branchCode}/${shortCode}/${prefix}/1`
     if (lastObject) {
         newDocId = `${branchObj.branchCode}/${shortCode}/${prefix}/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
@@ -85,7 +89,6 @@ async function get(req) {
 
     let totalCount = 0;
 
-    console.log(where, "where")
 
     let data = await prisma.pos.findMany({
         where,
@@ -307,6 +310,10 @@ async function create(body) {
                         if (fQty <= 0) continue;
 
                         const fStoreId = parseInt(f.storeId);
+
+                        // Pessimistic Lock to prevent concurrent sales of the same item
+                        await tx.$executeRaw`SELECT id FROM item WHERE id = ${itemId} FOR UPDATE`;
+
                         const currentStock = await tx.stock.aggregate({
                             _sum: { qty: true },
                             where: {
@@ -317,19 +324,18 @@ async function create(body) {
                                 storeId: fStoreId,
                                 branchId: baseEntry.branchId,
                                 barcode: baseEntry?.barcode
-
                             }
                         });
 
-                        console.log({
-                            itemId,
-                            sizeId: baseEntry.sizeId,
-                            colorId: baseEntry.colorId,
-                            uomId: baseEntry.uomId,
-                            storeId: fStoreId,
-                            branchId: baseEntry.branchId,
-                            barcode: baseEntry?.barcode
-                        }, "currentStock")
+                        // console.log({
+                        //     itemId,
+                        //     sizeId: baseEntry.sizeId,
+                        //     colorId: baseEntry.colorId,
+                        //     uomId: baseEntry.uomId,
+                        //     storeId: fStoreId,
+                        //     branchId: baseEntry.branchId,
+                        //     barcode: baseEntry?.barcode
+                        // }, "currentStock")
 
                         const available = parseFloat(currentStock._sum.qty || 0);
                         if (available < fQty) {
@@ -367,31 +373,9 @@ async function create(body) {
                 }
             });
 
-            const originalCreditAmount = parseFloat(body.availableCredit || 0);
-            const billAmount = Math.abs(parseFloat(netAmount || 0));
-
-            const totalRefunds = (posPayments || [])
-                .filter(p => (p.paymentMode || "").toLowerCase().includes('refund'))
-                .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-
-            if (billAmount < originalCreditAmount) {
-                const remainingToAdjust = (originalCreditAmount - billAmount) - totalRefunds;
-
-                if (remainingToAdjust > 0) {
-                    await tx.ledger.create({
-                        data: {
-                            EntryType: "Debit_Note",
-                            LedgerType: "Customer",
-                            creditOrDebit: "Debit",
-                            partyId: parseInt(customerId),
-                            amount: remainingToAdjust,
-                            partyBillNo: posRecord.docId,
-                            partyBillDate: new Date(),
-                            posId: posRecord.id
-                        }
-                    });
-                }
-            }
+            // Remaining credit balance (original credit - bill amount - instant refunds) is naturally
+            // preserved as active credit in the customer's ledger balance. We explicitly do NOT debit
+            // the customer account for the remaining credit, allowing them to redeem it in future bills.
 
 
             return posRecord;
@@ -413,7 +397,7 @@ async function update(id, body) {
     try {
         const {
             customerId, posItems, posPayments, branchId, storeId,
-            netAmount, taxAmount, discountValue, transactionType
+            netAmount, taxAmount, discountValue, transactionType, finYearId, bilStatus
         } = await body;
 
 
@@ -427,22 +411,18 @@ async function update(id, body) {
 
             const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE/RETURN" && parseFloat(netAmount || 0) < 0);
 
-            // Transition logic
-            if (finalDocId === 'DRAFT' && body.approvalStatus === 'APPROVED') {
-                finalDocId = 'PROCEED';
-            } else if (finalDocId === 'PROCEED' && body.approvalStatus === 'COMPLETED') {
-                const finYearDate = await getFinYearStartTimeEndTime(body.finYearId);
-                const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-                finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
-            } else if (!finalDocId && body.approvalStatus === 'NONE') {
-                // For regular sales
-                const finYearDate = await getFinYearStartTimeEndTime(body.finYearId);
+            // console.log(body, 'body')
+            // console.log(finalDocId, "finalDocId", bilStatus, 'bilStatus')
+
+            console.log(dataFound.docId, "dataFound.docId", finYearId)
+
+            if ((dataFound.docId === 'DRAFT')) {
+                const finYearDate = await getFinYearStartTimeEndTime(finYearId);
                 const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
                 finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
             }
 
-            // DELETE existing stock only if we are doing a real stock transaction
-            if (body.approvalStatus === 'COMPLETED' || body.approvalStatus === 'NONE' || dataFound.approvalStatus === 'COMPLETED' || dataFound.approvalStatus === 'NONE') {
+            if (body.approvalStatus === 'COMPLETED' || body.approvalStatus === 'NONE' || body.bilStatus === 'PAID' || body.bilStatus === 'UNPAID' || dataFound.approvalStatus === 'COMPLETED' || dataFound.approvalStatus === 'NONE') {
                 await tx.stock.deleteMany({
                     where: {
                         transactionId: parseInt(id),
@@ -461,7 +441,7 @@ async function update(id, body) {
                     customerId: customerId ? parseInt(customerId) : undefined,
                     branchId: branchId ? parseInt(branchId) : undefined,
                     docId: finalDocId,
-                    approvalStatus: body.approvalStatus || dataFound.approvalStatus,
+                    approvalStatus: (body.bilStatus === 'PAID' || body.bilStatus === 'UNPAID') ? "COMPLETED" : (body.approvalStatus || dataFound.approvalStatus),
                     bilStatus: body.bilStatus || dataFound.bilStatus || "PAID",
                     discountValue: discountValue ? String(discountValue) : undefined,
                     netAmount: String(netAmount || dataFound.netAmount),
@@ -505,7 +485,7 @@ async function update(id, body) {
             const stockEntries = [];
             const retailStoreId = parseInt(storeId);
 
-            if (body.approvalStatus === 'COMPLETED' || body.approvalStatus === 'NONE') {
+            if (body.approvalStatus === 'COMPLETED' || body.approvalStatus === 'NONE' || body.bilStatus === 'PAID' || body.bilStatus === 'UNPAID') {
                 for (const item of (posItems || [])) {
                     if (!item.itemId && !item.id) continue;
 
@@ -530,6 +510,10 @@ async function update(id, body) {
                             if (fQty <= 0) continue;
 
                             const fStoreId = parseInt(f.storeId);
+
+                            // Pessimistic Lock to prevent concurrent sales of the same item
+                            await tx.$executeRaw`SELECT id FROM item WHERE id = ${itemId} FOR UPDATE`;
+
                             const currentStock = await tx.stock.aggregate({
                                 _sum: { qty: true },
                                 where: {
@@ -580,31 +564,8 @@ async function update(id, body) {
                 }
             });
 
-            if (body.isRetrunBillId && body.availableCredit) {
-                const originalCreditAmount = parseFloat(body.availableCredit || 0);
-                const billAmount = Math.abs(parseFloat(netAmount || updatedPos.netAmount || 0));
-
-                const totalRefunds = (posPayments || [])
-                    .filter(p => (p.paymentMode || "").toLowerCase().includes('refund'))
-                    .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-
-                const remainingToAdjust = (originalCreditAmount - billAmount) - totalRefunds;
-
-                if (remainingToAdjust > 0) {
-                    await tx.ledger.create({
-                        data: {
-                            EntryType: "Adjustment",
-                            LedgerType: "Customer",
-                            creditOrDebit: "Debit",
-                            partyId: parseInt(customerId || updatedPos.customerId),
-                            amount: remainingToAdjust,
-                            partyBillNo: updatedPos.docId,
-                            partyBillDate: new Date(),
-                            posId: parseInt(id)
-                        }
-                    });
-                }
-            }
+            // Remaining credit balance is naturally preserved as active credit in the customer's ledger
+            // balance. We do not debit or adjust the customer's account for this saved credit.
 
             return updatedPos;
         });
@@ -619,15 +580,47 @@ async function update(id, body) {
 async function remove(id) {
     try {
         const result = await prisma.$transaction(async (tx) => {
+
+            const posDetails = await tx.pos.findUnique({
+                where: { id: parseInt(id) },
+
+            });
+
+            const stockDetails = await tx.stock.findMany({
+                where: {
+                    transactionId: parseInt(id),
+                    OR: [
+                        { inOrOut: "POS" },
+                        { inOrOut: "StockTransferOut" },
+                        { inOrOut: "StockTransferIn" }
+                    ]
+                }
+            });
+
+            // ✅ இப்போ delete பண்ணு
             await tx.stock.deleteMany({
                 where: {
                     transactionId: parseInt(id),
-                    OR: [{ inOrOut: "POS" }, { inOrOut: "StockTransferOut" }, { inOrOut: "StockTransferIn" }]
+                    OR: [
+                        { inOrOut: "POS" },
+                        { inOrOut: "StockTransferOut" },
+                        { inOrOut: "StockTransferIn" }
+                    ]
                 }
             });
+
             await tx.pos.delete({ where: { id: parseInt(id) } });
+
+            return {
+                deletedPos: posDetails,
+                deletedStock: stockDetails
+            };
         });
+
+        console.log(result, "result")
+
         return { statusCode: 0, data: result };
+
     } catch (error) {
         console.error("POS Deletion Error:", error);
         return { statusCode: 1, message: "Failed to delete sale: " + error.message };
@@ -676,9 +669,9 @@ async function getPartyCreditBalance(req) {
     });
 
 
-    console.log("ledgerCredit", ledgerCredit)
-    console.log("ledgerDebit", ledgerDebit)
-    console.log("posPayments", posPayments)
+    // console.log("ledgerCredit", ledgerCredit)
+    // console.log("ledgerDebit", ledgerDebit)
+    // console.log("posPayments", posPayments)
 
     const totalDebit = ledgerDebit._sum.amount || 0;
     const totalCredit = ledgerCredit._sum.amount || 0;
@@ -748,6 +741,80 @@ async function cancel(id) {
     }
 }
 
+async function requestDiscount(body) {
+    try {
+        const {
+            customerId, posItems, branchId, netAmount, transactionType
+        } = await body;
+
+        const result = await prisma.pos.create({
+            data: {
+                customerId: customerId ? parseInt(customerId) : undefined,
+                docId: "DRAFT",
+                branchId: branchId ? parseInt(branchId) : undefined,
+                createdById: body.userId ? parseInt(body.userId) : undefined,
+                netAmount: netAmount ? String(netAmount) : "0",
+                approvalStatus: "PENDING",
+                bilStatus: "DRAFT",
+                transactionType: transactionType ? transactionType : "DEFAULT",
+                isReturn: false,
+                PosItems: {
+                    createMany: {
+                        data: (posItems || []).map((item) => ({
+                            itemId: parseInt(item.itemId || item.id),
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                            uomId: item.uomId ? parseInt(item.uomId) : null,
+                            qty: String(item.qty),
+                            price: String(item.price),
+                            salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+                            barcode: item.barcode || null,
+                            barcodeType: item.barcodeType || null,
+                        }))
+                    }
+                }
+            }
+        });
+        return { statusCode: 0, data: result };
+    } catch (error) {
+        console.error("Discount Request Creation Error:", error);
+        return { statusCode: 1, message: "Discount request failed: " + error.message };
+    }
+}
+
+async function approveDiscount(id, body) {
+    try {
+        const { discountValue } = await body;
+        const posRecord = await prisma.pos.findUnique({
+            where: { id: parseInt(id) },
+            include: { PosItems: true }
+        });
+
+        if (!posRecord) return { statusCode: 1, message: "POS bill draft not found" };
+
+        const itemsTotal = posRecord.PosItems.reduce((sum, item) => {
+            return sum + (parseFloat(item.price || 0) * parseFloat(item.qty || 0));
+        }, 0);
+        const finalNet = Math.max(0, Math.round(itemsTotal - parseFloat(discountValue || 0)));
+
+        const updated = await prisma.pos.update({
+            where: { id: parseInt(id) },
+            data: {
+                discountValue: String(discountValue),
+                netAmount: String(finalNet),
+                docId: "DRAFT",
+                approvalStatus: "APPROVED",
+                bilStatus: "DRAFT"
+            }
+        });
+
+        return { statusCode: 0, data: updated };
+    } catch (error) {
+        console.error("Discount Request Approval Error:", error);
+        return { statusCode: 1, message: "Approval update failed: " + error.message };
+    }
+}
+
 export {
     get,
     getOne,
@@ -757,5 +824,7 @@ export {
     remove,
     cancel,
     checkReferenceNumber,
-    getPartyCreditBalance
+    getPartyCreditBalance,
+    requestDiscount,
+    approveDiscount
 }

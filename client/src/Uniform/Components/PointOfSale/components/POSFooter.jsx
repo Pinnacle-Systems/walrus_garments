@@ -8,9 +8,23 @@ const POSFooter = ({
     setShowReports,
     handlePayNow,
     handleSaveUnpaid,
-    scannerRef
+    scannerRef,
+    isAdmin,
+    approvalStatus
 }) => {
-    const shortcuts = [
+    const isPendingApproval = isAdmin && approvalStatus === 'PENDING';
+
+    const shortcuts = isPendingApproval ? [
+        {
+            key: 'F3', label: 'Disc', action: () => {
+                discountRef.current?.focus();
+                discountRef.current?.select();
+            }
+        },
+        {
+            key: 'F8', label: 'Approve', action: () => handlePayNow()
+        }
+    ] : [
         {
             key: 'F2', label: 'Qty', action: () => {
                 if (cart.length > 0) {

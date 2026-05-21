@@ -135,6 +135,10 @@ const VarientsSelection = ({ matches = [], onConfirm, onClose, stockDrivenFields
                                         onChange={(e) => handleSearchChange('color', e.target.value)}
                                     /> */}
                                 </th>
+                                <th className="px-1 py-1.5 border border-gray-300 text-center text-xs w-32">
+                                    <label className="block mb-1 text-gray-800">Uom</label>
+
+                                </th>
                                 {stockDrivenFields.map(field => (
                                     <th key={field.key} className="px-1 py-1.5 border border-gray-300 text-center text-xs w-32">
                                         <label className="block mb-1">{field.label}</label>
@@ -185,6 +189,9 @@ const VarientsSelection = ({ matches = [], onConfirm, onClose, stockDrivenFields
                                         </td>
                                         <td className="border border-gray-300 text-[11px] py-1.5 px-2 text-left text-gray-700 font-medium ">
                                             {item.color}
+                                        </td>
+                                        <td className="border border-gray-300 text-[11px] py-1.5 px-2 text-left text-gray-700 font-medium ">
+                                            {item.uom}
                                         </td>
                                         {stockDrivenFields.map(field => (
                                             <td key={field.key} className="border border-gray-300 text-[11px] py-1.5 px-2 text-center text-gray-600">

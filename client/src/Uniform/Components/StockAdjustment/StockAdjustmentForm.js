@@ -113,6 +113,9 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
   const stockMaintenance = getStockMaintenanceConfig(stockReportControlData?.data?.[0]);
   const stockDrivenFields = getConfiguredStockDrivenFields(stockReportControlData?.data?.[0]);
 
+  const selectedStore = locationData?.data?.find(loc => parseInt(loc.id) === parseInt(storeId));
+  const isDiscountStore = selectedStore?.storeName?.toLowerCase().includes("discount") || selectedStore?.storeName?.toLowerCase().includes("clearance");
+
 
   useEffect(() => {
     // if (id) return;
@@ -138,6 +141,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
     });
   }, [rows, setRows, id]);
 
+  console.log(rows, "rows")
 
   const updateRow = (index, field, value, extraData = {}) => {
     setRows((prev) => {
@@ -270,6 +274,8 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
   };
 
 
+
+  console.log(rows, "stockAdjustmentItems")
 
   const saveData = (nextProcess) => {
     const mandatoryFields = ["itemId", "adjType", "qty",];
@@ -435,23 +441,16 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
                           onChange={v => {
                             const selectedItem = itemList?.data?.find(i => i.id === (v || ""));
                             const availableBarcodes = selectedItem?.ItemPriceList?.[0]?.ItemBarcodes || [];
-                            let defaultBarcodeType = "REGULAR";
-                            if (availableBarcodes.length > 0) {
-                              const hasRegular = availableBarcodes.some(b => b.barcodeType === "REGULAR");
-                              if (availableBarcodes.length === 1) {
-                                defaultBarcodeType = availableBarcodes[0].barcodeType;
-                              } else if (hasRegular) {
-                                defaultBarcodeType = "REGULAR";
-                              } else {
-                                defaultBarcodeType = availableBarcodes[0].barcodeType;
-                              }
-                            }
+                            let defaultBarcodeType = isDiscountStore ? "CLEARANCE" : "REGULAR";
+
                             updateRow(idx, "itemId", v || "", {
                               item_name: selectedItem?.name || "",
                               sizeId: "",
                               size: "",
                               colorId: "",
                               color: "",
+                              uomId: selectedItem?.uomId || "",
+                              uom: uomOptions.find(o => String(o.value) === String(selectedItem?.uomId))?.label || "",
                               barcodeType: defaultBarcodeType,
                               price: getItemBarcodeGenerationMethod(selectedItem, barcodeGenerationMethod) === "STANDARD"
                                 ? selectedItem?.ItemPriceList?.[0]?.salesPrice || 0
@@ -470,7 +469,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
                             options={filteredSizeOptions}
                             // disabled={readOnly || !row.itemId}
                             onChange={v => {
-                              const selected = sizeOptions.find(o => o.value === v);
+                              const selected = sizeOptions.find(o => String(o.value) === String(v));
                               updateRow(idx, "sizeId", v || "", { size: selected?.label || "" });
                             }}
                           // addNewModalWidth="w-[40%] h-[45%]"
@@ -486,7 +485,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
                             options={filteredColorOptions}
                             // disabled={readOnly || !(stockMaintenance.trackSize ? row.sizeId : row.itemId)}
                             onChange={v => {
-                              const selected = colorOptions.find(o => o.value === v);
+                              const selected = colorOptions.find(o => String(o.value) === String(v));
                               updateRow(idx, "colorId", v || "", { color: selected?.label || "" });
                             }}
                           // addNewModalWidth="w-[40%] h-[45%]"
@@ -513,7 +512,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
                           options={uomOptions}
                           // disabled={readOnly || !isUomReady(row)}
                           onChange={v => {
-                            const selected = uomOptions.find(o => o.value === v);
+                            const selected = uomOptions.find(o => String(o.value) === String(v));
                             updateRow(idx, "uomId", v || "", { uom: selected?.label || "" });
                           }}
                           addNewModalWidth="w-[40%] h-[45%]"
@@ -529,18 +528,8 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
                           onChange={(e) => updateRow(idx, "barcodeType", e.target.value)}
                         // disabled={}
                         >
-                          {availableBarcodes.length > 0 ? (
-                            availableBarcodes.map((b) => (
-                              <option key={b.barcodeType} value={b.barcodeType}>
-                                {b.barcodeType}
-                              </option>
-                            ))
-                          ) : (
-                            <>
-                              <option value="REGULAR">REGULAR</option>
-                              <option value="CLEARANCE">CLEARANCE</option>
-                            </>
-                          )}
+                          <option value="REGULAR" hidden={isDiscountStore}>REGULAR</option>
+                          <option value="CLEARANCE" hidden={!isDiscountStore}>CLEARANCE</option>
                         </select>{console.log(availableBarcodes, "availableBarcodes")}
                       </td>
                       <td className="w-40 border border-gray-300 p-0 text-[11px] text-right">
@@ -555,7 +544,7 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
                           onFocus={(e) => e.target.select()}
                           value={row.price}
                           disabled={readOnly || !row.itemId}
-                          onChange={e => updateRow(row.id, "price", parseInt(e.target.value) || 0)}
+                          onChange={e => updateRow(idx, "price", parseInt(e.target.value) || 0)}
                         />
                       </td> */}
                       <td className="w-24 border border-gray-300 p-0 text-[11px] focus-within:border-amber-700 focus-within:bg-amber-100">

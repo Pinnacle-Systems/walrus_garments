@@ -17,11 +17,12 @@ const POSCartTable = ({
     qtyInputRefs,
     selectedReportSaleId,
     approvalStatus,
-    isAdmin
+    isAdmin,
+    currentBilStatus
 }) => {
 
     const isPendingApproval = approvalStatus === 'PENDING';
-    const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval);
+    const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval) && currentBilStatus === 'PAID';
 
     console.log(cart, "cart")
     return (
@@ -48,7 +49,7 @@ const POSCartTable = ({
                     </motion.div>
                 )}
             </AnimatePresence>
-            <div className="flex-1 overflow-auto bg-[#f8fafc]/30">
+            <div className="flex-1 overflow-auto bg-[#f8fafc]/30 select-text">
                 <table className="w-full text-left border-separate border-spacing-0">
                     <thead className="sticky top-0 z-20 bg-white shadow-sm border-b border-slate-200">
                         <tr className="text-[10px] font-black text-slate-500 uppercase tracking-widest">

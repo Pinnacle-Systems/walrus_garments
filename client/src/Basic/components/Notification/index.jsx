@@ -1,18 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getCommonParams } from "../../../Utils/helper";
 import secureLocalStorage from "react-secure-storage";
 import NotificationPopup from "../StockAlert";
 import { useGetPointOfSalesQuery } from "../../../redux/uniformService/PointOfSalesService";
 import { useGetMinStockAlertReportQuery } from "../../../redux/services/StockService";
+import { io as socketIO } from 'socket.io-client';
 
 
 const NotificationBell = ({ onShowPopup }) => {
     const { branchId, companyId, finYearId, userId, employeeId, userRole } = getCommonParams();
     const [showNotificationPopup, setShowNotificationPopup] = useState(false);
 
+    const isAdmin = userRole?.toUpperCase() === "ADMIN" || userRole?.toUpperCase() === "DEFAULT ADMIN" || userRole?.toUpperCase() === "SUPER ADMIN";
+    console.log(userRole, "userRole")
+    const targetStatus = isAdmin ? "PENDING" : "APPROVED";
+
     // Fetch Pending Discount Requests
-    const { data: posData } = useGetPointOfSalesQuery({
-        params: { branchId, approvalStatus: true, userRole }
+    const { data: posData, refetch } = useGetPointOfSalesQuery({
+        params: { branchId, approvalStatus: targetStatus, userRole }
     });
 
     const pendingDiscountCount = posData?.data?.length || 0;
@@ -30,6 +35,23 @@ const NotificationBell = ({ onShowPopup }) => {
         }
         setShowDropdown(false);
     };
+
+
+    useEffect(() => {
+        const socketUrl = process.env.REACT_APP_SERVER_URL
+        const socket = socketIO(socketUrl);
+
+        socket.on('pos_changed', (data) => {
+            if (data && parseInt(data.branchId) === parseInt(branchId)) {
+                console.log("Real-time POS update received, refetching...");
+                refetch();
+            }
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, [branchId, refetch]);
 
     return (
         <div className="relative">

@@ -35,6 +35,7 @@ const StockReport = () => {
     const [sizeId, setSizeId] = useState("");
     const [colorId, setColorId] = useState("")
     const [itemId, setItemId] = useState("")
+    const [barcode, setBarcode] = useState("")
     const [localLocationId, setLocalLocationId] = useState(locationId);
 
 
@@ -94,7 +95,7 @@ const StockReport = () => {
                         </div> */}
                     </div>
                     <div className='flex justify-center   flex-col text-center bg-gray-200 rounded-b-md mb-3 sticky top-0 '>
-                        <div className='grid grid-cols-6 gap-4 p-2'>
+                        <div className='grid grid-cols-7 gap-4 p-2'>
 
                             <div className=' items-center justify-center md:my-1 px-1 data flex flex-col'>
                                 <label className='block text-xs font-bold text-slate-700 mb-1'>Item</label>
@@ -128,6 +129,21 @@ const StockReport = () => {
                                 options={dropDownListObject(locationData?.data, "storeName", "id")}
                                 value={storeId} setValue={setStoreId} required={false} clear={true} />
 
+                            <div className='items-center justify-center md:my-1 px-1 data flex flex-col'>
+                                <label className='block text-xs font-bold text-slate-700 mb-1'>Barcode</label>
+                                <input
+                                    type='text'
+                                    className='w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all duration-150 shadow-sm'
+                                    value={barcode}
+                                    onChange={(e) => setBarcode(e.target.value)}
+                                    placeholder='Scan / Type'
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            fetchData({ params: { branchId, stockReport: true, storeId, toDate: localEndDate, itemId, sizeId, colorId, barcode: e.target.value } });
+                                        }
+                                    }}
+                                />
+                            </div>
 
                             <DateInput name={"Date"} value={localEndDate} setValue={setLocalEndDate} />
                             <div className='flex py-0.5 h-8 mt-4'>
@@ -153,9 +169,8 @@ const StockReport = () => {
                                                     toDate: localEndDate,
                                                     itemId,
                                                     sizeId,
-                                                    colorId
-
-
+                                                    colorId,
+                                                    barcode
                                                 }
                                             },
                                         )
@@ -193,7 +208,9 @@ const StockReport = () => {
                                             <td className="border border-gray-300 px-2 py-1 text-center text-xs w-10">S No</td>
                                             <td className="border border-gray-300 px-2 py-1 text-center text-xs w-96">Item </td>
                                             <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Size </td>
+
                                             <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Color </td>
+                                            <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Uom </td>
                                             <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Barcode </td>
 
                                             <td className="border border-gray-300 px-2 py-1 text-center text-xs w-44">Total Qty </td>
@@ -231,6 +248,7 @@ const StockReport = () => {
                                                             <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Item}</td>
                                                             <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Size}</td>
                                                             <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Color}</td>
+                                                            <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Uom}</td>
                                                             <td className="border border-gray-300 px-2 py-1 text-left text-[11px] ">{yarn?.Barcode}</td>
                                                             <td className="border border-gray-300 px-2 py-1 text-right text-[11px] ">{parseFloat(yarn?.total_qty).toFixed(3)}</td>
                                                         </tr>
@@ -242,7 +260,7 @@ const StockReport = () => {
                                     </tbody>
                                     <tfoot className="bg-gray-200 font-bold sticky bottom-0 z-10">
                                         <tr>
-                                            <td colSpan={5} className="border border-gray-300 px-2 py-1 text-right text-xs font-bold">Total</td>
+                                            <td colSpan={6} className="border border-gray-300 px-2 py-1 text-right text-xs font-bold">Total</td>
                                             <td className="border border-gray-300 px-2 py-1 text-right text-xs font-bold">{stockList.reduce((sum, item) => sum + (parseFloat(item.total_qty) || 0), 0).toFixed(3)}</td>
                                         </tr>
                                     </tfoot>
