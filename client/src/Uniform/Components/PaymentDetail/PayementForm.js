@@ -162,16 +162,16 @@ const PaymentForm = ({
     //     isLoading: isSingleLoading,
     // } = useGetPartyByIdQuery(supplierId, { skip: !supplierId });
 
-    const { data: outstandingData, isFetching: isOutstandingFetching, isLoading: isOutstandingLoading } = useGetPartyOutstandingBalanceQuery(supplierId, {
-        skip: !supplierId || paymentFlow !== "Payout"
-    });
+    // const { data: outstandingData, isFetching: isOutstandingFetching, isLoading: isOutstandingLoading } = useGetPartyOutstandingBalanceQuery(supplierId, {
+    //     skip: !supplierId || paymentFlow !== "Payout"
+    // });
 
-    useEffect(() => {
-        if (paymentFlow === "Payout") {
-            // setTotalBillAmount(outstandingData?.data?.outstandingBalance || 0);
-            setOutStandingAmount(outstandingData?.data?.outstandingBalance || 0);
-        }
-    }, [outstandingData, isOutstandingFetching, isOutstandingLoading, supplierId])
+    // useEffect(() => {
+    //     if (paymentFlow === "Payout") {
+    //         // setTotalBillAmount(outstandingData?.data?.outstandingBalance || 0);
+    //         setOutStandingAmount(outstandingData?.data?.outstandingBalance || 0);
+    //     }
+    // }, [outstandingData, isOutstandingFetching, isOutstandingLoading, supplierId])
 
     console.log(transactionType, "transactionType")
 
@@ -777,35 +777,33 @@ const PaymentForm = ({
                                     />
                                 </div>
                             </div>
-                            {paymentFlow !== "Payout" && (
-                                <div className="mb-2">
-                                    <label htmlFor="paymentType" className="block text-xs font-bold text-gray-600 mb-1">
-                                        Payment Type <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        value={paymentType}
-                                        onChange={(e) => setPaymentType(e.target.value)}
-                                        disabled={areLinkedFieldsLocked}
-                                        className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
-                                    >
-                                        <option value="" disabled>Select a payment type</option>
-                                        {PaymentType.filter(type => {
-                                            if (type.value === "ADVANCE") {
-                                                // Show Advance only if there are pending quotations for this customer
-                                                const pendingQuos = (quotationList?.data || []).filter(
-                                                    q => String(q.customerId) === String(supplierId) && (!q.Saleorder || q.Saleorder.length === 0)
-                                                );
-                                                return pendingQuos.length > 0;
-                                            }
-                                            return true;
-                                        }).map((type) => (
-                                            <option key={type.value} value={type.value}>
-                                                {type.show}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
+                            <div className="mb-2">
+                                <label htmlFor="paymentType" className="block text-xs font-bold text-gray-600 mb-1">
+                                    Payment Type <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={paymentType}
+                                    onChange={(e) => setPaymentType(e.target.value)}
+                                    disabled={areLinkedFieldsLocked}
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
+                                >
+                                    <option value="" disabled>Select a payment type</option>
+                                    {PaymentType.filter(type => {
+                                        if (type.value === "ADVANCE") {
+                                            // Show Advance only if there are pending quotations for this customer
+                                            const pendingQuos = (quotationList?.data || []).filter(
+                                                q => String(q.customerId) === String(supplierId) && (!q.Saleorder || q.Saleorder.length === 0)
+                                            );
+                                            return pendingQuos.length > 0;
+                                        }
+                                        return true;
+                                    }).map((type) => (
+                                        <option key={type.value} value={type.value}>
+                                            {type.show}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                             {/* <div className="mb-2" >
                                 <label htmlFor="transactionType" className="block text-xs font-bold text-gray-600 mb-1">
                                     Against Transaction
@@ -824,55 +822,53 @@ const PaymentForm = ({
                                     ))}
                                 </select>
                             </div> */}
-                            {paymentFlow !== "Payout" && (
-                                <div className="mb-2">
-                                    <label htmlFor="refDocId" className="block text-xs font-bold text-gray-600 mb-1 ">
-                                        Against Doc No
-                                    </label>
-                                    <DropdownInputNew
-                                        className="block text-gray-600 font-medium mb-2"
-                                        options={getDocIdOptions()}
-                                        value={transactionId}
-                                        readOnly={areLinkedFieldsLocked}
-                                        setValue={(val) => {
-                                            setTransactionId(val);
-                                            setRefId(val);
-                                            const options = getDocIdOptions();
-                                            const selected = options.find(opt => String(opt.value) === String(val));
-                                            if (selected) setRefDocId(selected.show);
+                            <div className="mb-2">
+                                <label htmlFor="refDocId" className="block text-xs font-bold text-gray-600 mb-1 ">
+                                    Against Doc No
+                                </label>
+                                <DropdownInputNew
+                                    className="block text-gray-600 font-medium mb-2"
+                                    options={getDocIdOptions()}
+                                    value={transactionId}
+                                    readOnly={areLinkedFieldsLocked}
+                                    setValue={(val) => {
+                                        setTransactionId(val);
+                                        setRefId(val);
+                                        const options = getDocIdOptions();
+                                        const selected = options.find(opt => String(opt.value) === String(val));
+                                        if (selected) setRefDocId(selected.show);
 
-                                            let transactionList = [];
-                                            if (transactionType === "QUOTATION") transactionList = quotationList?.data || [];
-                                            else if (transactionType === "SALESINVOICE") transactionList = salesInvoiceList?.data || [];
-                                            else if (transactionType === "SALESORDER") transactionList = salesOrderList?.data || [];
-                                            const selectedTransaction = transactionList.find(
-                                                (item) => String(item.id) === String(val)
-                                            );
-                                            console.log(transactionType, "transactionType")
+                                        let transactionList = [];
+                                        if (transactionType === "QUOTATION") transactionList = quotationList?.data || [];
+                                        else if (transactionType === "SALESINVOICE") transactionList = salesInvoiceList?.data || [];
+                                        else if (transactionType === "SALESORDER") transactionList = salesOrderList?.data || [];
+                                        const selectedTransaction = transactionList.find(
+                                            (item) => String(item.id) === String(val)
+                                        );
+                                        console.log(transactionType, "transactionType")
 
-                                            if (selectedTransaction) {
-                                                if (transactionType === "QUOTATION") {
-                                                    const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems, selectedTransaction);
-                                                    setTotalBillAmount(billVal.toFixed(2));
-                                                    // setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
-                                                    setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
-                                                } else if (transactionType === "SALESINVOICE") {
-                                                    const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems, selectedTransaction);
-                                                    setTotalBillAmount(billVal.toFixed(2));
-                                                    // setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
-                                                    setOutStandingAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
-                                                } else if (transactionType === "SALESORDER") {
-                                                    const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
-                                                    setTotalBillAmount(billVal.toFixed(2));
-                                                    // setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
-                                                    setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
-                                                }
+                                        if (selectedTransaction) {
+                                            if (transactionType === "QUOTATION") {
+                                                const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems, selectedTransaction);
+                                                setTotalBillAmount(billVal.toFixed(2));
+                                                // setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                                                setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                                            } else if (transactionType === "SALESINVOICE") {
+                                                const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems, selectedTransaction);
+                                                setTotalBillAmount(billVal.toFixed(2));
+                                                // setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                                                setOutStandingAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                                            } else if (transactionType === "SALESORDER") {
+                                                const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
+                                                setTotalBillAmount(billVal.toFixed(2));
+                                                // setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                                                setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
                                             }
-                                        }}
-                                        required
-                                    />
-                                </div>
-                            )}
+                                        }
+                                    }}
+                                    required
+                                />
+                            </div>
                             <div className="mb-4">
                                 <label htmlFor="paymentType" className="block text-xs font-bold text-gray-600 mb-1">
                                     Payment Mode <span className="text-red-500">*</span>

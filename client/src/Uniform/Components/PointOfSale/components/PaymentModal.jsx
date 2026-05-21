@@ -32,6 +32,9 @@ const PaymentModal = ({
     const absNetPayable = Math.abs(netPayable);
     const appliedCredit = Math.min(Math.max(0, total), availableCredit);
 
+
+    console.log(netPayable, "netPayable")
+
     // Scenario A: Refund Calculations
     const totalExcessCredit = absNetPayable;
     const instantRefundPaid = receivedAmount;
@@ -40,8 +43,8 @@ const PaymentModal = ({
     // Disable Settle Logic:
     // Scenario A: Cashier cannot refund more than excess credit.
     // Scenario B: Cashier must collect the exact net payable.
-    const isInvalid = isRefund 
-        ? (instantRefundPaid > totalExcessCredit) 
+    const isInvalid = isRefund
+        ? (instantRefundPaid > totalExcessCredit)
         : (receivedAmount !== absNetPayable);
 
     return (
@@ -67,16 +70,15 @@ const PaymentModal = ({
                             </p>
                         </div>
                     </div>
-                    
+
                     {/* Dynamic Status Badge */}
                     <div className="flex items-center gap-4">
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                            isRefund 
-                                ? 'bg-amber-100 text-amber-800 border border-amber-200' 
-                                : absNetPayable === 0 
-                                    ? 'bg-slate-100 text-slate-600 border border-slate-200'
-                                    : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                        }`}>
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${isRefund
+                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            : absNetPayable === 0
+                                ? 'bg-slate-100 text-slate-600 border border-slate-200'
+                                : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            }`}>
                             {isRefund ? '🔵 Adjusting Credit' : absNetPayable === 0 ? '⚪ Balanced' : '🟢 Receiving Payment'}
                         </span>
                         <button onClick={onClose} className="p-2 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-lg transition-all">
@@ -87,14 +89,14 @@ const PaymentModal = ({
 
                 {/* Horizontal Content Grid */}
                 <div className="flex flex-col md:flex-row flex-1">
-                    
+
                     {/* LEFT PANEL: Transaction Summary (40% width) */}
                     <div className="w-full md:w-[38%] bg-slate-50/70 p-8 border-r border-slate-100 flex flex-col justify-between space-y-6">
                         <div className="space-y-5">
                             <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <Receipt size={12} /> Transaction Summary
                             </h4>
-                            
+
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Invoice Amount</span>
@@ -183,7 +185,7 @@ const PaymentModal = ({
                                             </div>
                                             {/* Exact Fit Pill Button */}
                                             {!isRefund && absNetPayable > 0 && pod.value === 0 && (
-                                                <button 
+                                                <button
                                                     type="button"
                                                     onClick={() => pod.setter(absNetPayable)}
                                                     className="text-[8px] font-extrabold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-1.5 py-0.5 rounded transition-all uppercase"
@@ -242,9 +244,8 @@ const PaymentModal = ({
                                     </div>
                                 </div>
                             ) : (
-                                <div className={`p-4 rounded-2xl flex items-center justify-between shadow-lg transition-colors ${
-                                    receivedAmount >= absNetPayable ? 'bg-emerald-600 text-white shadow-emerald-100' : 'bg-slate-100 text-slate-400'
-                                }`}>
+                                <div className={`p-4 rounded-2xl flex items-center justify-between shadow-lg transition-colors ${receivedAmount >= absNetPayable ? 'bg-emerald-600 text-white shadow-emerald-100' : 'bg-slate-100 text-slate-400'
+                                    }`}>
                                     <div className="flex flex-col leading-none">
                                         <span className="text-[10px] font-black uppercase opacity-60 mb-1">
                                             {receivedAmount >= absNetPayable ? 'Change to Return' : 'Balance to Collect'}
@@ -262,8 +263,8 @@ const PaymentModal = ({
 
                 {/* Footer Controls */}
                 <div className="px-8 py-5 bg-slate-50 border-t border-slate-100 flex gap-4">
-                    <button 
-                        onClick={onClose} 
+                    <button
+                        onClick={onClose}
                         className="flex-1 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 hover:bg-slate-100 transition-all bg-white border border-slate-200 rounded-2xl"
                     >
                         Cancel (Esc)
@@ -306,16 +307,15 @@ const PaymentModal = ({
                                     setIsProcessing(false);
                                 }
                             }
-                            await handleCheckout();
+                            await handleCheckout(null, null, "PAID", "RECEIPTWITHBILL");
                             onClose();
                         }}
-                        className={`flex-[2] py-3.5 rounded-2xl flex items-center justify-center gap-3 font-black text-[11px] uppercase tracking-widest transition-all shadow-xl ${
-                            isInvalid || isProcessing 
-                                ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
-                                : isRefund 
-                                    ? 'bg-amber-600 text-white hover:bg-amber-700 shadow-amber-100' 
-                                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
-                        }`}
+                        className={`flex-[2] py-3.5 rounded-2xl flex items-center justify-center gap-3 font-black text-[11px] uppercase tracking-widest transition-all shadow-xl ${isInvalid || isProcessing
+                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                            : isRefund
+                                ? 'bg-amber-600 text-white hover:bg-amber-700 shadow-amber-100'
+                                : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
+                            }`}
                     >
                         {isRefund ? <CreditCard size={16} /> : <CheckCircle2 size={16} />}
                         <span>{isRefund ? "Complete Settlement & Print" : "Complete Sale & Print"}</span>

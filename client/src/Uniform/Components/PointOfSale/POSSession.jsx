@@ -42,6 +42,7 @@ import PaymentModal from './components/PaymentModal';
 import ReceiptViewerModal from './components/ReceiptViewerModal';
 import { pdf } from '@react-pdf/renderer';
 import PosMultiCopyPrint from './PosMultiCopyPrint';
+import printJS from 'print-js';
 import StockLocationModal from './components/StockLocationModal';
 import { useGetcollectionsQuery } from '../../../redux/uniformService/CollectionsService';
 import { useGetRolesQuery } from '../../../redux/services/RolesMasterService';
@@ -139,7 +140,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const [isCancelBill, setIsCancelBill] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [editingInvoiceId, setEditingInvoiceId] = useState(null);
-    const [exchangeSalesNo, setExchangeSalesNo] = useState('');
+    const [returnBillId, setReturnBillId] = useState('');
     const [availableReturnBills, setAvailableReturnBills] = useState([]);
     const [selectedReturnBills, setSelectedReturnBills] = useState(null);
 
@@ -210,9 +211,10 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         }
     }, [cart, tabId, onCartUpdate]);
 
+    console.log(selectedReportSaleId, "selectedReportSaleId")
     // Fetch credit balance and available return bills when customer changes
     useEffect(() => {
-        if (selectedCustomer?.id) {
+        if (selectedCustomer?.id && !selectedReportSaleId && transactionType === "SALE") {
             fetchCreditBalance(selectedCustomer.id).unwrap().then(res => {
                 if (res.statusCode === 0) setAvailableCredit(res.data);
             });
@@ -1022,149 +1024,17 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setShowPaymentModal(true);
         }
     };
-
-    const handleCheckout = async (isApprovalOnly = false, isCreditSale = false, isSilentPrint = false) => {
-        if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
-
-        if (!isApprovalOnly && !isCreditSale && transactionType !== "RETURN") {
-            const isRefundMode = netPayableValue < 0;
-
-            if (isRefundMode) {
-                if (receivedAmount > absNetPayableValue) {
-                    Swal.fire({
-                        title: "Error",
-                        text: `Refund payout (₹${receivedAmount}) cannot exceed the excess credit available (₹${absNetPayableValue}).`,
-                        icon: "error"
-                    });
-                    return;
-                }
-            } else {
-                if (receivedAmount !== absNetPayableValue) {
-                    Swal.fire({
-                        title: "Error",
-                        text: "Payment amount mismatch. Please enter the exact net payable amount.",
-                        icon: "error"
-                    });
-                    return;
-                }
-            }
-        }
-
-        setIsProcessing(true);
-
-        try {
-            let customerId = selectedCustomer?.id;
-            if (isGuestCustomer) {
-                const guestPayload = { name: guestName || 'Walk-in Customer', contact: guestMobile, isClient: true, isB2C: true, companyId, userId, partyCode: `WALK-${guestMobile.slice(-4)}-${Math.floor(Math.random() * 1000)}`, active: true, address: 'Walk-in Store', pincode: '000000', gstNo: 'N/A' };
-                try {
-                    const res = await addParty(guestPayload).unwrap();
-                    customerId = res.data.id;
-                } catch (e) {
-                    customerId = customers.find(c => c.contact === guestMobile)?.id;
-                    if (!customerId) throw new Error("Could not register guest.");
-                }
-            }
-
-            const totalPayableBeforeCredit = total;
-            const appliedCredit = total > 0 ? Math.min(availableCredit, totalPayableBeforeCredit) : 0;
-            const netPayable = totalPayableBeforeCredit - appliedCredit;
-            const isRefundMode = netPayableValue < 0;
-
-            const posPayments = [
-                ...(appliedCredit > 0 ? [{ amount: String(appliedCredit), paymentMode: 'STORE_CREDIT' }] : []),
-                ...(paidCash > 0 ? [{ amount: String(paidCash), paymentMode: isRefundMode ? 'Cash Refund' : 'Cash' }] : []),
-                ...(paidUPI > 0 ? [{ amount: String(paidUPI), paymentMode: isRefundMode ? 'UPI Refund' : 'UPI', reference_no: upiRefNo }] : []),
-                ...(paidCard > 0 ? [{ amount: String(paidCard), paymentMode: isRefundMode ? 'Card Refund' : 'Card' }] : []),
-                ...(paidOnline > 0 ? [{ amount: String(paidOnline), paymentMode: isRefundMode ? 'Online Refund' : 'Online' }] : []),
-            ];
-
-            const invoicePayload = {
-                date: new Date().toISOString().split('T')[0],
-                customerId,
-                supplierId: customerId,
-                branchId, userId, companyId, finYearId,
-                paymentMethod,
-                storeId: retailStoreId,
-                poType: "General", poInwardOrDirectInward: "DirectInward",
-                netAmount: total, taxAmount: tax, discountValue: discount, discountType: "Flat",
-                paidCash, paidUPI, paidCard, paidOnline, receivedAmount, balanceReturn,
-                posItems: cartWithOffers,
-                posPayments,
-                promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff, transactionType,
-                exchangeSalesNo,
-                bilStatus: transactionType == "RETURN" ? "RETURNED" : isCreditSale ? "UNPAID" : "PAID",
-                isRetrunBillId: selectedReturnBills?.value || null,
-                availableCredit,
-                approvalStatus: (editMode && approvalStatus === 'PENDING' && isAdmin) ? "APPROVED" :
-                    (editMode && docId === 'DRAFT' && isAdmin) ? "APPROVED" :
-                        (editMode && docId === 'PROCEED') ? "COMPLETED" : "NONE"
-            };
-
-            let apiResponse;
-            if (editMode) {
-                apiResponse = await updatePointOfSales({ id: editingInvoiceId, ...invoicePayload }).unwrap();
-            } else {
-                apiResponse = await addPointOfSales(invoicePayload).unwrap();
-            }
-
-            if (apiResponse.statusCode !== 0) {
-                throw new Error(apiResponse.message || "Failed to save invoice.");
-            }
-
-            const getSuccessMessage = () => {
-                if (editMode) return 'Updated Successfully!';
-                if (transactionType === 'RETURN') return 'Return Saved Successfully!';
-                return 'Payment Successful!';
-            };
-
-            Swal.fire({ title: getSuccessMessage(), icon: 'success', timer: 2000, showConfirmButton: false });
-
-            if (transactionType !== 'RETURN') {
-                const printPayload = {
-                    docId: apiResponse?.data?.docId || docId,
-                    date: new Date(),
-                    customerData: selectedCustomer || { name: guestName, contact: guestMobile },
-                    items: cart,
-                    payments: { cash: paidCash, upi: paidUPI, card: paidCard },
-                    summary: { subtotal, tax, discount, total, received: Math.abs(receivedAmount), balance: Math.abs(balanceReturn), roundOff },
-                    branchData: locations.find(l => l.id === retailStoreId),
-                    returnReferences: selectedReturnBills ? [selectedReturnBills.label] : (exchangeSalesNo ? [exchangeSalesNo] : []),
-                    bilStatus: isCreditSale ? "UNPAID" : "PAID",
-                    printCopies: 2,
-                    showSummarySlip: true
-                };
-
-                if (isSilentPrint) {
-                    triggerSilentPrint(printPayload);
-                } else {
-                    setPrintData(printPayload);
-                }
-            }
-
-            setCart([]);
-            setDiscount(0);
-            setSelectedCustomer(null);
-            setPaidCash(0);
-            setPaidUPI(0);
-            setPaidCard(0);
-            setUpiRefNo("");
-            setAvailableCredit(0);
-            setAvailableReturnBills([]);
-            setSelectedReturnBills(null);
-            setEditMode(false);
-            setEditingInvoiceId(null);
-            setSelectedReportSaleId(null);
-            setGuestName("");
-            setGuestMobile("");
-            setIsGuestCustomer(true);
-            setSearchMode('BARCODE');
-
-        } catch (error) {
-            Swal.fire({ title: "Error", text: error.message || "Failed to save invoice.", icon: "error" });
-        } finally {
-            setIsProcessing(false);
-        }
+    const triggerSilentPrint = async (printPayload) => {
+        <Modal isOpen={true} widthClass="w-[300pt] h-[95%]">
+            <PDFViewer style={{ width: "100%", height: "90vh" }}>
+                <PosMultiCopyPrint
+                    {...printPayload}
+                // branchData={branchList?.data?.find(b => b.id === branchId)}
+                />
+            </PDFViewer>
+        </Modal>
     };
+
 
     const handleRequestDiscount = async () => {
         if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
@@ -1262,50 +1132,11 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         });
 
         if (result.isConfirmed) {
-            handleCheckout(false, true);
+            handleCheckout(false, true, "UNPAID", "DELIVERYRECEIPT");
         }
     };
 
-    const triggerSilentPrint = async (printPayload) => {
-        try {
-            Swal.fire({
-                title: 'Generating Receipt...',
-                text: 'Sending print payload to receipt printer.',
-                icon: 'info',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
 
-            const blob = await pdf(<PosMultiCopyPrint {...printPayload} />).toBlob();
-            const blobURL = URL.createObjectURL(blob);
-
-            let iframe = document.getElementById('silent-pdf-printer-iframe');
-            if (!iframe) {
-                iframe = document.createElement('iframe');
-                iframe.id = 'silent-pdf-printer-iframe';
-                iframe.style.position = 'absolute';
-                iframe.style.width = '0';
-                iframe.style.height = '0';
-                iframe.style.border = 'none';
-                document.body.appendChild(iframe);
-            }
-
-            iframe.src = blobURL;
-
-            iframe.onload = () => {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
-                Swal.close();
-                setTimeout(() => {
-                    URL.revokeObjectURL(blobURL);
-                }, 5000);
-            };
-        } catch (error) {
-            Swal.close();
-            Swal.fire({ title: 'Print Error', text: error.message || 'Direct printing failed.', icon: 'error' });
-            console.error('Direct Print Failed:', error);
-        }
-    };
 
     const handleSaveAndPrint = async () => {
         if (cart.length === 0 || isProcessing) return;
@@ -1319,7 +1150,165 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             return;
         }
 
-        handleCheckout(false, false, true);
+        handleCheckout(true, false, "UNPAID", "DELIVERYRECEIPT");
+    };
+
+    console.log(editMode, "editMode", editingInvoiceId)
+
+
+    const handleCheckout = async (isApprovalOnly = false, isCreditSale = false, saleType = '', printType = '') => {
+        if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
+
+        if (!isApprovalOnly && !isCreditSale && transactionType !== "RETURN") {
+            const isRefundMode = netPayableValue < 0;
+
+            if (isRefundMode) {
+                if (receivedAmount > absNetPayableValue) {
+                    Swal.fire({
+                        title: "Error",
+                        text: `Refund payout (₹${receivedAmount}) cannot exceed the excess credit available (₹${absNetPayableValue}).`,
+                        icon: "error"
+                    });
+                    return;
+                }
+            } else {
+                if (receivedAmount !== absNetPayableValue) {
+                    Swal.fire({
+                        title: "Error",
+                        text: "Payment amount mismatch. Please enter the exact net payable amount.",
+                        icon: "error"
+                    });
+                    return;
+                }
+            }
+        }
+
+        setIsProcessing(true);
+
+        try {
+            let customerId = selectedCustomer?.id;
+            if (isGuestCustomer) {
+                const guestPayload = { name: guestName || 'Walk-in Customer', contact: guestMobile, isClient: true, isB2C: true, companyId, userId, partyCode: `WALK-${guestMobile.slice(-4)}-${Math.floor(Math.random() * 1000)}`, active: true, address: 'Walk-in Store', pincode: '000000', gstNo: 'N/A' };
+                try {
+                    const res = await addParty(guestPayload).unwrap();
+                    customerId = res.data.id;
+                } catch (e) {
+                    customerId = customers.find(c => c.contact === guestMobile)?.id;
+                    if (!customerId) throw new Error("Could not register guest.");
+                }
+            }
+
+            const totalPayableBeforeCredit = total;
+            const appliedCredit = total > 0 ? Math.min(availableCredit, totalPayableBeforeCredit) : 0;
+            const netPayable = totalPayableBeforeCredit - appliedCredit;
+            const isRefundMode = netPayableValue < 0;
+
+            const posPayments = [
+                ...(appliedCredit > 0 ? [{ amount: String(appliedCredit), paymentMode: 'STORE_CREDIT' }] : []),
+                ...(paidCash > 0 ? [{ amount: String(paidCash), paymentMode: isRefundMode ? 'Cash Refund' : 'Cash' }] : []),
+                ...(paidUPI > 0 ? [{ amount: String(paidUPI), paymentMode: isRefundMode ? 'UPI Refund' : 'UPI', reference_no: upiRefNo }] : []),
+                ...(paidCard > 0 ? [{ amount: String(paidCard), paymentMode: isRefundMode ? 'Card Refund' : 'Card' }] : []),
+                ...(paidOnline > 0 ? [{ amount: String(paidOnline), paymentMode: isRefundMode ? 'Online Refund' : 'Online' }] : []),
+            ];
+
+            const invoicePayload = {
+                date: new Date().toISOString().split('T')[0],
+                customerId,
+                supplierId: customerId,
+                branchId, userId, companyId, finYearId,
+                paymentMethod,
+                storeId: retailStoreId,
+                poType: "General", poInwardOrDirectInward: "DirectInward",
+                netAmount: total, taxAmount: tax, discountValue: discount, discountType: "Flat",
+                paidCash, paidUPI, paidCard, paidOnline, receivedAmount, balanceReturn,
+                posItems: cartWithOffers,
+                posPayments,
+                promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff, transactionType,
+                exchangeSalesNo: returnBillId,
+                returnBillId: returnBillId,
+                bilStatus: transactionType == "RETURN" ? "RETURNED" : saleType,
+                isRetrunBillId: selectedReturnBills?.value || null,
+                isExchange: selectedReturnBills ? true : false,
+                isExchangeBillId: selectedReturnBills?.value || null,
+
+                availableCredit,
+                approvalStatus: (editMode && approvalStatus === 'PENDING' && isAdmin) ? "APPROVED" :
+                    (editMode && docId === 'DRAFT' && isAdmin) ? "APPROVED" :
+                        (editMode && docId === 'PROCEED') ? "COMPLETED" : "NONE"
+            };
+
+            let apiResponse;
+            if (editMode) {
+                apiResponse = await updatePointOfSales({ id: editingInvoiceId, ...invoicePayload }).unwrap();
+            } else {
+                apiResponse = await addPointOfSales(invoicePayload).unwrap();
+            }
+
+            if (apiResponse.statusCode !== 0) {
+                throw new Error(apiResponse.message || "Failed to save invoice.");
+            }
+
+            const getSuccessMessage = () => {
+                if (editMode) return 'Updated Successfully!';
+                if (transactionType === 'RETURN') return 'Return Saved Successfully!';
+                if (saleType == "UNPAID") return "unpaid bill save ";
+                return 'Payment Successful!';
+            };
+
+            Swal.fire({ title: getSuccessMessage(), icon: 'success', timer: 2000, showConfirmButton: false });
+
+            if (transactionType !== 'RETURN') {
+                const printPayload = {
+                    docId: apiResponse?.data?.docId || docId,
+                    date: new Date(),
+                    customerData: selectedCustomer || { name: guestName, contact: guestMobile },
+                    items: cart,
+                    payments: { cash: paidCash, upi: paidUPI, card: paidCard },
+                    summary: { subtotal, tax, discount, total, received: Math.abs(receivedAmount), balance: Math.abs(balanceReturn), roundOff },
+                    branchData: locations.find(l => l.id === retailStoreId),
+                    returnReferences: selectedReturnBills ? [selectedReturnBills.label] : (returnBillId ? [returnBillId] : []),
+                    bilStatus: transactionType == "RETURN" ? "RETURNED" : saleType,
+                    printCopies: 2,
+                    showSummarySlip: editMode ? false : true
+                };
+
+
+                console.log(printType == 'RECEIPTWITHBILL', "printType")
+
+
+                if (printType == "DELIVERYRECEIPT") {
+                    setPrintData({ ...printPayload, isDeliveryReceipt: true });
+                }
+                else if (printType == "RECEIPTWITHBILL") {
+                    setPrintData(printPayload);
+                } else {
+                    setPrintData(printPayload);
+                }
+            }
+
+            setCart([]);
+            setDiscount(0);
+            setSelectedCustomer(null);
+            setPaidCash(0);
+            setPaidUPI(0);
+            setPaidCard(0);
+            setUpiRefNo("");
+            setAvailableCredit(0);
+            setAvailableReturnBills([]);
+            setSelectedReturnBills(null);
+            setEditMode(false);
+            setEditingInvoiceId(null);
+            setSelectedReportSaleId(null);
+            setGuestName("");
+            setGuestMobile("");
+            setIsGuestCustomer(true);
+            setSearchMode('BARCODE');
+
+        } catch (error) {
+            Swal.fire({ title: "Error", text: error.message || "Failed to save invoice.", icon: "error" });
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     // Loads return items from older transactions into cart
@@ -1493,8 +1482,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 onClose={() => { setShowReturnExchnageModal(false); }}
                 onBillSelected={handleBillSelected}
                 Swal={Swal}
-                salesNo={exchangeSalesNo}
-                setSalesNo={setExchangeSalesNo}
+                salesNo={returnBillId}
+                setSalesNo={setReturnBillId}
                 setTransactionType={setTransactionType}
                 cart={cart}
             />

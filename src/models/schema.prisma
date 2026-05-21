@@ -5555,6 +5555,8 @@ model Pos {
   isRetrunBillId      Int?
   isCancel            Boolean?      @default(false)
   cancelReason        String?
+  isExchangeBillId    Int?
+  isBillClosed        Boolean?      @default(false) 
   OriginalBill        SalesReturn[] @relation("OriginalBill")
   ExchangeNewBill     SalesReturn[] @relation("ExchangeNewBill")
   PosItems            PosItems[]    @relation("Bill")

@@ -60,7 +60,7 @@ const POSFooter = ({
     ];
 
     return (
-        <footer className="h-14 bg-white border-t border-slate-200 px-4 flex items-center shrink-0 z-30">
+        <footer className="h-10 bg-white border-t border-slate-200 px-4 flex items-center shrink-0 z-30">
             <div className="text-[10px] font-black text-slate-400 flex gap-4 uppercase tracking-[0.2em] border-r border-slate-100 pr-6 shrink-0">
                 <span>Rows: {cart.length}</span>
                 <span>Total Pcs: {cart.reduce((s, i) => s + (Number(i.qty) || 0), 0)}</span>

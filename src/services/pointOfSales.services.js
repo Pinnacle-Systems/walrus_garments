@@ -72,7 +72,9 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 async function get(req) {
 
 
-    const { branchId, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus, userRole, reportsTransactionType } = req.query;
+    const { branchId, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus,
+        userRole, reportsTransactionType, pagination, currentPageNumber, dataPerPage, exchangeBill
+    } = req.query;
 
 
     let where = {
@@ -115,19 +117,29 @@ async function get(req) {
         },
     });
 
-    // Resolve LinkedReturnBill for each record (Self-join for reports)
     data = await Promise.all(data.map(async (item) => {
-        if (item.isRetrunBillId) {
-            const linked = await prisma.pos.findUnique({
-                where: { id: item.isRetrunBillId },
-                select: { id: true, docId: true }
-            });
-            return { ...item, LinkedReturnBill: linked };
-        }
-        return item;
+        const [linkedReturn, linkedExchange] = await Promise.all([
+            item.isReturnBillId
+                ? prisma.pos.findUnique({
+                    where: { id: item.isReturnBillId },
+                    select: { id: true, docId: true }
+                })
+                : null,
+            item.isExchangeBillId
+                ? prisma.pos.findUnique({
+                    where: { id: item.isExchangeBillId },
+                    select: { id: true, docId: true }
+                })
+                : null
+        ]);
+
+        return {
+            ...item,
+            ...(linkedReturn && { LinkedReturnBill: linkedReturn }),
+            ...(linkedExchange && { LinkedExchangeBill: linkedExchange })
+        };
     }));
 
-    // console.log(data, "data")
 
     if (approvalStatus) {
 
@@ -140,7 +152,12 @@ async function get(req) {
 
     }
     data = manualFilterSearchData(searchDate, "", "", data)
+    console.log(data?.length, "data", pagination)
 
+    if (pagination) {
+        totalCount = data.length;
+        data = data.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
+    }
 
     return { statusCode: 0, data, totalCount };
 }
@@ -214,6 +231,27 @@ async function getSearch(req) {
 }
 
 
+function posPaymentsUpdate(tx, posId, posPayments) {
+    let promises = posPayments?.map(async (item) => await createOnePosPayment(tx, item, posId))
+    return Promise.all(promises)
+}
+
+async function createOnePosPayment(tx, posPayment = {}, posId) {
+    let { id, amount, paymentMode, reference_no, transaction_id, retunBillId, date } = await posPayment;
+    return await tx.PosPayments.create({
+        data: {
+            PosId: parseInt(posId),
+            amount: String(amount),
+            paymentMode: paymentMode,
+            reference_no: reference_no,
+            transaction_id: transaction_id,
+            retunBillId: retunBillId ? parseInt(retunBillId) : null,
+            date: date ? new Date(date) : new Date()
+        }
+    })
+}
+
+
 async function create(body) {
     try {
         const {
@@ -228,7 +266,7 @@ async function create(body) {
         let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
 
         const result = await prisma.$transaction(async (tx) => {
-            // Stage 1: Initial Request from Salesperson
+
             const finalDocId = approvalStatus === 'PENDING' ? 'DRAFT' : (approvalStatus === 'APPROVED' ? 'PROCEED' : docId);
 
             const posRecord = await tx.pos.create({
@@ -239,11 +277,13 @@ async function create(body) {
                     createdById: body.userId ? parseInt(body.userId) : undefined,
                     netAmount: netAmount ? String(netAmount) : "0",
                     approvalStatus: approvalStatus || "NONE",
-                    bilStatus: body.bilStatus || "PAID",
-                    transactionType: transactionType ? transactionType : "DEFAULT",
+                    bilStatus: body.bilStatus ? body?.bilStatus : "NA",
+                    transactionType: transactionType ? transactionType : "NA",
                     isReturn: isReturn,
-                    isRetrunBillId: body.isRetrunBillId ? parseInt(body.isRetrunBillId) : undefined,
+                    isRetrunBillId: body.returnBillId ? parseInt(body.returnBillId) : undefined,
                     availableCredit: body.availableCredit ? parseInt(body.availableCredit) : undefined,
+                    isExchange: body.isExchange ? true : false,
+                    isExchangeBillId: body.isExchangeBillId ? parseInt(body.isExchangeBillId) : undefined,
                     PosItems: {
                         createMany: {
                             data: (posItems || []).map((item) => ({
@@ -262,23 +302,43 @@ async function create(body) {
                             }))
                         }
                     },
-                    PosPayments: {
-                        createMany: {
-                            data: (posPayments || []).map(p => ({
-                                amount: String(p.amount),
-                                paymentMode: p.paymentMode,
-                                reference_no: p.reference_no,
-                                transaction_id: p.transaction_id,
-                                retunBillId: exchangeSalesNo ? parseInt(exchangeSalesNo) : null,
-                                date: new Date()
-                            }))
-                        }
-                    }
+                    // PosPayments: {
+                    //     createMany: {
+                    //         data: (posPayments || []).map(p => ({
+                    //             amount: String(p.amount),
+                    //             paymentMode: p.paymentMode,
+                    //             reference_no: p.reference_no,
+                    //             transaction_id: p.transaction_id,
+                    //             retunBillId: exchangeSalesNo ? parseInt(exchangeSalesNo) : null,
+                    //             date: new Date()
+                    //         }))
+                    //     }
+                    // }
                 }
             });
 
-            // IMPORTANT: If approval is pending, don't deduct stock yet
-            if (approvalStatus === 'PENDING') {
+            if (body?.bilStatus == "PAID") {
+                await posPaymentsUpdate(tx, posRecord.id, posPayments)
+            }
+
+
+
+            if (body.transactionType == "SALE" && body.isExchange && body.isExchangeBillId) {
+
+
+                if (body.isExchangeBillId) {
+                    await tx.pos.update({
+                        where: { id: parseInt(body.isExchangeBillId) },
+                        data: {
+                            isBillClosed: true,
+                        },
+                    });
+                }
+            }
+
+
+
+            if (approvalStatus === 'PENDING' || body?.bilStatus == "UNPAID") {
                 return posRecord;
             }
 
@@ -406,21 +466,21 @@ async function update(id, body) {
 
         if (!dataFound) return NoRecordFound("POS");
 
+        let finalDocId = dataFound.docId;
+        const isReturn = transactionType === "RETURN";
+
+        if ((dataFound.docId === 'DRAFT')) {
+            const finYearDate = await getFinYearStartTimeEndTime(finYearId);
+            const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
+            finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
+        }
+
+
+
+
+
         const result = await prisma.$transaction(async (tx) => {
-            let finalDocId = dataFound.docId;
 
-            const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE/RETURN" && parseFloat(netAmount || 0) < 0);
-
-            // console.log(body, 'body')
-            // console.log(finalDocId, "finalDocId", bilStatus, 'bilStatus')
-
-            console.log(dataFound.docId, "dataFound.docId", finYearId)
-
-            if ((dataFound.docId === 'DRAFT')) {
-                const finYearDate = await getFinYearStartTimeEndTime(finYearId);
-                const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-                finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
-            }
 
             if (body.approvalStatus === 'COMPLETED' || body.approvalStatus === 'NONE' || body.bilStatus === 'PAID' || body.bilStatus === 'UNPAID' || dataFound.approvalStatus === 'COMPLETED' || dataFound.approvalStatus === 'NONE') {
                 await tx.stock.deleteMany({
@@ -434,6 +494,7 @@ async function update(id, body) {
                     }
                 });
             }
+
 
             const updatedPos = await tx.pos.update({
                 where: { id: parseInt(id) },
@@ -449,12 +510,11 @@ async function update(id, body) {
                     isReturn: isReturn,
                     isRetrunBillId: body.isRetrunBillId ? parseInt(body.isRetrunBillId) : undefined,
                     availableCredit: body.availableCredit ? parseInt(body.availableCredit) : undefined,
-
-                    // updatedBy: body.userId ? { connect: { id: parseInt(body.userId) } } : undefined,
                 }
             });
 
             await tx.posItems.deleteMany({ where: { PosId: parseInt(id) } });
+
             await tx.posItems.createMany({
                 data: (posItems || []).map((item) => ({
                     PosId: parseInt(id),
@@ -586,11 +646,17 @@ async function remove(id) {
 
             });
 
+            console.log(posDetails, "posDetails")
+
+
+            const isReturn = posDetails?.isReturn ? true : false
+
+
             const stockDetails = await tx.stock.findMany({
                 where: {
                     transactionId: parseInt(id),
                     OR: [
-                        { inOrOut: "POS" },
+                        { inOrOut: isReturn ? "POSReturn" : "POS" },
                         { inOrOut: "StockTransferOut" },
                         { inOrOut: "StockTransferIn" }
                     ]
@@ -602,7 +668,7 @@ async function remove(id) {
                 where: {
                     transactionId: parseInt(id),
                     OR: [
-                        { inOrOut: "POS" },
+                        { inOrOut: isReturn ? "POSReturn" : "POS" },
                         { inOrOut: "StockTransferOut" },
                         { inOrOut: "StockTransferIn" }
                     ]
@@ -684,6 +750,10 @@ async function getPartyCreditBalance(req) {
         if (mode.includes('refund')) return acc - amt;
         return acc + amt;
     }, 0);
+
+    console.log("totalCredit", totalCredit)
+    console.log("totalPayments", totalPayments)
+    console.log("totalDebit", totalDebit)
 
     // Balance = (Returns + Payments) - Sales
     const availableCredit = (totalCredit + totalPayments) - totalDebit;
