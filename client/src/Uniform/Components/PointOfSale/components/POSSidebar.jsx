@@ -51,7 +51,7 @@ const POSSidebar = ({
 
     console.log(isUnpaidBill, "isUnpaidBill")
     console.log(isPendingApproval, "isPendingApproval")
-    console.log(selectedReportSaleId, "selectedReportSaleId")
+    console.log(selectedReturnBills, "selectedReturnBills")
 
 
     const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval) && currentBilStatus === 'PAID';
@@ -63,7 +63,7 @@ const POSSidebar = ({
 
     return (
         <aside className="w-[340px] border-l border-slate-200 bg-white flex flex-col shadow-2xl relative z-10 overflow-hidden h-full select-text">
-            <div className="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
+            <div className="flex-1 flex flex-col p-1 gap-4 overflow-hidden">
                 {/* Module 1: Direct Customer Entry */}
                 <div className="space-y-2 shrink-0 relative bg-white border border-slate-100 p-3 rounded-2xl shadow-sm overflow-hidden">
                     <div className="flex justify-between items-center">
@@ -101,12 +101,12 @@ const POSSidebar = ({
                             />
                         </div>
                         {((availableCredit > 0 && availableReturnBills.length > 0) || selectedReturnBills) && (
-                            <div className="mt-2 space-y-1">
+                            <div className="space-y-1 z-[100]">
                                 <label className="text-[9px] font-black text-indigo-600 uppercase tracking-widest px-1">Against Returns</label>
                                 <Select
                                     // Current list + linked bill-ai merge panrom
                                     options={(() => {
-                                        const opts = availableReturnBills.map(b => ({ value: b.id, label: b.docId }));
+                                        const opts = availableReturnBills?.filter(i => !i.isBillClosed)?.map(b => ({ value: b.id, label: b.docId }));
                                         if (selectedReturnBills && !opts.some(o => o.value === selectedReturnBills.value)) {
                                             opts.push(selectedReturnBills);
                                         }
@@ -117,6 +117,8 @@ const POSSidebar = ({
                                     placeholder="Link bills..."
                                     isDisabled={!!selectedReportSaleId} // Edit mode-la change panna mudiyaadhu
                                     className="text-[10px] font-bold"
+                                    menuPortalTarget={document.body}
+                                    menuPosition={'fixed'}
                                     styles={{
                                         control: (base) => ({
                                             ...base,
@@ -129,7 +131,13 @@ const POSSidebar = ({
                                         valueContainer: (base) => ({
                                             ...base,
                                             padding: '0 8px'
-                                        })
+                                        }),
+                                        option: (base) => ({
+                                            ...base,
+                                            fontSize: '10px',
+                                            padding: '4px 8px'
+                                        }),
+                                        menuPortal: base => ({ ...base, zIndex: 9999 })
                                     }}
                                 />
                             </div>

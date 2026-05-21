@@ -40,10 +40,10 @@ const PosMultiCopyPrint = ({
   returnReferences = [],
   bilStatus = "PAID",
   printCopies = 2,
-  showSummarySlip = true
+  showSummarySlip,
 }) => {
 
-  console.log(branchData, "branchData")
+  console.log(showSummarySlip, "showSummarySlip")
 
 
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);

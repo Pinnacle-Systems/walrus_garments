@@ -81,7 +81,7 @@ const POSMultiTabWrapper = () => {
     };
 
     const handleCloseTab = (e, idToRemove) => {
-        e.stopPropagation();
+        if (e) e.stopPropagation();
         if (tabs.length === 1) return; // Don't close the last tab
 
         const closeIndex = tabs.findIndex(t => t.id === idToRemove);
@@ -219,10 +219,10 @@ const POSMultiTabWrapper = () => {
             </div>
 
             {/* SESSION VIEW */}
-            <div className={`flex-col h-full ${currentView === 'SESSION' ? 'flex' : 'hidden'}`}>
+            <div className={`flex-col h-full w-[] ${currentView === 'SESSION' ? 'flex' : 'hidden'}`}>
                 {/* Tab Bar */}
-                <div className="flex items-center justify-between bg-slate-200 px-2 pt-2 border-b border-slate-300 shrink-0">
-                    <div className="flex items-center gap-1 overflow-x-auto flex-1">
+                <div className=" flex items-center justify-between bg-slate-200 px-2 pt-2 border-b border-slate-300 shrink-0">
+                    <div className=" flex items-center gap-1  flex-1">
                         {tabs.map(tab => (
                             <div
                                 key={tab.id}
@@ -253,13 +253,13 @@ const POSMultiTabWrapper = () => {
                         </button>
                     </div>
 
-                    <button
+                    {/* <button
                         onClick={() => setCurrentView("REPORTS")}
                         className="flex items-center gap-1.5 px-3 py-1 mb-1 rounded-md bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm ml-4"
                     >
                         <FileText size={14} />
                         Reports
-                    </button>
+                    </button> */}
                 </div>
 
                 {/* Render all tabs, hide inactive ones */}
@@ -276,7 +276,12 @@ const POSMultiTabWrapper = () => {
                                     onCartUpdate={handleCartUpdate}
                                     globalReservedStock={globalReservedStock}
                                     initialEditSaleId={tab.editSaleId}
-                                    onGoToReports={() => setCurrentView("REPORTS")}
+                                    onGoToReports={() => {
+                                        setCurrentView("REPORTS");
+                                        if (tab.editSaleId) {
+                                            handleCloseTab(null, tab.id);
+                                        }
+                                    }}
                                 />
                             </div>
                         );

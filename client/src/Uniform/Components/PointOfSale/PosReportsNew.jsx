@@ -40,6 +40,8 @@ const PosReportsNew = ({
 
 }) => {
 
+    console.log(reportsTransactionType, "reportsTransactionType")
+
     const calculateQuotationNetAmount = (quotationItems = [], quotation = {}) => {
         const packingCharge = parseFloat(quotation?.packingCharge || 0);
         const shippingCharge = parseFloat(quotation?.shippingCharge || 0);
@@ -100,7 +102,7 @@ const PosReportsNew = ({
     const branchId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentBranchId"
     );
-    const [dataPerPage, setDataPerPage] = useState("15");
+    const [dataPerPage, setDataPerPage] = useState("16");
     const [serachDocNo, setSerachDocNo] = useState("");
     const [searchClientName, setSearchClientName] = useState("");
     const [searchDate, setSearchDate] = useState("");
@@ -108,6 +110,8 @@ const PosReportsNew = ({
     const [searchMaterial, setSearchMaterial] = useState("")
     const [searchCustomerName, setSearchCustomerName] = useState("")
     const [billStatus, setBillStatus] = useState("")
+    const [returnBill, setReturnBill] = useState("")
+    const [exchangeBill, setExchangeBill] = useState("")
 
     const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
@@ -152,7 +156,9 @@ const PosReportsNew = ({
         supplier,
         searchMaterial,
         searchCustomerName,
-        reportsTransactionType
+        reportsTransactionType,
+        exchangeBill,
+        returnBill
 
     };
 
@@ -165,7 +171,9 @@ const PosReportsNew = ({
         supplier,
         searchMaterial,
         searchCustomerName,
-        reportsTransactionType
+        reportsTransactionType,
+        exchangeBill,
+        returnBill
     ]);
 
     useEffect(() => {
@@ -186,7 +194,7 @@ const PosReportsNew = ({
             ...searchFields,
             pagination: true,
             dataPerPage,
-            pageNumber: currentPageNumber,
+            currentPageNumber,
         }
     });
 
@@ -194,8 +202,8 @@ const PosReportsNew = ({
 
 
     useEffect(() => {
-        if (allData?.totalCount) {
-            setTotalCount(allData?.totalCount);
+        if (allData?.data?.totalCount) {
+            setTotalCount(allData?.data?.totalCount);
         }
     }, [allData, isLoading, isFetching]);
 
@@ -229,11 +237,14 @@ const PosReportsNew = ({
 
 
 
-    console.log(allData, "entire");
 
     const totalPages = Math?.ceil((allData?.totalCount || 0) / parseInt(dataPerPage));
-    const indexOfFirstItem = (currentPageNumber - 1) * parseInt(dataPerPage);
+    const indexOfFirstItem = 0;
     const indexOfLastItem = Math.min(currentPageNumber * parseInt(dataPerPage), allData?.totalCount || 0);
+    const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
+
+
+    console.log(indexOfFirstItem, 'indexOfFirstItem', currentItems)
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -246,7 +257,7 @@ const PosReportsNew = ({
         return (
             <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
                 <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-                    Showing {indexOfFirstItem + 1} to {indexOfLastItem} of {allData?.totalCount || 0} entries
+                    Showing {indexOfFirstItem + 1} to {indexOfLastItem} of {allData?.data?.totalCount || 0} entries
                 </div>
                 <div className="flex gap-1">
                     <button
@@ -317,6 +328,9 @@ const PosReportsNew = ({
         );
     };
 
+
+
+
     return (
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
             <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
@@ -324,6 +338,7 @@ const PosReportsNew = ({
                     <PosMultiCopyPrint
                         {...printData}
                         branchData={branchList?.data?.find(b => b.id === branchId)}
+                        showSummarySlip={printData?.showSummarySlip}
                     />
                 </PDFViewer>
             </Modal>
@@ -349,14 +364,23 @@ const PosReportsNew = ({
                                     </th>
 
 
-                                    <th className="w-48  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                                    <th className="w-24  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>Bill Status</div>
                                     </th>
+                                    {reportsTransactionType != "SALE" && (
+                                        <th className="w-48  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                                            <div>Return Bill</div>
+                                        </th>
+                                    )}
 
-                                    <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                                    <th className="w-64  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>Customer</div>
                                     </th>
-
+                                    {reportsTransactionType == "SALE" && (
+                                        <th className="w-48  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                                            <div>Return Bill</div>
+                                        </th>
+                                    )}
                                     <th className="w-14   px-3  font-bold text-[13px]  text-gray-900  text-center ">
                                         <div>Actions</div>
                                     </th>
@@ -423,7 +447,22 @@ const PosReportsNew = ({
                                             }}
                                         />
                                     </th>
-                                    <th className="w-1/2  px-1 font-bold text-[13px]  text-gray-900  text-center ">
+                                    {reportsTransactionType != "SALE" && (
+                                        <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
+                                            <input
+                                                type="text"
+                                                className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                                placeholder="Search"
+                                                value={returnBill}
+                                                onChange={(e) => {
+                                                    setReturnBill(e.target.value);
+                                                }}
+                                            />
+                                        </th>
+
+                                    )}
+
+                                    <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                                         <input
                                             type="text"
                                             className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
@@ -434,7 +473,20 @@ const PosReportsNew = ({
                                             }}
                                         />
                                     </th>
+                                    {reportsTransactionType == "SALE" && (
+                                        <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
+                                            <input
+                                                type="text"
+                                                className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                                placeholder="Search"
+                                                value={exchangeBill}
+                                                onChange={(e) => {
+                                                    setExchangeBill(e.target.value);
+                                                }}
+                                            />
+                                        </th>
 
+                                    )}
 
                                     <th className="w-32 px-1 font-bold text-[13px] text-gray-900 text-center"></th>
                                     {/* <th className="w-14  px-1  font-bold text-[13px]  text-gray-900  text-center "></th> */}
@@ -451,7 +503,7 @@ const PosReportsNew = ({
                                 </tbody>
                             ) : (
                                 <tbody className="border-2">
-                                    {(allData?.data ? allData?.data : []).map((dataObj, index) => (
+                                    {(currentItems ? currentItems : []).map((dataObj, index) => (
                                         <tr
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
@@ -508,11 +560,24 @@ const PosReportsNew = ({
                                                 )}
                                             </td>
 
+                                            {reportsTransactionType !== "SALE" && (
+
+                                                <td className="py-1.5 text-left">
+                                                    {dataObj?.LinkedReturnBill?.docId}
+                                                </td>
+                                            )}
+
+
                                             <td className="py-1.5 text-left">
-                                                {`${dataObj?.Party?.name}`}
+                                                {`${(dataObj?.Party?.name).toUpperCase()}`}
                                             </td>
 
+                                            {reportsTransactionType == "SALE" && (
 
+                                                <td className="py-1.5 text-left">
+                                                    {dataObj?.LinkedExchangeBill?.docId}
+                                                </td>
+                                            )}
                                             {rowActions && (
                                                 <td className="border-gray-200 px-2 h-8">
                                                     <div className="flex items-center justify-end gap-1">
@@ -562,7 +627,7 @@ const PosReportsNew = ({
                                                                     onClick={() =>
                                                                         hasPermission(() => onDelete(dataObj.id), "delete", dataObj?._count)
                                                                     }
-                                                                    disabled={dataObj?.bilStatus == "PAID" ? true : false}
+                                                                    disabled={dataObj?.bilStatus == "PAID" || dataObj?.isBillClosed ? true : false}
                                                                 >
                                                                     <svg
                                                                         xmlns="http://www.w3.org/2000/svg"
@@ -579,7 +644,7 @@ const PosReportsNew = ({
                                                                 </button>
                                                             )}
                                                             {
-                                                                (hoveredDeleteId === dataObj.id && dataObj?.bilStatus == "PAID") && (
+                                                                (hoveredDeleteId === dataObj.id && (dataObj?.bilStatus == "PAID" || dataObj?.isBillClosed)) && (
                                                                     <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-[12px] rounded shadow-lg w-64 z-50">
                                                                         Cannot delete. Child records exist.
 
@@ -588,11 +653,21 @@ const PosReportsNew = ({
 
                                                         </div>
                                                         <button
+                                                            className="text-red-600 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleCancel(dataObj.id);
+                                                            }}
+                                                            disabled={dataObj.bilStatus !== "UNPAID"}
+                                                            title="Cancel Bill"
+                                                        >
+                                                            <FiXCircle className="h-4 w-4" />
+                                                        </button>
+                                                        <button
                                                             className="text-orange-600 flex items-center px-1 bg-orange-50 rounded hover:bg-orange-100 transition-colors"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 console.log(dataObj, "dataObj")
-                                                                // 1. தொகைகளை கணக்கிடுதல்
                                                                 const received = dataObj.PosPayments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
                                                                 const total = parseFloat(dataObj.netAmount || 0);
                                                                 const balance = received - total;
@@ -602,7 +677,7 @@ const PosReportsNew = ({
                                                                     docId: dataObj.docId,
                                                                     date: dataObj.createdAt,
                                                                     customerData: dataObj.Party || { name: "Walk-in Customer" },
-                                                                    items: dataObj.PosItems || [], // Backend-ல் PosItems என்றுதான் வருகிறது
+                                                                    items: dataObj.PosItems || [],
                                                                     payments: {
                                                                         cash: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Cash")?.amount || 0),
                                                                         upi: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "UPI")?.amount || 0),
@@ -621,7 +696,7 @@ const PosReportsNew = ({
                                                                     branchData: branchList?.data?.find(b => b.id === dataObj.branchId),
                                                                     bilStatus: dataObj.bilStatus,
                                                                     printCopies: 2,
-                                                                    showSummarySlip: true
+                                                                    showSummarySlip: false
                                                                 });
 
                                                                 setThermalPrintOpen(true);
@@ -631,17 +706,7 @@ const PosReportsNew = ({
                                                             <FiPrinter className="h-4 w-4" />
                                                         </button>
 
-                                                        <button
-                                                            className="text-red-600 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleCancel(dataObj.id);
-                                                            }}
-                                                            disabled={dataObj.bilStatus !== "UNPAID"}
-                                                            title="Cancel Bill"
-                                                        >
-                                                            <FiXCircle className="h-4 w-4" />
-                                                        </button>
+
                                                         {/* {dataObj.isCancel && (
                                                             <span className="text-red-500 text-[10px] font-bold uppercase border border-red-200 px-1 rounded bg-red-50">Canceled</span>
                                                         )} */}

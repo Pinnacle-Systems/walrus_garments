@@ -27,7 +27,7 @@ const POSHeader = ({
     cart
 }) => {
     return (
-        <header className="h-14 bg-white border-b border-slate-200 px-4 flex items-center shrink-0 z-30 justify-between shadow-sm">
+        <header className="h-10 bg-white border-b border-slate-200 px-4 flex items-center shrink-0 z-30 justify-between shadow-sm">
             <div className="flex items-center gap-4 flex-1">
                 {/* Search Mode Toggle */}
                 <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 shadow-sm shrink-0">
@@ -48,7 +48,7 @@ const POSHeader = ({
                 </div>
 
                 <div className="flex flex-col gap-0.5">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Transaction Type</label>
+                    {/* <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Transaction Type</label> */}
                     <div className="relative group w-24">
                         <select
                             disabled={selectedReportSaleId || cart?.length > 0}

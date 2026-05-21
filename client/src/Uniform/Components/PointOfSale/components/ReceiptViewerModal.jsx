@@ -1,7 +1,9 @@
 import React from 'react';
-import { X } from 'lucide-react';
-import { PDFViewer } from '@react-pdf/renderer';
+import { X, Printer } from 'lucide-react';
+import { PDFViewer, pdf } from '@react-pdf/renderer';
 import PosMultiCopyPrint from '../PosMultiCopyPrint';
+import PosDeliveryReceiptPrint from '../PosDeliveryReceiptPrint';
+import printJS from 'print-js';
 
 const ReceiptViewerModal = ({
     printData,
@@ -9,6 +11,26 @@ const ReceiptViewerModal = ({
     Swal
 }) => {
     if (!printData) return null;
+
+    const PrintComponent = printData.isDeliveryReceipt ? PosDeliveryReceiptPrint : PosMultiCopyPrint;
+
+    const handleDirectPrint = async () => {
+        try {
+            const blob = await pdf(<PrintComponent {...printData} />).toBlob();
+            const blobURL = URL.createObjectURL(blob);
+
+            printJS({
+                printable: blobURL,
+                type: 'pdf',
+                onPrintDialogClose: () => {
+                    URL.revokeObjectURL(blobURL);
+                }
+            });
+        } catch (error) {
+            console.error('Direct Print Failed:', error);
+            Swal.fire({ title: "Print Error", text: error.message || "Failed to print.", icon: "error" });
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-10 animate-in fade-in duration-300">
@@ -23,24 +45,24 @@ const ReceiptViewerModal = ({
                 <div className="flex-1 bg-slate-100 p-4 sm:p-8 flex items-center justify-center overflow-hidden">
                     <div className="w-[300px] h-full shadow-2xl rounded-sm overflow-hidden border border-slate-200">
                         <PDFViewer width="100%" height="100%" showToolbar={true} className="border-none">
-                            <PosMultiCopyPrint {...printData} />
+                            <PrintComponent {...printData} />
                         </PDFViewer>
                     </div>
                 </div>
-                <div className="p-6 bg-white border-t border-slate-100 flex items-center gap-4">
+                {/* <div className="p-6 bg-white border-t border-slate-100 flex items-center gap-4">
                     <button onClick={() => setPrintData(null)} className="flex-1 py-4 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-all">Close Viewer</button>
                     <button
-                        onClick={() => {
-                            Swal.fire({ title: "Info", text: "Use the Print icon inside the terminal viewer.", icon: "info", timer: 1500, showConfirmButton: false });
-                        }}
-                        className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 block text-center"
+                        onClick={handleDirectPrint}
+                        className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
                     >
+                        <Printer size={16} />
                         Send to Thermal Printer
                     </button>
-                </div>
+                </div> */}
             </div>
         </div>
     );
 };
 
 export default ReceiptViewerModal;
+
