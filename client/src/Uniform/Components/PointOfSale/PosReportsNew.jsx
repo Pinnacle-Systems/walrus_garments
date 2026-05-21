@@ -1,5 +1,6 @@
 import React from 'react'
 import { useEffect, useState } from "react";
+import { io as socketIO } from 'socket.io-client';
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService"
 import { Loader } from "../../../Basic/components";
 import { findFromList, getCommonParams, getDateFromDateTimeToDisplay } from "../../../Utils/helper";
@@ -33,8 +34,9 @@ const PosReportsNew = ({
     onConvertToInvoice,
     onMakePayment,
     reportsTransactionType = "SALE",
-    lastRefresh,
     rowActions = true,
+    lastRefresh,
+    hasPermission
 
 }) => {
 
@@ -98,7 +100,7 @@ const PosReportsNew = ({
     const branchId = secureLocalStorage.getItem(
         sessionStorage.getItem("sessionId") + "currentBranchId"
     );
-    const [dataPerPage, setDataPerPage] = useState("1");
+    const [dataPerPage, setDataPerPage] = useState("15");
     const [serachDocNo, setSerachDocNo] = useState("");
     const [searchClientName, setSearchClientName] = useState("");
     const [searchDate, setSearchDate] = useState("");
@@ -203,6 +205,25 @@ const PosReportsNew = ({
         }
     }, [lastRefresh, refetch]);
 
+    useEffect(() => {
+        const socketUrl = process.env.REACT_APP_SERVER_URL
+        const socket = socketIO(socketUrl);
+
+        socket.on('pos_changed', (data) => {
+            if (data && parseInt(data.branchId) === parseInt(branchId)) {
+                console.log("Real-time POS update received, refetching...");
+                refetch();
+            }
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, [branchId, refetch]);
+
+
+
+
     const isLoadingIndicator =
         isLoading || isFetching
 
@@ -210,16 +231,13 @@ const PosReportsNew = ({
 
     console.log(allData, "entire");
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-    const indexOfLastItem = currentPage * parseInt(itemsPerPage);
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-
-    console.log(indexOfLastItem, "indexOfLastItem")
+    const totalPages = Math?.ceil((allData?.totalCount || 0) / parseInt(dataPerPage));
+    const indexOfFirstItem = (currentPageNumber - 1) * parseInt(dataPerPage);
+    const indexOfLastItem = Math.min(currentPageNumber * parseInt(dataPerPage), allData?.totalCount || 0);
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
-            setCurrentPage(newPage);
+            setCurrentPageNumber(newPage);
         }
     };
     const Pagination = () => {
@@ -228,13 +246,13 @@ const PosReportsNew = ({
         return (
             <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
                 <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.length} entries
+                    Showing {indexOfFirstItem + 1} to {indexOfLastItem} of {allData?.totalCount || 0} entries
                 </div>
                 <div className="flex gap-1">
                     <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className={`px-3 py-1 rounded-md ${currentPage === 1
+                        onClick={() => handlePageChange(currentPageNumber - 1)}
+                        disabled={currentPageNumber === 1}
+                        className={`px-3 py-1 rounded-md ${currentPageNumber === 1
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             : 'bg-white text-gray-600 hover:bg-gray-100'
                             }`}
@@ -246,19 +264,19 @@ const PosReportsNew = ({
                         let pageNum;
                         if (totalPages <= 5) {
                             pageNum = i + 1;
-                        } else if (currentPage <= 3) {
+                        } else if (currentPageNumber <= 3) {
                             pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
+                        } else if (currentPageNumber >= totalPages - 2) {
                             pageNum = totalPages - 4 + i;
                         } else {
-                            pageNum = currentPage - 2 + i;
+                            pageNum = currentPageNumber - 2 + i;
                         }
 
                         return (
                             <button
                                 key={pageNum}
                                 onClick={() => handlePageChange(pageNum)}
-                                className={`px-3 py-1 rounded-md ${currentPage === pageNum
+                                className={`px-3 py-1 rounded-md ${currentPageNumber === pageNum
                                     ? 'bg-indigo-800 text-white'
                                     : 'bg-white text-gray-600 hover:bg-gray-100'
                                     }`}
@@ -268,14 +286,14 @@ const PosReportsNew = ({
                         );
                     })}
 
-                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                    {totalPages > 5 && currentPageNumber < totalPages - 2 && (
                         <span className="px-3 py-1">...</span>
                     )}
 
-                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                    {totalPages > 5 && currentPageNumber < totalPages - 2 && (
                         <button
                             onClick={() => handlePageChange(totalPages)}
-                            className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                            className={`px-3 py-1 rounded-md ${currentPageNumber === totalPages
                                 ? 'bg-indigo-800 text-white'
                                 : 'bg-white text-gray-600 hover:bg-gray-100'
                                 }`}
@@ -285,9 +303,9 @@ const PosReportsNew = ({
                     )}
 
                     <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                        onClick={() => handlePageChange(currentPageNumber + 1)}
+                        disabled={currentPageNumber === totalPages}
+                        className={`px-3 py-1 rounded-md ${currentPageNumber === totalPages
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             : 'bg-white text-gray-600 hover:bg-gray-100'
                             }`}
@@ -331,7 +349,7 @@ const PosReportsNew = ({
                                     </th>
 
 
-                                    <th className="w-24  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                                    <th className="w-48  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>Bill Status</div>
                                     </th>
 
@@ -346,7 +364,7 @@ const PosReportsNew = ({
                                 </tr>
                                 <tr className="">
                                     <th className=" px-1  font-bold text-[13px] justify-end  text-gray-900  text-center  w-12">
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 setSerachDocNo("");
                                                 setSearchDate("");
@@ -453,9 +471,7 @@ const PosReportsNew = ({
                                             <td className="py-1.5 text-left">
                                                 <div className="flex items-center gap-2">
                                                     {dataObj.docId}
-                                                    {dataObj.approvalStatus === 'PENDING' && (
-                                                        <span className="bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded text-[8px] font-black uppercase border border-amber-200">Pending Approval</span>
-                                                    )}
+
                                                 </div>
                                             </td>
 
@@ -465,15 +481,31 @@ const PosReportsNew = ({
                                             </td>
 
                                             <td className="py-1.5 text-left">
-                                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase border ${
-                                                    dataObj.isCancel ? "bg-red-50 text-red-500 border-red-200" :
-                                                    dataObj.bilStatus === "DRAFT" ? "bg-gray-100 text-gray-600 border-gray-300" :
-                                                    dataObj.bilStatus === "PAID" ? "bg-green-100 text-green-600 border-green-300" :
-                                                    dataObj.bilStatus === "UNPAID" ? "bg-red-100 text-red-600 border-red-300" :
-                                                    "bg-blue-100 text-blue-600 border-blue-300"
-                                                    } w-24 text-center `}>
-                                                    {dataObj.isCancel ? "CANCELLED" : (dataObj.bilStatus || "DRAFT")}
-                                                </span>
+                                                {dataObj.isCancel ? (
+                                                    <span className="bg-red-50 text-red-500 border border-red-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm">
+                                                        🚫 Cancelled
+                                                    </span>
+                                                ) : dataObj.docId === "DRAFT" && dataObj.approvalStatus === "PENDING" ? (
+                                                    <span className="bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm">
+                                                        ⏳ Discount Pending
+                                                    </span>
+                                                ) : dataObj.docId === "DRAFT" && dataObj.approvalStatus === "APPROVED" ? (
+                                                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm animate-pulse">
+                                                        💸 Ready for Payment
+                                                    </span>
+                                                ) : dataObj.docId !== "DRAFT" && dataObj.bilStatus === "PAID" ? (
+                                                    <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm">
+                                                        ✅ Paid
+                                                    </span>
+                                                ) : dataObj.docId !== "DRAFT" && dataObj.bilStatus === "UNPAID" ? (
+                                                    <span className="bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm">
+                                                        ❌ Unpaid
+                                                    </span>
+                                                ) : (
+                                                    <span className="bg-gray-50 text-gray-500 border border-gray-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm">
+                                                        {dataObj.bilStatus || "DRAFT"}
+                                                    </span>
+                                                )}
                                             </td>
 
                                             <td className="py-1.5 text-left">
@@ -523,7 +555,6 @@ const PosReportsNew = ({
                                                                 setHoveredDeleteId(dataObj.id)
                                                             }
                                                             onMouseLeave={() => setHoveredDeleteId(null)}
-                                                            disabled={true}
                                                         >
                                                             {onDelete && (
                                                                 <button
@@ -531,7 +562,7 @@ const PosReportsNew = ({
                                                                     onClick={() =>
                                                                         hasPermission(() => onDelete(dataObj.id), "delete", dataObj?._count)
                                                                     }
-                                                                // disabled={hasChildRecords}
+                                                                    disabled={dataObj?.bilStatus == "PAID" ? true : false}
                                                                 >
                                                                     <svg
                                                                         xmlns="http://www.w3.org/2000/svg"
@@ -548,7 +579,7 @@ const PosReportsNew = ({
                                                                 </button>
                                                             )}
                                                             {
-                                                                hoveredDeleteId === dataObj.id && (
+                                                                (hoveredDeleteId === dataObj.id && dataObj?.bilStatus == "PAID") && (
                                                                     <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-[12px] rounded shadow-lg w-64 z-50">
                                                                         Cannot delete. Child records exist.
 
@@ -626,7 +657,7 @@ const PosReportsNew = ({
                         </table>
 
                     </div>
-                    <div className="shrink-0">
+                    <div className="">
                         <Pagination />
                     </div>
 

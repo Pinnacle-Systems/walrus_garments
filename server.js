@@ -275,6 +275,7 @@ export const io = new Server(httpServer, {
 });
 
 io.on("connection", socketMain);
+app.set('socketio', io);
 
 const PORT = process.env.PORT || 9999;
 

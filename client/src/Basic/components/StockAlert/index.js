@@ -16,8 +16,10 @@ const NotificationPopup = ({
     posData
 }) => {
     const dispatch = useDispatch();
-    const [activeTab, setActiveTab] = useState('stock'); // 'stock' or 'discount'
-    const { branchId, userId, companyId, finYearId } = getCommonParams();
+    const [activeTab, setActiveTab] = useState('stock');
+    const { branchId, userId, companyId, finYearId, userRole } = getCommonParams();
+
+    const isAdmin = userRole?.toUpperCase() === "ADMIN" || userRole?.toUpperCase() === "SUPER_ADMIN" || userRole?.toUpperCase() === "SUPER ADMIN";
 
     const params = {
         branchId, userId, finYearId
@@ -50,7 +52,7 @@ const NotificationPopup = ({
                             onClick={() => setActiveTab('discount')}
                             className={`text-sm font-bold px-3 py-1.5 rounded-lg transition-colors ${activeTab === 'discount' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                         >
-                            Discount Requests ({posData?.data?.length || 0})
+                            {isAdmin ? "Discount Requests" : "Approved Bills"} ({posData?.data?.length || 0})
                         </button>
                     </div>
 
@@ -113,14 +115,16 @@ const NotificationPopup = ({
                                                 onClick={() => handleOpenPos(req.id)}
                                                 className="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] font-bold hover:bg-indigo-700"
                                             >
-                                                OPEN POS
+                                                {isAdmin ? "OPEN POS" : "CHECKOUT"}
                                             </button>
                                         </td>
                                     </tr>
                                 ))}
                                 {(!posData?.data || posData.data.length === 0) && (
                                     <tr>
-                                        <td colSpan="5" className="px-3 py-8 text-center text-gray-500 italic">No pending discount requests</td>
+                                        <td colSpan="5" className="px-3 py-8 text-center text-gray-500 italic">
+                                            {isAdmin ? "No pending discount requests" : "No approved bills ready for payment"}
+                                        </td>
                                     </tr>
                                 )}
                             </tbody>

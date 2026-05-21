@@ -898,7 +898,7 @@ export async function _getOneAccessory(id, req) {
 
 export async function getStockReport(req) {
 
-    const { itemId, sizeId, colorId, storeId, toDate } = req.query;
+    const { itemId, sizeId, colorId, storeId, toDate, barcode } = req.query;
 
     const DateFormatted = moment(toDate).format("YYYY-MM-DD");
 
@@ -908,6 +908,7 @@ export async function getStockReport(req) {
     if (sizeId) conditions.push(`ST.sizeId = '${sizeId}'`);
     if (colorId) conditions.push(`ST.colorId = '${colorId}'`);
     if (storeId) conditions.push(`ST.storeId = '${storeId}'`);
+    if (barcode) conditions.push(`ST.barcode = '${barcode}'`);
     if (DateFormatted) conditions.push(`DATE(ST.createdAt) <= '${DateFormatted}'`);
 
     let whereClause = conditions.length > 0
@@ -929,6 +930,7 @@ export async function getStockReport(req) {
         I.name AS Item,
         S.name AS Size,
         C.name AS Color,
+        U.name AS Uom,
         ST.barcode AS Barcode
         ${selectStore},
         SUM(ST.qty) AS total_qty
@@ -936,12 +938,14 @@ export async function getStockReport(req) {
     LEFT JOIN Item I ON I.id = ST.itemId
     LEFT JOIN Size S ON S.id = ST.sizeId
     LEFT JOIN Color C ON C.id = ST.colorId
+    LEFT JOIN UnitOfMeasurement U ON U.id = ST.uomId
     ${whereClause}
 
     GROUP BY
         I.name,
         S.name,
         C.name,
+        U.name,
         ST.barcode
         ${groupByStore}
 
@@ -951,6 +955,7 @@ export async function getStockReport(req) {
         I.name,
         S.name,
         C.name,
+        U.name,
         ST.barcode
     `;
 

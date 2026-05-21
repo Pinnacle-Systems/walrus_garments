@@ -19,6 +19,12 @@ const ReturnExchangeModal = ({
     const { branchId, companyId, finYearId } = getCommonParams();
     const [selectedBill, setSelectedBill] = useState(null);
     const [selectedItemIds, setSelectedItemIds] = useState([]);
+    const [filterDate, setFilterDate] = useState('');
+    const [searchItem, setSearchItem] = useState('');
+    const [searchBarcode, setSearchBarcode] = useState('');
+    const [searchSize, setSearchSize] = useState('');
+    const [searchColor, setSearchColor] = useState('');
+    const [searchUom, setSearchUom] = useState('');
     const [fetchBillById, {
         isFetching: isSingleFetching,
     }] = useLazyGetPointOfSalesByIdQuery();
@@ -126,25 +132,35 @@ const ReturnExchangeModal = ({
     };
 
     return (
-        <Modal isOpen={isOpen} widthClass="w-[90%] h-[90%]" onClose={handleModalClose}>
+        <Modal isOpen={isOpen} widthClass="w-[95%] h-[90%]" onClose={handleModalClose}>
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="p-4 bg-gradient-to-br from-indigo-900 to-slate-900 text-white flex justify-between items-center shrink-0">
+                <div className="p-1 bg-gradient-to-br from-indigo-900 to-slate-900 text-white flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md">
                             <RotateCcw size={20} className="text-indigo-300" />
                         </div>
                         <div>
                             <h2 className="text-sm font-black uppercase tracking-widest">Return / Exchange</h2>
-                            <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-tighter">Reference Original Bill</p>
                         </div>
                     </div>
 
-                </div>{console.log(salesNo, "salesNo", billOptions)}
+                </div>
 
-                <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-                    <div className="flex gap-2">
-                        <div className="relative flex-1">
+                <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+                    <div className="grid grid-cols-12 gap-2 items-center">
+                        {/* Date Filter */}
+                        <div className="col-span-2">
+                            <input
+                                type="date"
+                                value={filterDate}
+                                onChange={(e) => setFilterDate(e.target.value)}
+                                className="w-full text-[10px] font-bold uppercase text-slate-700 bg-white border border-slate-200 rounded-xl px-2 py-2.5 focus:outline-none focus:border-indigo-500 transition-colors"
+                            />
+                        </div>
+
+                        {/* Bill Search */}
+                        <div className="col-span-4 relative">
                             <Select
                                 options={billOptions}
                                 value={billOptions.find(opt => opt.value === salesNo)}
@@ -153,9 +169,11 @@ const ReturnExchangeModal = ({
                                     handleSearch(opt.value);
                                 }}
                                 isLoading={isBillsFetching}
-                                placeholder="Search & Select Bill (Doc No / Customer)"
+                                placeholder="Search Bill (Doc / Cust)"
                                 isSearchable={true}
                                 className="text-xs font-bold uppercase"
+                                menuPortalTarget={document.body}
+                                menuPosition="fixed"
                                 styles={{
                                     control: (base) => ({
                                         ...base,
@@ -172,9 +190,43 @@ const ReturnExchangeModal = ({
                                         fontWeight: 'bold',
                                         backgroundColor: state.isSelected ? '#6366f1' : state.isFocused ? '#f1f5f9' : 'white',
                                         color: state.isSelected ? 'white' : '#1e293b'
-                                    })
+                                    }),
+                                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
                                 }}
                             />
+                        </div>
+
+                        {/* Bill Details */}
+                        <div className="col-span-6 flex items-center justify-between px-3 bg-white border border-slate-200 rounded-xl p-1.5 h-[42px]">
+                            <div className="flex items-center gap-2 border-r border-slate-100 pr-3 w-1/3">
+                                <User size={14} className="text-indigo-500 shrink-0" />
+                                <div className="min-w-0">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none truncate">Customer</p>
+                                    <p className="text-[10px] font-bold text-slate-700 truncate">
+                                        {selectedBill ? (selectedBill.Party?.name || selectedBill.customerName || 'Walk-in') : '-'}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 border-r border-slate-100 pl-1 pr-3 w-1/3">
+                                <ShoppingBag size={14} className="text-indigo-500 shrink-0" />
+                                <div className="min-w-0">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none truncate">Items</p>
+                                    <p className="text-[10px] font-bold text-slate-700 truncate">
+                                        {selectedBill ? (selectedBill.PosItems?.length || 0) : '-'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 pl-1 w-1/3">
+                                <div className="text-indigo-500 font-black text-[10px] shrink-0">₹</div>
+                                <div className="min-w-0">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none truncate">Amount</p>
+                                    <p className="text-[10px] font-bold text-slate-700 truncate">
+                                        {selectedBill ? `₹${selectedBill.netAmount?.toLocaleString()}` : '-'}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -183,74 +235,67 @@ const ReturnExchangeModal = ({
                 <div className="flex-1 overflow-auto p-4 space-y-4 min-h-[400px]">
                     {selectedBill ? (
                         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            {/* Bill Info Card */}
-                            <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-3 mb-4 grid grid-cols-4 gap-3">
-                                <div className="flex items-center gap-2">
-                                    <Calendar size={14} className="text-indigo-500" />
-                                    <div>
-                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Date</p>
-                                        <p className="text-[10px] font-bold text-slate-700">{new Date(selectedBill.date).toLocaleDateString()}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <User size={14} className="text-indigo-500" />
-                                    <div>
-                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Customer</p>
-                                        <p className="text-[10px] font-bold text-slate-700 truncate">{selectedBill.Party?.name || selectedBill.customerName || 'Walk-in'}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <ShoppingBag size={14} className="text-indigo-500" />
-                                    <div>
-                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Items</p>
-                                        <p className="text-[10px] font-bold text-slate-700">{selectedBill.PosItems?.length || 0}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="text-indigo-500 font-black text-[10px]">₹</div>
-                                    <div>
-                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Bill Amount</p>
-                                        <p className="text-[10px] font-bold text-slate-700">₹{selectedBill.netAmount?.toLocaleString()}</p>
-                                    </div>
-                                </div>
-                            </div>
 
                             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
                                 <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                                     <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">Select Return Items</h3>
-                                    {/* <button
-                                        onClick={handleConfirm}
-                                        disabled={selectedItemIds.length === 0}
-                                        className="px-4 py-1.5 border border-green-500 text-green-600 bg-white rounded-md text-[10px] font-bold hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
-                                    >
-                                        Done
-                                    </button> */}
+
                                 </div>
 
-                                <div className="overflow-x-auto">
+                                <div className="overflow-auto max-h-[350px] relative">
                                     <table className="w-full text-left border-collapse">
-                                        <thead className="bg-[#f8fafc] border-b border-slate-200">
+                                        <thead className="bg-[#f8fafc] border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                                             <tr>
-                                                <th className="p-2 border-r border-slate-200 w-10 text-center">
+                                                <th className="p-2 border-r border-slate-200 w-10 text-center" rowSpan="2">
                                                     <button onClick={toggleAll} className="p-0.5 hover:bg-slate-200 rounded transition-colors inline-flex items-center">
                                                         {selectedItemIds.length === selectedBill.PosItems?.filter(i => !i.retunBillId).length && selectedItemIds.length > 0 ?
                                                             <CheckSquare size={14} className="text-indigo-600" /> : <Square size={14} className="text-slate-400" />}
                                                     </button>
                                                 </th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-12">S No</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase">Item</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-16">Size</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-20">Color</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-20">Qty</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-20">Balance Qty</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-12" rowSpan="2">S No</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase w-[30%]">Item</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-32">Barcode</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-20">Size</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-24">Color</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-20">UOM</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-16" rowSpan="2">Qty</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-24" rowSpan="2">Balance Qty</th>
+                                            </tr>
+                                            <tr>
+                                                <th className="p-1 border-r border-slate-200 bg-white">
+                                                    <input type="text" placeholder="Search Item..." value={searchItem} onChange={(e) => setSearchItem(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-medium normal-case" />
+                                                </th>
+                                                <th className="p-1 border-r border-slate-200 bg-white">
+                                                    <input type="text" placeholder="Barcode..." value={searchBarcode} onChange={(e) => setSearchBarcode(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-medium normal-case" />
+                                                </th>
+                                                <th className="p-1 border-r border-slate-200 bg-white">
+                                                    <input type="text" placeholder="Size..." value={searchSize} onChange={(e) => setSearchSize(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-medium normal-case" />
+                                                </th>
+                                                <th className="p-1 border-r border-slate-200 bg-white">
+                                                    <input type="text" placeholder="Color..." value={searchColor} onChange={(e) => setSearchColor(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-medium normal-case" />
+                                                </th>
+                                                <th className="p-1 border-r border-slate-200 bg-white">
+                                                    <input type="text" placeholder="UOM..." value={searchUom} onChange={(e) => setSearchUom(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-medium normal-case" />
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {selectedBill.PosItems?.filter(i => !i.retunBillId).map((item, idx) => {
+                                            {selectedBill.PosItems?.filter(item => {
+                                                if (item.retunBillId) return false;
+                                                const itemNameStr = (item.item_name || item?.Item?.name || "").toLowerCase();
+                                                const barcodeStr = (item.barcode || "").toLowerCase();
+                                                const sizeStr = (item.size || item.Size?.name || "").toLowerCase();
+                                                const colorStr = (item.color || item.Color?.name || "").toLowerCase();
+                                                const uomStr = (item.Uom?.name || "").toLowerCase();
+
+                                                return itemNameStr.includes(searchItem.toLowerCase()) &&
+                                                       barcodeStr.includes(searchBarcode.toLowerCase()) &&
+                                                       sizeStr.includes(searchSize.toLowerCase()) &&
+                                                       colorStr.includes(searchColor.toLowerCase()) &&
+                                                       uomStr.includes(searchUom.toLowerCase());
+                                            }).map((item, idx) => {
                                                 const isSelected = selectedItemIds.includes(item.id);
                                                 const availableQty = parseFloat(item.qty || 0) - parseFloat(item.returnedQty || 0);
-
-                                                { console.log("availableQty", availableQty) }
 
                                                 return (
                                                     <tr
@@ -269,10 +314,16 @@ const ReturnExchangeModal = ({
                                                             </div>
                                                         </td>
                                                         <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
+                                                            {item.barcode || '-'}
+                                                        </td>
+                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
                                                             {item.size || item.Size?.name || '-'}
                                                         </td>
                                                         <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
                                                             {item.color || item.Color?.name || '-'}
+                                                        </td>
+                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
+                                                            {item.Uom?.name || '-'}
                                                         </td>
                                                         <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
                                                             {item.qty}
@@ -280,19 +331,13 @@ const ReturnExchangeModal = ({
                                                         <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
                                                             {availableQty}
                                                         </td>
-                                                        {/* <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
-                                                            RETAIL
-                                                        </td>
-                                                        <td className="p-2 text-[10px] font-black text-slate-700 text-right px-4">
-                                                            {availableQty.toFixed(2)}
-                                                        </td> */}
                                                     </tr>
                                                 );
                                             })}
 
                                             {selectedBill.PosItems?.filter(i => !i.retunBillId).length === 0 && (
                                                 <tr>
-                                                    <td colSpan="7" className="p-8 text-center text-[10px] font-bold text-slate-400 uppercase italic">
+                                                    <td colSpan="9" className="p-8 text-center text-[10px] font-bold text-slate-400 uppercase italic">
                                                         No returnable items found in this bill
                                                     </td>
                                                 </tr>

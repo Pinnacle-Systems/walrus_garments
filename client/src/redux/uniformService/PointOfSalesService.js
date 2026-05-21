@@ -56,6 +56,28 @@ const pointOfSalesApi = createApi({
             }),
             invalidatesTags: ["pointOfSales"],
         }),
+        requestDiscount: builder.mutation({
+            query: (payload) => ({
+                url: `${POINT_OF_SALES}/request-discount`,
+                method: "POST",
+                body: payload,
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                },
+            }),
+            invalidatesTags: ["pointOfSales"],
+        }),
+        approveDiscount: builder.mutation({
+            query: (payload) => {
+                const { id, ...body } = payload;
+                return {
+                    url: `${POINT_OF_SALES}/approve-discount/${id}`,
+                    method: "PUT",
+                    body,
+                };
+            },
+            invalidatesTags: ["pointOfSales"],
+        }),
         updatePointOfSales: builder.mutation({
             query: (payload) => {
                 const { id, ...body } = payload;
@@ -108,7 +130,9 @@ export const {
     useDeletePointOfSalesMutation,
     useCancelPointOfSalesMutation,
     useLazyCheckReferenceNumberQuery,
-    useLazyGetPartyCreditBalanceQuery
+    useLazyGetPartyCreditBalanceQuery,
+    useRequestDiscountMutation,
+    useApproveDiscountMutation
 } = pointOfSalesApi;
 
 export default pointOfSalesApi;

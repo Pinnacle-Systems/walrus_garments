@@ -1,1627 +1,291 @@
-import { useDispatch, useSelector } from 'react-redux';
-import {
-    Plus, RefreshCw
-} from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
-import { toast } from 'react-toastify';
-import { useGetItemMasterQuery, useGetItemPriceListQuery } from '../../../redux/uniformService/ItemMasterService';
-import { useGetPartyQuery, useAddPartyMutation } from '../../../redux/services/PartyMasterService';
-import { useAddSalesInvoiceMutation } from '../../../redux/uniformService/salesInvoiceServices';
-import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
-import { useLazyGetUnifiedStockByBarcodeQuery } from '../../../redux/services/StockService';
-import { findFromList, getCommonParams } from '../../../Utils/helper';
-import Swal from 'sweetalert2';
-import {
-    useGetPointOfSalesQuery,
-    useLazyGetPointOfSalesQuery,
-    useLazyGetPointOfSalesByIdQuery,
-    useAddPointOfSalesMutation,
-    useUpdatePointOfSalesMutation,
-    useGetPointOfSalesByIdQuery,
-    useLazyCheckReferenceNumberQuery,
-    useLazyGetPartyCreditBalanceQuery
-} from '../../../redux/uniformService/PointOfSalesService';
-import { useGetoffersPromotionsQuery } from '../../../redux/uniformService/Offer&PromotionsService';
-import { useGetEmployeeQuery } from '../../../redux/services/EmployeeMasterService';
-import PosReports from './PosReports';
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { findDefaultPriceRow, normalizeLocalItemForPos } from './utils/posHelpers';
-
-// Sub-components
-import POSHeader from './components/POSHeader';
-import POSCartTable from './components/POSCartTable';
-import POSSidebar from './components/POSSidebar';
-import POSFooter from './components/POSFooter';
-import ItemOfferModal from './components/ItemOfferModal';
-import ReturnExchangeModal from './components/ReturnExchangeModal';
-import BarcodeResolutionModal from './components/BarcodeResolutionModal';
-import SalesPersonModal from './components/SalesPersonModal';
-import PaymentModal from './components/PaymentModal';
-import ReceiptViewerModal from './components/ReceiptViewerModal';
-import StockLocationModal from './components/StockLocationModal';
+import React, { useState, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { push } from '../../../redux/features/opentabs';
+import POSSession from './POSSession';
 import PosReportsNew from './PosReportsNew';
-import { useGetcollectionsQuery } from '../../../redux/uniformService/CollectionsService';
-import { useGetRolesQuery } from '../../../redux/services/RolesMasterService';
-import secureLocalStorage from 'react-secure-storage';
+import { Plus, X, RefreshCw, FileText } from 'lucide-react';
+import { useDeletePointOfSalesMutation, useLazyGetPointOfSalesQuery } from '../../../redux/uniformService/PointOfSalesService';
+import { childRecordCount } from '../../../Inputs';
+import Swal from 'sweetalert2';
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
+import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
 
-
-const PointOfSale = () => {
-
-    const { branchId, userId, companyId, finYearId } = getCommonParams();
-    const [cart, setCart] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('All');
-    const [selectedCustomer, setSelectedCustomer] = useState(null);
-    const [paymentMethod, setPaymentMethod] = useState('Cash');
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [availableCredit, setAvailableCredit] = useState(0);
-    const [availableReturnBills, setAvailableReturnBills] = useState([]);
-    const [selectedReturnBills, setSelectedReturnBills] = useState(null);
-    const [fetchCreditBalance] = useLazyGetPartyCreditBalanceQuery();
-    const [fetchPointOfSales] = useLazyGetPointOfSalesQuery();
-    const [showCartMobile, setShowCartMobile] = useState(false);
-
-    const [discount, setDiscount] = useState(0);
-    const [customerQuery, setCustomerQuery] = useState('');
-    const [isGuestCustomer, setIsGuestCustomer] = useState(true);
-    const [guestName, setGuestName] = useState('');
-    const [guestMobile, setGuestMobile] = useState('');
-    const [showReports, setShowReports] = useState(true);
-    const [editMode, setEditMode] = useState(false);
-    const [editingInvoiceId, setEditingInvoiceId] = useState(null);
-    const [addParty] = useAddPartyMutation();
-    const scannerRef = useRef(null);
-    const discountRef = useRef(null);
-    const qtyInputRefs = useRef({});
-    const [activeRowIndex, setActiveRowIndex] = useState(0);
-    const [printData, setPrintData] = useState(null);
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [docId, setDocId] = useState("");
-    const [approvalStatus, setApprovalStatus] = useState("NONE");
-    const [currentBilStatus, setCurrentBilStatus] = useState("PAID");
-    const [isCancelBill, setIsCancelBill] = useState(false);
-
-
-    const [transactionType, setTransactionType] = useState("SALE");
-    const [showReturnExchnageModal, setShowReturnExchnageModal] = useState(false);
-
-
-
-
-
-    const [showSalesPersonModal, setShowSalesPersonModal] = useState(false);
-    const [salesPersonBarcode, setSalesPersonBarcode] = useState('');
-    const salesPersonScannerRef = useRef(null);
-
-    const [exchangeSalesNo, setExchangeSalesNo] = useState('');
-
-    // Reports Pagination & Search States
-    const [currentPageNumber, setCurrentPageNumber] = useState(1);
-    const [dataPerPage, setDataPerPage] = useState("10");
-    const [reportsSearchDocNo, setReportsSearchDocNo] = useState("");
-    const [reportsSearchDate, setReportsSearchDate] = useState("");
-    const [reportsSearchCustomerName, setReportsSearchCustomerName] = useState("");
-    const [reportsTransactionType, setReportsTransactionType] = useState("SALE");
-    const [showStockModal, setShowStockModal] = useState(false);
-    const [selectedItemForStock, setSelectedItemForStock] = useState(null);
-    const [lastRefresh, setLastRefresh] = useState(Date.now());
-
-    const [suggestions, setSuggestions] = useState([]);
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    // Added for Search Mode Toggle
-    const [searchMode, setSearchMode] = useState('BARCODE'); // Default to BARCODE
-    const [barcodeResolution, setBarcodeResolution] = useState({ open: false, matches: [], resolve: null });
-
-
-    const [checkRefNo] = useLazyCheckReferenceNumberQuery();
-
-    const { data: employeeData } = useGetEmployeeQuery({
-        params: { branchId, userId, companyId, finYearId }
-    });
-
-    const { data: roledData } = useGetRolesQuery({
-        params: { branchId, userId, companyId, finYearId }
-    });
-
-    const employees = employeeData?.data || [];
-
-
-
-
-    const userRoleId = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + 'userRoleId')
-
-    const isAdmin = findFromList(userRoleId, roledData?.data, "name") == 'ADMIN' || findFromList(userRoleId, roledData?.data, "name") == 'DEFAULT ADMIN'
+const POSMultiTabWrapper = () => {
     const dispatch = useDispatch();
     const openTabsState = useSelector((state) => state.openTabs);
     const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "POINT OF SALES");
     const pendingPosId = currentTab?.projectId;
 
-    // const [getPosById, { isLoading: isPosLoading  }] = useLazyGetPointOfSalesByIdQuery();
+    const [tabs, setTabs] = useState([{ id: 1, title: 'Bill 1', cart: [], editSaleId: null }]);
+    const [activeTabId, setActiveTabId] = useState(1);
+    const [nextTabId, setNextTabId] = useState(2);
 
+    const [currentView, setCurrentView] = useState("REPORTS");
+    const [reportsTransactionType, setReportsTransactionType] = useState("SALE");
+    const [lastRefresh, setLastRefresh] = useState(Date.now());
+    const [fetchRecentSales, { isFetching: isRecentSalesFetching }] = useLazyGetPointOfSalesQuery();
+    const [invalidateTagsDispatch] = useInvalidateTags();
+    const { hasPermission } = usePermissionForUsers()
 
-    useEffect(() => {
+    const [removeData] = useDeletePointOfSalesMutation();
+
+    React.useEffect(() => {
         if (pendingPosId) {
-            setSelectedReportSaleId(pendingPosId)
-        }
-    }, [pendingPosId]);
-
-
-    const handlePayNow = async () => {
-        if (cart.length === 0 || isProcessing) return;
-
-        // If it's a return, we don't need payment validation or modal
-        if (transactionType === 'RETURN') {
-            const result = await Swal.fire({
-                title: 'Save Return?',
-                text: 'Do you want to save this return transaction?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#4f46e5',
-                confirmButtonText: 'Yes, Save'
-            });
-            if (result.isConfirmed) {
-                handleCheckout();
+            const existingTab = tabs.find(t => t.editSaleId === pendingPosId);
+            if (existingTab) {
+                setActiveTabId(existingTab.id);
+            } else {
+                const newId = nextTabId;
+                setTabs(prevTabs => [
+                    ...prevTabs,
+                    { id: newId, title: `Edit: Pending`, cart: [], editSaleId: pendingPosId }
+                ]);
+                setActiveTabId(newId);
+                setNextTabId(newId + 1);
             }
-            return;
+            setCurrentView("SESSION");
+            dispatch(push({ name: "POINT OF SALES", projectId: null }));
         }
+    }, [pendingPosId, tabs, nextTabId, dispatch]);
 
-        if (isAdmin && approvalStatus === 'PENDING') {
-            if (discount <= 0) {
-                const result = await Swal.fire({
-                    title: 'No Discount Entered',
-                    text: 'You have not entered any discount. Do you want to proceed with 0 discount?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#4f46e5',
-                    confirmButtonText: 'Yes, Approve'
-                });
-                if (!result.isConfirmed) return;
+    const getAvailableBillNumber = () => {
+        const usedNumbers = tabs
+            .map(t => {
+                const match = t.title.match(/^Bill (\d+)$/);
+                return match ? parseInt(match[1], 10) : null;
+            })
+            .filter(n => n !== null);
+
+        let num = 1;
+        while (usedNumbers.includes(num)) {
+            num++;
+        }
+        return num;
+    };
+
+    const handleAddTab = () => {
+        const newId = nextTabId;
+        const billNum = getAvailableBillNumber();
+        setTabs([...tabs, { id: newId, title: `Bill ${billNum}`, cart: [], editSaleId: null }]);
+        setActiveTabId(newId);
+        setNextTabId(newId + 1);
+        setCurrentView("SESSION");
+    };
+
+    const handleAddEditTab = (sale) => {
+        const newId = nextTabId;
+        setTabs([...tabs, { id: newId, title: `Edit: ${sale.docId || 'Bill'}`, cart: [], editSaleId: sale.id }]);
+        setActiveTabId(newId);
+        setNextTabId(newId + 1);
+        setCurrentView("SESSION");
+    };
+
+    const handleCloseTab = (e, idToRemove) => {
+        e.stopPropagation();
+        if (tabs.length === 1) return; // Don't close the last tab
+
+        const closeIndex = tabs.findIndex(t => t.id === idToRemove);
+        const newTabs = tabs.filter(t => t.id !== idToRemove);
+
+        // Rename remaining standard tabs sequentially to prevent gaps (e.g., Bill 1, Bill 2...)
+        let billCounter = 1;
+        const renamedTabs = newTabs.map(t => {
+            if (t.editSaleId === null) {
+                const newTitle = `Bill ${billCounter}`;
+                billCounter++;
+                return { ...t, title: newTitle };
             }
-            handleCheckout(true);
-            return;
-        }
+            return t;
+        });
 
-        const currentPhone = selectedCustomer ? selectedCustomer.contact : guestMobile;
+        setTabs(renamedTabs);
 
-        const phoneRegex = /^[0-9]{10}$/;
-        const cleanPhone = currentPhone?.toString().replace(/\D/g, '') || '';
-
-        if (!phoneRegex.test(cleanPhone)) {
-            Swal.fire({ title: "Error", text: "A valid 10-digit mobile number is required!", icon: "error" });
-            return;
-        }
-
-
-
-        if (total === 0) {
-            Swal.fire({
-                title: 'Equal Exchange',
-                text: 'The return value matches the purchase value. Save this exchange?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#4f46e5',
-                confirmButtonText: 'Yes, Save'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    handleCheckout();
-                }
-            });
-        } else {
-            setShowPaymentModal(true);
+        if (activeTabId === idToRemove) {
+            // Focus the tab immediately to the left, or the first tab if closing the first one
+            const nextActiveIndex = closeIndex > 0 ? closeIndex - 1 : 0;
+            setActiveTabId(renamedTabs[nextActiveIndex].id);
         }
     };
 
-    const allocateStock = useCallback((totalQty, stockDetails, retailStoreId) => {
-        let remaining = parseFloat(totalQty) || 0;
-        const fulfillments = [];
-        const sortedStocks = [...(stockDetails || [])].sort((a, b) => {
-            const isARetail = a.storeName?.toLowerCase().includes('retail') || parseInt(a.storeId) === parseInt(retailStoreId);
-            const isBRetail = b.storeName?.toLowerCase().includes('retail') || parseInt(b.storeId) === parseInt(retailStoreId);
-            if (isARetail && !isBRetail) return -1;
-            if (!isARetail && isBRetail) return 1;
-            return 0;
-        });
-
-        sortedStocks.forEach(s => {
-            const take = Math.min(remaining, parseFloat(s.stockQty) || 0);
-            fulfillments.push({ storeId: s.storeId, storeName: s.storeName, qty: take });
-            remaining -= take;
-        });
-
-        // If still remaining (though shouldn't happen with stock limits), add to last or retail
-        if (remaining > 0 && fulfillments.length > 0) {
-            fulfillments[0].qty += remaining;
-        }
-
-        return fulfillments;
+    const handleCartUpdate = React.useCallback((tabId, newCart) => {
+        setTabs(prevTabs =>
+            prevTabs.map(tab =>
+                tab.id === tabId ? { ...tab, cart: newCart } : tab
+            )
+        );
     }, []);
 
-    // Keyboard Shortcuts
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            const tag = document.activeElement?.tagName?.toLowerCase();
-            const isTyping = tag === 'input' || tag === 'textarea';
+    // Calculate global reserved stock across ALL tabs
+    const globalReservedStock = useMemo(() => {
+        const reserved = {};
+        tabs.forEach(tab => {
+            (tab.cart || []).forEach(item => {
+                // Key format matches what is used in POS (e.g. itemId-sizeId-colorId)
+                const key = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}`;
+                if (!reserved[key]) reserved[key] = 0;
+                reserved[key] += parseFloat(item.qty || 0);
+            });
+        });
+        return reserved;
+    }, [tabs]);
 
-            if (e.key === 'F10') { e.preventDefault(); scannerRef.current?.focus(); return; }
-            if (e.key === 'F8') { e.preventDefault(); handlePayNow(); return; }
-            if (e.key === 'F9') { e.preventDefault(); handleSaveUnpaid(); return; }
-            if (e.key === 'F2') {
-                e.preventDefault();
-                if (cart.length > 0) {
-                    const idx = Math.min(activeRowIndex, cart.length - 1);
-                    const item = cart[idx];
-                    const key = `${item.id}-${item.sizeId}-${item.colorId}`;
-                    qtyInputRefs.current[key]?.focus();
-                    qtyInputRefs.current[key]?.select();
-                }
+
+    const handleDelete = async (id, childRecord) => {
+
+
+        if (childRecordCount(childRecord)) {
+            Swal.fire({
+                icon: 'error',
+                text: 'Child Record Exists',
+            });
+            return
+        }
+
+        if (id) {
+            if (!window.confirm("Are you sure to delete...?")) {
                 return;
             }
-            if (e.key === 'F3') { e.preventDefault(); discountRef.current?.focus(); discountRef.current?.select(); return; }
-            if (e.key === 'F4' && !selectedReportSaleId) {
-                e.preventDefault();
-                if (cart.length > 0) {
-                    Swal.fire({
-                        title: 'Void All Items?',
-                        text: 'This will clear all items from the cart.',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#ef4444',
-                        cancelButtonColor: '#94a3b8',
-                        confirmButtonText: 'Void All'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            setCart([]);
-                            setDiscount(0);
-                            setActiveRowIndex(0);
-                        }
-                    });
-                }
-                return;
-            }
+            try {
+                await removeData(id)
+                // onNew();
+                // toast.success("Deleted Successfully");
+                Swal.fire({
+                    title: "Deleted Successfully",
+                    icon: "success",
 
-            if (!isTyping) {
-                if (e.key === 'ArrowDown') { e.preventDefault(); setActiveRowIndex(prev => Math.min(prev + 1, cart.length - 1)); return; }
-                if (e.key === 'ArrowUp') { e.preventDefault(); setActiveRowIndex(prev => Math.max(prev - 1, 0)); return; }
-                if (e.key === 'Delete' && cart.length > 0 && !selectedReportSaleId) {
-                    e.preventDefault();
-                    const idx = Math.min(activeRowIndex, cart.length - 1);
-                    const item = cart[idx];
-                    removeFromCart(`${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}`);
-                    setActiveRowIndex(prev => Math.max(prev - 1, 0));
-                    return;
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [cart, activeRowIndex, isProcessing, guestName, guestMobile, isGuestCustomer, selectedCustomer]);
+                });
+                invalidateTagsDispatch()
 
-    // Offers & Promotions Logic
-    const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
-    const { data: offersData } = useGetoffersPromotionsQuery({
-        params: { branchId, userId, finYearId, active: true }
-    });
-    const { data: collectionsData } = useGetcollectionsQuery({
-        params: { branchId, userId, finYearId, active: true }
-    });
-    const activeOffers = offersData?.data || [];
-
-    const potentialOffers = useMemo(() => {
-        if (!activeOffers.length || !cart.length) return [];
-
-        const potential = [];
-        activeOffers.forEach(off => {
-            const inScopeItems = cart.filter(item => {
-                if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
-                if (off.scopeMode === 'Global') return true;
-                if (off.scopeMode === 'Item' || off.scopeMode === 'Collection') return off.OfferScope?.some(s => s.refId === (item.itemId || item.id));
-                return false;
-            });
-            if (!inScopeItems.length) return;
-
-            const scopeQty = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
-            const scopeValue = inScopeItems.reduce((sum, i) => sum + ((parseFloat(i.salesPrice || i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
-
-            const rules = off.OfferRule?.[0]?.conditions?.rules || [];
-            const results = rules.map(rule => {
-                const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
-                if (rule.operator === '>=') return target >= parseFloat(rule.value);
-                if (rule.operator === '<=') return target <= parseFloat(rule.value);
-                if (rule.operator === '==') return target === parseFloat(rule.value);
-                return true;
-            });
-
-            const isValid = off.OfferRule?.[0]?.logic === 'OR' ? results.some(r => r) : results.every(r => r);
-            if (!isValid && rules.length > 0) return;
-
-            let discountValue = 0;
-            if (off.discountType === 'Percentage') {
-                discountValue = (scopeValue * (off.discountValue || 0)) / 100;
-                if (off.maxDiscountValue && discountValue > off.maxDiscountValue) discountValue = off.maxDiscountValue;
-            } else if (off.discountType === 'Fixed') {
-                discountValue = off.discountValue || 0;
-            } else if (off.discountType === 'Override') {
-                const sortedTiers = [...(off.OfferTier || [])].sort((a, b) => b.minQty - a.minQty);
-                const tier = sortedTiers.find(t => scopeQty >= t.minQty);
-                if (tier) {
-                    if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
-                    else discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
-                }
-            } else if (off.discountType === 'Volume') {
-                const sortedTiers = [...(off.OfferTier || [])].sort((a, b) => b.minQty - a.minQty);
-                const tier = sortedTiers.find(t => scopeQty >= t.minQty);
-                if (tier) {
-                    if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
-                    else discountValue = tier.value * scopeQty;
-                }
-            }
-            if (discountValue > 0) potential.push({ ...off, calculatedDiscount: discountValue, inScopeItems });
-        });
-        return potential;
-    }, [cart, activeOffers]);
-
-    console.log(cart, "cart")
-
-    const { cartWithOffers, appliedOffers } = useMemo(() => {
-        if (!cart.length) return { cartWithOffers: [], appliedOffers: [] };
-
-        // 1. Pre-calculate total quantity for each offer's scope in the current cart
-        const offerScopeTotals = {};
-        activeOffers.forEach(off => {
-            const inScopeItems = cart.filter(item => {
-                if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
-                if (item.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
-                if (off.scopeMode === 'Global') return true;
-                if (off.scopeMode === 'Item') return off.OfferScope?.some(s => String(s.refId) === String(item.itemId));
-                if (off.scopeMode === 'Collection') {
-                    return off.OfferScope?.some(scope => {
-                        const matchedCollection = collectionsData?.data?.find(col => String(col.id) === String(scope.refId));
-                        return matchedCollection?.CollectionItems?.some(ci => String(ci.itemId) === String(item.itemId));
-                    });
-                }
-                return false;
-            });
-            offerScopeTotals[off.id] = inScopeItems.reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
-        });
-
-        const appliedSet = new Set();
-        const computed = cart.map(item => {
-            const cartKey = `${item.itemId}-${item.sizeId}-${item.colorId}-${item.barcodeType}`;
-            const rowOfferId = selectedOffersByRow[cartKey];
-            if (!rowOfferId) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
-
-            const selectedOffer = potentialOffers.find(o => o.id === rowOfferId) || activeOffers.find(o => o.id === rowOfferId);
-            console.log(selectedOffer, "selectedOffer")
-
-            if (!selectedOffer) return { ...item, priceType: 'SalesPrice', price: item.salesPrice !== undefined ? item.salesPrice : item.price, appliedOfferName: null };
-
-            appliedSet.add(selectedOffer);
-            let currentItemPrice = item.salesPrice !== undefined ? parseFloat(item.salesPrice) : parseFloat(item.price);
-            const totalScopeQty = offerScopeTotals[selectedOffer.id] || 0;
-
-            if (selectedOffer.discountType === 'Percentage') currentItemPrice *= (1 - parseFloat(selectedOffer.discountValue || 0) / 100);
-            else if (selectedOffer.discountType === 'Fixed')
-                currentItemPrice = Math.max(0, currentItemPrice - parseFloat(selectedOffer.discountValue || 0));
-            else if (selectedOffer.discountType === 'Override') {
-                const tier = [...(selectedOffer.OfferTier || [])].sort((a, b) => b.minQty - a.minQty).find(t => totalScopeQty >= t.minQty);
-                if (tier) {
-                    if (tier.type === 'Fixed') currentItemPrice = tier.value;
-                    else currentItemPrice *= (1 - parseFloat(tier.value || 0) / 100);
-                }
-            }
-            else if (selectedOffer.discountType === 'Volume') {
-                const tier = [...(selectedOffer.OfferTier || [])].sort((a, b) => b.minQty - a.minQty).find(t => totalScopeQty >= t.minQty);
-                if (tier) {
-                    if (tier.type === 'Fixed') currentItemPrice = Math.max(0, currentItemPrice - parseFloat(tier.value || 0));
-                    else currentItemPrice *= (1 - parseFloat(tier.value || 0) / 100);
-                }
-            }
-            return { ...item, priceType: 'offerPrice', price: Math.max(0, currentItemPrice), appliedOfferName: selectedOffer.name };
-        });
-        return { cartWithOffers: computed, appliedOffers: Array.from(appliedSet) };
-    }, [cart, selectedOffersByRow, potentialOffers, activeOffers, collectionsData]);
-
-    const [showItemOfferModal, setShowItemOfferModal] = useState(false);
-    const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
-
-    const totalOfferDiscount = cartWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
-
-    const handleShowItemOffers = (item) => { setSelectedItemForOffers(item); setShowItemOfferModal(true); };
-
-
-
-    const getItemApplicableOffers = (item) => {
-        if (!item || !activeOffers.length) return [];
-
-        return activeOffers.map(off => {
-            if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return null;
-            if (item.barcodeType === 'REGULAR' && !off.applyToRegular) return null;
-
-            const targetId = item.itemId;
-
-            // ✅ SCOPE CHECK
-            let isInScope = false;
-            if (off.scopeMode === 'Global') {
-                isInScope = true;
-            } else if (off.scopeMode === 'Item') {
-                isInScope = off.OfferScope?.some(s =>
-                    String(s.refId) === String(targetId)
-                );
-            } else if (off.scopeMode === 'Collection') {
-                isInScope = off.OfferScope?.some(scope => {
-                    if (scope.type !== 'Collection') return false;
-                    const matchedCollection = collectionsData?.data?.find(col =>
-                        String(col.id) === String(scope.refId)
-                    );
-                    if (!matchedCollection) return false;
-                    return matchedCollection?.CollectionItems?.some(ci =>
-                        String(ci.itemId) === String(targetId)
-                    );
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    text: error,
                 });
             }
-
-            if (!isInScope) return null;
-
-            const inScopeItems = cartWithOffers.filter(cit => {
-                if (cit.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
-                if (cit.barcodeType === 'REGULAR' && !off.applyToRegular) return false;
-                const citId = cit.itemId
-                if (off.scopeMode === 'Global') {
-                    return true;
-                } else if (off.scopeMode === 'Item') {
-                    return off.OfferScope?.some(s =>
-                        String(s.refId) === String(citId)
-                    );
-                } else if (off.scopeMode === 'Collection') {
-                    return off.OfferScope?.some(scope => {
-                        if (scope.type !== 'Collection') return false;
-                        const matchedCollection = collectionsData?.data?.find(col =>
-                            String(col.id) === String(scope.refId)
-                        );
-                        if (!matchedCollection) return false;
-                        return matchedCollection.CollectionItems?.some(ci =>
-                            String(ci.itemId) === String(citId)
-                        );
-                    });
-                }
-                return false;
-            });
-
-            // ✅ AGGREGATE SCOPE METRICS
-            const scopeQty = inScopeItems.reduce((sum, i) =>
-                sum + (parseFloat(i.qty) || 0), 0
-            );
-
-            const scopeValue = inScopeItems.reduce((sum, i) =>
-                sum + ((parseFloat(i.price) || 0) * (parseFloat(i.qty) || 0)), 0
-            );
-
-            // ✅ EVALUATE OFFER RULES
-            const rules = off.OfferRule?.[0]?.conditions?.rules || [];
-            const results = rules.map(rule => {
-                const target =
-                    rule.field === 'Minimum Quantity' ? scopeQty :
-                        rule.field === 'Cart Value' ? scopeValue : 0;
-                if (rule.operator === '>=') return target >= parseFloat(rule.value);
-                if (rule.operator === '<=') return target <= parseFloat(rule.value);
-                if (rule.operator === '==') return target === parseFloat(rule.value);
-                return true;
-            });
-
-            // ✅ AND / OR LOGIC
-            const isMatched = off.OfferRule?.[0]?.logic === 'OR'
-                ? results.some(r => r)
-                : results.every(r => r);
-
-            if (isMatched) {
-                return { ...off, _metrics: { scopeQty, scopeValue } };
-            }
-            return null;
-        }).filter(Boolean);
-    };
-
-    const { data: itemsData } = useGetItemMasterQuery({ params: { branchId, userId, finYearId, active: true } });
-    const { data: ItemPriceListData } = useGetItemPriceListQuery({ params: { branchId, userId, finYearId } });
-    const { data: customerData } = useGetPartyQuery({ params: { branchId, userId, finYearId } });
-    const { data: locationsData } = useGetLocationMasterQuery({ params: { branchId, companyId } });
-    const [addPointOfSales] = useAddPointOfSalesMutation();
-    const [updatePointOfSales] = useUpdatePointOfSalesMutation();
-    const [getStockByBarcode, { isLoading: isBarcodeLoading }] = useLazyGetUnifiedStockByBarcodeQuery();
-    const [fetchRecentSales, { data: posData, isFetching: isRecentSalesFetching }] = useLazyGetPointOfSalesQuery();
-
-    const [selectedReportSaleId, setSelectedReportSaleId] = useState(null);
-    const { data: fetchedSaleResponse, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetPointOfSalesByIdQuery(selectedReportSaleId, { skip: !selectedReportSaleId });
-
-
-
-    const items = itemsData?.data || [];
-    const recentSales = posData?.data?.slice(0, 50) || [];
-    const customers = (customerData?.data || []).filter(c => c.isB2C);
-    const locations = locationsData?.data || [];
-    const retailLocation = locations.find(l => l.storeName?.toLowerCase().includes('retail'));
-    const retailStoreId = retailLocation?.id;
-
-    const syncFormWithDb = useCallback((sale) => {
-
-        console.log(sale, "sale")
-
-        if (!sale) {
-            setCart([]);
-            setDiscount(0);
-            setEditingInvoiceId(null);
-            setSelectedCustomer(null);
-            setIsGuestCustomer(true);
-            setGuestName("");
-            setGuestMobile("");
-            setPaidCash(0);
-            setPaidUPI(0);
-            setPaidCard(0);
-            setPaidOnline(0);
-            setDocId("");
-            setUpiRefNo("");
-            setApprovalStatus("NONE");
-            setCurrentBilStatus("PAID");
-            setIsCancelBill(false)
-            return;
         }
 
-
-
-        const mappedCart = (sale.PosItems || []).map(item => {
-            const masterItem = items.find(i => i.id === item.itemId);
-            const employee = employees.find(e => e.id === item.salesPersonId);
-            return {
-                ...item,
-                id: item.itemId,
-                // Item: masterItem,
-                salesPrice: parseFloat(item.price),
-                price: parseFloat(item.price),
-                qty: parseFloat(item.qty),
-                taxPercent: masterItem?.Hsn?.tax || 5,
-                salesPersonId: item.salesPersonId,
-                salesPersonBarcode: item?.Employee?.employeeId,
-                // salesPersonName: employee?.name,
-                stockQty: 0,
-                sourceStoreId: retailStoreId
-            };
-        });
-
-        setCart(mappedCart);
-        setEditingInvoiceId(sale.id);
-        if (sale.LinkedReturnBill) {
-            setSelectedReturnBills({ value: sale.LinkedReturnBill.id, label: sale.LinkedReturnBill.docId });
-        } else if (sale.isRetrunBillId) {
-            setSelectedReturnBills({ value: sale.isRetrunBillId, label: `Bill ID: ${sale.isRetrunBillId}` });
-        } else {
-            setSelectedReturnBills(null);
-        }
-
-        const payments = sale.PosPayments || [];
-        let cash = 0, upi = 0, card = 0, online = 0;
-
-        payments.forEach(p => {
-            const mode = (p.paymentMode || p.mode || "").toLowerCase();
-            const amt = parseFloat(p.amount) || 0;
-            if (mode.includes('cash')) cash += amt;
-            else if (mode.includes('upi')) upi += amt;
-            else if (mode.includes('card')) card += amt;
-            else if (mode.includes('online')) online += amt;
-        });
-
-        setDiscount(parseFloat(sale.discountValue || 0));
-        setPaymentMethod(sale.paymentMethod || 'Cash');
-        setDocId(sale.docId || "");
-
-        if (sale.Party) {
-            setSelectedCustomer(sale.Party);
-            setIsGuestCustomer(false);
-            setGuestName(sale.Party.name);
-            setGuestMobile(sale.Party.contact);
-        } else {
-            setSelectedCustomer(null);
-            setIsGuestCustomer(true);
-            setGuestName(sale.customerName || "Walk-in");
-            setGuestMobile(sale.customerMobile || "");
-        }
-        setPaidCash(cash);
-        setPaidUPI(upi);
-        setPaidCard(card);
-        setPaidOnline(online);
-
-        if (sale.Party) {
-            setSelectedCustomer(sale.Party);
-            setIsGuestCustomer(false);
-            setGuestName(sale.Party.name);
-            setGuestMobile(sale.Party.contact);
-        } else {
-            setSelectedCustomer(null);
-            setIsGuestCustomer(true);
-            setGuestName(sale.customerName || "Walk-in");
-            setGuestMobile(sale.customerMobile || "");
-        }
-        if (sale.docId) setDocId(sale.docId);
-        setApprovalStatus(sale.approvalStatus || "NONE");
-        setCurrentBilStatus(sale.bilStatus || "PAID");
-        setShowReports(true);
-        setIsCancelBill(sale?.isCancel ? sale?.isCancel : false)
-
-    }, [selectedReportSaleId, items, employees, retailStoreId]);
-
-    console.log(isCancelBill, "isCancelBill")
-
-
-    useEffect(() => {
-        if (selectedReportSaleId) syncFormWithDb(fetchedSaleResponse?.data);
-        else syncFormWithDb(undefined);
-    }, [isSingleLoading, isSingleFetching, selectedReportSaleId, fetchedSaleResponse, syncFormWithDb]);
-
-
-    useEffect(() => {
-        if (!showReports) {
-            fetchRecentSales({
-                params: {
-                    branchId,
-                    companyId,
-                    finYearId,
-                    pagination: true,
-                    pageNumber: currentPageNumber,
-                    dataPerPage,
-                    serachDocNo: reportsSearchDocNo,
-                    searchDate: reportsSearchDate,
-                    searchCustomerName: reportsSearchCustomerName
-                }
-            });
-        }
-    }, [showReports, currentPageNumber, reportsSearchDocNo, reportsSearchDate, reportsSearchCustomerName, dataPerPage, fetchRecentSales, branchId, companyId, finYearId]);
-
-    useEffect(() => {
-        setCurrentPageNumber(1);
-    }, [reportsSearchDocNo, reportsSearchDate, reportsSearchCustomerName, dataPerPage]);
-
-
-
-
-    const handleScan = async (e) => {
-        if (e.key === 'Enter') {
-            if (selectedReportSaleId) return;
-            const barcode = searchQuery.trim();
-            if (!barcode) return;
-
-            // Barcode Mode Logic
-            if (searchMode === 'BARCODE') {
-                try {
-                    const response = await getStockByBarcode({ params: { barcode, branchId, } }).unwrap();
-                    if (response.statusCode === 0) {
-                        const { data, matches, needsResolution } = response;
-
-                        if (needsResolution || (Array.isArray(matches) && matches.length > 1)) {
-                            // Multiple matches found - Show resolution modal
-                            setBarcodeResolution({
-                                open: true,
-                                matches: matches,
-                                resolve: (selectedItems) => {
-                                    if (Array.isArray(selectedItems)) {
-                                        selectedItems.forEach(item => addToCart(item));
-                                    } else if (selectedItems) {
-                                        addToCart(selectedItems);
-                                    }
-                                }
-                            });
-                            setSearchQuery('');
-                            setTimeout(() => scannerRef.current?.focus(), 100);
-
-                        } else if (data || (Array.isArray(matches) && matches.length === 1)) {
-                            // Single match found
-                            const resolvedData = data || matches[0];
-                            addToCart({ ...resolvedData });
-                            setSearchQuery('');
-                            setTimeout(() => scannerRef.current?.focus(), 100);
-                        } else {
-                            Swal.fire({ title: "Warning", text: "Barcode not found", icon: "warning" });
-                        }
-                        return;
-                    } else {
-                        Swal.fire({ title: "Warning", text: response.message || "Barcode not found", icon: "warning" });
-                    }
-                } catch (error) {
-                    console.error("Barcode search failed", error);
-                    Swal.fire({ title: "Error", text: "Failed to fetch barcode details", icon: "error" });
-                }
-            } else {
-                // Name Mode Logic: Enter doesn't necessarily need to do anything 
-                // if users select from suggestions
-            }
-        }
     };
 
-    useEffect(() => {
-        const query = searchQuery?.trim().toLowerCase();
-        // suggestions logic should only run in NAME mode
-        if (!query || query.length < 2 || selectedReportSaleId || searchMode !== 'NAME') {
-            setSuggestions([]);
-            setShowSuggestions(false);
-            return;
-        }
-
-        const matchingItems = items.filter(i =>
-            i.name?.toLowerCase().includes(query) ||
-            i.code?.toLowerCase().includes(query)
-        );
-
-        let allMatches = [];
-        const barcodeMap = new Map();
-
-        const addMatch = (match) => {
-            if (!barcodeMap.has(match.barcode)) {
-                barcodeMap.set(match.barcode, true);
-                allMatches.push(match);
-            }
-        };
-
-        matchingItems.forEach(item => {
-            const variants = ItemPriceListData?.data?.filter(p => p.itemId === item.id) || [];
-            variants.forEach(variant => {
-                variant.ItemBarcodes?.forEach(bc => {
-                    addMatch({
-                        barcode: bc.barcode,
-                        barcodeType: bc.barcodeType,
-
-                        item_name: item.name,
-                        size: variant.Size?.name || "-",
-                        color: variant.Color?.name || "-",
-                        itemId: item.id,
-                        sizeId: variant.sizeId,
-                        colorId: variant.colorId,
-                        uomId: item.uomId,
-                        storeId: retailStoreId,
-                    });
-                });
-            });
-        });
-
-        const barcodeMatches = items.filter(i =>
-            i.ItemPriceList?.some(row => row.ItemBarcodes?.some(b => b.barcode.toLowerCase().includes(query)))
-        );
-
-        barcodeMatches.forEach(item => {
-            const variants = ItemPriceListData?.data?.filter(p => p.itemId === item.id) || [];
-            variants.forEach(variant => {
-                variant.ItemBarcodes?.forEach(bc => {
-                    if (bc.barcode.toLowerCase().includes(query)) {
-                        addMatch({
-                            barcode: bc.barcode,
-                            barcodeType: bc.barcodeType,
-                            item_name: item.name,
-                            size: variant.Size?.name || "-",
-                            color: variant.Color?.name || "-",
-                            itemId: item.id,
-                            sizeId: variant.sizeId,
-                            colorId: variant.colorId,
-                            uomId: item.uomId,
-                            storeId: retailStoreId,
-                        });
-                    }
-                });
-            });
-        });
-
-        setSuggestions(allMatches.slice(0, 10));
-        setShowSuggestions(allMatches.length > 0);
-
-        // Fetch stock for top suggestions to show in dropdown - Filtered by retailStoreId
-        if (allMatches.length > 0) {
-            (async () => {
-                const updated = await Promise.all(allMatches.slice(0, 15).map(async (m) => {
-                    try {
-                        const res = await getStockByBarcode({ params: { barcode: m.barcode, storeId: retailStoreId, branchId } }).unwrap();
-                        // If multiple matches, sum up their stock quantities
-                        const totalStock = res?.data?.stockQty || (res?.matches ? res.matches.reduce((sum, match) => sum + (match.stockQty || 0), 0) : 0);
-                        return { ...m, stockQty: totalStock, uomId: res?.data?.uomId || (res?.matches?.[0]?.uomId) };
-                    } catch { return m; }
-                }));
-                // Only show items that have stock in the retail store
-                const withStockOnly = updated.filter(item => item.stockQty > 0);
-                setSuggestions(withStockOnly);
-                setShowSuggestions(withStockOnly.length > 0);
-            })();
-        }
-    }, [searchQuery, items, ItemPriceListData, selectedReportSaleId, branchId, retailStoreId, searchMode]);
-
-    const handleSelectSuggestion = async (suggestion) => {
-        setSearchQuery('');
-        setSuggestions([]);
-        setShowSuggestions(false);
-        try {
-            // Re-verify stock and check for ambiguity in retail store
-            const res = await getStockByBarcode({ params: { barcode: suggestion.barcode, storeId: retailStoreId, branchId } }).unwrap();
-
-            if (res.statusCode === 0) {
-                const { data, matches, needsResolution } = res;
-
-                if (needsResolution || (Array.isArray(matches) && matches.length > 1)) {
-                    // Ambiguity found - show selection modal
-                    setBarcodeResolution({
-                        open: true,
-                        matches: matches,
-                        resolve: (selectedItems) => {
-                            if (Array.isArray(selectedItems)) {
-                                selectedItems.forEach(item => addToCart(item));
-                            } else if (selectedItems) {
-                                addToCart(selectedItems);
-                            }
-                        }
-                    });
-                } else if (data || (Array.isArray(matches) && matches.length === 1)) {
-                    // Unique match - add directly
-                    const resolvedData = data || matches[0];
-                    addToCart({ ...resolvedData });
-                } else {
-                    // Fallback to original suggestion if no stock found (though filtered out earlier)
-                    addToCart(suggestion);
-                }
-            } else {
-                addToCart(suggestion);
-            }
-        } catch (error) {
-            console.error("Suggestion selection failed", error);
-            addToCart(suggestion);
-        }
-        scannerRef.current?.focus();
-    };
-
-
-    const addToCart = (product) => {
-
-        const itemId = product.itemId || product.id;
-        const sizeId = product.sizeId || 0;
-        const colorId = product.colorId || 0;
-        const uomId = product.uomId || product.Item?.uomId || 0;
-        const barcode = product.barcode || "";
-
-        console.log(ItemPriceListData?.data?.flatMap(item => item.ItemBarcodes)?.filter(i => i.barcode === barcode), "ItemPriceListData")
-
-        console.log("DEBUG: addToCart Search Target:", { itemId, sizeId, colorId, uomId, isReturn: !!product.isReturn });
-
-        setCart(prev => {
-            const existingIndex = prev.findIndex((item, i) => {
-                const isIdMatch = (item.itemId == itemId) || (item.id == itemId);
-                const isSizeMatch = (item.sizeId || 0) == (sizeId || 0);
-                const isColorMatch = (item.colorId || 0) == (colorId || 0);
-                const isUomMatch = (item.uomId || 0) == (uomId || 0);
-                const isBarcodeMatch = (item.barcode || "") == (barcode || "");
-                const isReturnMatch = !!item.isReturn === !!product.isReturn;
-
-
-
-
-                if (isIdMatch && isReturnMatch) {
-                    console.log(`   - Checking Row ${i}: ID Match! Size: ${isSizeMatch}, Color: ${isColorMatch}, Uom: ${isUomMatch}`);
-                }
-
-                return isIdMatch && isSizeMatch && isColorMatch && isUomMatch && isBarcodeMatch && isReturnMatch;
-            });
-
-            console.log(existingIndex, "existingIndex")
-
-
-            if (existingIndex > -1) {
-                const existing = prev[existingIndex];
-
-                console.log(existing, "existing")
-                const newQty = (parseFloat(existing.qty) || 0) + 1;
-
-                if (existing.isReturn) {
-                    if (newQty > (existing.maxReturnQty || 0)) {
-                        toast.warning(`Max return limit: ${existing.maxReturnQty}`);
-                        return prev;
-                    }
-                    const updatedCart = [...prev];
-                    updatedCart[existingIndex] = { ...existing, qty: newQty };
-                    return updatedCart;
-                } else {
-                    const stockDetails = [...(existing.stockDetails || [])];
-                    const currentStoreId = product.storeId || product.locationId;
-                    if (currentStoreId && !stockDetails.find(s => s.storeId == currentStoreId)) {
-                        stockDetails.push({
-                            storeId: currentStoreId,
-                            storeName: product.location || "Store",
-                            stockQty: product.stockQty || 0
-                        });
-                    }
-
-                    const totalStock = stockDetails.reduce((sum, s) => sum + (parseFloat(s.stockQty) || 0), 0);
-
-                    if (newQty > totalStock) {
-                        toast.warning("Max stock reached");
-                        return prev;
-                    }
-
-                    const updatedFulfillments = allocateStock(newQty, stockDetails, retailStoreId);
-                    const updatedCart = [...prev];
-                    updatedCart[existingIndex] = {
-                        ...existing,
-                        qty: newQty,
-                        stockQty: totalStock,
-                        stockDetails,
-                        fulfillments: updatedFulfillments
-                    };
-                    return updatedCart;
-                }
-            }
-
-            const fullPriceList = ItemPriceListData?.data || [];
-            const itemPrices = fullPriceList.filter(p => p.itemId === itemId);
-            const variantHit = itemPrices.find(p => p.sizeId === product.sizeId && p.colorId === product.colorId);
-            const lookupPrice = variantHit?.salesPrice || itemPrices.find(p => !p.sizeId && !p.colorId)?.salesPrice || itemPrices[0]?.salesPrice || 0;
-            const masterItem = product?.Item || items.find(i => i.id === itemId);
-            const barcodeDetails = ItemPriceListData?.data?.flatMap(item => item.ItemBarcodes)?.filter(i => i.barcode === barcode)?.[0]
-
-            const stockDetails = [{
-                storeId: product.storeId || product.locationId || retailStoreId,
-                storeName: product.location || "Retail Store",
-                stockQty: product.stockQty || 0
-            }];
-
-            const totalStock = stockDetails.reduce((sum, s) => sum + (parseFloat(s.stockQty) || 0), 0);
-            const initialFulfillments = allocateStock(1, stockDetails, retailStoreId);
-
-            return [...prev, {
-                ...product,
-                itemId,
-                Item: masterItem,
-                salesPrice: lookupPrice,
-                price: lookupPrice,
-                rate: lookupPrice,
-                qty: 1,
-                priceType: 'SalesPrice',
-                taxPercent: masterItem?.Hsn?.tax || 5,
-                stockQty: totalStock,
-                stockDetails,
-                fulfillments: initialFulfillments,
-                sourceStoreId: retailStoreId,
-                barcodeType: barcodeDetails?.barcodeType,
-            }];
-        });
-        const existingItem = cart.find(item => {
-            const isIdMatch = (item.itemId == itemId) || (item.id == itemId);
-            const isSizeMatch = (item.sizeId || 0) == (sizeId || 0);
-            const isColorMatch = (item.colorId || 0) == (colorId || 0);
-            const isUomMatch = (item.uomId || 0) == (uomId || 0);
-            const isBarcodeMatch = (item.barcode || "") == (barcode || "");
-            const isReturnMatch = !!item.isReturn === !!product.isReturn;
-            return isIdMatch && isSizeMatch && isColorMatch && isUomMatch && isBarcodeMatch && isReturnMatch;
-        });
-
-        if (!existingItem || !existingItem.salesPersonId) {
-            setShowSalesPersonModal(true);
-            setTimeout(() => salesPersonScannerRef.current?.focus(), 500);
-        } else {
-            setTimeout(() => scannerRef.current?.focus(), 100);
-        }
-    };
-
-    const handleSalesPersonScan = (barcode) => {
-        if (!barcode) return;
-        const employee = employees.find(e => e.employeeId === barcode || e.regNo === barcode);
-        setCart(prev => prev.map(item => !item.salesPersonId ? { ...item, salesPersonId: employee?.id || null, salesPersonBarcode: barcode, salesPersonName: employee?.name || "Unknown" } : item));
-        setShowSalesPersonModal(false);
-        setSalesPersonBarcode('');
-        setTimeout(() => scannerRef.current?.focus(), 100);
-    };
-
-    const handleRowSalesPersonChange = (index, empId) => {
-        if (!empId) { setCart(prev => prev.map((item, i) => i === index ? { ...item, salesPersonId: null, salesPersonName: null, salesPersonBarcode: null } : item)); return; }
-        const employee = employees.find(e => e.id === parseInt(empId));
-        setCart(prev => prev.map((item, i) => i === index ? { ...item, salesPersonId: employee?.id, salesPersonName: employee?.name, salesPersonBarcode: employee?.employeeId || employee?.regNo } : item));
-    };
-
-    const handleEditPOS = (sale) => {
-        console.log(sale, 'sale')
-        setEditMode(true);
-        setSelectedReportSaleId(sale.id);
-    };
-
-
-
-    const removeFromCart = (cartKey) => setCart(prev => prev.filter(item => `${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}` !== cartKey));
-
-    const updateQuantity = (id, value, sizeId, colorId, isDirect = false) => {
-        setCart(prev => prev.map(item => {
-            if (item.id === id && item.sizeId === sizeId && item.colorId === colorId) {
-                const stockLimit = parseFloat(item.stockQty) || 0;
-                const isReturn = !!item.isReturn;
-
-                let newQty;
-                if (isReturn) {
-                    newQty = isDirect ? (parseFloat(value) || 0) : (parseFloat(item.qty) || 0) + (parseFloat(value) || 0);
-                    if (newQty > (item.maxReturnQty || 0)) {
-                        Swal.fire({ title: "Warning", text: `Maximum return quantity is ${item.maxReturnQty}`, icon: "warning" });
-                        newQty = (item.maxReturnQty || 0);
-                    }
-                    if (newQty < 0) newQty = 0;
-                } else {
-                    newQty = isDirect ? Math.max(0, parseFloat(value) || 0) : Math.max(1, (parseFloat(item.qty) || 0) + (parseFloat(value) || 0));
-                    if (newQty > stockLimit) { Swal.fire({ title: "Warning", text: `Stock limit: ${stockLimit}`, icon: "warning" }); newQty = stockLimit; }
-                }
-
-                const updatedFulfillments = allocateStock(newQty, item.stockDetails, retailStoreId);
-                return { ...item, qty: newQty, fulfillments: updatedFulfillments };
-            }
-            return item;
-        }));
-    };
-
-    const updateFulfillments = (itemId, sizeId, colorId, isReturn, fulfillments) => {
-        setCart(prev => prev.map(item =>
-            (item.itemId || item.id) === itemId &&
-                item.sizeId === sizeId &&
-                item.colorId === colorId &&
-                !!item.isReturn === !!isReturn
-                ? { ...item, fulfillments, qty: fulfillments.reduce((sum, f) => sum + f.qty, 0) }
-                : item
-        ));
-        setShowStockModal(false);
-    };
-
-    const updateRate = (id, value, sizeId, colorId) => {
-        setCart(prev => prev.map(item => (item.id === id && item.sizeId === sizeId && item.colorId === colorId) ? { ...item, rate: parseFloat(value) || 0, price: parseFloat(value) || 0 } : item));
-    };
-
-    const handleCustomerMobileChange = (val) => {
-        const cleanPhone = val.replace(/\D/g, '').substring(0, 10);
-        setGuestMobile(cleanPhone);
-        if (cleanPhone.length === 10) {
-            const hit = customers.find(c => (c.contact || '').toString().replace(/\D/g, '') === cleanPhone);
-            if (hit) {
-                setSelectedCustomer(hit);
-                setIsGuestCustomer(false);
-                setGuestName(hit.name);
-                // Fetch credit balance and available returns
-                fetchCreditBalance(hit.id).unwrap().then(res => {
-                    if (res.statusCode === 0) setAvailableCredit(res.data);
-                });
-                fetchPointOfSales({ params: { customerId: hit.id, reportsTransactionType: 'RETURN', branchId } }).unwrap().then(res => {
-                    if (res.statusCode === 0) setAvailableReturnBills(res.data);
-                });
-            }
-            else { setSelectedCustomer(null); setIsGuestCustomer(true); setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills(null); }
-        } else if (selectedCustomer) { setSelectedCustomer(null); setIsGuestCustomer(true); setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills(null); }
-    };
-
-    // Totals Calculation
-    const returnTotal = cartWithOffers.reduce((sum, item) => item.isReturn ? sum + (parseFloat(item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
-    const purchaseTotalBeforeOffer = cartWithOffers.reduce((sum, item) => !item.isReturn ? sum + (parseFloat(item.salesPrice || item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
-
-    const totalBeforeOffer = purchaseTotalBeforeOffer - returnTotal;
-    const totalBeforeDiscount = purchaseTotalBeforeOffer - totalOfferDiscount - returnTotal;
-    const totalWithoutRounding = totalBeforeDiscount - discount;
-    const total = Math.round(totalWithoutRounding);
-    const roundOff = parseFloat((total - totalWithoutRounding).toFixed(2));
-    const tax = cartWithOffers.reduce((sum, item) => {
-        const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
-        const itemValue = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
-        const multiplier = item.isReturn ? -1 : 1;
-        // Basic proportional discount spread (simplified)
-        const itemDiscount = totalBeforeDiscount !== 0 ? (itemValue / Math.abs(totalBeforeDiscount)) * discount : 0;
-        const netItemTotal = itemValue - itemDiscount;
-        const itemTax = (netItemTotal - (netItemTotal / (1 + (itemTaxPercent / 100)))) * multiplier;
-        return sum + itemTax;
-    }, 0);
-    const subtotal = totalWithoutRounding - tax;
-
-
-    console.log(purchaseTotalBeforeOffer, "purchaseTotalBeforeOffer")
-    console.log(totalOfferDiscount, "totalOfferDiscount")
-    console.log(totalBeforeDiscount, "totalBeforeDiscount")
-    console.log(discount, "discount")
-    console.log(totalWithoutRounding, "totalWithoutRounding")
-    console.log(total, "total")
-    console.log(roundOff, "roundOff")
-    console.log(tax, "tax")
-    console.log(subtotal, "subtotal")
-
-    const [paidCash, setPaidCash] = useState(0);
-    const [paidUPI, setPaidUPI] = useState(0);
-    const [paidCard, setPaidCard] = useState(0);
-    const [paidOnline, setPaidOnline] = useState(0);
-    const [upiRefNo, setUpiRefNo] = useState('');
-    const receivedAmount = paidCash + paidUPI + paidCard + paidOnline;
-    const netPayableValue = total - availableCredit;
-    const absNetPayableValue = Math.abs(netPayableValue);
-    const balanceReturn = Math.max(0, receivedAmount - absNetPayableValue);
-
-    const handleCheckout = async (isApprovalOnly = false, isCreditSale = false) => {
-        if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
-        if (!isApprovalOnly && !isCreditSale && transactionType !== "RETURN" && receivedAmount !== absNetPayableValue) { Swal.fire({ title: "Error", text: "Payment amount mismatch", icon: "error" }); return; }
-
-
-        // const result = await Swal.fire({
-        //     title: 'Confirm Sale',
-        //     html: `
-        //         <div class="text-left space-y-2 p-4 bg-slate-50 rounded-xl">
-        //             <div class="flex justify-between"><span>Subtotal:</span> <b>₹${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b></div>
-        //             <div class="flex justify-between"><span>Discount:</span> <b class="text-red-500">-₹${discount.toLocaleString()}</b></div>
-        //             <div class="flex justify-between text-lg border-t pt-2 mt-2 font-bold"><span>Total:</span> <b class="text-indigo-600">₹${total.toLocaleString()}</b></div>
-        //         </div>
-        //     `,
-        //     icon: 'question', showCancelButton: true, confirmButtonColor: '#4f46e5', cancelButtonColor: '#94a3b8', confirmButtonText: 'Confirm & Process'
-        // });
-
-        // if (!result.isConfirmed) return;
-        setIsProcessing(true);
-
-        try {
-            let customerId = selectedCustomer?.id;
-            if (isGuestCustomer) {
-                const guestPayload = { name: guestName || 'Walk-in Customer', contact: guestMobile, isClient: true, isB2C: true, companyId, userId, partyCode: `WALK-${guestMobile.slice(-4)}-${Math.floor(Math.random() * 1000)}`, active: true, address: 'Walk-in Store', pincode: '000000', gstNo: 'N/A' };
-                try { const res = await addParty(guestPayload).unwrap(); customerId = res.data.id; }
-                catch (e) { customerId = customers.find(c => c.contact === guestMobile)?.id; if (!customerId) throw new Error("Could not register guest."); }
-            }
-
-            const totalPayableBeforeCredit = total; // This is the rounded total
-            const appliedCredit = total > 0 ? Math.min(availableCredit, totalPayableBeforeCredit) : 0;
-            const netPayable = totalPayableBeforeCredit - appliedCredit;
-
-            const isRefundMode = netPayableValue < 0;
-
-            const posPayments = [
-                ...(appliedCredit > 0 ? [{ amount: String(appliedCredit), paymentMode: 'STORE_CREDIT' }] : []),
-                ...(paidCash > 0 ? [{ amount: String(paidCash), paymentMode: isRefundMode ? 'Cash Refund' : 'Cash' }] : []),
-                ...(paidUPI > 0 ? [{ amount: String(paidUPI), paymentMode: isRefundMode ? 'UPI Refund' : 'UPI', reference_no: upiRefNo }] : []),
-                ...(paidCard > 0 ? [{ amount: String(paidCard), paymentMode: isRefundMode ? 'Card Refund' : 'Card' }] : []),
-                ...(paidOnline > 0 ? [{ amount: String(paidOnline), paymentMode: isRefundMode ? 'Online Refund' : 'Online', }] : []),
-            ];
-
-            const invoicePayload = {
-                date: new Date().toISOString().split('T')[0],
-                customerId,
-                supplierId: customerId,
-                branchId, userId, companyId, finYearId,
-                paymentMethod,
-                storeId: retailStoreId,
-                poType: "General", poInwardOrDirectInward: "DirectInward",
-                netAmount: total, taxAmount: tax, discountValue: discount, discountType: "Flat",
-                paidCash, paidUPI, paidCard, paidOnline, receivedAmount, balanceReturn,
-                posItems: cartWithOffers,
-                posPayments,
-                promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff, transactionType,
-                exchangeSalesNo,
-                bilStatus: isCreditSale ? "UNPAID" : "PAID",
-                isRetrunBillId: selectedReturnBills?.value || null,
-                availableCredit,
-                // Stage Logic:
-                approvalStatus: (editMode && approvalStatus === 'PENDING' && isAdmin) ? "APPROVED" :
-                    (editMode && docId === 'DRAFT' && isAdmin) ? "APPROVED" :
-                        (editMode && docId === 'PROCEED') ? "COMPLETED" : "NONE"
-            };
-
-
-            let apiResponse;
-            if (editMode) {
-                apiResponse = await updatePointOfSales({ id: editingInvoiceId, ...invoicePayload }).unwrap();
-            } else {
-                apiResponse = await addPointOfSales(invoicePayload).unwrap();
-            }
-
-            if (apiResponse.statusCode !== 0) {
-                throw new Error(apiResponse.message || "Failed to save invoice.");
-            }
-
-            Swal.fire({ title: editMode ? 'Updated Successfully!' : 'Payment Successful!', icon: 'success', timer: 2000, showConfirmButton: false });
-            setPrintData(
-                {
-                    docId: apiResponse?.data?.docId || docId,
-                    date: new Date(),
-                    customerData: selectedCustomer || { name: guestName, contact: guestMobile },
-                    items: cart,
-                    payments: { cash: paidCash, upi: paidUPI, card: paidCard },
-                    summary: { subtotal, tax, discount, total, received: Math.abs(receivedAmount), balance: Math.abs(balanceReturn), roundOff }, branchData: locations.find(l => l.id === retailStoreId),
-                    returnReferences: selectedReturnBills ? [selectedReturnBills.label] : (exchangeSalesNo ? [exchangeSalesNo] : []),
-                    bilStatus: isCreditSale ? "UNPAID" : "PAID",
-                    printCopies: 2,
-                    showSummarySlip: true
-                });
-            setCart([]); setDiscount(0); setSelectedCustomer(null); setPaidCash(0); setPaidUPI(0); setPaidCard(0); setUpiRefNo("");
-            setAvailableCredit(0); setAvailableReturnBills([]); setSelectedReturnBills(null);
-            setEditMode(false); setEditingInvoiceId(null); setSelectedReportSaleId(null);
-        } catch (error) { Swal.fire({ title: "Error", text: error.message || "Failed to save invoice.", icon: "error" }); }
-
-        finally { setIsProcessing(false); }
-    };
-
-    const handleRequestDiscount = async () => {
-        if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
-
-        const result = await Swal.fire({
-            title: 'Request Discount Approval?',
-            text: 'This will send your current cart to the Admin for discount entry.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#4f46e5',
-            confirmButtonText: 'Yes, Send Request'
-        });
-
-        if (!result.isConfirmed) return;
-        setIsProcessing(true);
-
-        try {
-            let customerId = selectedCustomer?.id;
-            if (isGuestCustomer) {
-                const guestPayload = { name: guestName || 'Walk-in Customer', contact: guestMobile, isClient: true, isB2C: true, companyId, userId, partyCode: `WALK-${guestMobile.slice(-4)}-${Math.floor(Math.random() * 1000)}`, active: true, address: 'Walk-in Store', pincode: '000000', gstNo: 'N/A' };
-                try { const res = await addParty(guestPayload).unwrap(); customerId = res.data.id; }
-                catch (e) { customerId = customers.find(c => c.contact === guestMobile)?.id; if (!customerId) throw new Error("Could not register guest."); }
-            }
-
-            const invoicePayload = {
-                date: new Date().toISOString().split('T')[0],
-                customerId,
-                supplierId: customerId,
-                branchId, userId, companyId, finYearId,
-                paymentMethod: "Cash", // Default for request
-                storeId: retailStoreId,
-                poType: "General", poInwardOrDirectInward: "DirectInward",
-                netAmount: total, taxAmount: tax, discountValue: 0, discountType: "Flat",
-                paidCash: 0, paidUPI: 0, paidCard: 0, paidOnline: 0, receivedAmount: 0, balanceReturn: 0,
-                posItems: cartWithOffers,
-                posPayments: [],
-                promotionalDiscount: totalOfferDiscount, manualDiscount: 0, roundOff,
-                approvalStatus: "PENDING",
-                transactionType
-            };
-
-            const apiResponse = await addPointOfSales(invoicePayload).unwrap();
-
-            if (apiResponse.statusCode !== 0) {
-                throw new Error(apiResponse.message || "Failed to send request.");
-            }
-
-            Swal.fire({ title: 'Request Sent!', text: 'Bill saved as PENDING. Admin can now enter discount.', icon: 'success' });
-            setCart([]); setDiscount(0); setSelectedCustomer(null); setGuestName(""); setGuestMobile("");
-        } catch (error) {
-            Swal.fire({ title: "Error", text: error.message || "Failed to send request.", icon: "error" });
-        } finally {
-            setIsProcessing(false);
-        }
-    };
-
-    const handleSaveUnpaid = async () => {
-        if (cart.length === 0 || isProcessing) return;
-
-        if (isGuestCustomer && !guestMobile) {
-            Swal.fire({ title: "Error", text: "Customer mobile is required for credit sales!", icon: "error" });
-            return;
-        }
-
-        const result = await Swal.fire({
-            title: 'Save as Unpaid?',
-            text: 'This bill will be saved as a Credit Sale. Ledger entry will not be created.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#f59e0b',
-            confirmButtonText: 'Yes, Save'
-        });
-
-        if (result.isConfirmed) {
-            handleCheckout(false, true); // isApprovalOnly = false, isCreditSale = true
-        }
-    };
-
-    const handleBillSelected = (bill) => {
-
-        console.log(bill, "bill");
-        if (!bill) return;
-
-        if (bill.Party) {
-            setSelectedCustomer(bill.Party);
-            setIsGuestCustomer(false);
-            setGuestName(bill.Party.name);
-            setGuestMobile(bill.Party.contact);
-            // Fetch credit balance for this customer
-            fetchCreditBalance(bill.Party.id).unwrap().then(res => {
-                if (res.statusCode === 0) setAvailableCredit(res.data);
-            });
-        } else {
-            setSelectedCustomer(null);
-            setIsGuestCustomer(true);
-            setGuestName(bill.customerName || "Walk-in");
-            setGuestMobile(bill.customerMobile || "");
-            setAvailableCredit(0);
-        }
-
-        const returnItems = (bill.PosItems || []).map(item => {
-            const masterItem = items.find(i => i.id === item.itemId);
-            return {
-                ...item,
-                Item: masterItem,
-                price: parseFloat(item.price),
-                qty: parseFloat(item.qty) - parseFloat(item.returnedQty || 0),
-                maxReturnQty: parseFloat(item.qty) - parseFloat(item.returnedQty || 0),
-                isReturn: true,
-                retunBillId: bill.id,
-                originalItemId: item.id,
-                taxPercent: masterItem?.Hsn?.tax || 5,
-                sourceStoreId: retailStoreId
-            };
-        });
-
-        setCart(prev => {
-            // Remove any existing return items for this specific bill first
-            const filteredCart = prev.filter(item =>
-                !(item.isReturn && item.retunBillId === bill.id)
-            );
-
-            // Add all currently selected return items
-            return [...filteredCart, ...returnItems];
-        });
-        Swal.fire({
-            title: 'Items Added',
-            text: `${returnItems.length} items from Bill ${bill.docId} added as returns.`,
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false
-        });
-    };
-
-
-    const onNew = () => {
-        setShowReports(true);
-        setEditMode(false);
-        setEditingInvoiceId(null);
-        setCart([]);
-        setDiscount(0);
-        setSelectedReportSaleId(null)
-        setGuestMobile("")
-        setGuestName("Walk-in")
-        setIsGuestCustomer(true)
-        setSelectedCustomer(null)
-        setTransactionType("SALE")
-        setSearchQuery("")
-        setCurrentBilStatus("PAID")
-        setAvailableCredit(0)
-    }
-
-    const onViewStock = (item) => {
-        setSelectedItemForStock(item);
-        setShowStockModal(true);
-    };
     return (
-        <>
-            <ItemOfferModal
-                isOpen={showItemOfferModal}
-                onClose={() => setShowItemOfferModal(false)}
-                selectedItemForOffers={selectedItemForOffers}
-                getItemApplicableOffers={getItemApplicableOffers}
-                selectedOffersByRow={selectedOffersByRow}
-                setSelectedOffersByRow={setSelectedOffersByRow}
-                Swal={Swal}
-            />
-            <ReturnExchangeModal
-                isOpen={showReturnExchnageModal}
-                setShowReturnExchnageModal={setShowReturnExchnageModal}
-                onClose={() => { setShowReturnExchnageModal(false); }}
-                onBillSelected={handleBillSelected}
-                Swal={Swal}
-                salesNo={exchangeSalesNo}
-                setSalesNo={setExchangeSalesNo}
-                setTransactionType={setTransactionType}
-                cart={cart}
-            />
-
-
-
-
-            {showReports ? (
-                <div className="flex flex-col h-[85vh] bg-[#f1f5f9] text-slate-800 overflow-hidden font-sans select-none border border-slate-200">
-                    <POSHeader
-                        isBarcodeLoading={isBarcodeLoading}
-                        scannerRef={scannerRef}
-                        searchQuery={searchQuery}
-                        setSearchQuery={setSearchQuery}
-                        handleScan={handleScan}
-                        setShowReports={setShowReports}
-                        retailLocation={retailLocation}
-                        setSelectedReportSaleId={setSelectedReportSaleId}
-                        transactionType={transactionType}
-                        setTransactionType={setTransactionType}
-                        setShowReturnExchnageModal={setShowReturnExchnageModal}
-                        selectedReportSaleId={selectedReportSaleId}
-                        approvalStatus={approvalStatus}
-                        isAdmin={isAdmin}
-                        onNew={onNew}
-                        suggestions={suggestions}
-                        showSuggestions={showSuggestions}
-                        setShowSuggestions={setShowSuggestions}
-                        onSelectSuggestion={handleSelectSuggestion}
-                        searchMode={searchMode}
-                        setSearchMode={setSearchMode}
-                    />
-
-                    <div className="flex-1 flex overflow-hidden">
-                        <POSCartTable
-                            isBarcodeLoading={isBarcodeLoading}
-                            cart={cartWithOffers}
-                            activeRowIndex={activeRowIndex}
-                            setActiveRowIndex={setActiveRowIndex}
-                            updateQuantity={updateQuantity}
-                            handleShowItemOffers={handleShowItemOffers}
-                            onViewStock={onViewStock}
-                            employees={employees}
-                            handleRowSalesPersonChange={handleRowSalesPersonChange}
-                            updateRate={updateRate}
-                            removeFromCart={removeFromCart}
-                            qtyInputRefs={qtyInputRefs}
-                            selectedReportSaleId={selectedReportSaleId}
-                            approvalStatus={approvalStatus}
-                            isAdmin={isAdmin}
-                        />
-
-                        <POSSidebar
-                            isGuestCustomer={isGuestCustomer}
-                            guestMobile={guestMobile}
-                            handleCustomerMobileChange={handleCustomerMobileChange}
-                            guestName={guestName}
-                            setGuestName={setGuestName}
-                            subtotal={subtotal}
-                            totalOfferDiscount={totalOfferDiscount}
-                            appliedOffers={appliedOffers}
-                            discount={discount}
-                            setDiscount={setDiscount}
-                            discountRef={discountRef}
-                            tax={tax}
-                            roundOff={roundOff}
-                            total={total}
-                            isProcessing={isProcessing}
-                            cart={cartWithOffers}
-                            handlePayNow={handlePayNow}
-                            printData={printData}
-                            setPrintData={setPrintData}
-                            returnTotal={returnTotal}
-                            purchaseTotal={purchaseTotalBeforeOffer}
-                            selectedReportSaleId={selectedReportSaleId}
-                            isAdmin={isAdmin}
-                            handleRequestDiscount={handleRequestDiscount}
-                            handleSaveUnpaid={handleSaveUnpaid}
-                            approvalStatus={approvalStatus}
-                            currentBilStatus={currentBilStatus}
-                            transactionType={transactionType}
-                            availableCredit={availableCredit}
-                            availableReturnBills={availableReturnBills}
-                            selectedReturnBills={selectedReturnBills}
-                            setSelectedReturnBills={setSelectedReturnBills}
-                            isCancelBill={isCancelBill}
-                        />
-
+        <div className="flex flex-col h-full w-full bg-slate-50">
+            {/* REPORTS VIEW */}
+            <div className={`flex-1 flex-col ${currentView === 'REPORTS' ? 'flex' : 'hidden'}`}>
+                <div className="flex flex-col sm:flex-row justify-between bg-white py-0.5 px-4 items-start sm:items-center gap-x-4 shadow-sm border-b border-gray-200">
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-lg font-bold text-gray-800">Point Of Sales</h1>
+                        <select
+                            value={reportsTransactionType}
+                            onChange={(e) => setReportsTransactionType(e.target.value)}
+                            className="text-sm border border-gray-300 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-gray-50"
+                        >
+                            <option value="ALL">All Transactions</option>
+                            <option value="SALE">Sales Only</option>
+                            <option value="RETURN">Returns Only</option>
+                        </select>
                     </div>
-
-                    <POSFooter
-                        cart={cart}
-                        activeRowIndex={activeRowIndex}
-                        qtyInputRefs={qtyInputRefs}
-                        discountRef={discountRef}
-                        setShowReports={setShowReports}
-                        handlePayNow={handlePayNow}
-                        handleSaveUnpaid={handleSaveUnpaid}
-                        scannerRef={scannerRef}
-                    />
-                </div>
-            ) : (
-                <div className=" bg-[#F1F1F0] min-h-screen">
-                    <div className="flex flex-col sm:flex-row justify-between bg-white py-1 px-3 items-start sm:items-center  gap-x-4 rounded-tl-lg rounded-tr-lg shadow-sm border border-gray-200">
-                        <div className="flex items-center gap-4">
-                            <h1 className="text-md font-bold text-gray-800">Point Of Sales</h1>
-                            <select
-                                value={reportsTransactionType}
-                                onChange={(e) => setReportsTransactionType(e.target.value)}
-                                className="text-sm border border-gray-300 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-green-500 bg-gray-50"
-                            >
-                                <option value="ALL">All Transactions</option>
-                                <option value="SALE">Sales Only</option>
-                                <option value="RETURN">Returns Only</option>
-                            </select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                className="hover:bg-indigo-700 bg-white border border-indigo-700 hover:text-white text-indigo-800 px-2 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm"
-                                onClick={() => setLastRefresh(Date.now())}
-                                disabled={isRecentSalesFetching}
-                            >
-                                <RefreshCw size={14} className={isRecentSalesFetching ? 'animate-spin' : ''} /> Refresh
-                            </button>
-                            <button className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm" onClick={() => { onNew() }}>
-                                <Plus size={14} /> Create New
-                            </button>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden h-[85vh] mt-2 border-2">
-                        {/* <PosReports
-                            recentSales={posData?.data || []}
-                            totalCount={posData?.totalCount || 0}
-                            currentPageNumber={currentPageNumber}
-                            setCurrentPageNumber={setCurrentPageNumber}
-                            dataPerPage={dataPerPage}
-                            setDataPerPage={setDataPerPage}
-                            serachDocNo={reportsSearchDocNo}
-                            setSerachDocNo={setReportsSearchDocNo}
-                            searchDate={reportsSearchDate}
-                            setSearchDate={setReportsSearchDate}
-                            searchCustomerName={reportsSearchCustomerName}
-                            setSearchCustomerName={setReportsSearchCustomerName}
-                            onEdit={handleEditPOS}
-                            isLoading={isRecentSalesFetching}
-                        /> */}
-
-
-                        <PosReportsNew
-                            onEdit={handleEditPOS}
-                            onDelete={true}
-                            onView={true}
-                            reportsTransactionType={reportsTransactionType}
-                            lastRefresh={lastRefresh}
-                        />
+                    <div className="flex items-center gap-2">
+                        <button
+                            className="hover:bg-indigo-700 bg-white border border-indigo-700 hover:text-white text-indigo-800 px-3 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm"
+                            onClick={() => setLastRefresh(Date.now())}
+                            disabled={isRecentSalesFetching}
+                        >
+                            <RefreshCw size={14} className={isRecentSalesFetching ? 'animate-spin' : ''} /> Refresh
+                        </button>
+                        <button
+                            className="hover:bg-green-700 bg-green-600 text-white px-3 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm"
+                            onClick={handleAddTab}
+                        >
+                            <Plus size={14} /> Create New
+                        </button>
+                        <button
+                            className="hover:bg-indigo-600 bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm ml-2 font-medium"
+                            onClick={() => setCurrentView("SESSION")}
+                            title="Go back to open tabs"
+                        >
+                            View Open Tabs ({tabs.length})
+                        </button>
                     </div>
                 </div>
-            )}
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden h-[85vh] m-2 border border-slate-200 relative">
+                    <PosReportsNew
+                        onEdit={handleAddEditTab}
+                        onDelete={handleDelete}
+                        onView={true}
+                        reportsTransactionType={reportsTransactionType}
+                        lastRefresh={lastRefresh}
+                        hasPermission={hasPermission}
+                    />
+                </div>
+            </div>
 
-            <PaymentModal
-                isOpen={showPaymentModal}
-                onClose={() => setShowPaymentModal(false)}
-                total={total}
-                paidCash={paidCash}
-                setPaidCash={setPaidCash}
-                paidUPI={paidUPI}
-                setPaidUPI={setPaidUPI}
-                paidCard={paidCard}
-                setPaidCard={setPaidCard}
-                paidOnline={paidOnline}
-                setPaidOnline={setPaidOnline}
-                upiRefNo={upiRefNo}
-                setUpiRefNo={setUpiRefNo}
-                receivedAmount={receivedAmount}
-                handleCheckout={handleCheckout}
-                isProcessing={isProcessing}
-                checkRefNo={checkRefNo}
-                isAdmin={isAdmin}
-                setIsProcessing={setIsProcessing}
-                availableCredit={availableCredit}
-            />
+            {/* SESSION VIEW */}
+            <div className={`flex-col h-full ${currentView === 'SESSION' ? 'flex' : 'hidden'}`}>
+                {/* Tab Bar */}
+                <div className="flex items-center justify-between bg-slate-200 px-2 pt-2 border-b border-slate-300 shrink-0">
+                    <div className="flex items-center gap-1 overflow-x-auto flex-1">
+                        {tabs.map(tab => (
+                            <div
+                                key={tab.id}
+                                onClick={() => setActiveTabId(tab.id)}
+                                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-t-lg cursor-pointer transition-colors ${activeTabId === tab.id
+                                    ? 'bg-white text-indigo-700 border-t border-l border-r border-slate-300 shadow-sm relative top-[1px]'
+                                    : 'bg-slate-300 text-slate-600 hover:bg-slate-300/80'
+                                    }`}
+                            >
+                                <span>{tab.title}</span>
+                                {tabs.length > 1 && (
+                                    <button
+                                        onClick={(e) => handleCloseTab(e, tab.id)}
+                                        className="p-0.5 rounded-full hover:bg-slate-400/30 text-slate-500 hover:text-slate-800 transition-colors"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
 
-            <ReceiptViewerModal
-                printData={printData}
-                setPrintData={setPrintData}
-                Swal={Swal}
-            />
+                        <button
+                            onClick={handleAddTab}
+                            className="flex items-center justify-center p-1.5 ml-1 rounded-md bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors"
+                            title="Open New Bill Tab"
+                        >
+                            <Plus size={18} />
+                        </button>
+                    </div>
 
-            <SalesPersonModal
-                isOpen={showSalesPersonModal}
-                onClose={() => setShowSalesPersonModal(false)}
-                salesPersonScannerRef={salesPersonScannerRef}
-                salesPersonBarcode={salesPersonBarcode}
-                setSalesPersonBarcode={setSalesPersonBarcode}
-                handleSalesPersonScan={handleSalesPersonScan}
-                employees={employees}
-            />
+                    <button
+                        onClick={() => setCurrentView("REPORTS")}
+                        className="flex items-center gap-1.5 px-3 py-1 mb-1 rounded-md bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm ml-4"
+                    >
+                        <FileText size={14} />
+                        Reports
+                    </button>
+                </div>
 
-            <StockLocationModal
-                isOpen={showStockModal}
-                onClose={() => setShowStockModal(false)}
-                item={selectedItemForStock}
-                onSave={(fulfillments) => {
-                    updateFulfillments(
-                        selectedItemForStock.itemId || selectedItemForStock.id,
-                        selectedItemForStock.sizeId,
-                        selectedItemForStock.colorId,
-                        selectedItemForStock.isReturn,
-                        fulfillments
-                    );
-                }}
-            />
-
-            <BarcodeResolutionModal
-                barcodeResolution={barcodeResolution}
-                setBarcodeResolution={setBarcodeResolution}
-            />
-        </>
+                {/* Render all tabs, hide inactive ones */}
+                <div className="flex-1 relative overflow-hidden bg-[#f1f5f9]">
+                    {tabs.map(tab => {
+                        const isActive = activeTabId === tab.id;
+                        return (
+                            <div key={tab.id}
+                                className={`absolute inset-0 ${isActive ? 'block z-10' : 'hidden z-0'}`}
+                            >
+                                <POSSession
+                                    isActive={isActive}
+                                    tabId={tab.id}
+                                    onCartUpdate={handleCartUpdate}
+                                    globalReservedStock={globalReservedStock}
+                                    initialEditSaleId={tab.editSaleId}
+                                    onGoToReports={() => setCurrentView("REPORTS")}
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
     );
 };
 
-export default PointOfSale;
+export default POSMultiTabWrapper;
+
