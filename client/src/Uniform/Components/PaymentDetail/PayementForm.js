@@ -79,6 +79,8 @@ const PaymentForm = ({
     };
 
     const getQuotationOutstandingAmount = (quotation) => {
+
+        console.log(quotation, "quotation")
         if (!quotation) return 0;
 
         const quotationNetAmount = calculateQuotationNetAmount(quotation?.QuotationItems, quotation);
@@ -90,10 +92,14 @@ const PaymentForm = ({
             0
         );
 
+        const refundedAmount = (quotation?.paymentData || []).filter(i => i.paymentFlow === 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
 
+        const actualNetReceived = receivedAmount - refundedAmount;
 
-
-        return Math.max(0, quotationNetAmount - receivedAmount);
+        return Math.max(0, quotationNetAmount - actualNetReceived);
     };
 
     const getSalesInvoiceOutstandingAmount = (salesInvoice) => {
@@ -107,12 +113,24 @@ const PaymentForm = ({
             0
         );
 
-        const advanceReceivedAmount = (salesInvoice?.advancePaymentData || []).reduce(
+        const advanceReceivedAmount = (salesInvoice?.advancePaymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
             (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
             0
         );
 
-        return Math.max(0, salesInvoiceNetAmount - receivedAmount - advanceReceivedAmount);
+        const refundedAmount = (salesInvoice?.paymentData || []).filter(i => i.paymentFlow === 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        const advanceRefundedAmount = (salesInvoice?.advancePaymentData || []).filter(i => i.paymentFlow === 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        const actualNetReceived = (receivedAmount + advanceReceivedAmount) - (refundedAmount + advanceRefundedAmount);
+
+        return Math.max(0, salesInvoiceNetAmount - actualNetReceived);
     };
 
 
@@ -129,14 +147,73 @@ const PaymentForm = ({
             0
         );
 
-        const advanceReceivedAmount = (salesOrder?.advancePaymentData || []).reduce(
+        const advanceReceivedAmount = (salesOrder?.advancePaymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
             (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
             0
         );
 
+        const refundedAmount = (salesOrder?.paymentData || []).filter(i => i.paymentFlow === 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        const advanceRefundedAmount = (salesOrder?.advancePaymentData || []).filter(i => i.paymentFlow === 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+            0
+        );
+
+        const actualNetReceived = (receivedAmount + advanceReceivedAmount) - (refundedAmount + advanceRefundedAmount);
+
+        return Math.max(0, salesOrderNetAmount - actualNetReceived);
+    };
+
+    const getPayoutOutstandingForQuotation = (quotation) => {
+        if (!quotation) return 0;
+
+        const totalReceived = (quotation?.paymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0
+        );
+        const totalRefunded = (quotation?.paymentData || []).filter(i => i.paymentFlow === 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0
+        );
+
+        return Math.max(0, totalReceived - totalRefunded);
+    };
+
+    const getPayoutOutstandingForSalesOrder = (salesOrder, salesInvoiceList = []) => {
+        if (!salesOrder) return 0;
+
+        const soReceived = (salesOrder?.paymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0
+        );
+        const advanceReceived = (salesOrder?.Quotation?.paymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0
+        );
+        const totalReceived = soReceived + advanceReceived;
+
+        const soRefunded = (salesOrder?.paymentData || []).filter(i => i.paymentFlow === 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0
+        );
+        const advanceRefunded = (salesOrder?.Quotation?.paymentData || []).filter(i => i.paymentFlow === 'Payout').reduce(
+            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0
+        );
+        const totalRefunded = soRefunded + advanceRefunded;
 
 
-        return Math.max(0, salesOrderNetAmount - receivedAmount - advanceReceivedAmount);
+        console.log({
+            soReceived,
+            advanceReceived,
+            totalReceived,
+            soRefunded,
+            advanceRefunded,
+            totalRefunded,
+        })
+
+        const deliveredValue = salesInvoiceList
+            .filter(inv => String(inv.saleOrderId) === String(salesOrder.id) || String(inv.refId) === String(salesOrder.id))
+            .reduce((acc, inv) => acc + calculateQuotationNetAmount(inv?.SalesInvoiceItems, inv), 0);
+
+        return Math.max(0, totalReceived - deliveredValue - totalRefunded);
     };
 
 
@@ -469,14 +546,29 @@ const PaymentForm = ({
 
     const getDocIdOptions = () => {
         let list = [];
-        if (transactionType === "QUOTATION") {
-            list = (quotationList?.data || []).filter(q => !q.Saleorder || q.Saleorder.length === 0);
-        }
-        else if (transactionType === "SALESORDER") {
-            list = salesOrderList?.data || [];
-        }
-        else if (transactionType === "SALESINVOICE") {
-            list = salesInvoiceList?.data || [];
+        if (paymentFlow === "Payout") {
+            if (transactionType === "QUOTATION") {
+                list = (quotationList?.data || []).filter(q =>
+                    (!q.Saleorder || q.Saleorder.length === 0) &&
+                    getPayoutOutstandingForQuotation(q) > 0
+                );
+            } else if (transactionType === "SALESORDER") {
+                list = (salesOrderList?.data || []).filter(so =>
+                    getPayoutOutstandingForSalesOrder(so, salesInvoiceList?.data) > 0
+                );
+            } else if (transactionType === "SALESINVOICE") {
+                list = [];
+            }
+        } else {
+            if (transactionType === "QUOTATION") {
+                list = (quotationList?.data || []).filter(q => !q.Saleorder || q.Saleorder.length === 0);
+            }
+            else if (transactionType === "SALESORDER") {
+                list = salesOrderList?.data || [];
+            }
+            else if (transactionType === "SALESINVOICE") {
+                list = salesInvoiceList?.data || [];
+            }
         }
 
         // Filter by selected party if supplierId exists
@@ -523,8 +615,11 @@ const PaymentForm = ({
             const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems, selectedTransaction);
             if (!id) {
                 setTotalBillAmount(billVal.toFixed(2));
-                // setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
-                setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                if (paymentFlow === "Payout") {
+                    setOutStandingAmount(getPayoutOutstandingForQuotation(selectedTransaction).toFixed(2));
+                } else {
+                    setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                }
 
             } else {
                 setPaymentHistory(selectedTransaction?.paymentData || []);
@@ -533,8 +628,11 @@ const PaymentForm = ({
             const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems, selectedTransaction);
             if (!id) {
                 setTotalBillAmount(billVal.toFixed(2));
-                // setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
-                setOutStandingAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                if (paymentFlow === "Payout") {
+                    setOutStandingAmount(0);
+                } else {
+                    setOutStandingAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                }
             } else {
                 setPaymentHistory(selectedTransaction?.paymentData || []);
             }
@@ -542,13 +640,16 @@ const PaymentForm = ({
             const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
             if (!id) {
                 setTotalBillAmount(billVal.toFixed(2));
-                // setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
-                setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                if (paymentFlow === "Payout") {
+                    setOutStandingAmount(getPayoutOutstandingForSalesOrder(selectedTransaction, salesInvoiceList?.data).toFixed(2));
+                } else {
+                    setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                }
             } else {
                 setPaymentHistory(selectedTransaction?.paymentData || []);
             }
         }
-    }, [id, transactionId, transactionType, quotationList, salesInvoiceList, salesOrderList]);
+    }, [id, transactionId, transactionType, quotationList, salesInvoiceList, salesOrderList, paymentFlow]);
 
 
 
@@ -851,18 +952,27 @@ const PaymentForm = ({
                                             if (transactionType === "QUOTATION") {
                                                 const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems, selectedTransaction);
                                                 setTotalBillAmount(billVal.toFixed(2));
-                                                // setTotalBillAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
-                                                setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                                                if (paymentFlow === "Payout") {
+                                                    setOutStandingAmount(getPayoutOutstandingForQuotation(selectedTransaction).toFixed(2));
+                                                } else {
+                                                    setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                                                }
                                             } else if (transactionType === "SALESINVOICE") {
                                                 const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems, selectedTransaction);
                                                 setTotalBillAmount(billVal.toFixed(2));
-                                                // setTotalBillAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
-                                                setOutStandingAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                                                if (paymentFlow === "Payout") {
+                                                    setOutStandingAmount(0);
+                                                } else {
+                                                    setOutStandingAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
+                                                }
                                             } else if (transactionType === "SALESORDER") {
                                                 const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
                                                 setTotalBillAmount(billVal.toFixed(2));
-                                                // setTotalBillAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
-                                                setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                                                if (paymentFlow === "Payout") {
+                                                    setOutStandingAmount(getPayoutOutstandingForSalesOrder(selectedTransaction, salesInvoiceList?.data).toFixed(2));
+                                                } else {
+                                                    setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                                                }
                                             }
                                         }
                                     }}
@@ -979,6 +1089,9 @@ const PaymentForm = ({
                                                 <div>Payment No</div>
                                             </th>
                                             <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-40">
+                                                <div>Payment Flow  </div>
+                                            </th>
+                                            <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-40">
                                                 <div>Payment For</div>
                                             </th>
                                             <th className="px-3 py-1.5 font-medium text-[13px] text-gray-900 text-left w-40">
@@ -1008,6 +1121,8 @@ const PaymentForm = ({
                                                 >
                                                     <td className="text-center">{historyIndexOfFirstItem + index + 1}</td>
                                                     <td className="px-3 py-1.5 text-left">{payment.docId}</td>
+                                                    <td className="px-3 py-1.5 text-left">{payment.paymentFlow}</td>
+
                                                     <td className="px-3 py-1.5 text-left">{payment.transactionType}</td>
                                                     <td className="px-3 py-1.5 text-left">
                                                         {findFromList(payment?.transactionId,
@@ -1027,7 +1142,7 @@ const PaymentForm = ({
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="8" className="px-4 py-4 text-center text-slate-500 bg-white">
+                                                <td colSpan="9" className="px-4 py-4 text-center text-slate-500 bg-white">
                                                     No payment history found for this document.
                                                 </td>
                                             </tr>

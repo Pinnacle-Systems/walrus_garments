@@ -91,7 +91,7 @@ async function get(req) {
                     }
                 }
             });
-            if (saleOrder && saleOrder._count.SalesDelivery > 0) {
+            if (saleOrder || saleOrder._count.SalesDelivery > 0) {
                 isDeletable = false;
             }
         } else if (payment.transactionType === "SALESORDER" && payment.transactionId) {
