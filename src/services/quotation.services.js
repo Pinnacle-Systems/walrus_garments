@@ -152,37 +152,51 @@ async function get(req) {
         }
     });
 
+    console.log("data", data)
+
     const result = await Promise.all(
         data.map(async (item) => {
-            const paymentData = await prisma.payment.findMany({
-                where: {
-                    transactionType: "QUOTATION",
-                    transactionId: item.id,
-                },
-            });
 
+            const paymentData = item.id
+                ? await prisma.payment.findMany({
+                    where: {
+                        transactionType: "QUOTATION",
+                        paymentFlow: "Receipt",
+                        transactionId: item.id,
+                    },
+                })
+                : [];
 
+            const SaleOrderpaymentData = item.Saleorder?.id
+                ? await prisma.payment.findMany({
+                    where: {
+                        transactionType: "SALESORDER",
+                        transactionId: item.Saleorder.id,
+                    },
+                })
+                : [];
 
-            const SaleOrderpaymentData = await prisma.payment.findMany({
-                where: {
-                    transactionType: "SALESORDER",
-                    transactionId: item.Saleorder.id,
-                },
-            });
+            const RefundAmount = item.customerId
+                ? await prisma.payment.findMany({
+                    where: {
+                        transactionType: "QUOTATION",
+                        paymentFlow: "Payout",
+                        partyId: item.customerId,
+                    },
+                })
+                : [];
 
+            console.log("paymentData", paymentData);
+            console.log("SaleOrderpaymentData", SaleOrderpaymentData);
+            console.log("RefundAmount", RefundAmount);
 
-            const RefundAmount = await prisma.payment.findMany({
-                where: {
-                    paymentFlow: "Payout",
-                    partyId: data.customerId,
-                },
-            });
-
-
-            return enrichQuotationConversionState(item, [...paymentData, ...SaleOrderpaymentData, ...RefundAmount]);
+            return enrichQuotationConversionState(item, [
+                ...paymentData,
+                ...SaleOrderpaymentData,
+                ...RefundAmount,
+            ]);
         })
     );
-
     return { statusCode: 0, data: result };
 }
 
