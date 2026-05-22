@@ -569,7 +569,7 @@ const PosReportsNew = ({
 
 
                                             <td className="py-1.5 text-left">
-                                                {`${(dataObj?.Party?.name).toUpperCase()}`}
+                                                {`${(dataObj?.Party?.name)?.toUpperCase()}`}
                                             </td>
 
                                             {reportsTransactionType == "SALE" && (

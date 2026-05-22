@@ -85,13 +85,9 @@ async function get(req) {
         if (payment.transactionType === "QUOTATION" && payment.transactionId) {
             const saleOrder = await prisma.saleorder.findFirst({
                 where: { quotationId: payment.transactionId },
-                include: {
-                    _count: {
-                        select: { SalesDelivery: true }
-                    }
-                }
+
             });
-            if (saleOrder || saleOrder._count.SalesDelivery > 0) {
+            if (saleOrder) {
                 isDeletable = false;
             }
         } else if (payment.transactionType === "SALESORDER" && payment.transactionId) {
