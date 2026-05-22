@@ -263,7 +263,7 @@ const POSMultiTabWrapper = () => {
                 </div>
 
                 {/* Render all tabs, hide inactive ones */}
-                <div className="flex-1 relative overflow-hidden bg-[#f1f5f9]">
+                <div className="flex-1 relative  bg-[#f1f5f9]">
                     {tabs.map(tab => {
                         const isActive = activeTabId === tab.id;
                         return (
