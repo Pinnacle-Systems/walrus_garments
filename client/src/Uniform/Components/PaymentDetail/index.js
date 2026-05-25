@@ -44,7 +44,7 @@ export default function Form() {
   const [paymentMode, setPaymentMode] = useState('');
   const [paymentRefNo, setPaymentRefNo] = useState('');
   const [partyId, setPartyId] = useState("");
-  const [paymentType, setPaymentType] = useState(PaymentType[0].value);
+  const [paymentType, setPaymentType] = useState();
   const [paidAmount, setPaidAmount] = useState('');
   const [discount, setDiscount] = useState('')
   const [balanceAmount, setBalanceAmount] = useState('');
@@ -118,7 +118,7 @@ export default function Form() {
     setSupplierId("");
     setLockPrefilledTransactionFields(false);
     setLinkedPaymentOverrideEnabled(false);
-    setPaymentType("INVOICE");
+    setPaymentType("");
     setPaymentFlow("Receipt");
     setTransactionType("");
     setTransactionId("");

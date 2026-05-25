@@ -92,6 +92,9 @@ const PremiumSalesPrintFormat = ({
   colorList = [],
   uomList = [],
   hsnList = [],
+  packingCharge = 0,
+  shippingCharge = 0,
+  courierCharge = 0,
 }) => {
   const formattedDate = moment(date).format("DD-MM-YYYY");
   const formattedTime = moment(date).format("hh:mm A");
@@ -107,7 +110,11 @@ const PremiumSalesPrintFormat = ({
       const price = parseFloat(item.price || 0);
       let taxableAmount = 0;
       let taxAmount = 0;
-      if (taxMethod === "inclusive") {
+      const itemTaxMethod = item.taxMethod;
+      const isInclusive = (typeof itemTaxMethod === 'string') &&
+        (itemTaxMethod.toLowerCase() === "inclusive" || itemTaxMethod.toLowerCase() === "with tax" || itemTaxMethod.toLowerCase() === "withtax");
+
+      if (isInclusive) {
         const netTotal = price * qty;
         taxableAmount = netTotal / (1 + taxRate / 100);
         taxAmount = netTotal - taxableAmount;
@@ -144,7 +151,9 @@ const PremiumSalesPrintFormat = ({
   const cgstTotal = taxBreakup.reduce((acc, b) => acc + b.cgst, 0);
   const sgstTotal = taxBreakup.reduce((acc, b) => acc + b.sgst, 0);
   const igstTotal = taxBreakup.reduce((acc, b) => acc + b.igst, 0);
-  const netAmount = taxableAmount + totalTax;
+  const extraCharges = parseFloat(packingCharge || 0) + parseFloat(shippingCharge || 0) + parseFloat(courierCharge || 0);
+
+  const netAmount = Math.round(taxableAmount + totalTax + extraCharges);
 
   const fmt = (n, dec = 2) =>
     parseFloat(n || 0).toLocaleString("en-IN", { minimumFractionDigits: dec });
@@ -424,6 +433,27 @@ const PremiumSalesPrintFormat = ({
                   </View>
                 )}
               </>
+            )}
+
+            {parseFloat(packingCharge || 0) > 0 && (
+              <View style={s.summaryRow}>
+                <Text style={s.summaryLabel}>Packing Charge :</Text>
+                <Text style={s.summaryValue}>Rs. {fmt(packingCharge)}</Text>
+              </View>
+            )}
+
+            {parseFloat(shippingCharge || 0) > 0 && (
+              <View style={s.summaryRow}>
+                <Text style={s.summaryLabel}>Shipping Charge :</Text>
+                <Text style={s.summaryValue}>Rs. {fmt(shippingCharge)}</Text>
+              </View>
+            )}
+
+            {parseFloat(courierCharge || 0) > 0 && (
+              <View style={s.summaryRow}>
+                <Text style={s.summaryLabel}>Courier Charge :</Text>
+                <Text style={s.summaryValue}>Rs. {fmt(courierCharge)}</Text>
+              </View>
             )}
 
             <View style={s.summaryRow}>

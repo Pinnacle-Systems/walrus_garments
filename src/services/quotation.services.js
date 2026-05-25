@@ -70,6 +70,7 @@ function enrichQuotationConversionState(quotation, paymentData = []) {
         paymentData,
         paidAmount: totalPaidAmount,
         totalRefundAmount,
+        totalReceivedAmount: paidAmount,
         requiredAdvanceAmount,
         quotationStatus,
         canConvertToSaleOrder: !saleOrderExists && totalPaidAmount >= requiredAdvanceAmount,
@@ -163,6 +164,7 @@ async function get(req) {
                         transactionType: "QUOTATION",
                         paymentFlow: "Receipt",
                         transactionId: item.id,
+                        partyId: item?.customerId
                     },
                 })
                 : [];
@@ -172,16 +174,23 @@ async function get(req) {
                     where: {
                         transactionType: "SALESORDER",
                         transactionId: item.Saleorder.id,
+                        partyId: item?.customerId
+
                     },
                 })
                 : [];
 
+            const saleOrderId = item?.Saleorder?.id;
+
+            const transactionIds = [item.id, saleOrderId].filter(Boolean);
+
             const RefundAmount = item.customerId
                 ? await prisma.payment.findMany({
                     where: {
-                        transactionType: "QUOTATION",
+                        transactionType: { in: ["QUOTATION", "SALESORDER"] },
                         paymentFlow: "Payout",
-                        partyId: item.customerId,
+                        transactionId: { in: transactionIds },
+                        partyId: item?.customerId
                     },
                 })
                 : [];
@@ -222,6 +231,7 @@ async function getOne(id) {
         where: {
             transactionType: "QUOTATION",
             transactionId: data.id,
+            partyId: data?.customerId
         },
     });
     return { statusCode: 0, data: { ...enrichQuotationConversionState(data, paymentData), childRecord } };

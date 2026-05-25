@@ -25,7 +25,7 @@ async function getManagementInsights(query) {
             getSalesData(commonWhere, from, to),
             getCollectionData(commonWhere, from, to),
             getOrderPipeline(commonWhere),
-            getCustomerAdvanceData(commonWhere),
+            getCustomerAdvanceData(commonWhere, from),
             getExpenseData(commonWhere, from, to),
             getTopSellingProducts(commonWhere),
             getRecentDeliveries(commonWhere)
@@ -68,7 +68,7 @@ async function getSalesData(where, from, to) {
         where: { ...where, createdAt: { gte: from, lte: to }, isReturn: false },
         include: { Party: { select: { name: true } } }
     });
-    
+
     const posReturns = await prisma.pos.findMany({
         where: { ...where, createdAt: { gte: from, lte: to }, isReturn: true },
         include: { Party: { select: { name: true } } }
@@ -76,7 +76,7 @@ async function getSalesData(where, from, to) {
 
     const bulkSales = await prisma.salesDelivery.findMany({
         where: { ...where, createdAt: { gte: from, lte: to }, isDeleted: false },
-        include: { 
+        include: {
             Party: { select: { name: true } },
             SalesDeliveryItems: { select: { deliveryQty: true, price: true } }
         }
@@ -84,7 +84,7 @@ async function getSalesData(where, from, to) {
 
     const posTotal = posSales.reduce((acc, curr) => acc + parseFloat(curr.netAmount || 0), 0);
     const returnsTotal = posReturns.reduce((acc, curr) => acc + Math.abs(parseFloat(curr.netAmount || 0)), 0);
-    
+
     const bulkBreakup = bulkSales.map(s => {
         const amount = s.SalesDeliveryItems.reduce((acc, item) => acc + (parseFloat(item.deliveryQty || 0) * parseFloat(item.price || 0)), 0);
         return { id: s.docId || s.id, party: s.Party?.name || 'N/A', amount, type: 'Bulk' };
@@ -143,14 +143,14 @@ async function getOrderPipeline(where) {
 
     const orders = await prisma.saleorder.findMany({
         where: { ...where, isDeleted: false },
-        include: { 
+        include: {
             Party: { select: { name: true } },
             SaleOrderItems: { include: { SalesDeliveryItems: { select: { deliveryQty: true } } } }
         },
         take: 100
     });
 
-    const deliveriesBreakup = orders.filter(so => 
+    const deliveriesBreakup = orders.filter(so =>
         so.SaleOrderItems.some(i => parseFloat(i.qty || 0) > i.SalesDeliveryItems.reduce((s, d) => s + parseFloat(d.deliveryQty || 0), 0))
     ).map(o => ({ id: o.docId || o.id, party: o.Party?.name || 'N/A', amount: parseFloat(o.totalAmount || 0), date: o.createdAt }));
 
@@ -162,7 +162,7 @@ async function getOrderPipeline(where) {
     };
 }
 
-async function getCustomerAdvanceData(where) {
+async function getCustomerAdvanceData(where, from) {
     const parties = await prisma.party.findMany({
         where: { active: true, isClient: true },
         select: { id: true, name: true }
@@ -174,12 +174,12 @@ async function getCustomerAdvanceData(where) {
             select: { deliveryQty: true, price: true }
         });
         const salesTotal = salesRaw.reduce((a, b) => a + (parseFloat(b.deliveryQty || 0) * parseFloat(b.price || 0)), 0);
-        
+
         const payments = await prisma.payment.aggregate({
-            where: { partyId: p.id, isDeleted: false, ...where },
+            where: { partyId: p.id, isDeleted: false, ...where, paymentFlow: "Payout", createdAt: from },
             _sum: { paidAmount: true }
         });
-        
+
         const paidAmount = payments._sum.paidAmount || 0;
         const advance = paidAmount - salesTotal;
         return { party: p.name, amount: advance };

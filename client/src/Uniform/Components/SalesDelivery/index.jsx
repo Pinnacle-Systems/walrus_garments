@@ -51,6 +51,8 @@ const SalesDelivery = () => {
     const [shippingCharge, setShippingCharge] = useState("");
     const [courierChargeEnabled, setCourierChargeEnabled] = useState(false);
     const [courierCharge, setCourierCharge] = useState("");
+    const [receivedAmount, setReceivedAmount] = useState("");
+    const [remainingPaymentCapacity, setRemainingPaymentCapacity] = useState("");
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
 
@@ -62,7 +64,7 @@ const SalesDelivery = () => {
     const { data: saleOrderToConvertData } =
         useGetsaleOrderByIdQuery(convertSaleOrderId, { skip: !convertSaleOrderId });
 
-    console.log(saleOrderToConvertData, "saleOrderToConvertData");
+    console.log(saleOrderToConvertData, "saleOrderToConvertData", convertSaleOrderId);
 
 
     const parseChargeAmount = (value) => {
@@ -98,6 +100,8 @@ const SalesDelivery = () => {
             setPackingChargeEnabled(Boolean(saleOrderData?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
             setShippingChargeEnabled(Boolean(saleOrderData?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
             setCourierChargeEnabled(Boolean(saleOrderData?.courierChargeEnabled) || parseChargeAmount(nextCourierCharge) > 0);
+            setReceivedAmount(saleOrderData?.totalReceivedAmount);
+            setRemainingPaymentCapacity(saleOrderData?.remainingPaymentCapacity);
         }
     }, [saleOrderToConvertData, convertSaleOrderId, dispatch]);
 
@@ -213,6 +217,8 @@ const SalesDelivery = () => {
                         setCourierChargeEnabled={setCourierChargeEnabled}
                         courierCharge={courierCharge}
                         setCourierCharge={setCourierCharge}
+                        receivedAmount={receivedAmount}
+                        setReceivedAmount={setReceivedAmount}
 
 
                     />

@@ -181,33 +181,21 @@ const PaymentForm = ({
     };
 
     const getPayoutOutstandingForSalesOrder = (salesOrder, salesInvoiceList = []) => {
+        console.log(salesOrder, "salesOrder", salesInvoiceList, "salesInvoiceList")
         if (!salesOrder) return 0;
 
         const soReceived = (salesOrder?.paymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
             (acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0
         );
-        const advanceReceived = (salesOrder?.Quotation?.paymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
-            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0
-        );
-        const totalReceived = soReceived + advanceReceived;
+
+        const totalReceived = soReceived;
 
         const soRefunded = (salesOrder?.paymentData || []).filter(i => i.paymentFlow === 'Payout').reduce(
             (acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0
         );
-        const advanceRefunded = (salesOrder?.Quotation?.paymentData || []).filter(i => i.paymentFlow === 'Payout').reduce(
-            (acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0
-        );
-        const totalRefunded = soRefunded + advanceRefunded;
 
+        const totalRefunded = soRefunded;
 
-        console.log({
-            soReceived,
-            advanceReceived,
-            totalReceived,
-            soRefunded,
-            advanceRefunded,
-            totalRefunded,
-        })
 
         const deliveredValue = salesInvoiceList
             .filter(inv => String(inv.saleOrderId) === String(salesOrder.id) || String(inv.refId) === String(salesOrder.id))
@@ -268,7 +256,7 @@ const PaymentForm = ({
             setDiscount(data?.discount || 0)
             setSupplierId(data?.partyId || '')
             setPaymentMode(data?.paymentMode || '');
-            setPaymentType(data?.paymentType || 'ADVANCE')
+            setPaymentType(data?.paymentType || '')
             setPaymentRefNo(data?.paymentRefNo || '');
             setRefId(data?.refId || '');
             setRefDocId(data?.refDocId || '');
@@ -546,6 +534,9 @@ const PaymentForm = ({
 
     const getDocIdOptions = () => {
         let list = [];
+
+        console.log(transactionType, "transactionType", paymentFlow)
+
         if (paymentFlow === "Payout") {
             if (transactionType === "QUOTATION") {
                 list = (quotationList?.data || []).filter(q =>
@@ -554,10 +545,8 @@ const PaymentForm = ({
                 );
             } else if (transactionType === "SALESORDER") {
                 list = (salesOrderList?.data || []).filter(so =>
-                    getPayoutOutstandingForSalesOrder(so, salesInvoiceList?.data) > 0
+                    getPayoutOutstandingForSalesOrder(so, salesOrderList?.data) > 0
                 );
-            } else if (transactionType === "SALESINVOICE") {
-                list = [];
             }
         } else {
             if (transactionType === "QUOTATION") {
@@ -566,9 +555,7 @@ const PaymentForm = ({
             else if (transactionType === "SALESORDER") {
                 list = salesOrderList?.data || [];
             }
-            else if (transactionType === "SALESINVOICE") {
-                list = salesInvoiceList?.data || [];
-            }
+
         }
 
         // Filter by selected party if supplierId exists
@@ -621,18 +608,6 @@ const PaymentForm = ({
                     setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
                 }
 
-            } else {
-                setPaymentHistory(selectedTransaction?.paymentData || []);
-            }
-        } else if (transactionType === "SALESINVOICE") {
-            const billVal = calculateQuotationNetAmount(selectedTransaction?.SalesInvoiceItems, selectedTransaction);
-            if (!id) {
-                setTotalBillAmount(billVal.toFixed(2));
-                if (paymentFlow === "Payout") {
-                    setOutStandingAmount(0);
-                } else {
-                    setOutStandingAmount(getSalesInvoiceOutstandingAmount(selectedTransaction).toFixed(2));
-                }
             } else {
                 setPaymentHistory(selectedTransaction?.paymentData || []);
             }
@@ -895,7 +870,8 @@ const PaymentForm = ({
                                             const pendingQuos = (quotationList?.data || []).filter(
                                                 q => String(q.customerId) === String(supplierId) && (!q.Saleorder || q.Saleorder.length === 0)
                                             );
-                                            return pendingQuos.length > 0;
+                                            console.log(pendingQuos, "pendingQuos", quotationList);
+                                            return pendingQuos.length > 0 ? true : false;
                                         }
                                         return true;
                                     }).map((type) => (

@@ -218,8 +218,11 @@ const SaleOrderReport = ({
                   </th>
                   <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                     <div>Customer</div>
-
                   </th>
+                  <th className="w-16  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                    <div>Received Amount</div>
+                  </th>
+
                   <th className="w-36   px-3  font-bold text-[13px]  text-gray-900  text-center ">
 
                     Status
@@ -280,7 +283,9 @@ const SaleOrderReport = ({
                       }}
                     />
                   </th>
+                  <th className="w-36  px-1  font-bold text-[13px]  text-gray-900  text-center ">
 
+                  </th>
                   <th className="w-36  px-1  font-bold text-[13px]  text-gray-900  text-center ">
 
                   </th>
@@ -332,12 +337,15 @@ const SaleOrderReport = ({
                           ? ` / ${dataObj?.Party?.BranchType?.name}`
                           : ""
                           }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`}                            </td>
+                      <td className="py-1.5 text-center text-green-500 font-bold">{parseFloat(dataObj?.totalReceivedAmount).toFixed(2)} </td>
+
                       <td className="py-1.5 text-center">
                         <StatusBadge status={dataObj?.deliveryStatus} />
                       </td>
                       {rowActions && (
                         <td className="border-gray-200 px-2 h-8">
                           <div className="flex items-center justify-end">
+
                             {onConvertToDelivery && (
                               <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
                                 <Tooltip title={dataObj?.canConvertToDelivery ? "Create Sales Delivery" : (dataObj?.deliveryStatus || "Delivery blocked")} arrow>

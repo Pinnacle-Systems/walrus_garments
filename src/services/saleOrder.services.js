@@ -73,11 +73,19 @@ function buildRemainingSaleOrderItems(saleOrderItems = [], salesDeliveries = [],
 }
 
 function getTotalReceivedAmountForSaleOrder(saleOrder) {
-    return roundMoney((saleOrder?.Quotation?.paymentData || []).reduce(
+    return roundMoney((saleOrder?.Quotation?.paymentData || [])?.filter(i => i.paymentFlow !== "Payout")?.reduce(
         (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
         0
     ) || 0);
 }
+
+function getTotalPayoutAmountForSaleOrder(saleOrder) {
+    return roundMoney((saleOrder?.Quotation?.paymentData || [])?.filter(i => i.paymentFlow === "Payout")?.reduce(
+        (acc, curr) => acc + parseFloat(curr?.paidAmount || 0),
+        0
+    ) || 0);
+}
+
 
 function getTotalReturnedAmountForSaleOrder(saleOrder) {
     const returnAmount = (saleOrder?.SalesDelivery || []).reduce((acc, delivery) => {
@@ -90,7 +98,16 @@ function getTotalReturnedAmountForSaleOrder(saleOrder) {
     return roundMoney(returnAmount);
 }
 
-function calculateDeliveryNetAmount(deliveryItems = [], { packingChargeEnabled, packingCharge, shippingChargeEnabled, shippingCharge } = {}) {
+function calculateDeliveryNetAmount(deliveryItems = [], { packingChargeEnabled, packingCharge, shippingChargeEnabled, shippingCharge,
+    courierChargeEnabled, courierCharge
+} = {}) {
+
+
+    console.log("============================================");
+    console.log("packingCharge", packingCharge);
+    console.log("shippingCharge", shippingCharge);
+    console.log("courierCharge", courierCharge);
+    console.log("============================================");
 
 
     const lineNetAmount = (deliveryItems || []).reduce((acc, curr) => {
@@ -121,8 +138,10 @@ function calculateDeliveryNetAmount(deliveryItems = [], { packingChargeEnabled, 
 
     const packingAmount = packingChargeEnabled ? (parseFloat(packingCharge || 0) || 0) : 0;
     const shippingAmount = shippingChargeEnabled ? (parseFloat(shippingCharge || 0) || 0) : 0;
+    const courierAmount = courierChargeEnabled ? (parseFloat(courierCharge || 0) || 0) : 0;
 
-    return roundMoney(lineNetAmount + packingAmount + shippingAmount);
+
+    return roundMoney(lineNetAmount + packingAmount + shippingAmount + courierAmount);
 }
 
 function getRemainingPaymentCapacityForSaleOrder(saleOrder) {
@@ -149,6 +168,42 @@ function getDeliveredQty(saleOrderItems = [], salesDeliveries = []) {
     };
 }
 
+
+function getDeliveryGoodsValue(saleOrder) {
+
+
+    const deliveryAmount = (saleOrder?.SalesDelivery || []).reduce((acc, salesDelivery) => (
+        acc + calculateDeliveryNetAmount(salesDelivery?.SalesDeliveryItems, salesDelivery)
+    ), 0);
+
+
+
+
+
+    return roundMoney(deliveryAmount);
+}
+
+
+
+function getReturnGoodsvalue(saleOrder) {
+    const returnAmount = (saleOrder?.SalesDelivery || []).reduce((acc, salesDelivery) => {
+        return acc + (salesDelivery?.SalesReturn || []).reduce((srAcc, sr) => {
+            const ledgerCredit = (sr?.Ledger || []).find(l => l.EntryType === "Credit_Note")?.amount || 0;
+            return srAcc + parseFloat(ledgerCredit);
+        }, 0);
+    }, 0);
+
+    const retunPaidAmount = (saleOrder?.SalesDelivery || []).reduce((acc, salesDelivery) => {
+        return acc + (salesDelivery?.SalesReturn || []).reduce((srAcc, sr) => {
+            const ledgerCredit = (sr?.Ledger || []).find(l => l.EntryType === "Debit_Note")?.amount || 0;
+            return srAcc + parseFloat(ledgerCredit);
+        }, 0);
+    }, 0);
+
+    return roundMoney(returnAmount);
+}
+
+
 function getSaleOrderDeliveryState(saleOrder, quotationWithPayments = saleOrder?.Quotation) {
     const remainingSaleOrderItems = buildRemainingSaleOrderItems(
         saleOrder?.SaleOrderItems,
@@ -157,6 +212,11 @@ function getSaleOrderDeliveryState(saleOrder, quotationWithPayments = saleOrder?
     const qtyState = getDeliveredQty(saleOrder?.SaleOrderItems, saleOrder?.SalesDelivery);
     const saleOrderWithPayments = { ...saleOrder, Quotation: quotationWithPayments };
     const totalReceivedAmount = roundMoney(getTotalReceivedAmountForSaleOrder(saleOrderWithPayments));
+    const totalPayoutAmount = roundMoney(getTotalPayoutAmountForSaleOrder(saleOrderWithPayments));
+
+    const totalDeliveryGoodsValue = getDeliveryGoodsValue(saleOrder)
+    const totalRetunGoodsValue = getReturnGoodsvalue(saleOrder)
+
     const remainingPaymentCapacity = roundMoney(getRemainingPaymentCapacityForSaleOrder(saleOrderWithPayments));
     const hasRemainingQty = qtyState.remainingQty > 0.0001;
     const hasDeliveredQty = qtyState.deliveredQty > 0.0001;
@@ -168,10 +228,13 @@ function getSaleOrderDeliveryState(saleOrder, quotationWithPayments = saleOrder?
 
     return {
         // remainingSaleOrderItems,
-        totalReceivedAmount,
+        receivedAmount: totalReceivedAmount,
+        totalReceivedAmount: totalReceivedAmount - (totalPayoutAmount + totalDeliveryGoodsValue),
+        totalPayoutAmount,
         remainingPaymentCapacity,
         deliveryStatus,
         canConvertToDelivery: hasRemainingQty && remainingPaymentCapacity > 0,
+        totalDeliveryGoodsValue
     };
 }
 
@@ -354,6 +417,12 @@ async function get(req) {
                 select: {
                     id: true,
                     docId: true,
+                    packingChargeEnabled: true,
+                    packingCharge: true,
+                    shippingChargeEnabled: true,
+                    shippingCharge: true,
+                    courierChargeEnabled: true,
+                    courierCharge: true,
                     SalesDeliveryItems: {
                         select: {
                             saleOrderItemId: true,
@@ -363,6 +432,11 @@ async function get(req) {
                             uomId: true,
                             hsnId: true,
                             deliveryQty: true,
+                            price: true,
+                            taxPercent: true,
+                            taxMethod: true,
+                            discountType: true,
+                            discountValue: true,
                             SalesReturnItems: {
                                 select: {
                                     qty: true
@@ -376,8 +450,12 @@ async function get(req) {
                                 where: {
                                     EntryType: "Credit_Note"
                                 }
-                            }
-                        }
+                            },
+                            id: true,
+                            docId: true,
+
+                        },
+
                     }
                 }
             },
@@ -394,33 +472,40 @@ async function get(req) {
     });
 
 
-    let paymentData = [];
-    let saleOrderPaymentData = [];
+
+
     const enrichedData = await Promise.all(data.map(async (saleOrder) => {
-        let quotationWithPayments = saleOrder?.Quotation;
-        if (saleOrder?.Quotation?.id) {
+
+        let paymentData = [];
+        let saleOrderPaymentData = [];
+        let quotationWithPayments
+
+        if (saleOrder?.Quotation?.id && saleOrder?.customerId) {
             paymentData = await prisma.payment.findMany({
                 where: {
                     transactionType: "QUOTATION",
                     transactionId: saleOrder.Quotation.id,
+                    partyId: saleOrder?.customerId
                 },
             });
 
         }
-        if (saleOrder?.id) {
+        if (saleOrder?.id && saleOrder?.customerId) {
             saleOrderPaymentData = await prisma.payment.findMany({
                 where: {
                     transactionType: "SALESORDER",
                     transactionId: saleOrder.id,
+                    partyId: saleOrder?.customerId
                 },
             });
         }
 
 
-        // quotationWithPayments = {
-        //     ...saleOrder.Quotation,
-        //     paymentData: [...paymentData, ...saleOrderPaymentData],
-        // };
+
+
+
+        // console.log(saleOrder?.customerId, "paymentData", paymentData)
+        // console.log(saleOrder?.customerId, "saleOrderPaymentData", saleOrderPaymentData)
 
 
         quotationWithPayments = saleOrder.Quotation
@@ -431,7 +516,8 @@ async function get(req) {
             : {
                 paymentData: [...paymentData, ...saleOrderPaymentData],
             };
-        console.log(quotationWithPayments, "quotationWithPayments")
+        // console.log(saleOrder?.customerId, "quotationWithPayments", quotationWithPayments,)
+
 
         const state = getSaleOrderDeliveryState(saleOrder, quotationWithPayments);
 
@@ -545,8 +631,8 @@ async function getOne(id) {
         });
     }
 
-    console.log(paymentData, "paymentData")
-    console.log(saleOrderPaymentData, "saleOrderPaymentData")
+    // console.log(paymentData, "paymentData")
+    // console.log(saleOrderPaymentData, "saleOrderPaymentData")
 
     quotationWithPayments = {
         ...data.Quotation,

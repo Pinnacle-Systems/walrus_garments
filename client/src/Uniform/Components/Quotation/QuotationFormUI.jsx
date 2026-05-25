@@ -729,10 +729,12 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
   function isSupplierOutside() {
     if (supplierDetails) {
-      return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
+      return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU" && supplierDetails?.data?.City?.state?.name !== "TAMILNADU"
     }
     return false
   }
+
+  console.log(supplierDetails, "supplierDetails", supplierDetails?.data?.City?.state?.name !== "TAMIL NADU" && supplierDetails?.data?.City?.state?.name !== "TAMILNADU")
 
   const handleRightClick = (event, rowIndex, type) => {
     event.preventDefault();
@@ -771,6 +773,9 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             hsnList={hsnList?.data}
             taxMethod={taxMethod}
             isSupplierOutside={isSupplierOutside()}
+            packingCharge={packingChargeEnabled ? packingCharge : 0}
+            shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
+            courierCharge={courierChargeEnabled ? courierCharge : 0}
           />
         </PDFViewer>
       </Modal>
@@ -794,6 +799,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
             courierCharge={courierChargeEnabled ? courierCharge : 0}
             terms={terms}
+            isSupplierOutside={isSupplierOutside()}
+
           />
         </PDFViewer>
       </Modal>
