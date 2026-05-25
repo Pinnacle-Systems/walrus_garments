@@ -293,6 +293,12 @@ const QuotationPrintFormat = ({
                   <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                     <div>Customer</div>
                   </th>
+                  <th className="w-36  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                    <div>Minimum Advance Amount</div>
+                  </th>
+                  <th className="w-36  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                    <div>Paid Amount</div>
+                  </th>
                   <th className="w-36 px-3 font-bold text-[13px] text-gray-900 text-center">
                     <div>Status</div>
                   </th>
@@ -351,6 +357,9 @@ const QuotationPrintFormat = ({
                       }}
                     />
                   </th>
+                  <th className=" px-1 font-bold text-[13px] text-gray-900 text-center"></th>
+                  <th className="w-36 px-1 font-bold text-[13px] text-gray-900 text-center"></th>
+
                   <th className="w-36 px-1 font-bold text-[13px] text-gray-900 text-center"></th>
                   <th className="w-40  px-1  font-bold text-[13px]  text-gray-900  text-center "></th>
 
@@ -396,6 +405,18 @@ const QuotationPrintFormat = ({
                           ? ` / ${dataObj?.Party?.BranchType?.name}`
                           : ""
                           }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`}                         </td>
+                      <td className="py-1.5 text-center  text-green-500 font-bold">
+                        <span style={{ color: "#F97316", fontWeight: 600 }}>
+                          {parseFloat(dataObj?.minimumAdvancePayment).toFixed(2)}                        </span>
+                      </td>
+
+                      <td className="py-1.5 text-center  text-green-500 font-bold">
+                        <span style={{ color: "#16A34A", fontWeight: 600 }}>
+                          {parseFloat(dataObj?.paidAmount).toFixed(2)}
+                        </span>
+                      </td>
+
+
                       <td className="py-1.5 text-center">
                         <StatusBadge status={dataObj?.quotationStatus} />
                       </td>
@@ -403,7 +424,7 @@ const QuotationPrintFormat = ({
                         <td className="border-gray-200 px-2 h-8">
                           <div className="flex items-center justify-end">
                             <div className="flex items-center gap-1 pr-2 border-r border-gray-300">
-                              {shouldShowAdvanceReceipt(dataObj) && onMakePayment && (
+                              {shouldShowAdvanceReceipt(dataObj) && onMakePayment && dataObj?.Saleorder?.length === 0 && (
                                 <Tooltip title="Advance Receipt" arrow>
                                   <button
                                     className="p-1.5 rounded-md bg-orange-50 text-orange-600 hover:bg-orange-100 transition"

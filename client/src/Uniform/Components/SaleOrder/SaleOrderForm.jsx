@@ -634,24 +634,50 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
           label: "Packing",
           checked: packingChargeEnabled,
           onToggle: (checked) => {
-            setPackingChargeEnabled(checked);
+            // Checkbox-a uncheck panna try pannum pothu...
             if (!checked) {
+              // Manual-a enter panna value > 0 irukka nu check panrom
+              if (packingCharge && parseFloat(packingCharge) > 0) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Please remove the packing charge value first',
+                });
+                return; // Inganaye stop aagidum, uncheck aagathu, value-um remove aagathu
+              }
+
+              // Value ethum illana, normal-a uncheck aagalam
+              setPackingChargeEnabled(false);
               setPackingCharge("");
-            } else if (!packingCharge) {
-              setPackingCharge("0.00");
+            } else {
+              // Checkbox-a check pannum pothu...
+              setPackingChargeEnabled(true);
+              if (!packingCharge) {
+                setPackingCharge("0.00");
+              }
             }
           },
-        },
+        }
+        ,
         {
           key: "shippingChargeToggle",
           label: "Shipping",
           checked: shippingChargeEnabled,
           onToggle: (checked) => {
-            setShippingChargeEnabled(checked);
             if (!checked) {
+              if (shippingCharge && parseFloat(shippingCharge) > 0) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Please remove the shipping charge value first',
+                });
+                return;
+              }
+              setShippingChargeEnabled(false);
               setShippingCharge("");
-            } else if (!shippingCharge) {
-              setShippingCharge("0.00");
+            } else {
+              setShippingChargeEnabled(true);
+              if (!shippingCharge) {
+                setShippingCharge("0.00");
+              }
             }
           },
         },
@@ -660,11 +686,21 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
           label: "Courier",
           checked: courierChargeEnabled,
           onToggle: (checked) => {
-            setCourierChargeEnabled(checked);
             if (!checked) {
+              if (courierCharge && parseFloat(courierCharge) > 0) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Please remove the courier charge value first',
+                });
+                return;
+              }
+              setCourierChargeEnabled(false);
               setCourierCharge("");
-            } else if (!courierCharge) {
-              setCourierCharge("0.00");
+            } else {
+              setCourierChargeEnabled(true);
+              if (!courierCharge) {
+                setCourierCharge("0.00");
+              }
             }
           },
         },
@@ -793,6 +829,10 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             sizeList={sizeList?.data}
             colorList={colorList?.data}
             uomList={uomList?.data}
+            packingCharge={packingChargeEnabled ? packingCharge : 0}
+            shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
+            courierCharge={courierChargeEnabled ? courierCharge : 0}
+            isSupplierOutside={isSupplierOutside()}
           />
         </PDFViewer>
       </Modal>
@@ -815,6 +855,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             packingCharge={packingChargeEnabled ? packingCharge : 0}
             shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
             courierCharge={courierChargeEnabled ? courierCharge : 0}
+            isSupplierOutside={isSupplierOutside()}
+
             terms={terms}
           />
         </PDFViewer>

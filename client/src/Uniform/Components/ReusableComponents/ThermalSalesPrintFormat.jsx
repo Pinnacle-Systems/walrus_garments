@@ -199,7 +199,7 @@ const ThermalSalesPrintFormat = ({
             <Text style={tw('text-xxs')}>{taxableAmount.toFixed(2)}</Text>
           </View>
 
-          {/* {isSupplierOutside ? (
+          {isSupplierOutside ? (
             igstTotal > 0 && (
               <View style={tw('flex flex-row w-full justify-between')}>
                 <Text style={tw('text-xxs')}>IGST :</Text>
@@ -221,7 +221,7 @@ const ThermalSalesPrintFormat = ({
                 </View>
               )}
             </>
-          )} */}
+          )}
 
           <View style={tw('flex flex-row w-full justify-between')}>
             <Text style={tw('text-xxs')}>Tax Amount :</Text>
@@ -233,10 +233,7 @@ const ThermalSalesPrintFormat = ({
             <Text style={tw('text-xxs font-bold')}>{(taxableAmount + totalTax).toFixed(2)}</Text>
           </View>
 
-          <View style={tw('flex flex-row w-full justify-between')}>
-            <Text style={tw('text-xxs')}>Round off :</Text>
-            <Text style={tw('text-xxs')}>{(netAmount - (taxableAmount + totalTax + extraCharges)).toFixed(2)}</Text>
-          </View>
+
 
           {parseFloat(packingCharge || 0) > 0 && (
             <View style={tw('flex flex-row w-full justify-between')}>
@@ -258,7 +255,10 @@ const ThermalSalesPrintFormat = ({
               <Text style={tw('text-xxs')}>{parseFloat(courierCharge).toFixed(2)}</Text>
             </View>
           )}
-
+          <View style={tw('flex flex-row w-full justify-between')}>
+            <Text style={tw('text-xxs')}>Round off :</Text>
+            <Text style={tw('text-xxs')}>{(netAmount - (taxableAmount + totalTax + extraCharges)).toFixed(2)}</Text>
+          </View>
           <View style={tw('flex flex-row w-full justify-between py-1 border-t border-black border-dashed mt-1')}>
             <Text style={tw('text-xs font-bold')}>NET TOTAL :</Text>
             <Text style={tw('text-xs font-bold')}>Rs. {netAmount.toFixed(2)}</Text>

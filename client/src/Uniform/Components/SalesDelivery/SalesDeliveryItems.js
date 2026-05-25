@@ -305,7 +305,7 @@ const SalesDeliveryItems = ({
         const subTotal = discountedAmount || 0;
         const taxTotal = subTotal * (taxRate / 100 || 0);
 
-        console.log(line, subTotal, "subTotal")
+        // console.log(line, subTotal, "subTotal")
 
         return { subTotal, taxTotal, total: subTotal + taxTotal };
     };

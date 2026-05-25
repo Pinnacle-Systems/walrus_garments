@@ -43,7 +43,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   shippingChargeEnabled, setShippingChargeEnabled,
   shippingCharge, setShippingCharge,
   courierChargeEnabled, setCourierChargeEnabled,
-  courierCharge, setCourierCharge,
+  courierCharge, setCourierCharge, receivedAmount, setReceivedAmount
 
 
 
@@ -91,6 +91,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   } = refs;
 
 
+  console.log(receivedAmount, "receivedAmount")
 
   const childRecord = useRef(0);
   const { branchId, companyId, userId, finYearId } = getCommonParams()
@@ -125,7 +126,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
   const { data: saleOrderList } = useGetsaleOrderQuery({ params });
-  const { data: selectedSaleOrderData } = useGetsaleOrderByIdQuery(linkedSaleOrderId, { skip: !linkedSaleOrderId || id });
+  // const { data: selectedSaleOrderData, isLoading: selectedSaleOrderLoading, isFetching: selectedSaleOrderFetching } = useGetsaleOrderByIdQuery(linkedSaleOrderId, { skip: !linkedSaleOrderId || id });
 
 
   const {
@@ -138,7 +139,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [updateData] = useUpdateSalesDeliveryMutation();
 
   useEffect(() => {
-    if (convertSaleOrderId && String(linkedSaleOrderId || "") !== String(convertSaleOrderId)) {
+    if (convertSaleOrderId && String(linkedSaleOrderId) !== String(convertSaleOrderId)) {
       setLinkedSaleOrderId(convertSaleOrderId);
     }
   }, [convertSaleOrderId, linkedSaleOrderId]);
@@ -148,21 +149,22 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const inwardTyperef = useRef(null);
 
 
-  useEffect(() => {
-    if (inwardTyperef.current && !id) {
-      inwardTyperef.current.focus();
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (selectedSaleOrderData) {
+  //     setReceivedAmount(selectedSaleOrderData?.data?.totalReceivedAmount)
+  //   }
+  // }, [selectedSaleOrderLoading, selectedSaleOrderFetching, selectedSaleOrderData]);
 
 
+  // console.log(selectedSaleOrderData, "selectedSaleOrderData")
+  console.log(linkedSaleOrderId, "linkedSaleOrderId", id, 'id')
 
 
-  const syncFormWithDb = useCallback((data) => {
+  const syncFormWithDb = useCallback((data, forceClear = false) => {
 
 
     const today = new Date()
-    if (linkedSaleOrderId && !id) return
-
+    if (linkedSaleOrderId && !id && !forceClear) return;
     if (id) {
       setReadOnly(true);
     } else {
@@ -196,7 +198,11 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     setPackingChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextPackingCharge) > 0);
     setShippingChargeEnabled(Boolean(data?.shippingChargeEnabled) || parseChargeAmount(nextShippingCharge) > 0);
     setCourierChargeEnabled(Boolean(data?.courierChargeEnabled) || parseChargeAmount(nextCourierCharge) > 0);
-    setLinkedSaleOrderId(data?.saleOrderId ? data?.saleOrderId : '')
+    if (!convertSaleOrderId) {
+      setLinkedSaleOrderId(data?.saleOrderId ? data?.saleOrderId : '')
+
+    }
+    setReceivedAmount(data?.receivedAmount ? data?.receivedAmount : 0)
     if (data?.branchId) {
       branchIdFromApi.current = data?.branchId
     }
@@ -250,10 +256,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
     return false
   }
-  const effectiveRemainingPaymentCapacity = selectedSaleOrderData?.data?.remainingPaymentCapacity ?? remainingPaymentCapacity;
-  const effectiveTotalReceivedAmount = selectedSaleOrderData?.data?.totalReceivedAmount ?? totalReceivedAmount;
+  // const effectiveRemainingPaymentCapacity = selectedSaleOrderData?.data?.remainingPaymentCapacity ?? remainingPaymentCapacity;
+  // const effectiveTotalReceivedAmount = selectedSaleOrderData?.data?.totalReceivedAmount ?? totalReceivedAmount;
 
-
+  console.log(receivedAmount, "receivedAmount")
 
 
 
@@ -267,6 +273,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       } else {
         returnData = await callback(data).unwrap();
       }
+
+      invalidateTagsDispatch()
+
+
       if (returnData.statusCode === 1) {
         // toast.error(returnData.message);
         Swal.fire({
@@ -278,23 +288,21 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
         if (returnData.statusCode === 0) {
           dispatch(push({ name: "SALES DELIVERY", id: null }));
-          setLinkedSaleOrderId("")
           Swal.fire({
             icon: 'success',
             title: `${text || 'Saved'} Successfully`,
 
           });
-          invalidateTagsDispatch()
           if (nextProcess == "new") {
-            syncFormWithDb(undefined);
+            setLinkedSaleOrderId("")
+
+            syncFormWithDb(undefined, true);
             onNew()
           }
           else if (nextProcess == "close") {
-            onClose()
-          }
-          else {
-            setId(returnData?.data?.id);
+            setLinkedSaleOrderId("")
 
+            onClose()
           }
 
 
@@ -331,6 +339,16 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       return
     }
 
+    if (!linkedSaleOrderId) {
+      Swal.fire({
+        title: "Sale Order Is is Missing",
+        icon: "warning",
+      });
+      return
+    }
+
+
+
 
     if (
       !isGridDatasValid(
@@ -352,10 +370,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       });
       return;
     }
-    if (linkedSaleOrderId && effectiveRemainingPaymentCapacity < adjustedNetAmount) {
+    if (receivedAmount < adjustedNetAmount) {
       Swal.fire({
         title: "Insufficient Payment",
-        text: `Please adjust line items to ensure the new net total is within the payment received (Rs.${parseFloat(effectiveRemainingPaymentCapacity || 0).toFixed(2)}).`,
+        text: `Please adjust line items to ensure the new net total is within the payment received (Rs.${parseFloat(receivedAmount || 0).toFixed(2)}).`,
         icon: "warning",
       });
       return;
@@ -467,8 +485,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const { subtotal, taxAmount, netAmount } = calculateTotals();
   const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0) + (courierChargeEnabled ? parseChargeAmount(courierCharge) : 0);
   const adjustedNetAmount = netAmount + extraCharges;
-  const activeLinkedSaleOrder = selectedSaleOrderData?.data || linkedSaleOrder || singleData?.data?.Saleorder;
-  const linkedSaleOrderDocId = activeLinkedSaleOrder?.docId || "";
+  // const activeLinkedSaleOrder = selectedSaleOrderData?.data || linkedSaleOrder || singleData?.data?.Saleorder;
+  // const linkedSaleOrderDocId = activeLinkedSaleOrder?.docId || "";
   const chargeRows = [
     ...(packingChargeEnabled
       ? [{
@@ -543,40 +561,40 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     setContextMenu(null);
   };
 
-  const summaryItems = [
-    { label: "No", value: docId },
-    { label: "Date", value: date },
-    { label: "Sale Order", value: linkedSaleOrderDocId || "" },
-    {
-      label: "Customer",
-      value:
-        supplierDetails?.data?.name ||
-        findFromList(customerId, supplierList?.data, "name") ||
-        findFromList(customerId, supplierList?.data, "aliasName"),
-    },
-    {
-      label: "Phone",
-      value:
-        supplierDetails?.data?.contactPersonNumber ||
-        findFromList(customerId, supplierList?.data, "contactPersonNumber"),
-    },
-    {
-      label: "Address",
-      value:
-        supplierDetails?.data?.address ||
-        findFromList(customerId, supplierList?.data, "address"),
-    },
-    ...(linkedSaleOrderId ? [
-      {
-        label: "Received Payment",
-        value: `Rs.${parseFloat(effectiveTotalReceivedAmount || 0).toFixed(2)}`,
-      },
-      {
-        label: "Remaining Capacity",
-        value: `Rs.${parseFloat(effectiveRemainingPaymentCapacity || 0).toFixed(2)}`,
-      },
-    ] : []),
-  ];
+  // const summaryItems = [
+  //   { label: "No", value: docId },
+  //   { label: "Date", value: date },
+  //   { label: "Sale Order", value: linkedSaleOrderDocId || "" },
+  //   {
+  //     label: "Customer",
+  //     value:
+  //       supplierDetails?.data?.name ||
+  //       findFromList(customerId, supplierList?.data, "name") ||
+  //       findFromList(customerId, supplierList?.data, "aliasName"),
+  //   },
+  //   {
+  //     label: "Phone",
+  //     value:
+  //       supplierDetails?.data?.contactPersonNumber ||
+  //       findFromList(customerId, supplierList?.data, "contactPersonNumber"),
+  //   },
+  //   {
+  //     label: "Address",
+  //     value:
+  //       supplierDetails?.data?.address ||
+  //       findFromList(customerId, supplierList?.data, "address"),
+  //   },
+  //   ...(linkedSaleOrderId ? [
+  //     {
+  //       label: "Received Payment",
+  //       value: `Rs.${parseFloat(effectiveTotalReceivedAmount || 0).toFixed(2)}`,
+  //     },
+  //     {
+  //       label: "Remaining Capacity",
+  //       value: `Rs.${parseFloat(effectiveRemainingPaymentCapacity || 0).toFixed(2)}`,
+  //     },
+  //   ] : []),
+  // ];
 
   const handleTermTemplateChange = (value) => {
     setTerm(value);
@@ -597,30 +615,97 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         label: blend?.name,
         templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
+      // chargeOptions={[
+      //   {
+      //     key: "packingChargeToggle",
+      //     label: "Packing",
+      //     checked: packingChargeEnabled,
+      //     onToggle: (checked) => {
+      //       setPackingChargeEnabled(checked);
+      //       if (!checked) {
+      //         setPackingCharge("");
+      //       } else if (!packingCharge) {
+      //         setPackingCharge("0.00");
+      //       }
+      //     },
+      //   },
+      //   {
+      //     key: "shippingChargeToggle",
+      //     label: "Shipping",
+      //     checked: shippingChargeEnabled,
+      //     onToggle: (checked) => {
+      //       setShippingChargeEnabled(checked);
+      //       if (!checked) {
+      //         setShippingCharge("");
+      //       } else if (!shippingCharge) {
+      //         setShippingCharge("0.00");
+      //       }
+      //     },
+      //   },
+      //   {
+      //     key: "courierChargeToggle",
+      //     label: "Courier",
+      //     checked: courierChargeEnabled,
+      //     onToggle: (checked) => {
+      //       setCourierChargeEnabled(checked);
+      //       if (!checked) {
+      //         setCourierCharge("");
+      //       } else if (!courierCharge) {
+      //         setCourierCharge("0.00");
+      //       }
+      //     },
+      //   },
+      // ]}
       chargeOptions={[
         {
           key: "packingChargeToggle",
           label: "Packing",
           checked: packingChargeEnabled,
           onToggle: (checked) => {
-            setPackingChargeEnabled(checked);
+            // Checkbox-a uncheck panna try pannum pothu...
             if (!checked) {
+              // Manual-a enter panna value > 0 irukka nu check panrom
+              if (packingCharge && parseFloat(packingCharge) > 0) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Please remove the packing charge value first',
+                });
+                return; // Inganaye stop aagidum, uncheck aagathu, value-um remove aagathu
+              }
+
+              // Value ethum illana, normal-a uncheck aagalam
+              setPackingChargeEnabled(false);
               setPackingCharge("");
-            } else if (!packingCharge) {
-              setPackingCharge("0.00");
+            } else {
+              // Checkbox-a check pannum pothu...
+              setPackingChargeEnabled(true);
+              if (!packingCharge) {
+                setPackingCharge("0.00");
+              }
             }
           },
-        },
+        }
+        ,
         {
           key: "shippingChargeToggle",
           label: "Shipping",
           checked: shippingChargeEnabled,
           onToggle: (checked) => {
-            setShippingChargeEnabled(checked);
             if (!checked) {
+              if (shippingCharge && parseFloat(shippingCharge) > 0) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Please remove the shipping charge value first',
+                });
+                return;
+              }
+              setShippingChargeEnabled(false);
               setShippingCharge("");
-            } else if (!shippingCharge) {
-              setShippingCharge("0.00");
+            } else {
+              setShippingChargeEnabled(true);
+              if (!shippingCharge) {
+                setShippingCharge("0.00");
+              }
             }
           },
         },
@@ -629,11 +714,21 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
           label: "Courier",
           checked: courierChargeEnabled,
           onToggle: (checked) => {
-            setCourierChargeEnabled(checked);
             if (!checked) {
+              if (courierCharge && parseFloat(courierCharge) > 0) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Please remove the courier charge value first',
+                });
+                return;
+              }
+              setCourierChargeEnabled(false);
               setCourierCharge("");
-            } else if (!courierCharge) {
-              setCourierCharge("0.00");
+            } else {
+              setCourierChargeEnabled(true);
+              if (!courierCharge) {
+                setCourierCharge("0.00");
+              }
             }
           },
         },
@@ -736,6 +831,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
             colorList={colorList?.data}
             uomList={uomList?.data}
             hsnList={hsnList?.data}
+            packingCharge={packingChargeEnabled ? packingCharge : 0}
+            shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
+            courierCharge={courierChargeEnabled ? courierCharge : 0}
+            isSupplierOutside={isSupplierOutside()}
           />
         </PDFViewer>
       </Modal>
@@ -759,6 +858,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
             shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
             courierCharge={courierChargeEnabled ? courierCharge : 0}
             terms={terms}
+            isSupplierOutside={isSupplierOutside()}
+
           />
         </PDFViewer>
       </Modal>
@@ -780,7 +881,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         onClose={onClose}
         headerOpen={isHeaderOpen}
         setHeaderOpen={setIsHeaderOpen}
-        summaryItems={summaryItems}
+        // summaryItems={summaryItems}
         openStateClassName="max-h-[600px] opacity-100 overflow-visible"
         footer={footerContent}
         headerContent={(
@@ -834,34 +935,46 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                   disabled
                 />
               </div>
-              <div className="col-span-2">
-                <DropdownInput
-                  name="Linked Sale Order"
-                  options={dropDownListObject(
-                    id
-                      ? saleOrderList?.data
-                      : saleOrderList?.data?.filter((item) =>
-                        (item?.canConvertToDelivery || String(item?.id) === String(linkedSaleOrderId)) &&
-                        item?.customerId === customerId
-                      ),
-                    "docId",
-                    "id"
-                  )}
-                  value={linkedSaleOrderId}
-                  setValue={(value) => { setLinkedSaleOrderId(value); }}
-                  clear
-                  readOnly={Boolean(id) || readOnly}
-                />
+              <div className="col-span-4 flex flex-row gap-2">
+                <div className="col-span-1">
+                  <DropdownInput
+                    name="Linked Sale Order"
+                    options={dropDownListObject(
+                      id
+                        ? saleOrderList?.data
+                        : saleOrderList?.data?.filter((item) =>
+                          (item?.canConvertToDelivery || String(item?.id) === String(linkedSaleOrderId)) &&
+                          item?.customerId === customerId
+                        ),
+                      "docId",
+                      "id"
+                    )}
+                    value={linkedSaleOrderId}
+                    setValue={(value) => { setLinkedSaleOrderId(value); }}
+                    clear
+                    readOnly={Boolean(id) || readOnly}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <button
+                    className="1 px-2 py-0.5 mt-6 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
+                    onClick={() => setIsSelectionModalOpen(true)(true)}
+                    disabled={id}
+                  >
+                    Fill Sale Order
+                  </button>
+                </div>
+                <div>
+                  <TextInput
+                    name="Received Amount"
+                    value={
+                      receivedAmount}
+                    disabled
+                    required
+                  />
+                </div>
               </div>
-              <div className="col-span-2">
-                <button
-                  className="1 px-2 py-0.5 mt-6 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
-                  onClick={() => setIsSelectionModalOpen(true)(true)}
-                  disabled={id}
-                >
-                  Load from Sale Order
-                </button>
-              </div>
+
             </TransactionHeaderSection>
 
           </div>

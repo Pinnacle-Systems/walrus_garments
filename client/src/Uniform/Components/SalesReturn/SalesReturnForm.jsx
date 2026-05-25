@@ -241,10 +241,10 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     setSpecialInstructions(data?.specialInstructions ? data?.specialInstructions : "")
     setRemarks(data?.remarks ? data?.remarks : "")
     setTerms(data?.terms ? data?.terms : "")
-    const nextReturnCharge = formatChargeValue(data?.packingCharge);
+    const nextReturnCharge = formatChargeValue(data?.returnCharge);
     setReturnCharge(nextReturnCharge);
-    setReturnChargeEnabled(Boolean(data?.packingChargeEnabled) || parseChargeAmount(nextReturnCharge) > 0);
-    setReturnChargeType("Flat");
+    setReturnChargeEnabled(Boolean(data?.returnChargeEnabled) || parseChargeAmount(nextReturnCharge) > 0);
+    setReturnChargeType(data?.returnChargeType ? data?.returnChargeType : "Flat");
     setSalesType(data?.returnType ? data?.returnType : "Return");
     setExchangeItems(data?.ExchangeItems || []);
     if (data?.branchId) {
