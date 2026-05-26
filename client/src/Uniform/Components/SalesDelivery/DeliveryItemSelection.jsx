@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useGetsaleOrderByIdQuery } from '../../../redux/uniformService/saleOrderServices';
 import Swal from 'sweetalert2';
 
-const DeliveryItemsSelection = ({ linkedSaleOrderId, setDeliveryItems, deliveryItems, setDeliveryItemSelection, onClose }) => {
+const DeliveryItemsSelection = ({ linkedSaleOrderId, setDeliveryItems, deliveryItems, setDeliveryItemSelection, onClose,
+    setReceivedAmount
+}) => {
     const [selectedIndices, setSelectedIndices] = useState([]);
     const [saleOrderItems, setSaleOrderItems] = useState([]);
 
@@ -17,6 +19,9 @@ const DeliveryItemsSelection = ({ linkedSaleOrderId, setDeliveryItems, deliveryI
     useEffect(() => {
         if (saleorderData?.data?.remaingSaleOrderItems) {
             setSaleOrderItems(saleorderData.data.remaingSaleOrderItems);
+        }
+        if (saleorderData?.data?.totalReceivedAmount) {
+            setReceivedAmount(saleorderData.data.totalReceivedAmount)
         }
     }, [saleorderData]);
 

@@ -95,7 +95,7 @@ const POSSidebar = ({
                                 type="text"
                                 placeholder="Customer Name"
                                 value={guestName}
-                                onChange={(e) => setGuestName(e.target.value)}
+                                onChange={(e) => setGuestName(e.target.value.trim().toUpperCase())}
                                 disabled={selectedReportSaleId || isReturnMode}
                                 className="w-full px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 transition-all disabled:opacity-50"
                             />

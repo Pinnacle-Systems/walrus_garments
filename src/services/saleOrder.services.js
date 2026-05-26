@@ -1,7 +1,7 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
-import { getYearShortCodeForFinYear } from '../utils/helper.js';
+import { getDateFromDateTime, getDateFromDateTimeYear, getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 
 function parseQty(value) {
@@ -351,6 +351,20 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
     return newDocId
 }
 
+function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data) {
+    return data.filter(item =>
+        (searchPoDate ? (
+            String(getDateFromDateTime(item.createdAt)).includes(searchPoDate) ||
+            String(getDateFromDateTimeYear(item.createdAt)).includes(searchPoDate)
+        ) : true) &&
+        (searchDueDate ? (
+            String(getDateFromDateTime(item.dueDate)).includes(searchDueDate) ||
+            String(getDateFromDateTimeYear(item.dueDate)).includes(searchDueDate)
+        ) : true) &&
+        (searchPoType ? (item.poType.toLowerCase().includes(searchPoType.toLowerCase())) : true)
+    )
+}
+
 async function get(req) {
     const { companyId, active, serachDocNo, searchQuotation, searchDate, supplier } = req.query
     let data = await prisma.saleorder.findMany({
@@ -472,6 +486,7 @@ async function get(req) {
     });
 
 
+    data = manualFilterSearchData(searchDate, "", "", data)
 
 
     const enrichedData = await Promise.all(data.map(async (saleOrder) => {
@@ -504,19 +519,17 @@ async function get(req) {
 
 
 
-        // console.log(saleOrder?.customerId, "paymentData", paymentData)
-        // console.log(saleOrder?.customerId, "saleOrderPaymentData", saleOrderPaymentData)
+
 
 
         quotationWithPayments = saleOrder.Quotation
             ? {
-                ...saleOrder.Quotation,   // id, docId will now appear
+                ...saleOrder.Quotation,
                 paymentData: [...paymentData, ...saleOrderPaymentData],
             }
             : {
                 paymentData: [...paymentData, ...saleOrderPaymentData],
             };
-        // console.log(saleOrder?.customerId, "quotationWithPayments", quotationWithPayments,)
 
 
         const state = getSaleOrderDeliveryState(saleOrder, quotationWithPayments);

@@ -3,7 +3,7 @@ import FormHeader from "../../../Basic/components/FormHeader"
 import { amountInWords, findFromList, formatAmountIN, getCommonParams, getDateFromDateTime } from "../../../Utils/helper";
 import { PaymentFlow, paymentModes, PaymentType, TransactionAgainst } from "../../../Utils/DropdownData";
 import { useDispatch } from "react-redux";
-import { useGetPartyByIdQuery, useGetPartyQuery, useGetPartyOutstandingBalanceQuery } from "../../../redux/services/PartyMasterService";
+import { useGetPartyByIdQuery, useGetPartyQuery, useGetPartyOutstandingBalanceQuery, useGetPartyCreditBalanceQuery } from "../../../redux/services/PartyMasterService";
 import moment from "moment";
 import { toast } from "react-toastify";
 import { DropdownInputNew, ReusableSearchableInputNewCustomerwithBranches, TextInputNew } from "../../../Inputs";
@@ -97,7 +97,10 @@ const PaymentForm = ({
             0
         );
 
-        const actualNetReceived = receivedAmount - refundedAmount;
+        // const actualNetReceived = receivedAmount - refundedAmount;
+
+        const actualNetReceived = receivedAmount;
+
 
         return Math.max(0, quotationNetAmount - actualNetReceived);
     };
@@ -162,7 +165,10 @@ const PaymentForm = ({
             0
         );
 
-        const actualNetReceived = (receivedAmount + advanceReceivedAmount) - (refundedAmount + advanceRefundedAmount);
+        // const actualNetReceived = (receivedAmount + advanceReceivedAmount) - (refundedAmount + advanceRefundedAmount);
+        const actualNetReceived = (receivedAmount + advanceReceivedAmount);
+
+        console.log()
 
         return Math.max(0, salesOrderNetAmount - actualNetReceived);
     };
@@ -221,22 +227,34 @@ const PaymentForm = ({
     const { data: allData, isLoading, isFetching } = useGetPaymentQuery({ params: { branchId, } });
 
     const { data: singleData } = useGetPaymentByIdQuery(id, { skip: !id });
-    // const {
-    //     data: PartyData,
-    //     isFetching: isSingleFetching,
-    //     isLoading: isSingleLoading,
-    // } = useGetPartyByIdQuery(supplierId, { skip: !supplierId });
+    const [adjustedCreditAmount, setAdjustedCreditAmount] = useState('');
+    const [isAdjustingCredit, setIsAdjustingCredit] = useState(false);
 
-    // const { data: outstandingData, isFetching: isOutstandingFetching, isLoading: isOutstandingLoading } = useGetPartyOutstandingBalanceQuery(supplierId, {
-    //     skip: !supplierId || paymentFlow !== "Payout"
-    // });
+    const { data: outstandingData } = useGetPartyOutstandingBalanceQuery(supplierId, {
+        skip: !supplierId || paymentFlow !== "Payout"
+    });
+
+    const { data: creditData } = useGetPartyCreditBalanceQuery(supplierId, {
+        skip: !supplierId || paymentFlow === "Payout"
+    });
+
+    const availableCredit = creditData?.data?.creditValue || 0;
 
     // useEffect(() => {
     //     if (paymentFlow === "Payout") {
-    //         // setTotalBillAmount(outstandingData?.data?.outstandingBalance || 0);
     //         setOutStandingAmount(outstandingData?.data?.outstandingBalance || 0);
     //     }
-    // }, [outstandingData, isOutstandingFetching, isOutstandingLoading, supplierId])
+    // }, [outstandingData, supplierId]);
+
+    useEffect(() => {
+        if (!isAdjustingCredit) {
+            setAdjustedCreditAmount('');
+        } else {
+            const billOutStanding = Number(outstandingAmount || 0);
+            const possibleAdjustment = Math.min(billOutStanding, availableCredit);
+            setAdjustedCreditAmount(possibleAdjustment > 0 ? possibleAdjustment : '');
+        }
+    }, [isAdjustingCredit, outstandingAmount, availableCredit]);
 
     console.log(transactionType, "transactionType")
 
@@ -350,11 +368,12 @@ const PaymentForm = ({
         finYearId,
         userId,
         totalBillAmount,
-        totalAmount: parseFloat(paidAmount || 0) + parseFloat(discount || 0),
+        totalAmount: parseFloat(paidAmount || 0) + parseFloat(discount || 0) + parseFloat(adjustedCreditAmount || 0),
         paymentFlow,
         transactionId,
         billAmount,
-        outstandingAmount
+        outstandingAmount,
+        adjustedCreditAmount: isAdjustingCredit ? parseFloat(adjustedCreditAmount || 0) : 0
 
     }
     const validateData = (data) => {
@@ -1007,6 +1026,37 @@ const PaymentForm = ({
                                     disabled
                                 />
                             </div>
+                            {availableCredit > 0 && paymentFlow !== "Payout" && (
+                                <div className="flex flex-col gap-1">
+                                    <label className="flex items-center text-xs font-bold text-gray-600">
+                                        <input
+                                            type="checkbox"
+                                            className="mr-2"
+                                            checked={isAdjustingCredit}
+                                            onChange={(e) => setIsAdjustingCredit(e.target.checked)}
+                                            disabled={readOnly}
+                                        />
+                                        Adjust Credit (Available: ₹{formatAmountIN(availableCredit.toFixed(2))})
+                                    </label>
+                                    {isAdjustingCredit && (
+                                        <input
+                                            type="number"
+                                            value={adjustedCreditAmount}
+                                            onChange={(e) => {
+                                                let val = Number(e.target.value);
+                                                if (val > availableCredit) val = availableCredit;
+                                                if (val > Number(outstandingAmount)) val = Number(outstandingAmount);
+                                                setAdjustedCreditAmount(val);
+                                            }}
+                                            className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-emerald-500 bg-emerald-50"
+                                            placeholder="Adjustment Amount"
+                                            readOnly={readOnly}
+                                            disabled={readOnly}
+                                            max={Math.min(availableCredit, Number(outstandingAmount || 0))}
+                                        />
+                                    )}
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-xs font-bold text-gray-600 mb-1">Paid Amount<span className="text-red-500">*</span> </label>
                                 <input
@@ -1024,9 +1074,9 @@ const PaymentForm = ({
                                 <label className="block text-xs font-bold text-gray-600 mb-1">Balance Amount</label>
                                 <input
                                     type="text"
-                                    value={formatAmountIN(((Number(outstandingAmount || 0) - Number(paidAmount || 0) - Number(discount || 0)) || 0).toFixed(2))}
+                                    value={formatAmountIN(((Number(outstandingAmount || 0) - Number(paidAmount || 0) - Number(discount || 0) - (isAdjustingCredit ? Number(adjustedCreditAmount || 0) : 0)) || 0).toFixed(2))}
                                     onChange={(e) => setBalanceAmount(e.target.value)}
-                                    className={`w-full px-3 py-1 border border-gray-300 bg-slate-100 rounded-lg ${(Number(outstandingAmount) - Number(paidAmount)) < 0 ? 'text-red-500' : 'text-green-800'
+                                    className={`w-full px-3 py-1 border border-gray-300 bg-slate-100 rounded-lg ${(Number(outstandingAmount) - Number(paidAmount) - (isAdjustingCredit ? Number(adjustedCreditAmount || 0) : 0)) < 0 ? 'text-red-500' : 'text-green-800'
                                         } focus:outline-none focus:ring-emerald-500 font-semibold`}
                                     placeholder="0"
                                     disabled

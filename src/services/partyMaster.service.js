@@ -301,7 +301,7 @@ async function create(body) {
         contactPersonName, department, contact, designation, isContact, id, isBranch, branchStateValues, isBranchContact,
         landMark, contactPersonEmail,
         bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo, attachments, parentId,
-        branchTypeId, isB2B, isB2C, aadharNo
+        branchTypeId, isB2B, isB2C, aadharNo, contactPersonNumber
     } = await body
 
 
@@ -318,9 +318,11 @@ async function create(body) {
                 isSupplier: isSupplier ? JSON.parse(isSupplier) : false,
                 isBranch: isBranch ? JSON.parse(isBranch) : false,
 
-                isBuyer, name, aliasName, code: partyCode,
+                isBuyer,
+                name: name ? name.toUpperCase() : null,
+                aliasName: aliasName ? aliasName.toUpperCase() : null, code: partyCode,
                 active: active ? JSON.parse(active) : false,
-                displayName,
+                displayName: displayName ? displayName.toUpperCase() : null,
 
                 address, landMark,
                 cityId: cityId ? parseInt(cityId) : undefined, pincode: pincode ? parseInt(pincode) : undefined,
@@ -342,7 +344,7 @@ async function create(body) {
                 designation: designation ? designation : null,
                 department: department ? department : null,
                 contactPersonEmail: contactPersonEmail ? contactPersonEmail : null,
-                contactPersonNumber: contactNumber ? contactNumber : null,
+                contactPersonNumber: contactNumber || contactPersonNumber ? contactNumber || contactPersonNumber : null,
                 branchTypeId: branchTypeId ? parseInt(branchTypeId) : undefined,
                 parentId: parentId ? parseInt(parentId) : undefined,
 
@@ -668,7 +670,7 @@ async function getPartyOutstandingBalance(id) {
     if (!party) return NoRecordFound("party");
 
     const ledgerDebit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Debit').reduce((acc, l) => acc + (l.amount || 0), 0);
-    const ledgerCredit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Credit').reduce((acc, l) => acc + (l.amount || 0), 0);
+    const ledgerCredit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Credit' && l.EntryType !== 'Credit_Note').reduce((acc, l) => acc + (l.amount || 0), 0);
 
     // 🔹 Consolidated Delivery Value from Ledger (Now includes Sales Delivery, Returns, and POS)
     const totalDeliveryValue = ledgerDebit - ledgerCredit;
@@ -679,7 +681,8 @@ async function getPartyOutstandingBalance(id) {
     const totalPayoutAmount = (party.Payment || []).filter(pay => pay.paymentFlow === "Payout").reduce((acc, pay) => acc + parseFloat(pay.paidAmount || 0), 0);
     const totalPayments = totalReceiptAmount - totalPayoutAmount;
 
-    const outstandingBalance = Math.round((totalDeliveryValue - totalPayments) * 100) / 100;
+    // const outstandingBalance = Math.round((totalDeliveryValue - totalPayments) * 100) / 100;
+    const outstandingBalance = Math.round((totalDeliveryValue) * 100) / 100;
 
     return {
         statusCode: 0,
@@ -691,6 +694,35 @@ async function getPartyOutstandingBalance(id) {
             totalPayoutAmount: Math.round(totalPayoutAmount * 100) / 100,
             totalPayments: Math.round(totalPayments * 100) / 100,
             outstandingBalance: Math.abs(outstandingBalance)
+        }
+    };
+}
+
+async function getPartyCreditBalance(id) {
+    const party = await prisma.party.findUnique({
+        where: {
+            id: parseInt(id)
+        },
+        include: {
+            Ledger: true
+        }
+    });
+
+
+    console.log(party, 'party')
+
+    if (!party) return NoRecordFound("party");
+
+    const creditValue = (party.Ledger || []).filter(l =>
+        (l.EntryType === 'Credit_Note' && l.creditOrDebit === 'Credit') ||
+        (l.EntryType === 'Debit_Note')
+    ).reduce((acc, l) => acc + (l.amount || 0), 0);
+
+    return {
+        statusCode: 0,
+        data: {
+            id: party.id,
+            creditValue: creditValue
         }
     };
 }
@@ -711,6 +743,6 @@ export {
     getContactOne,
     updateContact,
     getPartyBranchOne,
-    getPartyOutstandingBalance
+    getPartyOutstandingBalance,
+    getPartyCreditBalance
 }
-

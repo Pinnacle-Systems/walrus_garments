@@ -302,7 +302,7 @@ const SalesReturnItems = ({
                                             <SearchableTableCellSelect
                                                 value={row.itemId}
                                                 options={itemOptions}
-                                                disabled={readOnly}
+                                                disabled={readOnly || true}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "itemId")}
                                                 addNewModalWidth="w-[90%] h-[95%]"
                                                 childComponent={ItemMaster}
@@ -320,7 +320,7 @@ const SalesReturnItems = ({
                                                         value: item.id,
                                                         label: item?.name || "",
                                                     })) || []}
-                                                    disabled={readOnly || !isSizeReady(row)}
+                                                    disabled={readOnly || !isSizeReady(row) || true}
                                                     onChange={(nextValue) => handleInputChange(nextValue, index, "sizeId")}
                                                 />
                                             </td>
@@ -334,7 +334,7 @@ const SalesReturnItems = ({
                                                         value: item.id,
                                                         label: item?.name || "",
                                                     })) || []}
-                                                    disabled={readOnly || !isColorReady(row)}
+                                                    disabled={readOnly || !isColorReady(row) || true}
                                                     onChange={(nextValue) => handleInputChange(nextValue, index, "colorId")}
                                                 />
                                             </td>
@@ -344,7 +344,7 @@ const SalesReturnItems = ({
                                             <SearchableTableCellSelect
                                                 value={row.hsnId}
                                                 options={hsnOptions}
-                                                disabled={readOnly || !row.itemId}
+                                                disabled={readOnly || !row.itemId || true}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "hsnId")}
                                             />
                                         </td>
@@ -395,7 +395,7 @@ const SalesReturnItems = ({
                                                 className={compactNumberInputClassName}
                                                 onFocus={(e) => e.target.select()}
                                                 value={(!row.price) ? 0 : row.price}
-                                                disabled={readOnly || !row.qty}
+                                                disabled={readOnly || !row.qty || true}
                                                 onChange={(e) =>
                                                     handleInputChange(e.target.value, index, "price")
                                                 }
@@ -411,7 +411,7 @@ const SalesReturnItems = ({
                                                 className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 shadow-none outline-none focus:bg-transparent focus:outline-none"
                                                 value={row.barcodeType || "REGULAR"}
                                                 onChange={(e) => handleInputChange(e.target.value, index, "barcodeType")}
-                                                disabled={readOnly}
+                                                disabled={readOnly || true}
                                             >
                                                 {availableBarcodes.length > 0 ? (
                                                     availableBarcodes.map((b) => (
@@ -429,7 +429,7 @@ const SalesReturnItems = ({
                                             <SearchableTableCellSelect
                                                 value={row.taxMethod}
                                                 options={taxMethodOptions}
-                                                disabled={readOnly}
+                                                disabled={readOnly || true}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "taxMethod")}
                                             />
                                         </td>

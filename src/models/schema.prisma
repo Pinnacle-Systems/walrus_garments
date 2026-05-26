@@ -2810,6 +2810,8 @@ enum LedgerEntryType {
   Debit_Note
   Opening_Balance
   Printing_Job_Work
+  Credit_Adjustment
+  Debit_Adjustment
 }
 
 enum LedgerType {
@@ -2841,6 +2843,10 @@ model Ledger {
   salesReturnId     Int?
   Pos               Pos?             @relation(fields: [posId], references: [id], onDelete: Cascade)
   posId             Int?
+  Payment          Payment?        @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  paymentId         Int?             
+  PosPayments       PosPayments?     @relation(fields: [posPaymentId], references: [id], onDelete: Cascade)
+  posPaymentId      Int?             
 }
 
 model ProcessDeliveryReturn {
@@ -5492,36 +5498,37 @@ model PriceTemplateDetails {
 }
 
 model Payment {
-  id              Int       @id @default(autoincrement())
-  docId           String
-  Party           Party     @relation(fields: [partyId], references: [id], onDelete: Restrict)
-  partyId         Int
-  isTaxBill       Boolean   @default(false)
-  Branch          Branch?   @relation(fields: [branchId], references: [id])
-  branchId        Int?
-  createdBy       User      @relation("createdBy", fields: [createdById], references: [id])
-  createdById     Int
-  updatedBy       User?     @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById     Int?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  paymentMode     String
-  isDeleted       Boolean   @default(false)
-  cvv             DateTime?
-  date            DateTime?
-  paidAmount      Int?      @default(0)
-  paymentType     String
-  totalBillAmount Int?
-  discount        Int?      @default(0)
-  paymentRefNo    String?
-  totalAmount     Int?
-  paymentFlow     String?
-  transactionType String?
-  refId           Int?
-  refDocId        String?
-  transaction     String?
-  transactionId   Int?
+  id                Int       @id @default(autoincrement())
+  docId             String
+  Party             Party     @relation(fields: [partyId], references: [id], onDelete: Restrict)
+  partyId           Int
+  isTaxBill         Boolean   @default(false)
+  Branch            Branch?   @relation(fields: [branchId], references: [id])
+  branchId          Int?
+  createdBy         User      @relation("createdBy", fields: [createdById], references: [id])
+  createdById       Int
+  updatedBy         User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById       Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  paymentMode       String
+  isDeleted         Boolean   @default(false)
+  cvv               DateTime?
+  date              DateTime?
+  paidAmount        Int?      @default(0)
+  paymentType       String
+  totalBillAmount   Int?
+  discount          Int?      @default(0)
+  paymentRefNo      String?
+  totalAmount       Int?
+  paymentFlow       String?
+  transactionType   String?
+  refId             Int?
+  refDocId          String?
+  transaction       String?
+  transactionId     Int?
   outstandingAmount Float?
+  Ledger            Ledger[]
 }
 
 model Pos {
@@ -5556,7 +5563,7 @@ model Pos {
   isCancel            Boolean?      @default(false)
   cancelReason        String?
   isExchangeBillId    Int?
-  isBillClosed        Boolean?      @default(false) 
+  isBillClosed        Boolean?      @default(false)
   OriginalBill        SalesReturn[] @relation("OriginalBill")
   ExchangeNewBill     SalesReturn[] @relation("ExchangeNewBill")
   PosItems            PosItems[]    @relation("Bill")
@@ -5617,6 +5624,7 @@ model PosPayments {
   date           DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  Ledger         Ledger[]
 }
 
 model Collections {

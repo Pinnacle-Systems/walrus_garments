@@ -57,6 +57,18 @@ const partyMasterApi = createApi({
       },
       providesTags: ["Party"],
     }),
+    getPartyCreditBalance: builder.query({
+      query: (id) => {
+        return {
+          url: `${PARTY_API}/${id}/credit-balance`,
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+        };
+      },
+      providesTags: ["Party"],
+    }),
     getPartyMaterialById: builder.query({
       query: (id) => {
         return {
@@ -187,6 +199,7 @@ export const {
 
   useGetPartyByIdQuery,
   useGetPartyOutstandingBalanceQuery,
+  useGetPartyCreditBalanceQuery,
   useGetPartyBranchByIdQuery,
   useGetPartyMaterialByIdQuery,
   useGetPartyContactByIdQuery,

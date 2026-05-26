@@ -1,7 +1,7 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
-import { getYearShortCodeForFinYear } from '../utils/helper.js';
+import { getDateFromDateTime, getDateFromDateTimeYear, getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 
 function parseAmount(value) {
@@ -110,13 +110,37 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
     return newDocId
 }
 
+
+function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data) {
+    return data.filter(item =>
+        (searchPoDate ? (
+            String(getDateFromDateTime(item.createdAt)).includes(searchPoDate) ||
+            String(getDateFromDateTimeYear(item.createdAt)).includes(searchPoDate)
+        ) : true) &&
+        (searchDueDate ? (
+            String(getDateFromDateTime(item.dueDate)).includes(searchDueDate) ||
+            String(getDateFromDateTimeYear(item.dueDate)).includes(searchDueDate)
+        ) : true) &&
+        (searchPoType ? (item.poType.toLowerCase().includes(searchPoType.toLowerCase())) : true)
+    )
+}
+
 async function get(req) {
-    const { companyId, active } = req.query;
+    const { companyId, active, serachDocNo, supplier, searchDate } = req.query;
 
     let data = await prisma.quotation.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
-            isDeleted: false
+            isDeleted: false,
+            docId: serachDocNo ? {
+                contains: serachDocNo,
+            } : undefined,
+
+            Party: {
+                name: supplier ? {
+                    contains: supplier,
+                } : undefined,
+            }
         },
         include: {
             Party: {
@@ -153,7 +177,10 @@ async function get(req) {
         }
     });
 
-    console.log("data", data)
+
+    data = manualFilterSearchData(searchDate, "", "", data)
+
+
 
     const result = await Promise.all(
         data.map(async (item) => {

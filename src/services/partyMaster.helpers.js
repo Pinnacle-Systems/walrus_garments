@@ -33,6 +33,17 @@ export const filterBillableParties = (data) => {
         const hasQuotation = (party.Quotation && party.Quotation.length > 0) ||
             (party._count && party._count.Quotation > 0);
 
+        // Calculate if customer has credit value
+        const creditValue = (party.Ledger || []).filter(l => 
+            (l.EntryType === 'Credit_Note' && l.creditOrDebit === 'Credit') || 
+            (l.EntryType === 'Debit_Note')
+        ).reduce((acc, l) => acc + (l.amount || 0), 0);
+        
+        const hasCredit = creditValue > 0;
+
+        // If party has credit, immediately allow it to be shown
+        if (hasCredit) return true;
+
         // If party has sale orders (quotation was converted)
 
         if (hasSaleOrder && party.Saleorder && party.Saleorder.length > 0) {

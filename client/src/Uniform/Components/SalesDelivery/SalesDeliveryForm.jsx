@@ -871,6 +871,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
           deliveryItems={deliveryItems}
           setDeliveryItemSelection={setIsSelectionModalOpen}
           onClose={() => setIsSelectionModalOpen(false)}
+          receivedAmount={receivedAmount}
+          setReceivedAmount={setReceivedAmount}
         />
       </Modal>
 

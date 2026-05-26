@@ -193,7 +193,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     // =========================================================================
     const employees = employeeData?.data || [];
     const recentSales = posData?.data?.slice(0, 50) || [];
-    const customers = (customerData?.data || []).filter(c => c.isB2C);
+    const customers = (customerData?.data || []);
     const locations = locationsData?.data || [];
     const retailLocation = locations.find(l => l.storeName?.toLowerCase().includes('retail'));
     const retailStoreId = retailLocation?.id;
@@ -315,7 +315,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setSelectedCustomer(sale.Party);
             setIsGuestCustomer(false);
             setGuestName(sale.Party.name);
-            setGuestMobile(sale.Party.contact);
+            setGuestMobile(sale.Party.contactPersonNumber);
         } else {
             setSelectedCustomer(null);
             setIsGuestCustomer(true);
@@ -331,6 +331,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         setApprovalStatus(sale.approvalStatus || "NA");
         setCurrentBilStatus(sale.bilStatus ? sale.bilStatus : "NA");
         setIsCancelBill(sale?.isCancel ? sale?.isCancel : false);
+        setAvailableCredit(sale?.availableCredit || 0)
 
     }, [itemsData, retailStoreId]);
 
@@ -890,7 +891,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         const cleanPhone = val.replace(/\D/g, '').substring(0, 10);
         setGuestMobile(cleanPhone);
         if (cleanPhone.length === 10) {
-            const hit = customers.find(c => (c.contact || '').toString().replace(/\D/g, '') === cleanPhone);
+            const hit = customers.find(c => (c.contactPersonNumber || '').toString().replace(/\D/g, '') === cleanPhone);
             if (hit) {
                 setSelectedCustomer(hit);
                 setIsGuestCustomer(false);
@@ -998,7 +999,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             return;
         }
 
-        const currentPhone = selectedCustomer ? selectedCustomer.contact : guestMobile;
+        const currentPhone = selectedCustomer ? selectedCustomer.contactPersonNumber : guestMobile;
         const phoneRegex = /^[0-9]{10}$/;
         const cleanPhone = currentPhone?.toString().replace(/\D/g, '') || '';
 
@@ -1039,7 +1040,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const handleRequestDiscount = async () => {
         if (cart.length === 0) { Swal.fire({ title: "Error", text: "Cart is empty", icon: "error" }); return; }
 
-        const currentPhone = selectedCustomer ? selectedCustomer.contact : guestMobile;
+        const currentPhone = selectedCustomer ? selectedCustomer.contactPersonNumber : guestMobile;
         const phoneRegex = /^[0-9]{10}$/;
         const cleanPhone = currentPhone?.toString().replace(/\D/g, '') || '';
 
@@ -1067,12 +1068,23 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         try {
             let customerId = selectedCustomer?.id;
             if (isGuestCustomer) {
-                const guestPayload = { name: guestName || 'Walk-in Customer', contact: guestMobile, isClient: true, isB2C: true, companyId, userId, partyCode: `WALK-${guestMobile.slice(-4)}-${Math.floor(Math.random() * 1000)}`, active: true, address: 'Walk-in Store', pincode: '000000', gstNo: 'N/A' };
+                const existingCustomer = customers.find(c => c.contactPersonNumber === guestMobile && c.isB2C === true);
+                if (existingCustomer) {
+                    Swal.fire({
+                        title: "Customer Already Exists",
+                        text: `The mobile number ${guestMobile} is already registered to ${existingCustomer.name}. Please search and select the existing customer.`,
+                        icon: "warning"
+                    });
+                    setIsProcessing(false);
+                    return;
+                }
+
+                const guestPayload = { name: guestName || 'Walk-in Customer', contactPersonNumber: guestMobile, isClient: true, isB2C: true, companyId, userId, partyCode: `WALK-${guestMobile.slice(-4)}-${Math.floor(Math.random() * 1000)}`, active: true, address: 'Walk-in Store', pincode: '000000', gstNo: 'N/A' };
                 try {
                     const res = await addParty(guestPayload).unwrap();
                     customerId = res.data.id;
                 } catch (e) {
-                    customerId = customers.find(c => c.contact === guestMobile)?.id;
+                    customerId = customers.find(c => c.contactPersonNumber === guestMobile)?.id;
                     if (!customerId) throw new Error("Could not register guest.");
                 }
             }
@@ -1141,7 +1153,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const handleSaveAndPrint = async () => {
         if (cart.length === 0 || isProcessing) return;
 
-        const currentPhone = selectedCustomer ? selectedCustomer.contact : guestMobile;
+        const currentPhone = selectedCustomer ? selectedCustomer.contactPersonNumber : guestMobile;
         const phoneRegex = /^[0-9]{10}$/;
         const cleanPhone = currentPhone?.toString().replace(/\D/g, '') || '';
 
@@ -1188,12 +1200,27 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         try {
             let customerId = selectedCustomer?.id;
             if (isGuestCustomer) {
-                const guestPayload = { name: guestName || 'Walk-in Customer', contact: guestMobile, isClient: true, isB2C: true, companyId, userId, partyCode: `WALK-${guestMobile.slice(-4)}-${Math.floor(Math.random() * 1000)}`, active: true, address: 'Walk-in Store', pincode: '000000', gstNo: 'N/A' };
+                const existingCustomer = customers.find(c => c.contactPersonNumber === guestMobile);
+                if (existingCustomer) {
+                    Swal.fire({
+                        title: "Customer Already Exists",
+                        text: `The mobile number ${guestMobile} is already registered to ${existingCustomer.name}. Please search and select the existing customer.`,
+                        icon: "warning"
+                    });
+                    setIsProcessing(false);
+                    return;
+                }
+
+                const guestPayload = {
+                    name: guestName || 'Walk-in Customer', contactPersonNumber: guestMobile, isClient: true,
+                    isB2C: existingCustomer ? false : true,
+                    companyId, userId, partyCode: `WALK-${guestMobile.slice(-4)}-${Math.floor(Math.random() * 1000)}`, active: true
+                };
                 try {
                     const res = await addParty(guestPayload).unwrap();
                     customerId = res.data.id;
                 } catch (e) {
-                    customerId = customers.find(c => c.contact === guestMobile)?.id;
+                    customerId = customers.find(c => c.contactPersonNumber === guestMobile)?.id;
                     if (!customerId) throw new Error("Could not register guest.");
                 }
             }
@@ -1261,7 +1288,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 const printPayload = {
                     docId: apiResponse?.data?.docId || docId,
                     date: new Date(),
-                    customerData: selectedCustomer || { name: guestName, contact: guestMobile },
+                    customerData: selectedCustomer || { name: guestName, contactPersonNumber: guestMobile },
                     items: cart,
                     payments: { cash: paidCash, upi: paidUPI, card: paidCard },
                     summary: { subtotal, tax, discount, total, received: Math.abs(receivedAmount), balance: Math.abs(balanceReturn), roundOff },
@@ -1320,7 +1347,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setSelectedCustomer(bill.Party);
             setIsGuestCustomer(false);
             setGuestName(bill.Party.name);
-            setGuestMobile(bill.Party.contact);
+            setGuestMobile(bill.Party.contactPersonNumber);
         } else {
             setSelectedCustomer(null);
             setIsGuestCustomer(true);

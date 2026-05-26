@@ -253,13 +253,6 @@ const POSMultiTabWrapper = () => {
                         </button>
                     </div>
 
-                    {/* <button
-                        onClick={() => setCurrentView("REPORTS")}
-                        className="flex items-center gap-1.5 px-3 py-1 mb-1 rounded-md bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm ml-4"
-                    >
-                        <FileText size={14} />
-                        Reports
-                    </button> */}
                 </div>
 
                 {/* Render all tabs, hide inactive ones */}

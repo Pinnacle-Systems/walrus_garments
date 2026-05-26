@@ -160,7 +160,7 @@ const PosReports = ({
                                     </td>
                                     <td className="py-2.5 px-3 border-r border-slate-100">
                                         <div className="font-black text-slate-700 uppercase">{sale?.Party?.name || 'Walk-in'}</div>
-                                        {sale?.Party?.contact && <div className="text-[10px] font-bold text-slate-400 mt-0.5">+91 {sale.Party.contact}</div>}
+                                        {sale?.Party?.contactPersonNumber && <div className="text-[10px] font-bold text-slate-400 mt-0.5">+91 {sale.Party.contactPersonNumber}</div>}
                                     </td>
                                     <td className="py-2.5 text-center border-r border-slate-100">
                                         <div className="flex flex-col items-center gap-1">

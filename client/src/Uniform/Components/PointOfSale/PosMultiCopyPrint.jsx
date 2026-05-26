@@ -68,7 +68,7 @@ const PosMultiCopyPrint = ({
       <View style={tw('flex flex-row justify-between mb-1 py-1 border-t border-b border-gray-200')}>
         <View style={tw('flex flex-col w-1/2')}>
           <Text style={tw('text-xxs font-bold')}>{customerData?.name?.toUpperCase() || "WALK-IN CUSTOMER"}</Text>
-          {customerData?.contact && <Text style={tw('text-[6pt]')}>M: {customerData.contact.toString()}</Text>}
+          {customerData?.contactPersonNumber && <Text style={tw('text-[6pt]')}>M: {customerData.contactPersonNumber.toString()}</Text>}
         </View>
         <View style={tw('flex flex-col items-end w-1/2')}>
           <Text style={tw('text-xxs')}># {docId}</Text>

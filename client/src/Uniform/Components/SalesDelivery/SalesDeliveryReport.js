@@ -62,6 +62,7 @@ const SalesDeliveryReport = ({
   const [searchDate, setSearchDate] = useState("");
   const [supplier, setSupplier] = useState("");
   const [searchMaterial, setSearchMaterial] = useState("")
+  const [saleOrderNo, setSaleOrderNo] = useState("")
 
 
   const [totalCount, setTotalCount] = useState(0);
@@ -73,7 +74,8 @@ const SalesDeliveryReport = ({
     searchClientName,
     searchDate,
     supplier,
-    searchMaterial
+    searchMaterial,
+    saleOrderNo
 
   };
 
@@ -85,6 +87,7 @@ const SalesDeliveryReport = ({
     searchDate,
     supplier,
     searchMaterial,
+    saleOrderNo
   ]);
 
 
@@ -240,7 +243,10 @@ const SalesDeliveryReport = ({
                     <div>Delivery Date</div>
 
                   </th>
+                  <th className="w-24 px-3  font-bold text-[13px]  text-gray-900  text-center ">
+                    <div>Sale Order No</div>
 
+                  </th>
                   <th className="w-96  px-3   font-bold text-[13px] text-gray-900  text-center ">
                     <div>Customer</div>
 
@@ -284,18 +290,18 @@ const SalesDeliveryReport = ({
                       }}
                     />
                   </th>
-
-                  {/* <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
+                  <th className="w-32  px-1  font-bold text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
                       className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                       placeholder="Search"
-                      value={searchMaterial}
+                      value={saleOrderNo}
                       onChange={(e) => {
-                        setSearchMaterial(e.target.value);
+                        setSaleOrderNo(e.target.value);
                       }}
                     />
-                  </th> */}
+                  </th>
+
                   <th className="w-96  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                     <input
                       type="text"
@@ -307,6 +313,7 @@ const SalesDeliveryReport = ({
                       }}
                     />
                   </th>
+
                   <th className="w-36  px-1  font-bold text-[13px]  text-gray-900  text-center ">
 
                   </th>
@@ -349,6 +356,7 @@ const SalesDeliveryReport = ({
                       <td className="py-1.5 text-left">
                         {getDateFromDateTimeToDisplay(dataObj.createdAt)}
                       </td>
+                      <td className="py-1.5 text-left">{dataObj.Saleorder?.docId} </td>
 
 
                       <td className="py-1.5 text-left">   {`${dataObj?.Party?.name}${dataObj?.Party?.BranchType?.name

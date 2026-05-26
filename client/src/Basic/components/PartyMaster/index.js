@@ -546,17 +546,29 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       });
       return;
     }
-    if (!data?.gstNo?.trim() && !data?.panNo?.trim() && !data?.aadharNo?.trim() && !data?.contactNumber?.trim()) {
+
+    if (!data?.contactNumber?.trim()) {
       Swal.fire({
         icon: 'error',
         title: 'Required Field Missing',
-        text: 'Please fill in at least one: PAN, Aadhar, GST or Contact Number',
-        didClose: () => {
-          nameRef.current?.focus();
-        }
-      });
+        text: 'Please fill in at least one: Contact Number',
+
+      })
       return false;
     }
+
+    // if (!data?.gstNo?.trim() && !data?.panNo?.trim() && !data?.aadharNo?.trim()) {
+    //     Swal.fire({
+    //       icon: 'error',
+    //       title: 'Required Field Missing',
+    //       text: 'Please fill in at least one: PAN, Aadhar, GST Number',
+    //       didClose: () => {
+    //         nameRef.current?.focus();
+    //       }
+    //     });
+    //     return false;
+    //   }
+
 
     if (upperPan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(upperPan)) {
       Swal.fire({
@@ -583,6 +595,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
     }
 
     let foundItem;
+    let foundNumber
 
     if (isBranch) {
       if (id) {
@@ -633,6 +646,34 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
         return false;
       }
     }
+
+
+    if (id) {
+      foundNumber = allData?.data
+        ?.filter((i) => i.id != id)
+        ?.some((item) => item.contactPersonNumber == contactNumber);
+    } else {
+      foundNumber = allData?.data?.some((item) => item.contactPersonNumber == contactNumber);
+    }
+
+
+
+
+
+    if (foundNumber) {
+      Swal.fire({
+        text: `The Contact Number is already exists`,
+        icon: "warning",
+        customClass: {
+          popup: 'swal-custom-height'
+        },
+        didClose: () => {
+          nameRef.current?.focus();
+        }
+      });
+      return false;
+    }
+
 
     if (id) {
       if (!window.confirm("Are you sure update the details ...?")) {
@@ -1320,7 +1361,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                           name="Contact Number"
                           value={contactNumber}
                           setValue={setContactNumber}
-
+                          required={true}
                           readOnly={readOnly}
                           // disabled={childRecord.current > 0}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
@@ -2142,7 +2183,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                             name="Contact Number"
                             value={contactNumber}
                             setValue={setContactNumber}
-
+                            required={true}
                             readOnly={readOnly}
                             // disabled={childRecord.current > 0}
                             className="focus:ring-2 focus:ring-blue-100 w-10"

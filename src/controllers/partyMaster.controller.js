@@ -5,7 +5,7 @@ import {
     kycForm as kycFormService, removePartyBranch as _removePartyBranch , removePartyMaterial as _removePartyMaterial , getMaterialOne  as _getMaterialOne
     ,updateMaterial  as  _updateMaterial  , getContactOne  as _getContactOne , updateContact as _updateContact , removePartyContact as _removePartyContact ,
 getPartyBranchOne  as _getPartyBranchOne, getPartyOutstandingBalance as _getPartyOutstandingBalance ,
-
+getPartyCreditBalance as _getPartyCreditBalance
 
 
 
@@ -268,6 +268,15 @@ async function getPartyOutstandingBalance(req, res, next) {
     }
 }
 
+async function getPartyCreditBalance(req, res, next) {
+    try {
+        res.json(await _getPartyCreditBalance(req.params.id));
+    } catch (err) {
+        console.error(`Error`, err.message);
+        res.json({ statusCode: 1, message: err.message });
+    }
+}
+
 export {
     get,
     getOne,
@@ -287,5 +296,6 @@ export {
  
     updateMaterial,
     updateContact,
-    getPartyOutstandingBalance
+    getPartyOutstandingBalance,
+    getPartyCreditBalance
 };

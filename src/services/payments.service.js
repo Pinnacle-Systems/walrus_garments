@@ -4,6 +4,28 @@ import { getTableRecordWithId } from '../utils/helperQueries.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { prisma } from '../lib/prisma.js';
 
+// Helper to determine Ledger enums based on paymentFlow and party type
+function getLedgerDetails(paymentFlow, isSupplier) {
+    const ledgerType = isSupplier ? "Supplier" : "Customer";
+    let entryType = "Customer_Payment";
+    let creditOrDebit = "Credit";
+    if (paymentFlow === "Receipt") {
+        entryType = "Customer_Payment";
+        creditOrDebit = "Credit";
+    } else if (paymentFlow === "Payout") {
+        entryType = "My_Payment";
+        creditOrDebit = "Debit";
+    } else if (paymentFlow === "Credit Adjustment") {
+        entryType = "Credit_Adjustment";
+        creditOrDebit = "Credit";
+    }
+    else if (paymentFlow === "Debit Adjustment") {
+        entryType = "Debit_Adjustment";
+        creditOrDebit = "Debit";
+    }
+    return { ledgerType, entryType, creditOrDebit };
+}
+
 
 async function getNextDocId(branchId, shortCode, startTime, endTime,) {
     let lastObject = await prisma.payment.findFirst({
@@ -176,7 +198,7 @@ async function getSearch(req) {
 async function create(body) {
     let data;
     try {
-        const { branchId, id, paymentMode, cvv, paymentType, paidAmount, discount, paymentRefNo, supplierId, userId, finYearId, totalBillAmount, totalAmount, paymentFlow, transactionType, refId, refDocId, transaction, transactionId, outstandingAmount } = body;
+        const { branchId, id, paymentMode, cvv, paymentType, paidAmount, discount, paymentRefNo, supplierId, userId, finYearId, totalBillAmount, totalAmount, paymentFlow, transactionType, refId, refDocId, transaction, transactionId, outstandingAmount, adjustedCreditAmount } = body;
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
         const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -210,6 +232,25 @@ async function create(body) {
                     outstandingAmount: outstandingAmount ? parseFloat(outstandingAmount) : undefined,
                 }
             });
+            // Ledger entry creation
+            const party = await tx.party.findUnique({ where: { id: parseInt(supplierId) } });
+            const { ledgerType, entryType, creditOrDebit } = getLedgerDetails(paymentFlow, party?.isSupplier);
+            await tx.ledger.create({
+                data: {
+                    partyId: parseInt(supplierId),
+                    // branchId: parseInt(branchId),
+                    amount: parseFloat(paidAmount),
+                    partyBillDate: dateOnly ? new Date(dateOnly) : undefined,
+                    partyBillNo: newDocId,
+                    EntryType: entryType,
+                    LedgerType: ledgerType,
+                    creditOrDebit: creditOrDebit,
+                    paymentId: data?.id
+                    // refId: data.id,
+                    // refDocId: newDocId,
+                },
+            });
+
         });
 
         return { statusCode: 0, data };
@@ -263,8 +304,39 @@ async function update(id, body) {
                 totalBillAmount: totalBillAmount ? parseInt(totalBillAmount) : undefined,
 
 
-            },
+            }
+
         })
+        // Ledger entry update
+        const partyUpd = await tx.party.findUnique({ where: { id: parseInt(supplierId) } });
+        const { ledgerType: lt, entryType: et, creditOrDebit: cd } = getLedgerDetails(paymentFlow, partyUpd?.isSupplier);
+        const existingLedger = await tx.ledger.findFirst({ where: { paymentId: parseInt(id) } });
+        if (existingLedger) {
+            await tx.ledger.update({
+                where: { id: existingLedger.id },
+                data: {
+                    partyId: parseInt(supplierId),
+                    amount: parseFloat(paidAmount),
+                    partyBillDate: dateOnly ? new Date(dateOnly) : undefined,
+                    EntryType: et,
+                    LedgerType: lt,
+                    creditOrDebit: cd,
+                },
+            });
+        } else {
+            await tx.ledger.create({
+                data: {
+                    paymentId: data.id,
+                    partyId: parseInt(supplierId),
+                    amount: parseFloat(paidAmount),
+                    partyBillDate: dateOnly ? new Date(dateOnly) : undefined,
+                    partyBillNo: data.docId,
+                    EntryType: et,
+                    LedgerType: lt,
+                    creditOrDebit: cd,
+                },
+            });
+        }
     })
     return { statusCode: 0, data };
 };

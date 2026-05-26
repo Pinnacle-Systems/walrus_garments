@@ -795,7 +795,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
                   name="Return Type"
                   options={[
                     { value: "Return", show: "Return" },
-                    { value: "Exchange", show: "Exchange" }
+                    // { value: "Exchange", show: "Exchange" }
                   ]}
                   value={salesType}
                   setValue={setSalesType}

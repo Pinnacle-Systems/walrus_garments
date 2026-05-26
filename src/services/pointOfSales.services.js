@@ -184,7 +184,7 @@ async function getOne(id) {
                 select: {
                     id: true,
                     name: true,
-                    contact: true,
+                    contactPersonNumber: true,
                     isB2C: true,
 
                 }
@@ -735,9 +735,9 @@ async function getPartyCreditBalance(req) {
     });
 
 
-    // console.log("ledgerCredit", ledgerCredit)
-    // console.log("ledgerDebit", ledgerDebit)
-    // console.log("posPayments", posPayments)
+    console.log("ledgerCredit", ledgerCredit)
+    console.log("ledgerDebit", ledgerDebit)
+    console.log("posPayments", posPayments)
 
     const totalDebit = ledgerDebit._sum.amount || 0;
     const totalCredit = ledgerCredit._sum.amount || 0;

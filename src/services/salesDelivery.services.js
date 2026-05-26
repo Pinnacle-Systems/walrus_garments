@@ -1,7 +1,7 @@
 import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
-import { getYearShortCodeForFinYear } from '../utils/helper.js';
+import { getDateFromDateTime, getDateFromDateTimeYear, getYearShortCodeForFinYear } from '../utils/helper.js';
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 import {
     buildStockOutEntries,
@@ -216,17 +216,39 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
     return newDocId
 }
 
+function manualFilterSearchData(searchDate, data) {
+    console.log(data, "data")
+    return data.filter(item =>
+    (searchDate ? (
+        String(getDateFromDateTime(item.createdAt)).includes(searchDate) ||
+        String(getDateFromDateTimeYear(item.createdAt)).includes(searchDate)
+    ) : true)
+    )
+}
+
 async function get(req) {
 
-    const { companyId, active } = req.query
+    const { companyId, active, serachDocNo, saleOrderNo, supplier, searchDate } = req.query
 
     // console.log(companyId, active, "companyId, active ")
 
     let data = await prisma.salesDelivery.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
-            isDeleted: false
-
+            isDeleted: false,
+            docId: serachDocNo ? {
+                contains: serachDocNo,
+            } : undefined,
+            Saleorder: {
+                docId: saleOrderNo ? {
+                    contains: saleOrderNo,
+                } : undefined,
+            },
+            Party: {
+                name: supplier ? {
+                    contains: supplier,
+                } : undefined,
+            }
         },
         include: {
             Party: {
@@ -263,6 +285,7 @@ async function get(req) {
         }
     });
 
+    data = manualFilterSearchData(searchDate, data)
 
 
     return {

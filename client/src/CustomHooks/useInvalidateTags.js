@@ -103,7 +103,10 @@ const useInvalidateTags = () => {
             type: `offersPromotions/invalidateTags`,
             payload: ["offersPromotions"],
         },
-
+        {
+            type: `offersPromotions/invalidateTags`,
+            payload: ["offersPromotions"],
+        },
 
 
 
@@ -167,7 +170,7 @@ const useInvalidateTags = () => {
         },
         {
             type: `saleOrder/invalidateTags`,
-            payload: ["saleOrder"],
+            payload: ["saleOrderList", "saleOrderById"],
         },
         {
             type: `salesInvoice/invalidateTags`,
@@ -181,6 +184,11 @@ const useInvalidateTags = () => {
             type: `salesReturn/invalidateTags`,
             payload: ["salesReturn"],
         },
+
+        {
+            type: `payment/invalidateTags`,
+            payload: ["Payment"],
+        }
 
 
     ];
