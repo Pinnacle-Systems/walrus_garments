@@ -1363,7 +1363,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                           setValue={setContactNumber}
                           required={true}
                           readOnly={readOnly}
-                          // disabled={childRecord.current > 0}
+                          disabled={childRecord}
                           className="focus:ring-2 focus:ring-blue-100 w-10"
                         />
                       </div>
@@ -2185,7 +2185,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                             setValue={setContactNumber}
                             required={true}
                             readOnly={readOnly}
-                            // disabled={childRecord.current > 0}
+                            disabled={childRecord}
                             className="focus:ring-2 focus:ring-blue-100 w-10"
                           />
                         </div>

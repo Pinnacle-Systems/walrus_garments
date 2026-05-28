@@ -5,21 +5,21 @@ import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { prisma } from '../lib/prisma.js';
 
 // Helper to determine Ledger enums based on paymentFlow and party type
-function getLedgerDetails(paymentFlow, isSupplier) {
+function getLedgerDetails(paymentFlow, isSupplier, paymentMode, paymentType) {
     const ledgerType = isSupplier ? "Supplier" : "Customer";
     let entryType = "Customer_Payment";
     let creditOrDebit = "Credit";
-    if (paymentFlow === "Receipt") {
+    if (paymentFlow === "Receipt" && paymentMode !== "Credit_Adjustment") {
         entryType = "Customer_Payment";
         creditOrDebit = "Credit";
-    } else if (paymentFlow === "Payout") {
+    } else if (paymentFlow === "Payout" && paymentType !== "credit-balance") {
         entryType = "My_Payment";
         creditOrDebit = "Debit";
-    } else if (paymentFlow === "Credit Adjustment") {
+    } else if (paymentFlow === "Receipt" && paymentMode === "Credit_Adjustment") {
         entryType = "Credit_Adjustment";
         creditOrDebit = "Credit";
     }
-    else if (paymentFlow === "Debit Adjustment") {
+    else if (paymentFlow === "Payout" && paymentType == "credit-balance") {
         entryType = "Debit_Adjustment";
         creditOrDebit = "Debit";
     }
@@ -234,7 +234,7 @@ async function create(body) {
             });
             // Ledger entry creation
             const party = await tx.party.findUnique({ where: { id: parseInt(supplierId) } });
-            const { ledgerType, entryType, creditOrDebit } = getLedgerDetails(paymentFlow, party?.isSupplier);
+            const { ledgerType, entryType, creditOrDebit } = getLedgerDetails(paymentFlow, party?.isSupplier, paymentMode, paymentType);
             await tx.ledger.create({
                 data: {
                     partyId: parseInt(supplierId),
@@ -309,7 +309,7 @@ async function update(id, body) {
         })
         // Ledger entry update
         const partyUpd = await tx.party.findUnique({ where: { id: parseInt(supplierId) } });
-        const { ledgerType: lt, entryType: et, creditOrDebit: cd } = getLedgerDetails(paymentFlow, partyUpd?.isSupplier);
+        const { ledgerType: lt, entryType: et, creditOrDebit: cd } = getLedgerDetails(paymentFlow, partyUpd?.isSupplier, paymentMode, paymentType);
         const existingLedger = await tx.ledger.findFirst({ where: { paymentId: parseInt(id) } });
         if (existingLedger) {
             await tx.ledger.update({

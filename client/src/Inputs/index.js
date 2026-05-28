@@ -3328,7 +3328,6 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     });
     const [removeData] = useDeletePartyMutation();
 
-    console.log("searchTerm", partyList?.data)
 
 
     /* ---------------------------------- STATE --------------------------------- */
@@ -3385,7 +3384,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       if (!partyList?.data) return;
 
       if (!search.trim()) {
-        setFilteredPages(partyList?.data?.filter(i => show !== "both" ? i[show] : true && !i.isB2C));
+        setFilteredPages(partyList?.data?.filter(i => show !== "both" ? i[show] : true && isRetunBillable ? true : !i.isB2C));
         return;
       }
 

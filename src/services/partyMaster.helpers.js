@@ -34,11 +34,11 @@ export const filterBillableParties = (data) => {
             (party._count && party._count.Quotation > 0);
 
         // Calculate if customer has credit value
-        const creditValue = (party.Ledger || []).filter(l => 
-            (l.EntryType === 'Credit_Note' && l.creditOrDebit === 'Credit') || 
+        const creditValue = (party.Ledger || []).filter(l =>
+            (l.EntryType === 'Credit_Note' && l.creditOrDebit === 'Credit') ||
             (l.EntryType === 'Debit_Note')
         ).reduce((acc, l) => acc + (l.amount || 0), 0);
-        
+
         const hasCredit = creditValue > 0;
 
         // If party has credit, immediately allow it to be shown
@@ -69,42 +69,39 @@ export const filterBillableParties = (data) => {
     });
 };
 
-export const filterReturnBillableParties = (data) => {
-    return data.reduce((acc, party) => {
-        const ledgerDebit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Debit').reduce((sum, l) => sum + (l.amount || 0), 0);
-        const ledgerCredit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Credit').reduce((sum, l) => sum + (l.amount || 0), 0);
+// export const filterReturnBillableParties = (data) => {
+//     return data.reduce((acc, party) => {
+//         const ledgerDebit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Debit').reduce((sum, l) => sum + (l.amount || 0), 0);
+//         const ledgerCredit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Credit').reduce((sum, l) => sum + (l.amount || 0), 0);
 
-        // 🔹 Consolidated Delivery Value from Ledger (Now includes Sales Delivery, Returns, and POS)
-        const totalDeliveryValue = ledgerDebit - ledgerCredit;
+//         const totalDeliveryValue = ledgerDebit - ledgerCredit;
 
-        const totalReceiptAmount = (party.Payment || []).filter(pay => pay.paymentFlow !== "Payout").reduce((sum, pay) => sum + parseFloat(pay.paidAmount || 0), 0);
-        const totalPayoutAmount = (party.Payment || []).filter(pay => pay.paymentFlow === "Payout").reduce((sum, pay) => sum + parseFloat(pay.paidAmount || 0), 0);
-        const totalPayments = totalReceiptAmount - totalPayoutAmount;
+//         const totalReceiptAmount = (party.Payment || []).filter(pay => pay.paymentFlow !== "Payout").reduce((sum, pay) => sum + parseFloat(pay.paidAmount || 0), 0);
+//         const totalPayoutAmount = (party.Payment || []).filter(pay => pay.paymentFlow === "Payout").reduce((sum, pay) => sum + parseFloat(pay.paidAmount || 0), 0);
+//         const totalPayments = totalReceiptAmount - totalPayoutAmount;
 
-        const outstandingBalance = Math.round((totalDeliveryValue - totalPayments) * 100) / 100;
+//         const outstandingBalance = Math.round((totalDeliveryValue - totalPayments) * 100) / 100;
 
-        // "நாம தர வேண்டிய amount" என்றால் outstanding balance negative-ஆக இருக்கும்.
-        // உதாரணத்திற்கு: Sales(100) - Receipt(150) = -50 (நாம தரணும்)
-        if (outstandingBalance < 0) {
-            acc.push({
-                ...party,
-                totalDeliveryValue: Math.round(totalDeliveryValue * 100) / 100,
-                totalReceiptAmount: Math.round(totalReceiptAmount * 100) / 100,
-                totalPayoutAmount: Math.round(totalPayoutAmount * 100) / 100,
-                totalPayments: Math.round(totalPayments * 100) / 100,
-                outstandingBalance: Math.abs(outstandingBalance) // தேவைப்பட்டால் positive ஆக மாற்றி காட்டலாம்
-            });
-        }
-        return acc;
-    }, []);
-};
+
+//         if (outstandingBalance < 0) {
+//             acc.push({
+//                 ...party,
+//                 totalDeliveryValue: Math.round(totalDeliveryValue * 100) / 100,
+//                 totalReceiptAmount: Math.round(totalReceiptAmount * 100) / 100,
+//                 totalPayoutAmount: Math.round(totalPayoutAmount * 100) / 100,
+//                 totalPayments: Math.round(totalPayments * 100) / 100,
+//                 outstandingBalance: Math.abs(outstandingBalance)
+//             });
+//         }
+//         return acc;
+//     }, []);
+// };
 
 export const mapPaymentOutstandingParties = (data) => {
     return data.map(party => {
         const ledgerDebit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Debit').reduce((acc, l) => acc + (l.amount || 0), 0);
         const ledgerCredit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Credit').reduce((acc, l) => acc + (l.amount || 0), 0);
 
-        // 🔹 Consolidated Delivery Value from Ledger (Now includes Sales Delivery, Returns, and POS)
         const totalDeliveryValue = ledgerDebit - ledgerCredit;
 
         const totalReceiptAmount = (party.Payment || []).filter(pay => pay.paymentFlow !== "Payout").reduce((acc, pay) => acc + parseFloat(pay.paidAmount || 0), 0);
@@ -122,3 +119,67 @@ export const mapPaymentOutstandingParties = (data) => {
     });
 };
 
+
+export const filterReturnBillableParties = (data) => {
+    const results = [];
+
+    for (const party of data) {
+        // --- CREDITS ---
+        const customerPayment = (party.Ledger || [])
+            .filter(l => l.creditOrDebit === 'Credit' && l.EntryType === 'Customer_Payment')
+            .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        const creditNote = (party.Ledger || [])
+            .filter(l => l.creditOrDebit === 'Credit' && l.EntryType === 'Credit_Note')
+            .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        const creditAdjustment = (party.Ledger || [])
+            .filter(l => l.creditOrDebit === 'Credit' && l.EntryType === 'Credit_Adjustment')
+            .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        // --- DEBITS ---
+        const sales = (party.Ledger || [])
+            .filter(l => l.creditOrDebit === 'Debit' && l.EntryType === 'Sales')
+            .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        const debitAdjustment = (party.Ledger || [])
+            .filter(l => l.creditOrDebit === 'Debit' && l.EntryType === 'Debit_Adjustment')
+            .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        // --- BALANCE ---
+        const totalCredit = customerPayment + creditNote;
+        const totalDebit = sales + debitAdjustment + creditAdjustment;
+        const outstandingBalance = Math.round((totalCredit - totalDebit) * 100) / 100;
+
+        console.log({
+            partyName: party.name,
+            customerPayment,
+            creditNote,
+        })
+        console.log({
+            partyName: party.name,
+            sales,
+            debitAdjustment,
+            creditAdjustment
+        })
+
+
+        if (outstandingBalance > 0) {
+            results.push({
+                ...party,
+                ledgerBreakdown: {
+                    customerPayment: Math.round(customerPayment * 100) / 100,
+                    creditNote: Math.round(creditNote * 100) / 100,
+                    creditAdjustment: Math.round(creditAdjustment * 100) / 100,
+                    sales: Math.round(sales * 100) / 100,
+                    debitAdjustment: Math.round(debitAdjustment * 100) / 100,
+                    totalCredit: Math.round(totalCredit * 100) / 100,
+                    totalDebit: Math.round(totalDebit * 100) / 100,
+                },
+                outstandingBalance,
+            });
+        }
+    }
+
+    return results;
+};

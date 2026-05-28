@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FormHeader from "../../../Basic/components/FormHeader"
 import { amountInWords, findFromList, formatAmountIN, getCommonParams, getDateFromDateTime } from "../../../Utils/helper";
 import { PaymentFlow, paymentModes, PaymentType, TransactionAgainst } from "../../../Utils/DropdownData";
@@ -23,6 +23,7 @@ import { PDFViewer } from "@react-pdf/renderer";
 import Modal from "../../../UiComponents/Modal";
 import PaymentThermalPrint from "./PaymentThermalPrint";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import { useGetSalesDeliveryQuery } from "../../../redux/uniformService/salesDeliveryServices";
 
 const PaymentForm = ({
     id, setId, onClose, initialReadOnly = false, initialTransactionType, initialTransactionId,
@@ -45,6 +46,10 @@ const PaymentForm = ({
 }) => {
 
     const calculateQuotationNetAmount = (quotationItems = [], quotation) => {
+
+        console.log("quotation", quotation)
+        console.log("quotationItems", quotationItems)
+
         const packingCharge = parseFloat(quotation?.packingCharge || 0);
         const shippingCharge = parseFloat(quotation?.shippingCharge || 0);
         const courierCharge = parseFloat(quotation?.courierCharge || 0);
@@ -52,6 +57,45 @@ const PaymentForm = ({
         const itemsTotal = quotationItems.reduce((acc, curr) => {
             const price = parseFloat(curr?.price || 0);
             const qty = parseFloat(curr?.qty || 0);
+            const taxPercent = parseFloat(curr?.taxPercent || 0);
+            const taxMethod = curr?.taxMethod || "Inclusive";
+            const discountType = curr?.discountType;
+            const discountValue = parseFloat(curr?.discountValue || 0);
+
+            const gross = price * qty;
+            let discountedAmount = gross;
+
+            if (discountType === "Percentage") {
+                discountedAmount = gross - (gross * discountValue) / 100;
+            } else if (discountType === "Flat") {
+                discountedAmount = gross - discountValue;
+            }
+
+            discountedAmount = Math.max(0, discountedAmount);
+
+            if (taxMethod === "Inclusive" && taxPercent > 0) {
+                return acc + discountedAmount;
+            }
+
+            return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+        }, 0);
+
+        return itemsTotal + packingCharge + shippingCharge + courierCharge;
+    };
+
+
+    const calculateSalesDeliveryNetAmount = (quotationItems = [], quotation) => {
+
+        console.log("quotation", quotation)
+        console.log("quotationItems", quotationItems)
+
+        const packingCharge = parseFloat(quotation?.packingCharge || 0);
+        const shippingCharge = parseFloat(quotation?.shippingCharge || 0);
+        const courierCharge = parseFloat(quotation?.courierCharge || 0);
+
+        const itemsTotal = quotationItems.reduce((acc, curr) => {
+            const price = parseFloat(curr?.price || 0);
+            const qty = parseFloat(curr?.deliveryQty || 0);
             const taxPercent = parseFloat(curr?.taxPercent || 0);
             const taxMethod = curr?.taxMethod || "Inclusive";
             const discountType = curr?.discountType;
@@ -165,6 +209,8 @@ const PaymentForm = ({
             0
         );
 
+        console.log(receivedAmount, "receivedAmount")
+
         // const actualNetReceived = (receivedAmount + advanceReceivedAmount) - (refundedAmount + advanceRefundedAmount);
         const actualNetReceived = (receivedAmount + advanceReceivedAmount);
 
@@ -186,8 +232,9 @@ const PaymentForm = ({
         return Math.max(0, totalReceived - totalRefunded);
     };
 
-    const getPayoutOutstandingForSalesOrder = (salesOrder, salesInvoiceList = []) => {
-        console.log(salesOrder, "salesOrder", salesInvoiceList, "salesInvoiceList")
+    const getPayoutOutstandingForSalesOrder = (salesOrder, salesDeliveryList = []) => {
+        console.log(salesOrder, "salesOrder",)
+        console.log(salesDeliveryList, "salesDeliveryList")
         if (!salesOrder) return 0;
 
         const soReceived = (salesOrder?.paymentData || []).filter(i => i.paymentFlow !== 'Payout').reduce(
@@ -203,9 +250,12 @@ const PaymentForm = ({
         const totalRefunded = soRefunded;
 
 
-        const deliveredValue = salesInvoiceList
-            .filter(inv => String(inv.saleOrderId) === String(salesOrder.id) || String(inv.refId) === String(salesOrder.id))
-            .reduce((acc, inv) => acc + calculateQuotationNetAmount(inv?.SalesInvoiceItems, inv), 0);
+        const deliveredValue = salesDeliveryList
+            .filter(inv => String(inv.saleOrderId) === String(salesOrder.id))
+            .reduce((acc, inv) => acc + calculateSalesDeliveryNetAmount(inv?.SalesDeliveryItems, inv), 0);
+
+
+
 
         return Math.max(0, totalReceived - deliveredValue - totalRefunded);
     };
@@ -227,36 +277,27 @@ const PaymentForm = ({
     const { data: allData, isLoading, isFetching } = useGetPaymentQuery({ params: { branchId, } });
 
     const { data: singleData } = useGetPaymentByIdQuery(id, { skip: !id });
-    const [adjustedCreditAmount, setAdjustedCreditAmount] = useState('');
-    const [isAdjustingCredit, setIsAdjustingCredit] = useState(false);
+
 
     const { data: outstandingData } = useGetPartyOutstandingBalanceQuery(supplierId, {
         skip: !supplierId || paymentFlow !== "Payout"
     });
 
     const { data: creditData } = useGetPartyCreditBalanceQuery(supplierId, {
-        skip: !supplierId || paymentFlow === "Payout"
+        skip: !supplierId
     });
 
     const availableCredit = creditData?.data?.creditValue || 0;
-
-    // useEffect(() => {
-    //     if (paymentFlow === "Payout") {
-    //         setOutStandingAmount(outstandingData?.data?.outstandingBalance || 0);
-    //     }
-    // }, [outstandingData, supplierId]);
-
-    useEffect(() => {
-        if (!isAdjustingCredit) {
-            setAdjustedCreditAmount('');
-        } else {
-            const billOutStanding = Number(outstandingAmount || 0);
-            const possibleAdjustment = Math.min(billOutStanding, availableCredit);
-            setAdjustedCreditAmount(possibleAdjustment > 0 ? possibleAdjustment : '');
+    const paymentModeOptions = useMemo(() => {
+        const base = [...paymentModes];
+        if (availableCredit > 0 && paymentFlow !== "Payout") {
+            base.push({ show: "Credit_Adjustment", value: "Credit_Adjustment" });
         }
-    }, [isAdjustingCredit, outstandingAmount, availableCredit]);
+        return base;
+    }, [availableCredit, paymentFlow]);
 
-    console.log(transactionType, "transactionType")
+
+
 
     const syncFormWithDb = useCallback(
         (data) => {
@@ -271,9 +312,14 @@ const PaymentForm = ({
             setDocId(data?.docId ? data?.docId : "New");
             // if (data?.createdAt) setDate(moment.utc(data?.createdAt).format("YYYY-MM-DD"));
             setPaidAmount(data?.paidAmount || '');
-            setDiscount(data?.discount || 0)
-            setSupplierId(data?.partyId || '')
+            setDiscount(data?.discount || 0);
+            setSupplierId(data?.partyId || '');
             setPaymentMode(data?.paymentMode || '');
+            // Auto‑populate credit when mode is Credit_Adjustment
+            if (data?.paymentMode === "Credit_Adjustment") {
+                const max = Math.min(availableCredit, Number(outstandingAmount || 0));
+                setPaidAmount(max > 0 ? max.toString() : '');
+            }
             setPaymentType(data?.paymentType || '')
             setPaymentRefNo(data?.paymentRefNo || '');
             setRefId(data?.refId || '');
@@ -368,12 +414,11 @@ const PaymentForm = ({
         finYearId,
         userId,
         totalBillAmount,
-        totalAmount: parseFloat(paidAmount || 0) + parseFloat(discount || 0) + parseFloat(adjustedCreditAmount || 0),
+        totalAmount: parseFloat(paidAmount || 0) + parseFloat(discount || 0),
         paymentFlow,
         transactionId,
         billAmount,
-        outstandingAmount,
-        adjustedCreditAmount: isAdjustingCredit ? parseFloat(adjustedCreditAmount || 0) : 0
+        outstandingAmount
 
     }
     const validateData = (data) => {
@@ -504,15 +549,27 @@ const PaymentForm = ({
     }
 
 
-
+    console.log(availableCredit, "value", paymentType)
 
     const handleChange = (e) => {
-        const value = e.target.value;
+        const value = parseInt(e.target.value);
 
-        if (paymentFlow == "Payout") {
+
+
+        if (paymentFlow == "Payout" && paymentType != "credit-balance") {
             if (value > outstandingAmount) {
                 Swal.fire({
                     title: `Amount Cannot be Greater than Outstanding Amount(${formatAmountIN(outstandingAmount)})!!!`,
+                    icon: "error",
+
+                });
+                return
+            }
+        }
+        if (paymentType == "credit-balance") {
+            if (value > availableCredit) {
+                Swal.fire({
+                    title: `Amount Cannot be Greater than Available Credit(${formatAmountIN(availableCredit)})!!!`,
                     icon: "error",
 
                 });
@@ -535,6 +592,7 @@ const PaymentForm = ({
     const { data: quotationList } = useGetQuotationQuery({ params: { branchId, finYearId } });
     const { data: salesInvoiceList } = useGetSalesInvoiceQuery({ params: { branchId, finYearId } });
     const { data: salesOrderList } = useGetsaleOrderQuery({ params: { branchId, finYearId } });
+    const { data: salesDeliveryList } = useGetSalesDeliveryQuery({ params: { branchId, finYearId } });
 
     // const paymentHistory = (paymentList?.data || [])
     //     .filter((payment) =>
@@ -554,7 +612,6 @@ const PaymentForm = ({
     const getDocIdOptions = () => {
         let list = [];
 
-        console.log(transactionType, "transactionType", paymentFlow)
 
         if (paymentFlow === "Payout") {
             if (transactionType === "QUOTATION") {
@@ -564,7 +621,7 @@ const PaymentForm = ({
                 );
             } else if (transactionType === "SALESORDER") {
                 list = (salesOrderList?.data || []).filter(so =>
-                    getPayoutOutstandingForSalesOrder(so, salesOrderList?.data) > 0
+                    getPayoutOutstandingForSalesOrder(so, salesDeliveryList?.data) > 0
                 );
             }
         } else {
@@ -584,18 +641,20 @@ const PaymentForm = ({
 
         return list.map(item => ({ show: item.docId, value: item.id }));
     };
+    console.log(transactionType, "transactionType", availableCredit, "availableCredit", outstandingAmount)
 
     useEffect(() => {
-        if (!transactionType || !transactionId) {
-            if (!id) {
-                // setTotalBillAmount('');
-                setOutStandingAmount('')
-                setBillAmount('');
-                setRefDocId('');
-                setRefId('');
-            }
-            return;
-        }
+        // if (!transactionType || !transactionId) {
+        //     if (!id) {
+        //         // setTotalBillAmount('');
+        //         setOutStandingAmount('')
+        //         setBillAmount('');
+        //         setRefDocId('');
+        //         setRefId('');
+        //     }
+        //     return;
+        // }
+
 
         let transactionList = [];
         if (transactionType === "QUOTATION") transactionList = quotationList?.data || [];
@@ -605,44 +664,48 @@ const PaymentForm = ({
             (item) => String(item.id) === String(transactionId)
         );
 
-        console.log(transactionList, "transactionList")
-        if (!selectedTransaction) return;
+        if (selectedTransaction) {
+            if (!id) {
+                setRefId(selectedTransaction.id);
+                setRefDocId(selectedTransaction.docId || "");
 
-        if (!id) {
-            setRefId(selectedTransaction.id);
-            setRefDocId(selectedTransaction.docId || "");
-
-            if (selectedTransaction.customerId && String(supplierId || "") !== String(selectedTransaction.customerId)) {
-                setSupplierId(selectedTransaction.customerId);
+                if (selectedTransaction.customerId && String(supplierId || "") !== String(selectedTransaction.customerId)) {
+                    setSupplierId(selectedTransaction.customerId);
+                }
             }
+
+            if (transactionType === "QUOTATION") {
+                const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems, selectedTransaction);
+                if (!id) {
+                    setTotalBillAmount(billVal.toFixed(2));
+                    if (paymentFlow === "Payout") {
+                        setOutStandingAmount(getPayoutOutstandingForQuotation(selectedTransaction).toFixed(2));
+                    } else {
+                        setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                    }
+
+                } else {
+                    setPaymentHistory(selectedTransaction?.paymentData || []);
+                }
+            } else if (transactionType === "SALESORDER") {
+                const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
+                if (!id) {
+                    setTotalBillAmount(billVal.toFixed(2));
+                    if (paymentFlow === "Payout") {
+                        setOutStandingAmount(getPayoutOutstandingForSalesOrder(selectedTransaction, salesDeliveryList?.data).toFixed(2));
+                    } else {
+                        setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                    }
+                } else {
+                    setPaymentHistory(selectedTransaction?.paymentData || []);
+                }
+            }
+        } else {
+            console.log(selectedTransaction, "selectedTransaction")
+
+            setOutStandingAmount(availableCredit)
         }
 
-        if (transactionType === "QUOTATION") {
-            const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems, selectedTransaction);
-            if (!id) {
-                setTotalBillAmount(billVal.toFixed(2));
-                if (paymentFlow === "Payout") {
-                    setOutStandingAmount(getPayoutOutstandingForQuotation(selectedTransaction).toFixed(2));
-                } else {
-                    setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
-                }
-
-            } else {
-                setPaymentHistory(selectedTransaction?.paymentData || []);
-            }
-        } else if (transactionType === "SALESORDER") {
-            const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
-            if (!id) {
-                setTotalBillAmount(billVal.toFixed(2));
-                if (paymentFlow === "Payout") {
-                    setOutStandingAmount(getPayoutOutstandingForSalesOrder(selectedTransaction, salesInvoiceList?.data).toFixed(2));
-                } else {
-                    setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
-                }
-            } else {
-                setPaymentHistory(selectedTransaction?.paymentData || []);
-            }
-        }
     }, [id, transactionId, transactionType, quotationList, salesInvoiceList, salesOrderList, paymentFlow]);
 
 
@@ -683,6 +746,8 @@ const PaymentForm = ({
                 setTransactionType("QUOTATION");
             } else if (paymentType === "INVOICE") {
                 setTransactionType("SALESORDER");
+            } else if (paymentType === "credit-balance") {
+                setTransactionType("credit-balance");
             }
         }
     }, [paymentType, id]);
@@ -878,7 +943,19 @@ const PaymentForm = ({
                                 </label>
                                 <select
                                     value={paymentType}
-                                    onChange={(e) => setPaymentType(e.target.value)}
+                                    onChange={(e) => {
+                                        console.log(paymentType, "paymentType");
+
+                                        if (paymentType == "") {
+                                            setPaymentType(e.target.value)
+                                        } else {
+                                            setTransactionId("")
+                                            setPaymentType(e.target.value)
+                                            setPaidAmount(0)
+                                        }
+
+                                    }
+                                    }
                                     disabled={areLinkedFieldsLocked}
                                     className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
                                 >
@@ -889,7 +966,6 @@ const PaymentForm = ({
                                             const pendingQuos = (quotationList?.data || []).filter(
                                                 q => String(q.customerId) === String(supplierId) && (!q.Saleorder || q.Saleorder.length === 0)
                                             );
-                                            console.log(pendingQuos, "pendingQuos", quotationList);
                                             return pendingQuos.length > 0 ? true : false;
                                         }
                                         return true;
@@ -898,6 +974,12 @@ const PaymentForm = ({
                                             {type.show}
                                         </option>
                                     ))}
+                                    {(parseInt(availableCredit) > 0 && paymentFlow == "Payout") && (
+                                        <option value="credit-balance">
+                                            Credit Balance ({availableCredit})
+                                        </option>
+                                    )}
+
                                 </select>
                             </div>
                             {/* <div className="mb-2" >
@@ -964,13 +1046,14 @@ const PaymentForm = ({
                                                 const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
                                                 setTotalBillAmount(billVal.toFixed(2));
                                                 if (paymentFlow === "Payout") {
-                                                    setOutStandingAmount(getPayoutOutstandingForSalesOrder(selectedTransaction, salesInvoiceList?.data).toFixed(2));
+                                                    setOutStandingAmount(getPayoutOutstandingForSalesOrder(selectedTransaction, salesDeliveryList?.data).toFixed(2));
                                                 } else {
                                                     setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
                                                 }
                                             }
                                         }
                                     }}
+                                    disabled={paymentType == "credit-balance"}
                                     required
                                 />
                             </div>
@@ -981,13 +1064,26 @@ const PaymentForm = ({
                                 <DropdownInputNew
 
                                     className="text-sm"
-                                    options={paymentModes}
+                                    options={paymentModeOptions}
                                     value={paymentMode}
                                     setValue={setPaymentMode}
                                     required
                                     readOnly={readOnly}
                                 />
                             </div>
+                            {paymentMode == "Credit_Adjustment" && availableCredit > 0 && paymentFlow !== "Payout" && (
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-1">Credit Value</label>
+                                    <input
+                                        type="text"
+                                        onChange={(e) => setPaymentRefNo(e.target.value)}
+                                        value={availableCredit}
+                                        disabled={true}
+                                        className="w-full px-3 py-1 border border-gray-300 text-gray-700 rounded-lg focus:outline-none focus:ring-emerald-500"
+                                        placeholder="Reference No"
+                                    />
+                                </div>
+                            )}
 
 
                             <div>
@@ -1026,37 +1122,7 @@ const PaymentForm = ({
                                     disabled
                                 />
                             </div>
-                            {availableCredit > 0 && paymentFlow !== "Payout" && (
-                                <div className="flex flex-col gap-1">
-                                    <label className="flex items-center text-xs font-bold text-gray-600">
-                                        <input
-                                            type="checkbox"
-                                            className="mr-2"
-                                            checked={isAdjustingCredit}
-                                            onChange={(e) => setIsAdjustingCredit(e.target.checked)}
-                                            disabled={readOnly}
-                                        />
-                                        Adjust Credit (Available: ₹{formatAmountIN(availableCredit.toFixed(2))})
-                                    </label>
-                                    {isAdjustingCredit && (
-                                        <input
-                                            type="number"
-                                            value={adjustedCreditAmount}
-                                            onChange={(e) => {
-                                                let val = Number(e.target.value);
-                                                if (val > availableCredit) val = availableCredit;
-                                                if (val > Number(outstandingAmount)) val = Number(outstandingAmount);
-                                                setAdjustedCreditAmount(val);
-                                            }}
-                                            className="w-full px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-emerald-500 bg-emerald-50"
-                                            placeholder="Adjustment Amount"
-                                            readOnly={readOnly}
-                                            disabled={readOnly}
-                                            max={Math.min(availableCredit, Number(outstandingAmount || 0))}
-                                        />
-                                    )}
-                                </div>
-                            )}
+
                             <div>
                                 <label className="block text-xs font-bold text-gray-600 mb-1">Paid Amount<span className="text-red-500">*</span> </label>
                                 <input
@@ -1070,18 +1136,21 @@ const PaymentForm = ({
                                     placeholder="0"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-600 mb-1">Balance Amount</label>
-                                <input
-                                    type="text"
-                                    value={formatAmountIN(((Number(outstandingAmount || 0) - Number(paidAmount || 0) - Number(discount || 0) - (isAdjustingCredit ? Number(adjustedCreditAmount || 0) : 0)) || 0).toFixed(2))}
-                                    onChange={(e) => setBalanceAmount(e.target.value)}
-                                    className={`w-full px-3 py-1 border border-gray-300 bg-slate-100 rounded-lg ${(Number(outstandingAmount) - Number(paidAmount) - (isAdjustingCredit ? Number(adjustedCreditAmount || 0) : 0)) < 0 ? 'text-red-500' : 'text-green-800'
-                                        } focus:outline-none focus:ring-emerald-500 font-semibold`}
-                                    placeholder="0"
-                                    disabled
-                                />
-                            </div>
+
+                            {paymentType !== "credit-balance" && (
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-1">Balance Amount</label>
+                                    <input
+                                        type="text"
+                                        value={formatAmountIN(((Number(outstandingAmount || 0) - Number(paidAmount || 0) - Number(discount || 0)) || 0).toFixed(2))}
+                                        onChange={(e) => setBalanceAmount(e.target.value)}
+                                        className={`w-full px-3 py-1 border border-gray-300 bg-slate-100 rounded-lg ${(Number(outstandingAmount) - Number(paidAmount)) < 0 ? 'text-red-500' : 'text-green-800'
+                                            } focus:outline-none focus:ring-emerald-500 font-semibold`}
+                                        placeholder="0"
+
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className="mt-5 justify-center items-center">

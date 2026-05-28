@@ -260,52 +260,59 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  const getLineTotals = (line) => {
-    const quantity = Math.max(0, Number(line.qty));
-    const unitPrice = Math.max(0, Number(line.price));
-    const taxRate = Number(line.tax) || 0;
-    const taxMethod = line.taxMethod || "Inclusive";
-
-    const grossAmount = quantity * unitPrice;
-
-    if (taxMethod === "Inclusive" && taxRate > 0) {
-      const subtotal = grossAmount / (1 + taxRate / 100);
-      const taxAmount = grossAmount - subtotal;
-      return { subtotal, taxAmount, netAmount: grossAmount };
-    }
-
-    const subtotal = grossAmount;
-    const taxAmount = subtotal * (taxRate / 100);
-    return { subtotal, taxAmount, netAmount: subtotal + taxAmount };
-  };
-
   const calculateTotals = () => {
-    const returnTotals = (deliveryItems || [])?.reduce((acc, curr) => {
-      const { subtotal, taxAmount, netAmount } = getLineTotals(curr);
-      acc.subtotal += subtotal;
-      acc.taxAmount += taxAmount;
-      acc.netAmount += netAmount;
-      return acc;
-    }, { subtotal: 0, taxAmount: 0, netAmount: 0 });
+    return (
+      deliveryItems?.reduce(
+        (acc, curr) => {
+          const price = parseFloat(curr?.price || 0);
+          const qty = parseFloat(curr?.qty || 0);
+          const taxPercent = parseFloat(curr?.taxPercent || 0);
+          const taxMethod = curr?.taxMethod || "Inclusive";
 
-    if (salesType === "Return") return returnTotals;
+          const discountType = curr?.discountType; // "Percentage" | "Flat"
+          const discountValue = parseFloat(curr.discountValue || 0);
 
-    const exchangeTotals = (exchangeItems || [])?.reduce((acc, curr) => {
-      const { subtotal, taxAmount, netAmount } = getLineTotals(curr);
-      acc.subtotal += subtotal;
-      acc.taxAmount += taxAmount;
-      acc.netAmount += netAmount;
-      return acc;
-    }, { subtotal: 0, taxAmount: 0, netAmount: 0 });
+          const gross = price * qty;
 
-    return {
-      subtotal: exchangeTotals.subtotal - returnTotals.subtotal,
-      taxAmount: exchangeTotals.taxAmount - returnTotals.taxAmount,
-      netAmount: exchangeTotals.netAmount - returnTotals.netAmount,
-      rawReturnNet: returnTotals.netAmount,
-      rawExchangeNet: exchangeTotals.netAmount
-    };
-  }
+          // ✅ Step 1: Apply Discount
+          let discountedAmount = gross;
+
+          if (discountType === "Percentage") {
+            discountedAmount =
+              gross - (gross * discountValue) / 100;
+          } else if (discountType === "Flat") {
+            discountedAmount = gross - discountValue;
+          }
+
+          // Prevent negative
+          discountedAmount = Math.max(0, discountedAmount);
+
+          let subTotal = 0;
+          let taxAmount = 0;
+          let netAmount = 0;
+
+          // ✅ Step 2: Tax Calculation
+          if (taxMethod === "Inclusive" && taxPercent > 0) {
+            subTotal = discountedAmount / (1 + taxPercent / 100);
+            taxAmount = discountedAmount - subTotal;
+            netAmount = discountedAmount;
+          } else {
+            subTotal = discountedAmount;
+            taxAmount = subTotal * (taxPercent / 100);
+            netAmount = subTotal + taxAmount;
+          }
+
+          // ✅ Accumulate
+          acc.subtotal += subTotal;
+          acc.taxAmount += taxAmount;
+          acc.netAmount += netAmount;
+
+          return acc;
+        },
+        { subtotal: 0, taxAmount: 0, netAmount: 0 }
+      ) || { subtotal: 0, taxAmount: 0, netAmount: 0 }
+    );
+  };
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
 

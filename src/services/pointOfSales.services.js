@@ -433,9 +433,23 @@ async function create(body) {
                 }
             });
 
-            // Remaining credit balance (original credit - bill amount - instant refunds) is naturally
-            // preserved as active credit in the customer's ledger balance. We explicitly do NOT debit
-            // the customer account for the remaining credit, allowing them to redeem it in future bills.
+            if (!isReturn) {
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Customer_Payment",
+                        LedgerType: "Customer",
+                        creditOrDebit: "Credit",
+                        partyId: parseInt(customerId),
+                        amount: Math.abs(parseFloat(netAmount || 0)),
+                        partyBillNo: posRecord.docId,
+                        partyBillDate: new Date(),
+                        posId: posRecord.id
+                    }
+                });
+            }
+
+
+
 
 
             return posRecord;
@@ -624,8 +638,22 @@ async function update(id, body) {
                 }
             });
 
-            // Remaining credit balance is naturally preserved as active credit in the customer's ledger
-            // balance. We do not debit or adjust the customer's account for this saved credit.
+            if (!isReturn) {
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Customer_Payment",
+                        LedgerType: "Customer",
+                        creditOrDebit: "Credit",
+                        partyId: parseInt(customerId),
+                        amount: Math.abs(parseFloat(netAmount || 0)),
+                        partyBillNo: posRecord.docId,
+                        partyBillDate: new Date(),
+                        posId: posRecord.id,
+                    }
+                });
+            }
+
+
 
             return updatedPos;
         });
@@ -712,55 +740,117 @@ async function checkReferenceNumber(req) {
     };
 }
 
+// async function getPartyCreditBalance(req) {
+//     const { partyId } = req.query;
+//     if (!partyId) return { statusCode: 0, data: 0 };
+
+//     const ledgerDebit = await prisma.ledger.aggregate({
+//         _sum: { amount: true },
+//         where: { partyId: parseInt(partyId), creditOrDebit: 'Debit' }
+//     });
+
+//     const ledgerCredit = await prisma.ledger.aggregate({
+//         _sum: { amount: true },
+//         where: { partyId: parseInt(partyId), creditOrDebit: 'Credit' }
+//     });
+
+//     const posPayments = await prisma.posPayments.findMany({
+//         where: {
+//             Pos: { customerId: parseInt(partyId) },
+//             // paymentMode: { not: 'STORE_CREDIT' }
+//         },
+//         select: { amount: true, paymentMode: true }
+//     });
+
+
+//     console.log("ledgerCredit", ledgerCredit)
+//     console.log("ledgerDebit", ledgerDebit)
+//     console.log("posPayments", posPayments)
+
+//     const totalDebit = ledgerDebit._sum.amount || 0;
+//     const totalCredit = ledgerCredit._sum.amount || 0;
+
+//     const totalPayments = posPayments.reduce((acc, curr) => {
+//         const amt = parseFloat(curr.amount) || 0;
+//         const mode = (curr.paymentMode || "").toLowerCase();
+
+//         if (mode === 'store_credit') return acc;
+//         if (mode.includes('refund')) return acc - amt;
+//         return acc + amt;
+//     }, 0);
+
+//     console.log("totalCredit", totalCredit)
+//     console.log("totalPayments", totalPayments)
+//     console.log("totalDebit", totalDebit)
+
+//     // Balance = (Returns + Payments) - Sales
+//     const availableCredit = (totalCredit + totalPayments) - totalDebit;
+
+//     return { statusCode: 0, data: Math.max(0, availableCredit) };
+// }
+
+
 async function getPartyCreditBalance(req) {
     const { partyId } = req.query;
     if (!partyId) return { statusCode: 0, data: 0 };
 
-    const ledgerDebit = await prisma.ledger.aggregate({
+    const Customer_Payment = await prisma.ledger.aggregate({
         _sum: { amount: true },
-        where: { partyId: parseInt(partyId), creditOrDebit: 'Debit' }
+        where: { partyId: parseInt(partyId), creditOrDebit: 'Credit', EntryType: 'Customer_Payment', posId: { not: null } }
     });
 
-    const ledgerCredit = await prisma.ledger.aggregate({
+    const Sales = await prisma.ledger.aggregate({
         _sum: { amount: true },
-        where: { partyId: parseInt(partyId), creditOrDebit: 'Credit' }
+        where: { partyId: parseInt(partyId), creditOrDebit: 'Debit', EntryType: 'Sales', posId: { not: null } }
     });
 
-    const posPayments = await prisma.posPayments.findMany({
-        where: {
-            Pos: { customerId: parseInt(partyId) },
-            // paymentMode: { not: 'STORE_CREDIT' }
-        },
-        select: { amount: true, paymentMode: true }
+    const Credit_Note = await prisma.ledger.aggregate({
+        _sum: { amount: true },
+        where: { partyId: parseInt(partyId), creditOrDebit: 'Credit', EntryType: 'Credit_Note' }
+    });
+
+    const Credit_Adjustment = await prisma.ledger.aggregate({
+        _sum: { amount: true },
+        where: { partyId: parseInt(partyId), creditOrDebit: 'Credit', EntryType: 'Credit_Adjustment' }
+    });
+
+    const Debit_Adjustment = await prisma.ledger.aggregate({
+        _sum: { amount: true },
+        where: { partyId: parseInt(partyId), creditOrDebit: 'Debit', EntryType: 'Debit_Adjustment' }
     });
 
 
-    console.log("ledgerCredit", ledgerCredit)
-    console.log("ledgerDebit", ledgerDebit)
-    console.log("posPayments", posPayments)
+    console.log("Customer_Payment", Customer_Payment)
+    console.log("Sales", Sales)
+    console.log("Credit_Note", Credit_Note)
+    console.log("Credit_Adjustment", Credit_Adjustment)
+    console.log("Debit_Adjustment", Debit_Adjustment)
 
-    const totalDebit = ledgerDebit._sum.amount || 0;
-    const totalCredit = ledgerCredit._sum.amount || 0;
 
-    const totalPayments = posPayments.reduce((acc, curr) => {
-        const amt = parseFloat(curr.amount) || 0;
-        const mode = (curr.paymentMode || "").toLowerCase();
+    const totalCredit = Customer_Payment._sum.amount + Credit_Note._sum.amount
+    const totalDebit = Sales._sum.amount + Debit_Adjustment._sum.amount + Credit_Adjustment._sum.amount;;
+    const availableCredit = totalCredit - totalDebit;
 
-        if (mode === 'store_credit') return acc;
-        if (mode.includes('refund')) return acc - amt;
-        return acc + amt;
-    }, 0);
 
-    console.log("totalCredit", totalCredit)
-    console.log("totalPayments", totalPayments)
-    console.log("totalDebit", totalDebit)
 
-    // Balance = (Returns + Payments) - Sales
-    const availableCredit = (totalCredit + totalPayments) - totalDebit;
 
-    return { statusCode: 0, data: Math.max(0, availableCredit) };
+
+    return {
+        statusCode: 0,
+        data: Math.max(0, availableCredit),
+        ledger: {
+            Customer_Payment: Customer_Payment._sum.amount || 0,
+            Sales: Sales._sum.amount || 0,
+            Credit_Note: Credit_Note._sum.amount || 0,
+            Credit_Adjustment: Credit_Adjustment._sum.amount || 0,
+            Debit_Adjustment: Debit_Adjustment._sum.amount || 0,
+            totalCredit,
+            totalDebit,
+            availableCredit
+
+        }
+    };
 }
-
 async function cancel(id) {
     try {
         const dataFound = await prisma.pos.findUnique({

@@ -433,13 +433,15 @@ const SalesReturnItems = ({
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "taxMethod")}
                                             />
                                         </td>
-
                                         <td className={`${compactCellClassName} w-40 text-right`}>
                                             <input
-                                                type="number"
+                                                min="0" type="number"
                                                 className={compactNumberInputClassName}
-                                                value={row.tax || 0}
+                                                onFocus={e => e.target.select()}
+                                                value={(!row.taxPercent) ? 0 : row.taxPercent}
                                                 disabled={true}
+                                                onChange={e => handleInputChange(e.target.value, index, "taxPercent")}
+                                                onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "taxPercent")}
                                             />
                                         </td>
 
