@@ -15,7 +15,7 @@ import {
 import { IoMaleFemale } from "react-icons/io5";
 
 
-const TotalSalesBreakup = ({ data, onClose }) => {
+const TodaySalesBreakup = ({ data, onClose }) => {
 
     console.log(data, "data in salesBreakup")
 
@@ -383,4 +383,4 @@ const TotalSalesBreakup = ({ data, onClose }) => {
 
 }
 
-export default TotalSalesBreakup;
+export default TodaySalesBreakup;

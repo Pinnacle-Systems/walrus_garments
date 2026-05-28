@@ -97,27 +97,27 @@ export const filterBillableParties = (data) => {
 //     }, []);
 // };
 
-export const mapPaymentOutstandingParties = (data) => {
-    return data.map(party => {
-        const ledgerDebit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Debit').reduce((acc, l) => acc + (l.amount || 0), 0);
-        const ledgerCredit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Credit').reduce((acc, l) => acc + (l.amount || 0), 0);
+// export const mapPaymentOutstandingParties = (data) => {
+//     return data.map(party => {
+//         const ledgerDebit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Debit').reduce((acc, l) => acc + (l.amount || 0), 0);
+//         const ledgerCredit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Credit').reduce((acc, l) => acc + (l.amount || 0), 0);
 
-        const totalDeliveryValue = ledgerDebit - ledgerCredit;
+//         const totalDeliveryValue = ledgerDebit - ledgerCredit;
 
-        const totalReceiptAmount = (party.Payment || []).filter(pay => pay.paymentFlow !== "Payout").reduce((acc, pay) => acc + parseFloat(pay.paidAmount || 0), 0);
-        const totalPayoutAmount = (party.Payment || []).filter(pay => pay.paymentFlow === "Payout").reduce((acc, pay) => acc + parseFloat(pay.paidAmount || 0), 0);
-        const totalPayments = totalReceiptAmount - totalPayoutAmount;
+//         const totalReceiptAmount = (party.Payment || []).filter(pay => pay.paymentFlow !== "Payout").reduce((acc, pay) => acc + parseFloat(pay.paidAmount || 0), 0);
+//         const totalPayoutAmount = (party.Payment || []).filter(pay => pay.paymentFlow === "Payout").reduce((acc, pay) => acc + parseFloat(pay.paidAmount || 0), 0);
+//         const totalPayments = totalReceiptAmount - totalPayoutAmount;
 
-        return {
-            ...party,
-            totalDeliveryValue: Math.round(totalDeliveryValue * 100) / 100,
-            totalReceiptAmount: Math.round(totalReceiptAmount * 100) / 100,
-            totalPayoutAmount: Math.round(totalPayoutAmount * 100) / 100,
-            totalPayments: Math.round(totalPayments * 100) / 100,
-            outstandingBalance: Math.round((totalDeliveryValue - totalPayments) * 100) / 100
-        };
-    });
-};
+//         return {
+//             ...party,
+//             totalDeliveryValue: Math.round(totalDeliveryValue * 100) / 100,
+//             totalReceiptAmount: Math.round(totalReceiptAmount * 100) / 100,
+//             totalPayoutAmount: Math.round(totalPayoutAmount * 100) / 100,
+//             totalPayments: Math.round(totalPayments * 100) / 100,
+//             outstandingBalance: Math.round((totalDeliveryValue - totalPayments) * 100) / 100
+//         };
+//     });
+// };
 
 
 export const filterReturnBillableParties = (data) => {
@@ -182,4 +182,50 @@ export const filterReturnBillableParties = (data) => {
     }
 
     return results;
+};
+
+
+export const mapPaymentOutstandingParties = (data) => {
+    return data.map(party => {
+        // --- CREDITS ---
+        const customerPayment = (party.Ledger || [])
+            .filter(l => l.creditOrDebit === 'Credit' && l.EntryType === 'Customer_Payment')
+            .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        const creditNote = (party.Ledger || [])
+            .filter(l => l.creditOrDebit === 'Credit' && l.EntryType === 'Credit_Note')
+            .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        const creditAdjustment = (party.Ledger || [])
+            .filter(l => l.creditOrDebit === 'Credit' && l.EntryType === 'Credit_Adjustment')
+            .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        // --- DEBITS ---
+        const sales = (party.Ledger || [])
+            .filter(l => l.creditOrDebit === 'Debit' && l.EntryType === 'Sales')
+            .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        const debitAdjustment = (party.Ledger || [])
+            .filter(l => l.creditOrDebit === 'Debit' && l.EntryType === 'Debit_Adjustment')
+            .reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        // --- BALANCE ---
+        const totalCredit = customerPayment + creditNote;
+        const totalDebit = sales + debitAdjustment + creditAdjustment;
+        const outstandingBalance = Math.round((totalDebit - totalCredit) * 100) / 100;
+
+        return {
+            ...party,
+            ledgerBreakdown: {
+                customerPayment: Math.round(customerPayment * 100) / 100,
+                creditNote: Math.round(creditNote * 100) / 100,
+                creditAdjustment: Math.round(creditAdjustment * 100) / 100,
+                sales: Math.round(sales * 100) / 100,
+                debitAdjustment: Math.round(debitAdjustment * 100) / 100,
+                totalCredit: Math.round(totalCredit * 100) / 100,
+                totalDebit: Math.round(totalDebit * 100) / 100,
+            },
+            outstandingBalance,
+        };
+    });
 };

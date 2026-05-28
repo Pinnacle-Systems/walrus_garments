@@ -664,47 +664,50 @@ const PaymentForm = ({
             (item) => String(item.id) === String(transactionId)
         );
 
-        if (selectedTransaction) {
-            if (!id) {
-                setRefId(selectedTransaction.id);
-                setRefDocId(selectedTransaction.docId || "");
-
-                if (selectedTransaction.customerId && String(supplierId || "") !== String(selectedTransaction.customerId)) {
-                    setSupplierId(selectedTransaction.customerId);
-                }
-            }
-
-            if (transactionType === "QUOTATION") {
-                const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems, selectedTransaction);
-                if (!id) {
-                    setTotalBillAmount(billVal.toFixed(2));
-                    if (paymentFlow === "Payout") {
-                        setOutStandingAmount(getPayoutOutstandingForQuotation(selectedTransaction).toFixed(2));
-                    } else {
-                        setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
-                    }
-
-                } else {
-                    setPaymentHistory(selectedTransaction?.paymentData || []);
-                }
-            } else if (transactionType === "SALESORDER") {
-                const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
-                if (!id) {
-                    setTotalBillAmount(billVal.toFixed(2));
-                    if (paymentFlow === "Payout") {
-                        setOutStandingAmount(getPayoutOutstandingForSalesOrder(selectedTransaction, salesDeliveryList?.data).toFixed(2));
-                    } else {
-                        setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
-                    }
-                } else {
-                    setPaymentHistory(selectedTransaction?.paymentData || []);
-                }
-            }
-        } else {
-            console.log(selectedTransaction, "selectedTransaction")
-
+        if (!selectedTransaction && paymentType == "credit-balance") {
             setOutStandingAmount(availableCredit)
+            return
         }
+
+        if (!selectedTransaction) return
+
+        if (!id) {
+            setRefId(selectedTransaction.id);
+            setRefDocId(selectedTransaction.docId || "");
+
+            if (selectedTransaction.customerId && String(supplierId || "") !== String(selectedTransaction.customerId)) {
+                setSupplierId(selectedTransaction.customerId);
+            }
+        }
+
+        if (transactionType === "QUOTATION") {
+            const billVal = calculateQuotationNetAmount(selectedTransaction?.QuotationItems, selectedTransaction);
+            if (!id) {
+                setTotalBillAmount(billVal.toFixed(2));
+                if (paymentFlow === "Payout") {
+                    setOutStandingAmount(getPayoutOutstandingForQuotation(selectedTransaction).toFixed(2));
+                } else {
+                    setOutStandingAmount(getQuotationOutstandingAmount(selectedTransaction).toFixed(2));
+                }
+
+            } else {
+                setPaymentHistory(selectedTransaction?.paymentData || []);
+            }
+        } else if (transactionType === "SALESORDER") {
+            const billVal = calculateQuotationNetAmount(selectedTransaction?.SaleOrderItems, selectedTransaction);
+            if (!id) {
+                setTotalBillAmount(billVal.toFixed(2));
+                if (paymentFlow === "Payout") {
+                    setOutStandingAmount(getPayoutOutstandingForSalesOrder(selectedTransaction, salesDeliveryList?.data).toFixed(2));
+                } else {
+                    setOutStandingAmount(getSalesOrderOutstandingAmount(selectedTransaction).toFixed(2));
+                }
+            } else {
+                setPaymentHistory(selectedTransaction?.paymentData || []);
+            }
+        }
+
+
 
     }, [id, transactionId, transactionType, quotationList, salesInvoiceList, salesOrderList, paymentFlow]);
 
@@ -952,6 +955,7 @@ const PaymentForm = ({
                                             setTransactionId("")
                                             setPaymentType(e.target.value)
                                             setPaidAmount(0)
+                                            setOutStandingAmount(0)
                                         }
 
                                     }

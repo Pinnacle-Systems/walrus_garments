@@ -25,29 +25,32 @@ async function getManagementInsights(query) {
             getSalesData(commonWhere, from, to),
             getCollectionData(commonWhere, from, to),
             getOrderPipeline(commonWhere),
-            getCustomerAdvanceData(commonWhere, from),
+            getCustomerAdvanceData(commonWhere, from, to),
             getExpenseData(commonWhere, from, to),
             getTopSellingProducts(commonWhere),
             getRecentDeliveries(commonWhere)
         ]);
 
-        // 2. Prepare Final Response
         return {
             statusCode: 0,
             data: {
                 kpis: {
                     todaySales: salesData.total,
+                    todaySalesReturns: salesData.returnsTotal,
                     todayCollections: collectionData.total,
                     customerAdvances: advanceData.total,
-                    todayExpenses: expenseData.total + salesData.returnsTotal,
+                    customerAdvancesReceived: advanceData.advanceReceived,
+                    customerAdvancesPayout: advanceData.advancePayout,
+                    todayExpenses: expenseData.total,
                     pendingQuotations: pipelineData.quotationsCount,
                     pendingDeliveries: pipelineData.deliveriesCount
                 },
                 breakups: {
                     todaySales: salesData.breakup,
+                    todaySalesReturns: salesData.returnsBreakup,
                     todayCollections: collectionData.breakup,
                     customerAdvances: advanceData.breakup,
-                    todayExpenses: [...expenseData.breakup, ...salesData.returnsBreakup],
+                    todayExpenses: [...expenseData.breakup],
                     pendingQuotations: pipelineData.quotationsBreakup,
                     pendingDeliveries: pipelineData.deliveriesBreakup
                 },
@@ -82,27 +85,46 @@ async function getSalesData(where, from, to) {
         }
     });
 
-    const posTotal = posSales.reduce((acc, curr) => acc + parseFloat(curr.netAmount || 0), 0);
-    const returnsTotal = posReturns.reduce((acc, curr) => acc + Math.abs(parseFloat(curr.netAmount || 0)), 0);
+    const bulkReturns = await prisma.salesReturn.findMany({
+        where: { ...where, createdAt: { gte: from, lte: to }, isDeleted: false },
+        include: {
+            Party: { select: { name: true } },
+            SalesReturnItems: { select: { qty: true, price: true } }
+        }
+    });
 
-    const bulkBreakup = bulkSales.map(s => {
+    const bulkSalesBreakup = bulkSales.map(s => {
         const amount = s.SalesDeliveryItems.reduce((acc, item) => acc + (parseFloat(item.deliveryQty || 0) * parseFloat(item.price || 0)), 0);
         return { id: s.docId || s.id, party: s.Party?.name || 'N/A', amount, type: 'Bulk' };
     });
-    const bulkTotal = bulkBreakup.reduce((acc, curr) => acc + curr.amount, 0);
+
+    const bulkReturnsBreakup = bulkReturns.map(s => {
+        const amount = s.SalesReturnItems.reduce((acc, item) => acc + (parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
+        return { id: s.docId || s.id, party: s.Party?.name || 'N/A', amount, type: 'Bulk' };
+    });
+
+
+    const posTotal = posSales.reduce((acc, curr) => acc + parseFloat(curr.netAmount || 0), 0);
+    const bulkTotal = bulkSalesBreakup.reduce((acc, curr) => acc + curr.amount, 0);
+
+    const posReturnsTotal = posReturns.reduce((acc, curr) => acc + Math.abs(parseFloat(curr.netAmount || 0)), 0);
+    const bulkReturnsTotal = bulkReturnsBreakup.reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
+
+
+
+
 
     return {
         total: posTotal + bulkTotal,
-        returnsTotal,
+        returnsTotal: posReturnsTotal + bulkReturnsTotal,
         breakup: [
             ...posSales.map(p => ({ id: p.docId || p.id, party: p.Party?.name || 'Walk-in', amount: parseFloat(p.netAmount || 0), type: 'POS' })),
-            ...bulkBreakup
+            ...bulkSalesBreakup
         ],
-        returnsBreakup: posReturns.map(p => ({
-            category: 'Sales Returns',
-            amount: Math.abs(parseFloat(p.netAmount || 0)),
-            note: `Return from ${p.Party?.name || 'Walk-in'} (${p.docId || p.id})`
-        }))
+        returnsBreakup: [
+            ...posReturns.map(p => ({ id: p.docId || p.id, party: p.Party?.name || 'Walk-in', amount: parseFloat(p.netAmount || 0), type: 'POS' })),
+            ...bulkReturnsBreakup
+        ]
     };
 }
 
@@ -130,6 +152,45 @@ async function getCollectionData(where, from, to) {
     return { total, breakup: [...bulkBreakup, ...posBreakup] };
 }
 
+function calculateNetAmount(items = [], parent = {}) {
+    const parseVal = (v) => {
+        const p = parseFloat(v || 0);
+        return Number.isFinite(p) ? p : 0;
+    };
+
+    const lineNetAmount = (items || []).reduce((acc, curr) => {
+        const price = parseVal(curr?.price);
+        const qty = parseVal(curr?.qty);
+        const taxPercent = parseVal(curr?.taxPercent);
+        const taxMethod = curr?.taxMethod || "Inclusive";
+        const discountType = curr?.discountType;
+        const discountValue = parseVal(curr?.discountValue);
+
+        const gross = price * qty;
+        let discountedAmount = gross;
+
+        if (discountType === "Percentage") {
+            discountedAmount = gross - (gross * discountValue) / 100;
+        } else if (discountType === "Flat") {
+            discountedAmount = gross - discountValue;
+        }
+
+        discountedAmount = Math.max(0, discountedAmount);
+
+        if (taxMethod === "Inclusive" && taxPercent > 0) {
+            return acc + discountedAmount;
+        }
+
+        return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
+    }, 0);
+
+    const packingAmount = parent?.packingChargeEnabled ? parseVal(parent?.packingCharge) : 0;
+    const shippingAmount = parent?.shippingChargeEnabled ? parseVal(parent?.shippingCharge) : 0;
+    const courierAmount = parent?.courierChargeEnabled ? parseVal(parent?.courierCharge) : 0;
+
+    return Math.round((lineNetAmount + packingAmount + shippingAmount + courierAmount) * 100) / 100;
+}
+
 async function getOrderPipeline(where) {
     const convertedIds = await prisma.saleorder.findMany({
         where: { isDeleted: false, quotationId: { not: null } },
@@ -138,7 +199,10 @@ async function getOrderPipeline(where) {
 
     const quotations = await prisma.quotation.findMany({
         where: { ...where, isDeleted: false, id: { notIn: convertedIds } },
-        include: { Party: { select: { name: true } } }
+        include: { 
+            Party: { select: { name: true } },
+            QuotationItems: true
+        }
     });
 
     const orders = await prisma.saleorder.findMany({
@@ -152,56 +216,95 @@ async function getOrderPipeline(where) {
 
     const deliveriesBreakup = orders.filter(so =>
         so.SaleOrderItems.some(i => parseFloat(i.qty || 0) > i.SalesDeliveryItems.reduce((s, d) => s + parseFloat(d.deliveryQty || 0), 0))
-    ).map(o => ({ id: o.docId || o.id, party: o.Party?.name || 'N/A', amount: parseFloat(o.totalAmount || 0), date: o.createdAt }));
+    ).map(o => ({ 
+        id: o.docId || o.id, 
+        party: o.Party?.name || 'N/A', 
+        amount: calculateNetAmount(o.SaleOrderItems, o), 
+        date: o.createdAt 
+    }));
 
     return {
         quotationsCount: quotations.length,
-        quotationsBreakup: quotations.map(q => ({ id: q.docId || q.id, party: q.Party?.name || 'N/A', amount: parseFloat(q.totalAmount || 0), date: q.createdAt })),
+        quotationsBreakup: quotations.map(q => ({ 
+            id: q.docId || q.id, 
+            party: q.Party?.name || 'N/A', 
+            amount: calculateNetAmount(q.QuotationItems, q), 
+            date: q.createdAt 
+        })),
         deliveriesCount: deliveriesBreakup.length,
         deliveriesBreakup
     };
 }
 
-async function getCustomerAdvanceData(where, from) {
-    const parties = await prisma.party.findMany({
-        where: { active: true, isClient: true },
-        select: { id: true, name: true }
+async function getCustomerAdvanceData(where, from, to) {
+    // Fetch all non-deleted ADVANCE payments for this branch within the date range
+    const advances = await prisma.payment.findMany({
+        where: {
+            ...where,
+            // paymentFlow: "Receipt",
+            isDeleted: false,
+            createdAt: { gte: from, lte: to }
+        },
+        include: {
+            Party: { select: { name: true } }
+        }
     });
 
-    const breakup = await Promise.all(parties.slice(0, 50).map(async (p) => {
-        const salesRaw = await prisma.salesDeliveryItems.findMany({
-            where: { SalesDelivery: { customerId: p.id, isDeleted: false, ...where } },
-            select: { deliveryQty: true, price: true }
-        });
-        const salesTotal = salesRaw.reduce((a, b) => a + (parseFloat(b.deliveryQty || 0) * parseFloat(b.price || 0)), 0);
+    let advanceReceived = 0;
+    let advancePayout = 0;
 
-        const payments = await prisma.payment.aggregate({
-            where: { partyId: p.id, isDeleted: false, ...where, paymentFlow: "Payout", createdAt: from },
-            _sum: { paidAmount: true }
-        });
+    const breakup = advances.map(adv => {
+        const amount = parseFloat(adv.paidAmount || 0);
+        const isPayout = adv.paymentFlow === "Payout";
 
-        const paidAmount = payments._sum.paidAmount || 0;
-        const advance = paidAmount - salesTotal;
-        return { party: p.name, amount: advance };
-    }));
+        if (isPayout) {
+            advancePayout += amount;
+        } else {
+            advanceReceived += amount;
+        }
 
-    const filtered = breakup.filter(b => b.amount > 0).sort((a, b) => b.amount - a.amount);
-    return { total: filtered.reduce((a, b) => a + b.amount, 0), breakup: filtered.slice(0, 20) };
+        return {
+            id: adv.docId || adv.id,
+            party: adv.Party?.name || 'Walk-in',
+            amount: amount,
+            mode: adv.paymentMode || 'N/A',
+            flow: adv.paymentFlow || 'Receipt',
+            type: 'Advance'
+        };
+    });
+
+    const netAdvance = advanceReceived - advancePayout;
+
+    return {
+        total: netAdvance,
+        advanceReceived,
+        advancePayout,
+        breakup
+    };
 }
 
 async function getExpenseData(where, from, to) {
     const raw = await prisma.expenseEntryItems.findMany({
         where: { Expense: { ...where, date: { gte: from, lte: to } } },
-        include: { ExpenseCategory: { select: { name: true } } }
+        include: {
+            ExpenseCategory: { select: { name: true } },
+            Expense: { select: { docId: true } }
+        }
     });
 
+    console.log("raw", raw);
+
     const breakup = raw.map(e => ({
+        id: e.Expense?.docId || String(e.id),
         category: e.ExpenseCategory?.name || 'Other',
         amount: parseFloat(e.amount || 0),
-        note: e.note || '-'
+        note: e.description || e.referenceNo || '-'
     }));
 
-    return { total: breakup.reduce((a, b) => a + b.amount, 0), breakup };
+    return {
+        total: breakup.reduce((acc, e) => acc + e.amount, 0),
+        breakup
+    };
 }
 
 /**

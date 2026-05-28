@@ -18,7 +18,12 @@ import axios from "axios";
 import secureLocalStorage from "react-secure-storage";
 import { DASHBOARD_API } from "../../../Api";
 import Modal from "../../../UiComponents/Modal";
-import TotalSalesBreakup from "./DashBoardBreakTables/TotalSales";
+import TotalSalesBreakup from "./DashBoardBreakTables/SalesBreakup";
+import TodaySalesBreakup from "./DashBoardBreakTables/SalesBreakup";
+import TodaySalesReturnsBreakup from "./DashBoardBreakTables/SalesReturnsBreakup";
+import CustomerAdvancesBreakup from "./DashBoardBreakTables/CustomerAdvancesBreakup";
+import ExpensesBreakup from "./DashBoardBreakTables/ExpensesBreakup";
+import PendingDeliveriesBreakup from "./DashBoardBreakTables/PendingDeliveriesBreakup";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -114,117 +119,13 @@ const Dashboard = () => {
         setModalConfig({ isOpen: true, title: `${label} Breakup`, type });
     };
 
-    // const renderBreakupContent = () => {
-    //     const { type } = modalConfig;
-    //     const data = dashboardData.breakups[type] || [];
-
-
-
-
-
-
-
-    //     if (data.length === 0) return <div className="text-center py-10 text-gray-500">No data found for this breakup.</div>;
-
-    //     return (
-    //         <div className="overflow-x-auto max-h-[60vh]">
-    //             <table className="w-full text-sm text-left border-collapse">
-    //                 <thead className="bg-gray-50 sticky top-0">
-    //                     {type === 'todaySales' && (
-    //                         <tr>
-    //                             <th className="p-3 border-b">Doc ID</th>
-    //                             <th className="p-3 border-b">Party</th>
-    //                             <th className="p-3 border-b text-right">Amount</th>
-    //                             <th className="p-3 border-b text-center">Type</th>
-    //                         </tr>
-    //                     )}
-    //                     {type === 'todayCollections' && (
-    //                         <tr>
-    //                             <th className="p-3 border-b">Doc ID</th>
-    //                             <th className="p-3 border-b">Party</th>
-    //                             <th className="p-3 border-b text-right">Amount</th>
-    //                             <th className="p-3 border-b">Mode</th>
-    //                         </tr>
-    //                     )}
-    //                     {type === 'totalOutstanding' && (
-    //                         <tr>
-    //                             <th className="p-3 border-b">Party Name</th>
-    //                             <th className="p-3 border-b text-right">Balance</th>
-    //                         </tr>
-    //                     )}
-    //                     {type === 'todayExpenses' && (
-    //                         <tr>
-    //                             <th className="p-3 border-b">Category</th>
-    //                             <th className="p-3 border-b text-right">Amount</th>
-    //                             <th className="p-3 border-b">Note</th>
-    //                         </tr>
-    //                     )}
-    //                     {(type === 'pendingQuotations' || type === 'pendingDeliveries') && (
-    //                         <tr>
-    //                             <th className="p-3 border-b">ID</th>
-    //                             <th className="p-3 border-b">Customer</th>
-    //                             <th className="p-3 border-b text-right">Amount</th>
-    //                             <th className="p-3 border-b text-right">Date</th>
-    //                         </tr>
-    //                     )}
-    //                 </thead>
-    //                 <tbody className="divide-y divide-gray-100">
-    //                     {data.map((item, idx) => (
-    //                         <tr key={idx} className="hover:bg-gray-50">
-    //                             {type === 'todaySales' && (
-    //                                 <>
-    //                                     <td className="p-3 font-medium">{item.id}</td>
-    //                                     <td className="p-3">{item.party}</td>
-    //                                     <td className="p-3 text-right font-bold text-blue-600">₹{item.amount.toLocaleString()}</td>
-    //                                     <td className="p-3 text-center"><span className={`px-2 py-0.5 rounded text-[10px] ${item.type === 'POS' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'}`}>{item.type}</span></td>
-    //                                 </>
-    //                             )}
-    //                             {type === 'todayCollections' && (
-    //                                 <>
-    //                                     <td className="p-3 font-medium">{item.id}</td>
-    //                                     <td className="p-3">{item.party}</td>
-    //                                     <td className="p-3 text-right font-bold text-green-600">₹{item.amount.toLocaleString()}</td>
-    //                                     <td className="p-3">{item.mode}</td>
-    //                                 </>
-    //                             )}
-    //                             {type === 'customerAdvances' && (
-    //                                 <>
-    //                                     <td className="p-3 font-medium">{item.party}</td>
-    //                                     <td className="p-3 text-right font-bold text-green-600">₹{item.amount.toLocaleString()}</td>
-    //                                 </>
-    //                             )}
-    //                             {type === 'todayExpenses' && (
-    //                                 <>
-    //                                     <td className="p-3 font-medium">{item.category}</td>
-    //                                     <td className="p-3 text-right font-bold text-pink-600">₹{item.amount.toLocaleString()}</td>
-    //                                     <td className="p-3 text-gray-500">{item.note}</td>
-    //                                 </>
-    //                             )}
-    //                             {(type === 'pendingQuotations' || type === 'pendingDeliveries') && (
-    //                                 <>
-    //                                     <td className="p-3 font-medium">{item.id}</td>
-    //                                     <td className="p-3">{item.party}</td>
-    //                                     <td className="p-3 text-right font-bold text-indigo-600">₹{item.amount.toLocaleString()}</td>
-    //                                     <td className="p-3 text-right text-gray-400">{new Date(item.date).toLocaleDateString()}</td>
-    //                                 </>
-    //                             )}
-    //                         </tr>
-    //                     ))}
-    //                 </tbody>
-    //             </table>
-    //         </div>
-    //     );
-    // };
-
-
-
-
 
     const cardsData = [
         { label: "Today's Sales", type: 'todaySales', value: `₹${(dashboardData.kpis.todaySales || 0).toLocaleString()}`, logo: <ShoppingBag size={35} color={'#30b5fc'} />, color: 'border-blue-500' },
-        { label: "Customer Advances", type: 'customerAdvances', value: `₹${(dashboardData.kpis.customerAdvances || 0).toLocaleString()}`, logo: <Wallet size={35} color={'#22C55E'} />, color: 'border-green-500' },
+        { label: "Today's Returns", type: 'todaySalesReturns', value: `₹${(dashboardData.kpis.todaySalesReturns || 0).toLocaleString()}`, logo: <Clock size={35} color={'#8B5CF6'} />, color: 'border-purple-500' },
+
+        { label: "Cash flow", type: 'cashFlow', value: `₹${(dashboardData.kpis.customerAdvances || 0).toLocaleString()}`, logo: <Wallet size={35} color={'#22C55E'} />, color: 'border-green-500' },
         { label: "Today's Expenses", type: 'todayExpenses', value: `₹${(dashboardData.kpis.todayExpenses || 0).toLocaleString()}`, logo: <Receipt size={35} color={'#EC4899'} />, color: 'border-pink-500' },
-        { label: "Pending Quotations", type: 'pendingQuotations', value: `${(dashboardData.kpis.pendingQuotations || 0)}`, logo: <Clock size={35} color={'#8B5CF6'} />, color: 'border-purple-500' },
         { label: "Pending Deliveries", type: 'pendingDeliveries', value: `${(dashboardData.kpis.pendingDeliveries || 0)}`, logo: <ShoppingBag size={35} color={'#F43F5E'} />, color: 'border-rose-500' },
     ];
 
@@ -258,11 +159,14 @@ const Dashboard = () => {
                 onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
                 widthClass="w-[20vw] h-[70vh]"
             >
-                {/* <div className="mb-4 flex justify-between items-center border-b pb-3">
-                    <h5 className="text-xl font-bold text-gray-800">{modalConfig.title}</h5>
-                </div> */}
 
-                <TotalSalesBreakup onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} data={dashboardData} />
+
+                {modalConfig.type === 'todaySales' && <TodaySalesBreakup onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} data={dashboardData} />}
+                {modalConfig.type === 'todaySalesReturns' && <TodaySalesReturnsBreakup onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} data={dashboardData} />}
+                {modalConfig.type === 'cashFlow' && <CustomerAdvancesBreakup onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} data={dashboardData} />}
+                {modalConfig.type === 'todayExpenses' && <ExpensesBreakup onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} data={dashboardData} />}
+                {modalConfig.type === 'pendingDeliveries' && <PendingDeliveriesBreakup onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} data={dashboardData} />}
+
             </Modal>
             <div className="mt-2 overflow-y-auto p-4 bg-gray-50 h-[78vh] rounded-xl custom-scrollbar">
                 <header className="mb-4 flex justify-between items-center">
