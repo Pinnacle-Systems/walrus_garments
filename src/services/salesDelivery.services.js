@@ -217,6 +217,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 }
 
 function manualFilterSearchData(searchDate, data) {
+    console.log(getDateFromDateTime(searchDate), "searchDate")
     console.log(data, "data")
     return data.filter(item =>
     (searchDate ? (

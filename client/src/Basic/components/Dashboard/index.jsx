@@ -17,6 +17,7 @@ import { IndianRupee, PieChart, TrendingUp, UserCheck, UsersRound, UserX, Wallet
 import axios from "axios";
 import secureLocalStorage from "react-secure-storage";
 import { DASHBOARD_API } from "../../../Api";
+import { useLazyGetSalesAnalyticsQuery } from "../../../redux/uniformService/DashboardService";
 import Modal from "../../../UiComponents/Modal";
 import TotalSalesBreakup from "./DashBoardBreakTables/SalesBreakup";
 import TodaySalesBreakup from "./DashBoardBreakTables/SalesBreakup";
@@ -24,6 +25,13 @@ import TodaySalesReturnsBreakup from "./DashBoardBreakTables/SalesReturnsBreakup
 import CustomerAdvancesBreakup from "./DashBoardBreakTables/CustomerAdvancesBreakup";
 import ExpensesBreakup from "./DashBoardBreakTables/ExpensesBreakup";
 import PendingDeliveriesBreakup from "./DashBoardBreakTables/PendingDeliveriesBreakup";
+
+import TodaySales from "./SalesReports/TodaySales";
+import WeeklySales from "./SalesReports/WeeklySales";
+import MonthlySales from "./SalesReports/MonthlySales";
+import YearlySales from "./SalesReports/YearlySales";
+import SlowMovementItem from "./SalesReports/SlowMovementItem";
+import SalesPeriodBreakup from "./DashBoardBreakTables/SalesPeriodBreakup";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -41,7 +49,16 @@ const Dashboard = () => {
     );
 
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('today');
+    const [salesAnalytics, setSalesAnalytics] = useState(null);
+    const [salesBreakupConfig, setSalesBreakupConfig] = useState({ isOpen: false, timeframe: '', filterValue: '', title: '' });
     const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', type: '' });
+
+    // New Dynamic Filter States
+    const [customerType, setCustomerType] = useState('All'); // 'All', 'B2B', 'B2C'
+    const [finYear, setFinYear] = useState('26-27'); // '25-26', '24-25', '23-24', 'All'
+    const [saleTypeFilter, setSaleTypeFilter] = useState('All'); // 'All', 'Sales', 'Returns'
+
     const [dashboardData, setDashboardData] = useState({
         kpis: {
             todaySales: 0,
@@ -72,9 +89,22 @@ const Dashboard = () => {
         sessionStorage.getItem("sessionId") + "currentBranchId"
     );
 
+    const [triggerSalesAnalytics, { data: analyticsRes, isFetching: isFetchingAnalytics }] = useLazyGetSalesAnalyticsQuery();
+    const loadingAnalytics = isFetchingAnalytics;
+
     useEffect(() => {
         fetchDashboardData();
     }, [branchId]);
+
+    useEffect(() => {
+        fetchSalesAnalytics();
+    }, [branchId, customerType, finYear, saleTypeFilter]);
+
+    useEffect(() => {
+        if (analyticsRes?.statusCode === 0) {
+            setSalesAnalytics(analyticsRes.data);
+        }
+    }, [analyticsRes]);
 
     const fetchDashboardData = async () => {
         try {
@@ -90,6 +120,15 @@ const Dashboard = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchSalesAnalytics = () => {
+        triggerSalesAnalytics({
+            branchId,
+            customerType,
+            finYear,
+            saleTypeFilter
+        });
     };
 
     const barData = {
@@ -113,6 +152,15 @@ const Dashboard = () => {
                 borderWidth: 1,
             },
         ],
+    };
+
+    const handleShowSalesBreakup = (config) => {
+        setSalesBreakupConfig({
+            isOpen: true,
+            timeframe: config.timeframe,
+            filterValue: config.filterValue,
+            title: config.title
+        });
     };
 
     const handleCardClick = (label, type) => {
@@ -201,69 +249,112 @@ const Dashboard = () => {
                         </div>
                     ))}
                 </div>
-
-
-
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4 mb-6">
-                    {/* Top Products Table */}
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <h6 className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-                            <TrendingUp size={18} className="text-blue-500" /> Top Selling Products
-                        </h6>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-[11px] text-left">
-                                <thead className="text-[10px] text-gray-400 uppercase bg-gray-50">
-                                    <tr>
-                                        <th className="px-3 py-2 rounded-l-lg">Product Name</th>
-                                        <th className="px-3 py-2 rounded-r-lg text-right">Qty Sold</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {dashboardData.topProducts.length > 0 ? dashboardData.topProducts.map((p, i) => (
-                                        <tr key={i} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-3 py-2 font-medium text-gray-700">{p.name}</td>
-                                            <td className="px-3 py-2 text-right font-bold text-indigo-600">{p.sales}</td>
-                                        </tr>
-                                    )) : <tr><td colSpan="2" className="text-center py-4 text-gray-400">No sales data found</td></tr>}
-                                </tbody>
-                            </table>
-                        </div>
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4 mt-4">
+                    {/* Timeframe Navigation Tabs */}
+                    <div className="flex flex-wrap gap-2 bg-white p-1.5 rounded-xl shadow-sm border border-gray-100 flex-1 max-w-xl">
+                        {[
+                            { id: 'today', label: 'Today\'s Sales' },
+                            { id: 'weekly', label: 'Weekly Sales' },
+                            { id: 'monthly', label: 'Monthly Sales' },
+                            { id: 'yearly', label: 'Yearly Sales' },
+                            { id: 'slow_moving', label: 'Slow Moving Items' }
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all duration-300 ${activeTab === tab.id
+                                    ? 'bg-indigo-600 text-white shadow-md'
+                                    : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-50'
+                                    }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
                     </div>
 
-                    {/* Recent Orders Table */}
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                        <h6 className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
-                            <ShoppingBag size={18} className="text-purple-500" /> Recent Sale Orders
-                        </h6>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-[11px] text-left">
-                                <thead className="text-[10px] text-gray-400 uppercase bg-gray-50">
-                                    <tr>
-                                        <th className="px-3 py-2 rounded-l-lg">Order ID</th>
-                                        <th className="px-3 py-2">Customer</th>
-                                        <th className="px-3 py-2">Type</th>
-                                        <th className="px-3 py-2 rounded-r-lg text-right">Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {dashboardData.recentOrders.length > 0 ? dashboardData.recentOrders.map((o, i) => (
-                                        <tr key={i} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-3 py-2 font-bold text-gray-600">{o.id}</td>
-                                            <td className="px-3 py-2 text-gray-700">{o.party}</td>
-                                            <td className="px-3 py-2">
-                                                <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${o.type === 'POS' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                                                    {o.type}
-                                                </span>
-                                            </td>
-                                            <td className="px-3 py-2 text-right text-gray-500">{new Date(o.date).toLocaleDateString()}</td>
-                                        </tr>
-                                    )) : <tr><td colSpan="4" className="text-center py-4 text-gray-400">No recent orders</td></tr>}
-                                </tbody>
-                            </table>
+                    {/* Filter Controls Row */}
+                    <div className="flex flex-wrap items-center gap-3 bg-white p-1.5 rounded-xl shadow-sm border border-gray-100">
+                        {/* B2B / B2C / All Pills */}
+                        <div className="flex bg-gray-100 p-1 rounded-lg gap-1">
+                            {['B2B', 'B2C', 'All'].map((type) => (
+                                <button
+                                    key={type}
+                                    onClick={() => setCustomerType(type)}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${customerType === type
+                                        ? 'bg-blue-600 text-white shadow-sm'
+                                        : 'text-gray-600 hover:text-blue-600 hover:bg-gray-250'
+                                        }`}
+                                >
+                                    {type}
+                                </button>
+                            ))}
                         </div>
+
+                        {/* Financial Year Dropdown */}
+                        <select
+                            value={finYear}
+                            onChange={(e) => setFinYear(e.target.value)}
+                            className="bg-white border border-blue-500 hover:border-blue-600 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold outline-none cursor-pointer shadow-sm transition-all"
+                        >
+                            <option value="All">All Years</option>
+                            <option value="26-27">26-27</option>
+
+                            <option value="25-26">25-26</option>
+                            <option value="24-25">24-25</option>
+                            <option value="23-24">23-24</option>
+                        </select>
+
+                        {/* All / Sales / Returns Dropdown */}
+                        <select
+                            value={saleTypeFilter}
+                            onChange={(e) => setSaleTypeFilter(e.target.value)}
+                            className="bg-white border border-gray-200 hover:border-indigo-500 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold outline-none cursor-pointer shadow-sm transition-all"
+                        >
+                            <option value="All">All Sales & Returns</option>
+                            <option value="Sales">Sales Only</option>
+                            <option value="Returns">Returns Only</option>
+                        </select>
                     </div>
                 </div>
+
+                {/* Analytics Content Area */}
+                {loadingAnalytics ? (
+                    <div className="p-10 text-center flex flex-col items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
+                        <p className="text-gray-500 text-xs font-medium">Fetching sales reports and charts...</p>
+                    </div>
+                ) : (
+                    <div className="transition-all duration-300">
+                        {activeTab === 'today' && salesAnalytics && (
+                            <TodaySales data={salesAnalytics.today} paymentChart={salesAnalytics.charts.paymentMode} onShowBreakup={handleShowSalesBreakup} />
+                        )}
+                        {activeTab === 'weekly' && salesAnalytics && (
+                            <WeeklySales data={salesAnalytics.weekly} paymentChart={salesAnalytics.charts.paymentMode} onShowBreakup={handleShowSalesBreakup} />
+                        )}
+                        {activeTab === 'monthly' && salesAnalytics && (
+                            <MonthlySales data={salesAnalytics.monthly} categoryChart={salesAnalytics.charts.categoryDist} onShowBreakup={handleShowSalesBreakup} />
+                        )}
+                        {activeTab === 'yearly' && salesAnalytics && (
+                            <YearlySales data={salesAnalytics.yearly} categoryChart={salesAnalytics.charts.categoryDist} onShowBreakup={handleShowSalesBreakup} />
+                        )}
+                        {activeTab === 'slow_moving' && salesAnalytics && (
+                            <SlowMovementItem data={salesAnalytics.slowMoving} agingData={salesAnalytics.slowMovingAging} onShowBreakup={handleShowSalesBreakup} />
+                        )}
+                    </div>
+                )}
+
+                {salesBreakupConfig.isOpen && (
+                    <SalesPeriodBreakup
+                        timeframe={salesBreakupConfig.timeframe}
+                        filterValue={salesBreakupConfig.filterValue}
+                        title={salesBreakupConfig.title}
+                        branchId={branchId}
+                        customerType={customerType}
+                        finYear={finYear}
+                        saleTypeFilter={saleTypeFilter}
+                        onClose={() => setSalesBreakupConfig({ ...salesBreakupConfig, isOpen: false })}
+                    />
+                )}
             </div>
         </>
 

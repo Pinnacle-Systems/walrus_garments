@@ -275,7 +275,7 @@ async function create(body) {
                     docId: finalDocId,
                     branchId: branchId ? parseInt(branchId) : undefined,
                     createdById: body.userId ? parseInt(body.userId) : undefined,
-                    netAmount: netAmount ? String(netAmount) : "0",
+                    netAmount: netAmount ? String(Math.abs(parseFloat(netAmount || 0))) : undefined,
                     approvalStatus: approvalStatus || "NONE",
                     bilStatus: body.bilStatus ? body?.bilStatus : "NA",
                     transactionType: transactionType ? transactionType : "NA",
@@ -519,7 +519,7 @@ async function update(id, body) {
                     approvalStatus: (body.bilStatus === 'PAID' || body.bilStatus === 'UNPAID') ? "COMPLETED" : (body.approvalStatus || dataFound.approvalStatus),
                     bilStatus: body.bilStatus || dataFound.bilStatus || "PAID",
                     discountValue: discountValue ? String(discountValue) : undefined,
-                    netAmount: String(netAmount || dataFound.netAmount),
+                    netAmount: netAmount ? String(Math.abs(parseFloat(netAmount || 0))) : undefined,
                     transactionType: transactionType ? transactionType : "DEFAULT",
                     isReturn: isReturn,
                     isRetrunBillId: body.isRetrunBillId ? parseInt(body.isRetrunBillId) : undefined,
@@ -646,9 +646,9 @@ async function update(id, body) {
                         creditOrDebit: "Credit",
                         partyId: parseInt(customerId),
                         amount: Math.abs(parseFloat(netAmount || 0)),
-                        partyBillNo: posRecord.docId,
+                        partyBillNo: updatedPos.docId,
                         partyBillDate: new Date(),
-                        posId: posRecord.id,
+                        posId: updatedPos.id,
                     }
                 });
             }

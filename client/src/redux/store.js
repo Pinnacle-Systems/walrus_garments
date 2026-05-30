@@ -70,7 +70,8 @@ import {
   salesReportApi,
   ExpenseMasterApi,
   ExpenseEntryApi,
-  DayBookApi
+  DayBookApi,
+  DashboardApi
 } from "./uniformService";
 import SizeMasterApi from "./uniformService/SizeMasterService";
 import ColorMasterApi from "./uniformService/ColorMasterService";
@@ -229,6 +230,7 @@ const commonReducers = {
   ExpenseEntry: ExpenseEntryApi.reducer,
   dayBook: DayBookApi.reducer,
   paymentAdjustment: paymentAdjustmentApi.reducer,
+  [DashboardApi.reducerPath]: DashboardApi.reducer,
 }
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
@@ -361,7 +363,8 @@ salesReportApi.middleware,
 ExpenseMasterApi.middleware,
 ExpenseEntryApi.middleware,
 DayBookApi.middleware,
-  paymentAdjustmentApi.middleware
+  paymentAdjustmentApi.middleware,
+  DashboardApi.middleware
 ];
 
 
