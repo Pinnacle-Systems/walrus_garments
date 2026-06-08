@@ -5,11 +5,12 @@ import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
 import secureLocalStorage from "react-secure-storage";
 import { CollectionsMaster, ExcessToleranceQty, ExpenseMaster, FiberContent, ItemCategroyMaster, ItemMaster, MaterialMaster, OffersPromtions, PriceTemplateMaster, SectionMaster, SubCategoryMaster, TermsandCondition, YarnNeedle } from "../../../Shocks";
-import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, AccessoryStockTransfer, BranchType, DeliveryChallan, ExpenseEntry, GsmMaster, MachineWiseProduction, OnlineSalesDeliveryReport, OpeningStock, PartyOverAllLedger, Payment, PointOfSale, PurchaseBillEntry, PurchaseCancel, PurchaseInward, Quotation, RequirementPlanningForm, SaleOrder, SalesDelivery, SalesInvoice, SalesReport, SalesmanSummaryReport, SalesReturn, StockAdjustment, StockReport, StockTransfer, OverallSalesReports, DayBookCloseForm, DayBookClosingForm, Ledger } from "../../../Uniform/Components";
+import { AccessoryPurchaseBillEntry, AccessoryPurchasecancel, AccessoryPurchaseInward, AccessoryPurchaseOrder, AccessoryPurchaseReturn, AccessoryStockTransfer, BranchType, DeliveryChallan, ExpenseEntry, GsmMaster, MachineWiseProduction, OnlineSalesDeliveryReport, OpeningStock, Payment, PointOfSale, PurchaseBillEntry, PurchaseCancel, PurchaseInward, Quotation, RequirementPlanningForm, SaleOrder, SalesDelivery, SalesInvoice, SalesReport, SalesmanSummaryReport, SalesReturn, StockAdjustment, StockReport, StockTransfer, OverallSalesReports, DayBookCloseForm, DayBookClosingForm, Ledger, PaymentOutStandingLedger } from "../../../Uniform/Components";
 import MaterialIssue from "../../../Uniform/Components/MaterialIssue";
 import MaterialRequestForm from "../../../Uniform/Components/MaterialRequestForm";
 import { AccessoryTemplate } from "..";
 import PaymentAdjustmentForm from "../../../Uniform/Components/PaymentAdjustmentForm";
+import SalesDetailDashboard from "../Dashboard/SalesDetails/SalesDetailHome";
 
 // Lazy-loaded components
 const CountryMaster = lazy(() => import("../../components/CountryMaster"));
@@ -155,7 +156,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "SALES RETURN": <SalesReturn />,
     "PAYMENTS": <Payment />,
     "SUB CATEGORY": <SubCategoryMaster />,
-    "PAYMENT OUTSTANDING LEDGER": <PartyOverAllLedger />,
+    "PAYMENT OUTSTANDING LEDGER": <PaymentOutStandingLedger />,
     "OFFERS & PROMOTIONS": <OffersPromtions />,
     "COLLECTIONS MASTER": <CollectionsMaster />,
     "DELIVERY CHALLAN": <DeliveryChallan />,
@@ -167,7 +168,15 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "OVERALL SALES REPORTS": <OverallSalesReports />,
     "DAY BOOK CLOSING REPORT": <DayBookClosingForm />,
     "PAYMENT ADJUSTMENT FORM": <PaymentAdjustmentForm />,
-    "LEDGER": <Ledger />
+    "LEDGER": <Ledger />,
+    "SALES DETAIL DASHBOARD": (tabData) => (
+      <SalesDetailDashboard
+        companyName={tabData?.companyName || tabData?.selectedCompany}
+        Year={tabData?.Year || tabData?.selectedYear}
+        selectedmonth={tabData?.selectedmonth}
+        finYearId={tabData?.finYearId}
+      />
+    ),
   };
 
 
@@ -263,7 +272,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
       {openTabs?.tabs?.map((tab, index) => (
         <div key={index} className={`${tab.active ? "block" : "hidden"}`}>
           <Suspense fallback={<div>Loading...</div>}>
-            {tabs[tab.name]}
+            {typeof tabs[tab.name] === "function" ? tabs[tab.name](tab.data) : tabs[tab.name]}
           </Suspense>
         </div>
       ))}

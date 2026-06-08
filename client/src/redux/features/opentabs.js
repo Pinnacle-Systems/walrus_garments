@@ -33,6 +33,7 @@ export const openTabs = createSlice({
           projectId: action.payload.projectId,
           projectForm: action.payload.projectForm,
           transactionType: action.payload.transactionType,
+          data: action.payload.data,
         };
       } else {
         state.tabs.push({
@@ -41,7 +42,8 @@ export const openTabs = createSlice({
           active: true,
           projectId: action.payload.projectId,
           projectForm: action.payload.projectForm,
-          transactionType: action.payload.transactionType
+          transactionType: action.payload.transactionType,
+          data: action.payload.data,
         });
       }
       localStorage.setItem("openTabs", JSON.stringify(state.tabs));

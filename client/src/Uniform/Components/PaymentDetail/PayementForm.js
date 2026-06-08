@@ -520,25 +520,7 @@ const PaymentForm = ({
         }
     }
 
-    const deleteData = async () => {
-        if (id) {
-            if (!window.confirm("Are you sure to delete...?")) {
-                return
-            }
-            try {
-                await removeData(id).unwrap();
-                setId("");
-                toast.success("Deleted Successfully");
-                dispatch({
-                    type: `partyMaster/invalidateTags`,
-                    payload: ['Party'],
-                });
-            } catch (error) {
-                toast.error("something went wrong")
-            }
-            ;
-        }
-    }
+
 
     const handleKeyDown = (event) => {
         let charCode = String.fromCharCode(event.which).toLowerCase();

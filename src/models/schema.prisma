@@ -2843,10 +2843,10 @@ model Ledger {
   salesReturnId     Int?
   Pos               Pos?             @relation(fields: [posId], references: [id], onDelete: Cascade)
   posId             Int?
-  Payment          Payment?        @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  paymentId         Int?             
+  Payment           Payment?         @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  paymentId         Int?
   PosPayments       PosPayments?     @relation(fields: [posPaymentId], references: [id], onDelete: Cascade)
-  posPaymentId      Int?             
+  posPaymentId      Int?
 }
 
 model ProcessDeliveryReturn {
@@ -5153,6 +5153,7 @@ model Saleorder {
   isDeleted             Boolean?               @default(false)
   courierChargeEnabled  Boolean?               @default(false)
   courierCharge         String?
+  deliveryMarginPercent Float?                 @default(50.0)
   SaleOrderItems        SaleOrderItems[]
   SalesDelivery         SalesDelivery[]
   SalesInvoice          SalesInvoice[]
@@ -5241,37 +5242,39 @@ model StockAdjustmentItems {
 }
 
 model SalesDelivery {
-  id                     Int                                  @id @default(autoincrement())
-  docId                  String?
-  date                   DateTime?
-  Branch                 Branch?                              @relation(fields: [branchId], references: [id])
-  branchId               Int?
-  Party                  Party?                               @relation(fields: [customerId], references: [id])
-  customerId             Int?
-  createdAt              DateTime?                            @default(now())
-  updatedAt              DateTime?                            @updatedAt
-  createdBy              User?                                @relation("createdBy", fields: [createdById], references: [id])
-  createdById            Int?
-  updatedBy              User?                                @relation("updatedBy", fields: [updatedById], references: [id])
-  updatedById            Int?
-  taxType                String?
-  packingChargeEnabled   Boolean?                             @default(false)
-  packingCharge          String?
-  shippingChargeEnabled  Boolean?                             @default(false)
-  shippingCharge         String?
-  remarks                String?
-  termsAndCondition      String?
-  TermsAndConditionsNew  TermsAndConditionsNew?               @relation(fields: [termsAndConditionsId], references: [id])
-  termsAndConditionsId   Int?
-  saleOrderId            Int?
-  Saleorder              Saleorder?                           @relation(fields: [saleOrderId], references: [id])
-  isDeleted              Boolean?                             @default(false)
-  courierChargeEnabled   Boolean?                             @default(false)
-  courierCharge          String?
-  status                 String?                              @default("APPROVED")
-  isOverDelivery         Boolean?                             @default(false)
-  approvedBy             Int?
-  approvedAt             DateTime?
+  id                    Int                    @id @default(autoincrement())
+  docId                 String?
+  date                  DateTime?
+  Branch                Branch?                @relation(fields: [branchId], references: [id])
+  branchId              Int?
+  Party                 Party?                 @relation(fields: [customerId], references: [id])
+  customerId            Int?
+  createdAt             DateTime?              @default(now())
+  updatedAt             DateTime?              @updatedAt
+  createdBy             User?                  @relation("createdBy", fields: [createdById], references: [id])
+  createdById           Int?
+  updatedBy             User?                  @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById           Int?
+  taxType               String?
+  packingChargeEnabled  Boolean?               @default(false)
+  packingCharge         String?
+  shippingChargeEnabled Boolean?               @default(false)
+  shippingCharge        String?
+  remarks               String?
+  termsAndCondition     String?
+  TermsAndConditionsNew TermsAndConditionsNew? @relation(fields: [termsAndConditionsId], references: [id])
+  termsAndConditionsId  Int?
+  saleOrderId           Int?
+  Saleorder             Saleorder?             @relation(fields: [saleOrderId], references: [id])
+  isDeleted             Boolean?               @default(false)
+  courierChargeEnabled  Boolean?               @default(false)
+  courierCharge         String?
+  status                String?                @default("APPROVED")
+  isOverDelivery        Boolean?               @default(false)
+  approvedBy            Int?
+  approvedAt            DateTime?
+  deliveryMarginPercent Float?
+
   SalesDeliveryItems     SalesDeliveryItems[]
   FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
   SalesReturn            SalesReturn[]

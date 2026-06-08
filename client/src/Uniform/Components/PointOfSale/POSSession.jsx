@@ -48,7 +48,7 @@ import { useGetcollectionsQuery } from '../../../redux/uniformService/Collection
 import { useGetRolesQuery } from '../../../redux/services/RolesMasterService';
 import secureLocalStorage from 'react-secure-storage';
 
-const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock = {}, initialEditSaleId = null, onGoToReports }) => {
+const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock = {}, initialEditSaleId = null, onGoToReports, autoOpenPayment = false }) => {
 
     // =========================================================================
     // CATEGORY 1: CORE HOOKS, PARAMS & REDUX APIS
@@ -165,6 +165,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const [paidCard, setPaidCard] = useState(0);
     const [paidOnline, setPaidOnline] = useState(0);
     const [upiRefNo, setUpiRefNo] = useState('');
+    const [paymentTriggered, setPaymentTriggered] = useState(false);
 
     // Printing/Receipt States
     const [printData, setPrintData] = useState(null);
@@ -340,6 +341,17 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         if (selectedReportSaleId) syncFormWithDb(fetchedSaleResponse?.data);
         else syncFormWithDb(undefined);
     }, [isSingleLoading, isSingleFetching, selectedReportSaleId, fetchedSaleResponse, syncFormWithDb]);
+
+    useEffect(() => {
+        setPaymentTriggered(false);
+    }, [selectedReportSaleId]);
+
+    useEffect(() => {
+        if (autoOpenPayment && cart.length > 0 && selectedReportSaleId && !paymentTriggered) {
+            handlePayNow();
+            setPaymentTriggered(true);
+        }
+    }, [autoOpenPayment, cart, selectedReportSaleId, paymentTriggered]);
 
     // View router helper
     const setShowReports = (val) => {

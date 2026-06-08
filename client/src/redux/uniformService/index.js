@@ -63,4 +63,5 @@ export { default as ExpenseMasterApi } from "./ExpenseMasterServices"
 export { default as ExpenseEntryApi } from "./ExpenseEntryServices"
 export { default as DayBookApi } from "./DayBookService"
 export { default as DashboardApi } from "./DashboardService"
+export { default as SalesDashboardApi } from "./SalesDashboardService"
 

@@ -434,18 +434,24 @@ async function create(body) {
             });
 
             if (!isReturn) {
-                await tx.ledger.create({
-                    data: {
-                        EntryType: "Customer_Payment",
-                        LedgerType: "Customer",
-                        creditOrDebit: "Credit",
-                        partyId: parseInt(customerId),
-                        amount: Math.abs(parseFloat(netAmount || 0)),
-                        partyBillNo: posRecord.docId,
-                        partyBillDate: new Date(),
-                        posId: posRecord.id
-                    }
-                });
+                const actualPaymentAmount = (posPayments || [])
+                    .filter(p => p.paymentMode !== 'STORE_CREDIT')
+                    .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+                if (actualPaymentAmount > 0) {
+                    await tx.ledger.create({
+                        data: {
+                            EntryType: "Customer_Payment",
+                            LedgerType: "Customer",
+                            creditOrDebit: "Credit",
+                            partyId: parseInt(customerId),
+                            amount: Math.abs(actualPaymentAmount),
+                            partyBillNo: posRecord.docId,
+                            partyBillDate: new Date(),
+                            posId: posRecord.id
+                        }
+                    });
+                }
             }
 
 
@@ -639,18 +645,24 @@ async function update(id, body) {
             });
 
             if (!isReturn) {
-                await tx.ledger.create({
-                    data: {
-                        EntryType: "Customer_Payment",
-                        LedgerType: "Customer",
-                        creditOrDebit: "Credit",
-                        partyId: parseInt(customerId),
-                        amount: Math.abs(parseFloat(netAmount || 0)),
-                        partyBillNo: updatedPos.docId,
-                        partyBillDate: new Date(),
-                        posId: updatedPos.id,
-                    }
-                });
+                const actualPaymentAmount = (posPayments || [])
+                    .filter(p => p.paymentMode !== 'STORE_CREDIT')
+                    .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+                if (actualPaymentAmount > 0) {
+                    await tx.ledger.create({
+                        data: {
+                            EntryType: "Customer_Payment",
+                            LedgerType: "Customer",
+                            creditOrDebit: "Credit",
+                            partyId: parseInt(customerId || updatedPos.customerId),
+                            amount: Math.abs(actualPaymentAmount),
+                            partyBillNo: updatedPos.docId,
+                            partyBillDate: new Date(),
+                            posId: updatedPos.id,
+                        }
+                    });
+                }
             }
 
 

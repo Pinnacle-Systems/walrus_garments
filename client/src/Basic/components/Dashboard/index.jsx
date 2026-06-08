@@ -32,6 +32,8 @@ import MonthlySales from "./SalesReports/MonthlySales";
 import YearlySales from "./SalesReports/YearlySales";
 import SlowMovementItem from "./SalesReports/SlowMovementItem";
 import SalesPeriodBreakup from "./DashBoardBreakTables/SalesPeriodBreakup";
+import SalesData from "./SalesDetails";
+import { useGetTotalSalesQuery } from "../../../redux/uniformService/SalesDashboardService";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -90,7 +92,9 @@ const Dashboard = () => {
     );
 
     const [triggerSalesAnalytics, { data: analyticsRes, isFetching: isFetchingAnalytics }] = useLazyGetSalesAnalyticsQuery();
-    const loadingAnalytics = isFetchingAnalytics;
+
+    const { data: totalSales, isLoading, isError, error, refetch } = useGetTotalSalesQuery();
+
 
     useEffect(() => {
         fetchDashboardData();
@@ -109,6 +113,8 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
+            refetch()
+
             const response = await axios.get(`${BASE_URL}${DASHBOARD_API}/management-insights`, {
                 params: { branchId }
             });
@@ -216,7 +222,7 @@ const Dashboard = () => {
                 {modalConfig.type === 'pendingDeliveries' && <PendingDeliveriesBreakup onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} data={dashboardData} />}
 
             </Modal>
-            <div className="mt-2 overflow-y-auto p-4 bg-gray-50 h-[78vh] rounded-xl custom-scrollbar">
+            <div className="mt-2 overflow-y-auto p-4 bg-gray-50 h-[90vh] rounded-xl custom-scrollbar">
                 <header className="mb-4 flex justify-between items-center">
                     <div>
                         <h4 className="text-2xl font-extrabold text-gray-900 tracking-tight">Management Dashboard</h4>
@@ -230,8 +236,7 @@ const Dashboard = () => {
                     </button>
                 </header>
 
-                {/* Cards Section */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5">
                     {cardsData.map((card, index) => (
                         <div
                             key={index}
@@ -249,112 +254,15 @@ const Dashboard = () => {
                         </div>
                     ))}
                 </div>
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4 mt-4">
-                    {/* Timeframe Navigation Tabs */}
-                    <div className="flex flex-wrap gap-2 bg-white p-1.5 rounded-xl shadow-sm border border-gray-100 flex-1 max-w-xl">
-                        {[
-                            { id: 'today', label: 'Today\'s Sales' },
-                            { id: 'weekly', label: 'Weekly Sales' },
-                            { id: 'monthly', label: 'Monthly Sales' },
-                            { id: 'yearly', label: 'Yearly Sales' },
-                            { id: 'slow_moving', label: 'Slow Moving Items' }
-                        ].map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all duration-300 ${activeTab === tab.id
-                                    ? 'bg-indigo-600 text-white shadow-md'
-                                    : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-50'
-                                    }`}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
 
-                    {/* Filter Controls Row */}
-                    <div className="flex flex-wrap items-center gap-3 bg-white p-1.5 rounded-xl shadow-sm border border-gray-100">
-                        {/* B2B / B2C / All Pills */}
-                        <div className="flex bg-gray-100 p-1 rounded-lg gap-1">
-                            {['B2B', 'B2C', 'All'].map((type) => (
-                                <button
-                                    key={type}
-                                    onClick={() => setCustomerType(type)}
-                                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${customerType === type
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'text-gray-600 hover:text-blue-600 hover:bg-gray-250'
-                                        }`}
-                                >
-                                    {type}
-                                </button>
-                            ))}
-                        </div>
 
-                        {/* Financial Year Dropdown */}
-                        <select
-                            value={finYear}
-                            onChange={(e) => setFinYear(e.target.value)}
-                            className="bg-white border border-blue-500 hover:border-blue-600 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold outline-none cursor-pointer shadow-sm transition-all"
-                        >
-                            <option value="All">All Years</option>
-                            <option value="26-27">26-27</option>
 
-                            <option value="25-26">25-26</option>
-                            <option value="24-25">24-25</option>
-                            <option value="23-24">23-24</option>
-                        </select>
-
-                        {/* All / Sales / Returns Dropdown */}
-                        <select
-                            value={saleTypeFilter}
-                            onChange={(e) => setSaleTypeFilter(e.target.value)}
-                            className="bg-white border border-gray-200 hover:border-indigo-500 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold outline-none cursor-pointer shadow-sm transition-all"
-                        >
-                            <option value="All">All Sales & Returns</option>
-                            <option value="Sales">Sales Only</option>
-                            <option value="Returns">Returns Only</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Analytics Content Area */}
-                {loadingAnalytics ? (
-                    <div className="p-10 text-center flex flex-col items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
-                        <p className="text-gray-500 text-xs font-medium">Fetching sales reports and charts...</p>
-                    </div>
-                ) : (
-                    <div className="transition-all duration-300">
-                        {activeTab === 'today' && salesAnalytics && (
-                            <TodaySales data={salesAnalytics.today} paymentChart={salesAnalytics.charts.paymentMode} onShowBreakup={handleShowSalesBreakup} />
-                        )}
-                        {activeTab === 'weekly' && salesAnalytics && (
-                            <WeeklySales data={salesAnalytics.weekly} paymentChart={salesAnalytics.charts.paymentMode} onShowBreakup={handleShowSalesBreakup} />
-                        )}
-                        {activeTab === 'monthly' && salesAnalytics && (
-                            <MonthlySales data={salesAnalytics.monthly} categoryChart={salesAnalytics.charts.categoryDist} onShowBreakup={handleShowSalesBreakup} />
-                        )}
-                        {activeTab === 'yearly' && salesAnalytics && (
-                            <YearlySales data={salesAnalytics.yearly} categoryChart={salesAnalytics.charts.categoryDist} onShowBreakup={handleShowSalesBreakup} />
-                        )}
-                        {activeTab === 'slow_moving' && salesAnalytics && (
-                            <SlowMovementItem data={salesAnalytics.slowMoving} agingData={salesAnalytics.slowMovingAging} onShowBreakup={handleShowSalesBreakup} />
-                        )}
-                    </div>
-                )}
-
-                {salesBreakupConfig.isOpen && (
-                    <SalesPeriodBreakup
-                        timeframe={salesBreakupConfig.timeframe}
-                        filterValue={salesBreakupConfig.filterValue}
-                        title={salesBreakupConfig.title}
-                        branchId={branchId}
-                        customerType={customerType}
-                        finYear={finYear}
-                        saleTypeFilter={saleTypeFilter}
-                        onClose={() => setSalesBreakupConfig({ ...salesBreakupConfig, isOpen: false })}
-                    />
-                )}
+                <SalesData
+                    totalSales={totalSales}
+                    isLoading={isLoading}
+                    isError={isError}
+                    error={error}
+                />
             </div>
         </>
 

@@ -67,6 +67,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
   const [terms, setTerms] = useState("")
+  const [deliveryMarginPercent, setDeliveryMarginPercent] = useState("50.00")
   // const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
   // const [packingCharge, setPackingCharge] = useState("");
   // const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
@@ -262,6 +263,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     setLinkedQuoteId(data?.quotationId || "")
     setSaleOrderItems(data?.SaleOrderItems ? data.SaleOrderItems : []);
     setChildRecord(data?.SalesDelivery?.length > 0 ? true : false)
+    setDeliveryMarginPercent(data?.deliveryMarginPercent !== undefined && data?.deliveryMarginPercent !== null ? String(data.deliveryMarginPercent) : "50.00");
 
 
   }, [id, linkedQuoteId]);
@@ -303,6 +305,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     courierCharge: courierChargeEnabled ? String(parseChargeAmount(courierCharge).toFixed(2)) : "",
     selectedOffersByRow,
     termsAndCondition: terms,
+    deliveryMarginPercent: deliveryMarginPercent ? parseFloat(deliveryMarginPercent) : 50.0,
   }
 
 
@@ -882,7 +885,17 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
               <div className={"col-span-1"}>
                 <ReusableInput label="Sale Order Date" value={date} type="date" required readOnly disabled />
               </div>
-
+              <div className={"col-span-2"}>
+                <TextInput
+                  name="Delivery Margin (%)"
+                  type="number"
+                  value={deliveryMarginPercent}
+                  setValue={setDeliveryMarginPercent}
+                  readOnly={readOnly}
+                  min="0"
+                  max="100"
+                />
+              </div>
             </TransactionHeaderSection>
 
             <TransactionHeaderSection title="Customer Details" className="col-span-3 overflow-visible" bodyClassName="grid-cols-11 gap-1 overflow-visible">

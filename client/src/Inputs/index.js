@@ -3359,11 +3359,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
 
 
 
-    /* ---------------------------- OUTSIDE CLICK ---------------------------- */
-    // useEffect(() => {
-    //   if (id) return;
-    //   setIsDropdownOpen(true);
-    // }, []);
+
 
 
     useEffect(() => {
@@ -3388,7 +3384,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
         return;
       }
 
-      let filtered = partyList?.data;
+      let filtered = partyList?.data
 
       filtered = filtered?.filter((item) =>
 
@@ -3399,7 +3395,9 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     }, [search, partyList, id, supplierId]);
 
 
-    /* ---------------------------- ARROW NAVIGATION --------------------------- */
+    console.log(filteredPages, "filterPages")
+
+
     useEffect(() => {
       const container = containerRef.current;
       if (!container) return;
@@ -3611,48 +3609,11 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
 
           </div>
 
-          {/* ---------------- DROPDOWN LIST ---------------- */}
-          {/* {isDropdownOpen && (
-            <div className="absolute w-full mt-1 max-h-40 overflow-y-auto  rounded bg-white z-20 border border-gray-200" ref={ref}>
-              {filteredPages.length > 0 ? (
-                filteredPages?.map((item) => (
-                  <div
-                    key={item.id}
-                    tabIndex={0}
-                    className="px-3 py-2 text-xs hover:bg-slate-100 cursor-pointer flex justify-between group border rounded-sm border-gray-400"
-                    onClick={() => {
-                      setSearchTerm(item.id);
-                      setSearch("");
-                      setIsDropdownOpen(false);
-                      setIsListShow(false);
-                      nextRef?.current?.focus();
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        setSearchTerm(item.id);
-                        setSearch("");
-                        setIsDropdownOpen(false);
-                        setIsListShow(false);
-                        nextRef?.current?.focus();
-                      }
-                    }}
-                  >
-                    <span className='0'>{item.name}</span>
 
-                  
-                  </div>
-                ))
-              ) : (
-                <div className="px-3 py-2 text-xs text-gray-500">
-                  No party found
-                </div>
-              )}
-            </div>
-          )} */}
           {isDropdownOpen && (
             <div className="border border-slate-200 rounded-md shadow-md bg-white mt-1 max-h-40 overflow-y-auto z-20 absolute w-full">
               {filteredPages?.length > 0 ? (
-                filteredPages?.map((item) => (
+                filteredPages?.filter(i => i.active == true)?.map((item) => (
                   <div
                     key={item.id}
                     tabIndex={0}

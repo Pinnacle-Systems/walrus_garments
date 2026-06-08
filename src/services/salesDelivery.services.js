@@ -430,7 +430,8 @@ async function create(body) {
         shippingChargeEnabled,
         shippingCharge,
         courierChargeEnabled,
-        courierCharge
+        courierCharge,
+        deliveryMarginPercent
     } = await body
 
 
@@ -467,6 +468,7 @@ async function create(body) {
                     courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
                     status: isOverDeliveryDetected ? "PENDING_APPROVAL" : "APPROVED",
                     isOverDelivery: isOverDeliveryDetected,
+                    // deliveryMarginPercent: deliveryMarginPercent ? parseFloat(deliveryMarginPercent) : null,
                 }
             });
 
@@ -716,7 +718,8 @@ async function update(id, body) {
         courierChargeEnabled,
         courierCharge,
         docId,
-        finYearId
+        finYearId,
+        deliveryMarginPercent
     } = await body
 
 
@@ -816,6 +819,9 @@ async function update(id, body) {
                     packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
                     shippingChargeEnabled: Boolean(shippingChargeEnabled),
                     shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
+                    courierChargeEnabled: Boolean(courierChargeEnabled),
+                    courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
+                    deliveryMarginPercent: deliveryMarginPercent ? parseFloat(deliveryMarginPercent) : null,
                 },
             })
 

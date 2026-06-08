@@ -64,6 +64,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [discountType, setDiscountType] = useState("")
   const [discountValue, setDiscountValue] = useState("")
   const [term, setTerm] = useState("")
+  const [deliveryMarginPercent, setDeliveryMarginPercent] = useState(50)
   // const [packingChargeEnabled, setPackingChargeEnabled] = useState(false);
   // const [packingCharge, setPackingCharge] = useState("");
   // const [shippingChargeEnabled, setShippingChargeEnabled] = useState(false);
@@ -91,7 +92,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   } = refs;
 
 
-  console.log(receivedAmount, "receivedAmount")
 
   const childRecord = useRef(0);
   const { branchId, companyId, userId, finYearId } = getCommonParams()
@@ -126,7 +126,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: priceTemplateList } = useGetpriceTemplateQuery({ params });
   const { data: saleOrderList } = useGetsaleOrderQuery({ params });
-  // const { data: selectedSaleOrderData, isLoading: selectedSaleOrderLoading, isFetching: selectedSaleOrderFetching } = useGetsaleOrderByIdQuery(linkedSaleOrderId, { skip: !linkedSaleOrderId || id });
+  const { data: selectedSaleOrderData } = useGetsaleOrderByIdQuery(linkedSaleOrderId, { skip: !linkedSaleOrderId });
 
 
   const {
@@ -146,18 +146,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
 
 
-  const inwardTyperef = useRef(null);
 
 
-  // useEffect(() => {
-  //   if (selectedSaleOrderData) {
-  //     setReceivedAmount(selectedSaleOrderData?.data?.totalReceivedAmount)
-  //   }
-  // }, [selectedSaleOrderLoading, selectedSaleOrderFetching, selectedSaleOrderData]);
 
-
-  // console.log(selectedSaleOrderData, "selectedSaleOrderData")
-  console.log(linkedSaleOrderId, "linkedSaleOrderId", id, 'id')
+  console.log(linkedSaleOrderId, "linkedSaleOrderId", selectedSaleOrderData, 'selectedSaleOrderData')
 
 
   const syncFormWithDb = useCallback((data, forceClear = false) => {
@@ -203,10 +195,17 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
     }
     setReceivedAmount(data?.receivedAmount ? data?.receivedAmount : 0)
+    if (data?.deliveryMarginPercent !== undefined && data?.deliveryMarginPercent !== null) {
+      setDeliveryMarginPercent(data.deliveryMarginPercent);
+    } else if (selectedSaleOrderData?.data?.deliveryMarginPercent !== undefined && selectedSaleOrderData?.data?.deliveryMarginPercent !== null) {
+      setDeliveryMarginPercent(selectedSaleOrderData.data.deliveryMarginPercent);
+    } else {
+      setDeliveryMarginPercent(50.00);
+    }
     if (data?.branchId) {
       branchIdFromApi.current = data?.branchId
     }
-  }, [convertSaleOrderId, id]);
+  }, [convertSaleOrderId, id, selectedSaleOrderData]);
 
   useEffect(() => {
     if (id) {
@@ -215,6 +214,12 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       syncFormWithDb(undefined);
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  // useEffect(() => {
+  //   if (!id && selectedSaleOrderData?.data?.deliveryMarginPercent !== undefined && selectedSaleOrderData?.data?.deliveryMarginPercent !== null) {
+  //     setDeliveryMarginPercent(String(selectedSaleOrderData.data.deliveryMarginPercent));
+  //   }
+  // }, [selectedSaleOrderData, id]);
 
   const data = {
     docId,
@@ -243,6 +248,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     shippingCharge: shippingChargeEnabled ? String(parseChargeAmount(shippingCharge).toFixed(2)) : "",
     courierChargeEnabled,
     courierCharge: courierChargeEnabled ? String(parseChargeAmount(courierCharge).toFixed(2)) : "",
+    deliveryMarginPercent: deliveryMarginPercent ? parseFloat(deliveryMarginPercent) : 50.0,
 
   }
 
@@ -370,6 +376,131 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       });
       return;
     }
+
+    if (linkedSaleOrderId && selectedSaleOrderData?.data) {
+      const saleOrderItems = selectedSaleOrderData.data.remaingSaleOrderItems || [];
+
+      const itemsPendingValue = saleOrderItems.reduce((sum, item) => {
+        const qty = parseFloat(item.balanceQty || 0);
+        const price = parseFloat(item.price || 0);
+        const taxPercent = parseFloat(item.taxPercent || 0);
+        const taxMethod = item.taxMethod || "Inclusive";
+        const discountType = item.discountType;
+        const discountValue = parseFloat(item.discountValue || 0);
+
+        const gross = price * qty;
+        let discountedAmount = gross;
+        if (discountType === "Percentage") {
+          discountedAmount = gross - (gross * discountValue) / 100;
+        } else if (discountType === "Flat") {
+          discountedAmount = gross - discountValue;
+        }
+        discountedAmount = Math.max(0, discountedAmount);
+
+        let net = 0;
+        if (taxMethod === "Inclusive" && taxPercent > 0) {
+          net = discountedAmount;
+        } else {
+          const subTotal = discountedAmount;
+          const taxAmount = subTotal * (taxPercent / 100);
+          net = subTotal + taxAmount;
+        }
+        return sum + net;
+      }, 0);
+
+      const otherCharges =
+        (selectedSaleOrderData.data.packingChargeEnabled ? parseFloat(selectedSaleOrderData.data.packingCharge || 0) : 0) +
+        (selectedSaleOrderData.data.shippingChargeEnabled ? parseFloat(selectedSaleOrderData.data.shippingCharge || 0) : 0) +
+        (selectedSaleOrderData.data.courierChargeEnabled ? parseFloat(selectedSaleOrderData.data.courierCharge || 0) : 0);
+
+      const totalSaleOrderPendingValue = itemsPendingValue + otherCharges;
+      const receivedPayment = parseFloat(selectedSaleOrderData.data.totalReceivedAmount || receivedAmount || 0);
+      const marginPercent = deliveryMarginPercent ? parseFloat(deliveryMarginPercent) : 50.0;
+
+      // Calculate net amount of the old delivery if editing, to compute the net change in pending order value
+      let oldDeliveryNetAmount = 0;
+      // if (id && singleData?.data) {
+      //   const oldItems = singleData.data.SalesDeliveryItems || [];
+      //   const oldItemsValue = oldItems.reduce((sum, item) => {
+      //     const qty = parseFloat(item.deliveryQty || 0);
+      //     const price = parseFloat(item.price || 0);
+      //     const taxPercent = parseFloat(item.taxPercent || 0);
+      //     const taxMethod = item.taxMethod || "Inclusive";
+      //     const discountType = item.discountType;
+      //     const discountValue = parseFloat(item.discountValue || 0);
+
+      //     const gross = price * qty;
+      //     let discountedAmount = gross;
+      //     if (discountType === "Percentage") {
+      //       discountedAmount = gross - (gross * discountValue) / 100;
+      //     } else if (discountType === "Flat") {
+      //       discountedAmount = gross - discountValue;
+      //     }
+      //     discountedAmount = Math.max(0, discountedAmount);
+
+      //     let net = 0;
+      //     if (taxMethod === "Inclusive" && taxPercent > 0) {
+      //       net = discountedAmount;
+      //     } else {
+      //       const subTotal = discountedAmount;
+      //       const taxAmount = subTotal * (taxPercent / 100);
+      //       net = subTotal + taxAmount;
+      //     }
+      //     return sum + net;
+      //   }, 0);
+
+      //   const oldCharges =
+      //     (singleData.data.packingChargeEnabled ? parseFloat(singleData.data.packingCharge || 0) : 0) +
+      //     (singleData.data.shippingChargeEnabled ? parseFloat(singleData.data.shippingCharge || 0) : 0) +
+      //     (singleData.data.courierChargeEnabled ? parseFloat(singleData.data.courierCharge || 0) : 0);
+
+      //   oldDeliveryNetAmount = oldItemsValue + oldCharges;
+      // }
+
+      // Safe balance of the order that is remaining after this delivery completes
+      const pendingValueAfter = Math.max(0, totalSaleOrderPendingValue);
+      const marginValue = pendingValueAfter * (marginPercent / 100);
+      const allowedLimit = Math.max(0, receivedPayment - marginValue);
+
+      console.log(
+        {
+          itemsPendingValue,
+          totalSaleOrderPendingValue,
+          oldDeliveryNetAmount,
+          adjustedNetAmount,
+          pendingValueAfter,
+          marginValue,
+          allowedLimit
+        }
+      )
+
+      console.log(totalSaleOrderPendingValue, oldDeliveryNetAmount, adjustedNetAmount, "totalSaleOrderPendingValue, oldDeliveryNetAmount, adjustedNetAmount", totalSaleOrderPendingValue + (oldDeliveryNetAmount - adjustedNetAmount), pendingValueAfter)
+
+
+
+      if (adjustedNetAmount > allowedLimit) {
+        Swal.fire({
+          title: "Sale Order Margin Checkpoint",
+          html: `
+            <div class="text-left text-xs space-y-2">
+              <p>This Sale Order has a delivery margin constraint of <b>${marginPercent}%</b>.</p>
+              <hr class="my-1"/>
+              <p>• <b>Pending Sale Order Value (Remaining)</b>: <span class="float-right font-semibold">₹${pendingValueAfter.toFixed(2)}</span></p>
+              <p>• <b>Customer Payment Received</b>: <span class="float-right font-semibold">₹${receivedPayment.toFixed(2)}</span></p>
+              <p>• <b>Required Margin (Deducted)</b>: <span class="float-right font-semibold">₹${marginValue.toFixed(2)}</span></p>
+              <hr class="my-1"/>
+              <p class="text-green-700 font-bold">• <b>Maximum Allowed Delivery Value</b>: <span class="float-right text-green-700 font-bold">₹${allowedLimit.toFixed(2)}</span></p>
+              <hr class="my-1"/>
+              <p class="font-semibold text-red-600">Current Delivery Value (₹${adjustedNetAmount.toFixed(2)}) exceeds this limit!</p>
+            </div>
+          `,
+          icon: "warning",
+          confirmButtonText: "Okay"
+        });
+        return; // Block save flow
+      }
+    }
+
     if (receivedAmount < adjustedNetAmount) {
       Swal.fire({
         title: "Insufficient Payment",
@@ -873,6 +1004,12 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
           onClose={() => setIsSelectionModalOpen(false)}
           receivedAmount={receivedAmount}
           setReceivedAmount={setReceivedAmount}
+          setPackingChargeEnabled={setPackingChargeEnabled}
+          setPackingCharge={setPackingCharge}
+          setShippingChargeEnabled={setShippingChargeEnabled}
+          setShippingCharge={setShippingCharge}
+          setCourierChargeEnabled={setCourierChargeEnabled}
+          setCourierCharge={setCourierCharge}
         />
       </Modal>
 
@@ -938,7 +1075,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                 />
               </div>
               <div className="col-span-4 flex flex-row gap-2">
-                <div className="col-span-1">
+                <div className="flex-1 min-w-[80px]">
                   <DropdownInput
                     name="Linked Sale Order"
                     options={dropDownListObject(
@@ -957,27 +1094,56 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                     readOnly={Boolean(id) || readOnly}
                   />
                 </div>
-                <div className="col-span-2">
-                  <button
-                    className="1 px-2 py-0.5 mt-6 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
-                    onClick={() => setIsSelectionModalOpen(true)(true)}
+                <div className="flex-initial">
+                  {/* <button
+                    className="px-2 py-0.5 mt-6 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
+                    onClick={() => setIsSelectionModalOpen(true)}
                     disabled={id}
                   >
                     Fill Sale Order
+                  </button> */}
+                  <button
+                    className="w-8 h-8 mt-4 flex items-center justify-center bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+                    onClick={() => setIsSelectionModalOpen(true)}
+                    disabled={id}
+                    title="Fill Sale Order"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                      <rect x="9" y="3" width="6" height="4" rx="1" ry="1" />
+                      <line x1="9" y1="12" x2="15" y2="12" />
+                      <line x1="9" y1="16" x2="12" y2="16" />
+                    </svg>
                   </button>
                 </div>
-                <div>
+                <div className="w-24">
                   <TextInput
-                    name="Received Amount"
+                    name="Receied Amount"
+                    className={"text-right"}
                     value={
                       receivedAmount}
                     disabled
                     required
                   />
                 </div>
+                <div className="w-24">
+                  <TextInput
+                    name="Margin (%)"
+                    type="number"
+                    className={"text-right"}
+                    value={deliveryMarginPercent}
+                    setValue={(value) => setDeliveryMarginPercent(value)}
+                    min="0"
+                    max="100"
+                    readOnly={readOnly}
+                  />
+                </div>
               </div>
 
+
+
             </TransactionHeaderSection>
+
 
           </div>
         )}

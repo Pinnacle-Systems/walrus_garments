@@ -5,7 +5,7 @@ import { VIEW } from '../../../icons';
 import { useDispatch } from 'react-redux';
 import { push } from '../../../redux/features/opentabs';
 
-const PartyOverAllLedger = () => {
+const PaymentOutStandingLedger = () => {
     const [searchPartyName, setSearchPartyName] = useState('');
     const { data } = useGetPartyQuery({ params: { isPaymentOutstanding: true, searchValue: searchPartyName } });
     const partyList = data?.data?.filter(i => !i.isB2C && i.isClient) || [];
@@ -70,4 +70,4 @@ const PartyOverAllLedger = () => {
     )
 }
 
-export default PartyOverAllLedger
+export default PaymentOutStandingLedger

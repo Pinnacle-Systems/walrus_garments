@@ -170,7 +170,7 @@ const useInvalidateTags = () => {
         },
         {
             type: `saleOrder/invalidateTags`,
-            payload: ["saleOrderList", "saleOrderById"],
+            payload: ["saleOrder"],
         },
         {
             type: `salesInvoice/invalidateTags`,

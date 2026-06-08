@@ -3,7 +3,7 @@ import { useGetsaleOrderByIdQuery } from '../../../redux/uniformService/saleOrde
 import Swal from 'sweetalert2';
 
 const DeliveryItemsSelection = ({ linkedSaleOrderId, setDeliveryItems, deliveryItems, setDeliveryItemSelection, onClose,
-    setReceivedAmount
+    setReceivedAmount, setPackingChargeEnabled, setPackingCharge, setShippingChargeEnabled, setShippingCharge, setCourierChargeEnabled, setCourierCharge
 }) => {
     const [selectedIndices, setSelectedIndices] = useState([]);
     const [saleOrderItems, setSaleOrderItems] = useState([]);
@@ -14,7 +14,16 @@ const DeliveryItemsSelection = ({ linkedSaleOrderId, setDeliveryItems, deliveryI
         isLoading,
     } = useGetsaleOrderByIdQuery(linkedSaleOrderId, { skip: !linkedSaleOrderId });
 
-    console.log(saleOrderItems, "saleOrderItems")
+    const parseChargeAmount = (value) => {
+        const parsedValue = parseFloat(value);
+        return Number.isFinite(parsedValue) ? parsedValue : 0;
+    };
+    const formatChargeValue = (value) => {
+        if (value === "" || value === null || value === undefined) {
+            return "";
+        }
+        return parseChargeAmount(value).toFixed(2);
+    };
 
     useEffect(() => {
         if (saleorderData?.data?.remaingSaleOrderItems) {
@@ -23,7 +32,18 @@ const DeliveryItemsSelection = ({ linkedSaleOrderId, setDeliveryItems, deliveryI
         if (saleorderData?.data?.totalReceivedAmount) {
             setReceivedAmount(saleorderData.data.totalReceivedAmount)
         }
+        setPackingChargeEnabled(Boolean(saleorderData?.data?.packingChargeEnabled) || parseChargeAmount(saleorderData?.data?.packingCharge) > 0);
+        setPackingCharge(saleorderData?.data?.packingChargeEnabled ? formatChargeValue(saleorderData?.data?.packingCharge) : "");
+        setShippingChargeEnabled(Boolean(saleorderData?.data?.shippingChargeEnabled) || parseChargeAmount(saleorderData?.data?.shippingCharge) > 0);
+        setShippingCharge(saleorderData?.data?.shippingChargeEnabled ? formatChargeValue(saleorderData?.data?.shippingCharge) : "");
+        setCourierChargeEnabled(Boolean(saleorderData?.data?.courierChargeEnabled) || parseChargeAmount(saleorderData?.data?.courierCharge) > 0);
+        setCourierCharge(saleorderData?.data?.courierChargeEnabled ? formatChargeValue(saleorderData?.data?.courierCharge) : "");
     }, [saleorderData]);
+
+
+
+
+
 
     function handleDone() {
 

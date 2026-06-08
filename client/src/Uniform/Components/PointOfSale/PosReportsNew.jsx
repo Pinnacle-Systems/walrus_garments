@@ -14,7 +14,7 @@ import ReactPaginate from 'react-paginate';
 import { FaChevronLeft, FaChevronRight, FaEllipsisV } from 'react-icons/fa';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 import { useGetQuotationMasterQuery, useGetQuotationQuery } from '../../../redux/uniformService/quotationServices';
-import { useGetPointOfSalesQuery, useCancelPointOfSalesMutation } from '../../../redux/uniformService/PointOfSalesService';
+import { useGetPointOfSalesQuery, useCancelPointOfSalesMutation, useLazyGetPointOfSalesQuery } from '../../../redux/uniformService/PointOfSalesService';
 import { FiPrinter, FiXCircle, FiRefreshCw, FiCalendar } from 'react-icons/fi';
 import { PDFViewer } from '@react-pdf/renderer';
 import Modal from '../../../UiComponents/Modal';
@@ -122,6 +122,7 @@ const PosReportsNew = ({
     const { branchId: currentBranchId, companyId } = getCommonParams();
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
     const [cancelPointOfSales] = useCancelPointOfSalesMutation();
+    const [triggerGetPOS] = useLazyGetPointOfSalesQuery();
 
     const handleCancel = async (id) => {
         const result = await Swal.fire({
@@ -228,6 +229,49 @@ const PosReportsNew = ({
             socket.disconnect();
         };
     }, [branchId, refetch]);
+
+    const handleScannedBillNo = async (docNo) => {
+        try {
+            const response = await triggerGetPOS({ params: { serachDocNo: docNo } }).unwrap();
+            if (response?.statusCode === 0 && response?.data?.length > 0) {
+                const sale = response.data[0];
+
+                if (sale.bilStatus === "PAID") {
+                    Swal.fire({
+                        title: "Already Paid",
+                        text: `Bill ${docNo} is already paid.`,
+                        icon: "info",
+                    });
+                    return;
+                }
+                if (sale.isCancel) {
+                    Swal.fire({
+                        title: "Cancelled Bill",
+                        text: `Bill ${docNo} is cancelled.`,
+                        icon: "warning",
+                    });
+                    return;
+                }
+
+                onEdit(sale, true);
+            } else {
+                Swal.fire({
+                    title: "Not Found",
+                    text: `Bill number ${docNo} not found.`,
+                    icon: "error",
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching bill by barcode:", error);
+            Swal.fire({
+                title: "Error",
+                text: "Failed to fetch bill details.",
+                icon: "error",
+            });
+        }
+    };
+
+
 
 
 
@@ -410,6 +454,16 @@ const PosReportsNew = ({
                                             value={serachDocNo}
                                             onChange={(e) => {
                                                 setSerachDocNo(e.target.value);
+                                            }}
+                                            onKeyDown={async (e) => {
+                                                if (e.key === "Enter") {
+                                                    const scannedValue = serachDocNo.trim();
+                                                    if (scannedValue && /\/(POS|RE)\//i.test(scannedValue)) {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        await handleScannedBillNo(scannedValue);
+                                                    }
+                                                }
                                             }}
                                         />
                                     </th>

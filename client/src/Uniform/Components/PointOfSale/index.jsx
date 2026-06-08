@@ -72,9 +72,9 @@ const POSMultiTabWrapper = () => {
         setCurrentView("SESSION");
     };
 
-    const handleAddEditTab = (sale) => {
+    const handleAddEditTab = (sale, autoOpenPayment = false) => {
         const newId = nextTabId;
-        setTabs([...tabs, { id: newId, title: `Edit: ${sale.docId || 'Bill'}`, cart: [], editSaleId: sale.id }]);
+        setTabs([...tabs, { id: newId, title: `Edit: ${sale.docId || 'Bill'}`, cart: [], editSaleId: sale.id, autoOpenPayment }]);
         setActiveTabId(newId);
         setNextTabId(newId + 1);
         setCurrentView("SESSION");
@@ -269,6 +269,7 @@ const POSMultiTabWrapper = () => {
                                     onCartUpdate={handleCartUpdate}
                                     globalReservedStock={globalReservedStock}
                                     initialEditSaleId={tab.editSaleId}
+                                    autoOpenPayment={tab.autoOpenPayment}
                                     onGoToReports={() => {
                                         setCurrentView("REPORTS");
                                         if (tab.editSaleId) {

@@ -36,7 +36,7 @@ import { setOpenPartyModal } from "../../../redux/features/openModel";
 import { push } from "../../../redux/features/opentabs";
 import { useGetPaytermMasterQuery } from "../../../redux/services/PayTermMasterServices";
 import Modal from "../../../UiComponents/Modal";
-import { Check, LayoutGrid, Plus, Table } from "lucide-react";
+import { Check, LayoutGrid, Plus, Power, Table } from "lucide-react";
 import { useGetbranchTypeQuery } from "../../../redux/uniformService/BranchTypeMaster";
 import MasterPageLayout from "../MasterPageLayout";
 import Swal from "sweetalert2";
@@ -891,6 +891,17 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
     setReadOnly(false);
   };
 
+  const ACTIVE = (
+    <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+
+  const INACTIVE = (
+    <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
 
 
 
@@ -926,7 +937,11 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       accessor: (item) => item.address,
       cellClass: () => 'font-medium text-gray-900',
       className: 'text-gray-800 uppercase w-96'
-
+    },
+    {
+      header: "Status",
+      accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+      className: "font-medium text-gray-900 text-center uppercase w-16",
     },
 
 
@@ -1684,7 +1699,9 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
             </div>
           </div>
 
+
         </div>
+
       </>
 
     )

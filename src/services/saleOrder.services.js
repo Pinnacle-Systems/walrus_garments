@@ -729,7 +729,8 @@ async function create(body) {
         termsAndCondition,
         termId,
         courierChargeEnabled,
-        courierCharge
+        courierCharge,
+        deliveryMarginPercent
     } = await body
 
     const quotationValidationMessage = await validateQuotationConversion(quoteId);
@@ -764,6 +765,7 @@ async function create(body) {
                     termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
                     courierChargeEnabled: Boolean(courierChargeEnabled),
                     courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
+                    deliveryMarginPercent: deliveryMarginPercent !== undefined && deliveryMarginPercent !== null ? parseFloat(deliveryMarginPercent) : 50.0,
                     SaleOrderItems: {
                         createMany: saleOrderItems?.length > 0 ? {
                             data: saleOrderItems?.filter(temp => temp.itemId).map((temp) => {
@@ -812,7 +814,8 @@ async function update(id, body) {
         termsAndCondition,
         termId,
         courierChargeEnabled,
-        courierCharge
+        courierCharge,
+        deliveryMarginPercent
     } = await body
 
     const dataFound = await prisma.saleorder.findUnique({
@@ -871,6 +874,7 @@ async function update(id, body) {
                     termsAndCondition: termsAndCondition ? termsAndCondition : undefined,
                     courierChargeEnabled: Boolean(courierChargeEnabled),
                     courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
+                    deliveryMarginPercent: deliveryMarginPercent !== undefined && deliveryMarginPercent !== null ? parseFloat(deliveryMarginPercent) : 50.0,
                 },
             })
 

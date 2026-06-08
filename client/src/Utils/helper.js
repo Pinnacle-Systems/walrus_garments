@@ -578,3 +578,71 @@ export const ModeChip = ({ id, readOnly }) => {
 
   return null;
 };
+
+
+export const addInsightsRowTurnOver = ({
+  worksheet,
+  startRow = 2,
+  totalColumns,
+  selectedYear,
+  localCompany,
+  dynamicValue,
+  dynamicField,
+  disableFinYear,
+  secondDynamicField,
+  seconddynamicValue
+
+}) => {
+
+
+
+  const insightText =
+
+    `${disableFinYear ? "" : `FinYear :  ${selectedYear}    |    `}` +
+    `Comp Code :  ${localCompany}    |    ` +
+    // `${dynamicField} :  ${dynamicValue}    |    ` +
+    `${dynamicField ? `${dynamicField}: ${dynamicValue}    |    ` : ""}` +
+    `${secondDynamicField ? `${secondDynamicField}: ${seconddynamicValue}    |    ` : ""}`;
+
+
+
+
+  // Insert insights row
+  worksheet.insertRow(startRow, [insightText]);
+
+  // 🔒 MUST match title merge range (A1:F1 → A2:F2)
+  const lastColumnLetter = worksheet.getColumn(totalColumns)._letter;
+
+  worksheet.mergeCells(`A${startRow}:${lastColumnLetter}${startRow}`);
+
+  const cell = worksheet.getCell(`A${startRow}`);
+
+  cell.font = { bold: true, size: 12 };
+  cell.alignment = {
+    horizontal: "left",
+    vertical: "middle",
+    wrapText: false,
+    indent: 1, // spacing from left
+  };
+
+  worksheet.getRow(startRow).height = 30;
+};
+
+
+
+export const formatQtyByUOM = (qty, uom) => {
+  if (qty === null || qty === undefined) return "-";
+
+  const decimals = UOM_DECIMALS[uom?.toUpperCase()] ?? 2;
+
+  return Number(qty).toFixed(decimals);
+};
+
+export const getExcelQtyFormatByUOM = (uom) => {
+  const decimals = UOM_DECIMALS[uom?.toUpperCase()] ?? 2;
+
+  // Build Excel number format dynamically
+  if (decimals === 0) return "#,##,##0";
+
+  return `#,##,##0.${"0".repeat(decimals)}`;
+};

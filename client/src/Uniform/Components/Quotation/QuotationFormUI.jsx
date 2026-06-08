@@ -444,12 +444,12 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
   const defaultMinimumAdvancePayment = (parseFloat(adjustedNetAmount || 0) * 0.25).toFixed(2);
 
-  console.log(defaultMinimumAdvancePayment, "minimumAdvancePayment", minimumAdvancePayment)
+  console.log(defaultMinimumAdvancePayment, "minimumAdvancePayment", minimumAdvancePayment, adjustedNetAmount)
 
   useEffect(() => {
     setMinimumAdvancePayment(defaultMinimumAdvancePayment);
 
-  }, [netAmount])
+  }, [netAmount, extraCharges])
 
 
 
@@ -632,7 +632,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       extraTotalsContent={
         <div className="flex items-center justify-between gap-2 py-0.5 text-[12px]">
           <div className="flex items-center gap-2">
-            <span className="text-slate-600">Min. Advance</span>
+            <span className="text-slate-600">Minimum Advance</span>
             <input
               disabled={readOnly}
               type="checkbox"

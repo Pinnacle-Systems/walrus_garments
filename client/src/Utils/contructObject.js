@@ -59,3 +59,12 @@ export const dropDownListMergedObjectStateCity = (data) => {
     }
     return outputData
 }
+
+
+export const dropDownFinYearNew = (data) => {
+    const outputData = [];
+    for (let i of data) {
+        outputData.push({ show: getYearShortCode(i["from"], i["to"]), value: getYearShortCode(i["from"], i["to"]) })
+    }
+    return outputData
+}
