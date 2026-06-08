@@ -5273,7 +5273,6 @@ model SalesDelivery {
   isOverDelivery        Boolean?               @default(false)
   approvedBy            Int?
   approvedAt            DateTime?
-  deliveryMarginPercent Float?
 
   SalesDeliveryItems     SalesDeliveryItems[]
   FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
