@@ -152,17 +152,7 @@ const SaleOrder = () => {
         dispatch(push({ name: "SALES DELIVERY", projectId: dataObj.id }));
     };
 
-    const handleDelete = async (id, childRecord) => {
-
-
-        // if (childRecordCount(childRecord)) {
-        //     Swal.fire({
-        //         icon: 'error',
-        //         text: 'Child Record Exists',
-        //     });
-        //     return
-        // }
-
+    const handleDelete = async (id) => {
         if (id) {
             if (!window.confirm("Are you sure to delete...?")) {
                 return;
@@ -171,7 +161,6 @@ const SaleOrder = () => {
                 await removeData(id)
                 setId("");
                 onNew();
-                // toast.success("Deleted Successfully");
                 Swal.fire({
                     title: "Deleted Successfully",
                     icon: "success",

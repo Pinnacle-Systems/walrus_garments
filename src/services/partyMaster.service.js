@@ -7,7 +7,7 @@ import { filterInwardReturnParties, filterBillableParties, mapPaymentOutstanding
 
 async function get(req) {
     const { companyId, active, isAddressCombined, isInwardRetuenParties, supplierId, id,
-        isPartyPurchaseOverAllReport, searchValue, isBillable, isPaymentOutstanding, isPartyLedgerReport, partyId, startDate, endDate, isRetunBillable } = req.query
+        isPartyPurchaseOverAllReport, searchValue, isBillable, isPaymentOutstanding, isPartyLedgerReport, partyId, startDate, endDate, isRetunBillable, searchPartyContactNo } = req.query
 
 
     let data
@@ -16,7 +16,7 @@ async function get(req) {
             companyId: companyId ? parseInt(companyId) : undefined,
             active: active ? Boolean(active) : undefined,
             name: searchValue ? { contains: searchValue } : undefined,
-
+            contactPersonNumber: searchPartyContactNo ? { contains: searchPartyContactNo } : undefined,
         },
         include: {
 

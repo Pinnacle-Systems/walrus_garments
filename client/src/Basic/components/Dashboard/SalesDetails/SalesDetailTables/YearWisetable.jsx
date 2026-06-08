@@ -66,6 +66,7 @@ const YearlyWiseTable = ({
     }, [response?.data]);
 
     console.log(rawData, "rawData");
+    console.log(search, "search");
 
     const formateDate = (date) => {
         if (!date) return
@@ -110,13 +111,15 @@ const YearlyWiseTable = ({
             // 🔹 Min / Max Turnover filter
             const value = Number(row.amount || 0);
 
-            if (value < netpayRange.min) return false;
-            if (netpayRange.max !== Infinity && value > netpayRange.max) return false;
+            // if (value < netpayRange.min) return false;
+            // if (netpayRange.max !== Infinity && value > netpayRange.max) return false;
 
             return true;
         });
     }, [rawData, search, netpayRange]);
 
+
+    console.log(filteredData, 'filteredData')
 
 
     useEffect(() => {
@@ -136,6 +139,12 @@ const YearlyWiseTable = ({
             return sum + parseFloat(row.amount || 0);
         }, 0);
     }, [filteredData]);
+
+    const totalTurnOver = useMemo(() => {
+        if (SalesType === "Sales") return totalSalesAmount;
+        if (SalesType === "Returns") return totalReturnsAmount;
+        return totalSalesAmount - totalReturnsAmount;
+    }, [totalSalesAmount, totalReturnsAmount, SalesType]);
 
 
 
@@ -162,15 +171,12 @@ const YearlyWiseTable = ({
             { header: "Doc No", key: "docNo", width: 35 },
             { header: "Doc Date", key: "docDate", width: 16 },
             { header: "Customer", key: "customer", width: 45 },
-            { header: "Invoice Qty", key: "invoiceQty", width: 18 },
-            { header: "UOM", key: "uom", width: 25 },
-            { header: "Rate", key: "rate", width: 21 },
             { header: "Amount", key: "amount", width: 21 },
         ];
 
         /* ================= TITLE ================= */
         worksheet.insertRow(1, ["Year Wise Sales Report"]);
-        worksheet.mergeCells("A1:J1");
+        worksheet.mergeCells("A1:E1");
 
         const titleCell = worksheet.getCell("A1");
         titleCell.font = { bold: true, size: 14 };
@@ -217,9 +223,6 @@ const YearlyWiseTable = ({
                 docNo: r.docId,
                 docDate: formateDate(r.docDate),
                 customer: r.customer,
-                invoiceQty: Number(r.invoiceQty || 0),
-                uom: r.uom,
-                rate: Number(r.rate || 0),
                 amount: Number(r.amount || 0)
             });
         });
@@ -232,9 +235,6 @@ const YearlyWiseTable = ({
             row.getCell("docNo").alignment = { horizontal: "left", vertical: "middle", indent: 1 };
             row.getCell("docDate").alignment = { horizontal: "left", vertical: "middle", indent: 1 };
             row.getCell("customer").alignment = { horizontal: "left", vertical: "middle", indent: 1 };
-            row.getCell("invoiceQty").alignment = { horizontal: "right", vertical: "middle", indent: 1 };
-            row.getCell("uom").alignment = { horizontal: "left", vertical: "middle", indent: 1 };
-            row.getCell("rate").alignment = { horizontal: "right", vertical: "middle", indent: 1 };
             row.getCell("amount").alignment = { horizontal: "right", vertical: "middle", indent: 1 };
         });
 
@@ -243,10 +243,7 @@ const YearlyWiseTable = ({
             salesType: "",
             docNo: "",
             docDate: "",
-            customer: "",
-            invoiceQty: "",
-            uom: "",
-            rate: "Total",
+            customer: "Total",
             amount: totalTurnOver,
         });
 
@@ -261,14 +258,12 @@ const YearlyWiseTable = ({
             };
             cell.alignment = {
                 vertical: "middle",
-                horizontal: colNumber === 10 ? "right" : "center",
+                horizontal: colNumber === 5 ? "right" : "center",
                 indent: 1
             };
         });
         worksheet.getColumn("docDate").numFmt = "dd-mm-yyyy";
-        worksheet.getColumn("invoiceQty").numFmt = "#,##,##0.000";
 
-        worksheet.getColumn("rate").numFmt = '₹ #,##,##0.00';
         worksheet.getColumn("amount").numFmt = '₹ #,##,##0.00';
 
         /* ================= FREEZE ================= */
@@ -483,10 +478,6 @@ const YearlyWiseTable = ({
                                     <th className="border p-1 text-center w-24">Doc No</th>
                                     <th className="border p-1 text-center w-[42px]">Doc Date</th>
                                     <th className="border p-1 text-center w-32">Customer</th>
-                                    <th className="border p-1 text-center w-12">Invoice Qty</th>
-                                    <th className="border p-1 text-center w-8">UOM</th>
-
-                                    <th className="border p-1 text-center w-8">Rate</th>
                                     <th className="border p-1 text-center w-12">Amount</th>
 
                                 </tr>
@@ -494,7 +485,7 @@ const YearlyWiseTable = ({
                             <tbody>
                                 {isLoading ? (
                                     <tr>
-                                        <td colSpan={8} className=" text-center">
+                                        <td colSpan={6} className=" text-center">
                                             <div className="flex justify-center items-center pointer-events-none">
                                                 {/* <SpinLoader /> */}
                                             </div>
@@ -502,7 +493,7 @@ const YearlyWiseTable = ({
                                     </tr>
                                 ) : currentRecords.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className="text-center py-6 text-gray-500">
+                                        <td colSpan={6} className="text-center py-6 text-gray-500">
                                             No data found
                                         </td>
                                     </tr>
@@ -522,10 +513,6 @@ const YearlyWiseTable = ({
 
                                                 <td className="border p-1 pl-2 text-left ">{formateDate(row.docDate)}</td>
                                                 <td className="border p-1 pr-2 text-left">{row.customer}</td>
-                                                <td className="border p-1 pr-2 text-right">{row.invoiceQty}</td>
-                                                <td className="border p-1 pl-2 text-left">{row.uom}</td>
-
-                                                <td className="border p-1 pr-2 text-right">{row.rate}</td>
 
                                                 <td className="border p-1 pr-2 text-right text-sky-700 ">
                                                     {new Intl.NumberFormat("en-IN", {

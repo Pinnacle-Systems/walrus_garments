@@ -31,7 +31,7 @@ const saleOrderApi = createApi({
                     params
                 };
             },
-            providesTags: ["saleOrderList"],
+            providesTags: ["saleOrder"],
         }),
         getsaleOrderById: builder.query({
             query: (id) => {
@@ -43,7 +43,7 @@ const saleOrderApi = createApi({
                     },
                 };
             },
-            providesTags: ["saleOrderById"],
+            providesTags: ["saleOrder"],
         }),
         addsaleOrder: builder.mutation({
             query: (payload) => ({

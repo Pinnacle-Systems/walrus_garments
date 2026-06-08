@@ -548,7 +548,7 @@ const PaymentForm = ({
                 return
             }
         }
-        if (paymentType == "credit-balance") {
+        if (paymentMode == "Credit_Adjustment") {
             if (value > availableCredit) {
                 Swal.fire({
                     title: `Amount Cannot be Greater than Available Credit(${formatAmountIN(availableCredit)})!!!`,
@@ -916,6 +916,7 @@ const PaymentForm = ({
                                         show={"both"}
                                         required
                                         disabled={areLinkedFieldsLocked}
+                                        paymentFlow={paymentFlow}
                                         isBillable={paymentFlow == "Payout" ? false : true}
                                         isRetunBillable={paymentFlow == "Payout" ? true : false}
                                     // ref={partyRef}
@@ -968,24 +969,7 @@ const PaymentForm = ({
 
                                 </select>
                             </div>
-                            {/* <div className="mb-2" >
-                                <label htmlFor="transactionType" className="block text-xs font-bold text-gray-600 mb-1">
-                                    Against Transaction
-                                </label>
-                                <select
-                                    value={transactionType}
-                                    onChange={(e) => setTransactionType(e.target.value)}
-                                    disabled={areLinkedFieldsLocked}
-                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg  bg-white focus:outline-none focus:ring-emerald-500 block text-xs font-bold text-gray-600 mb-1"
-                                >
-                                    <option value="" disabled>Select a transaction</option>
-                                    {TransactionAgainst.map((type) => (
-                                        <option key={type.value} value={type.value}>
-                                            {type.show}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div> */}
+
                             <div className="mb-2">
                                 <label htmlFor="refDocId" className="block text-xs font-bold text-gray-600 mb-1 ">
                                     Against Doc No

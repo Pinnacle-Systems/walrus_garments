@@ -40,16 +40,89 @@ function calculateHeaderTotal(items = [], header = {}, isReturn = false) {
     let packing = 0;
     let shipping = 0;
     let courier = 0;
+    let returnChargeAmount = 0;
 
     if (!isReturn) {
         packing = header.packingChargeEnabled ? parseAmount(header.packingCharge) : 0;
         shipping = header.shippingChargeEnabled ? parseAmount(header.shippingCharge) : 0;
         courier = header.courierChargeEnabled ? parseAmount(header.courierCharge) : 0;
     } else {
-        packing = header.returnChargeEnabled ? parseAmount(header.returnCharge) : 0;
+        if (header.returnChargeEnabled) {
+            const rawCharge = parseAmount(header.returnCharge);
+            if (header.returnChargeType === "Percentage") {
+                returnChargeAmount = (lineTotal * rawCharge) / 100;
+            } else {
+                returnChargeAmount = rawCharge;
+            }
+        }
     }
 
-    return Math.round((lineTotal + packing + shipping + courier) * 100) / 100;
+    const netTotal = isReturn ? (lineTotal - returnChargeAmount) : (lineTotal + packing + shipping + courier);
+    return Math.round(netTotal * 100) / 100;
+}
+
+function calculateItemsWithDistributedCharges(items = [], header = {}, isReturn = false) {
+    // 1. Calculate raw row totals for each item
+    const rawItems = items.map(curr => {
+        const price = parseAmount(curr.price);
+        const qty = parseAmount(isReturn ? curr.qty : (curr.deliveryQty || curr.qty));
+
+        const taxPercent = parseAmount(curr.taxPercent || curr.SalesDeliveryItems?.taxPercent);
+        const taxMethod = curr.taxMethod || curr.SalesDeliveryItems?.taxMethod || "Inclusive";
+        const discountType = curr.discountType || curr.SalesDeliveryItems?.discountType;
+        const discountValue = parseAmount(curr.discountValue || curr.SalesDeliveryItems?.discountValue);
+
+        let rowTotal = price * qty;
+        if (discountType === "Percentage") {
+            rowTotal -= (rowTotal * discountValue) / 100;
+        } else if (discountType === "Flat") {
+            rowTotal -= discountValue;
+        }
+        rowTotal = Math.max(0, rowTotal);
+
+        if (taxMethod === "Exclusive") {
+            rowTotal += (rowTotal * taxPercent) / 100;
+        }
+        
+        return {
+            itemRef: curr,
+            price,
+            qty,
+            rawRowTotal: rowTotal
+        };
+    });
+
+    const lineTotalSum = rawItems.reduce((acc, curr) => acc + curr.rawRowTotal, 0);
+
+    // 2. Determine header-level adjustment
+    let headerCharges = 0;
+    if (!isReturn) {
+        const packing = header.packingChargeEnabled ? parseAmount(header.packingCharge) : 0;
+        const shipping = header.shippingChargeEnabled ? parseAmount(header.shippingCharge) : 0;
+        const courier = header.courierChargeEnabled ? parseAmount(header.courierCharge) : 0;
+        headerCharges = packing + shipping + courier;
+    } else {
+        if (header.returnChargeEnabled) {
+            const rawCharge = parseAmount(header.returnCharge);
+            const returnChargeAmount = header.returnChargeType === "Percentage"
+                ? (lineTotalSum * rawCharge) / 100
+                : rawCharge;
+            headerCharges = -returnChargeAmount;
+        }
+    }
+
+    // 3. Distribute charges/credits proportionally
+    return rawItems.map(item => {
+        let adjustedTotal = item.rawRowTotal;
+        if (lineTotalSum > 0) {
+            const share = item.rawRowTotal / lineTotalSum;
+            adjustedTotal += share * headerCharges;
+        }
+        return {
+            ...item,
+            adjustedTotal: Math.round(adjustedTotal * 100) / 100
+        };
+    });
 }
 
 async function getTotalSales(req) {
@@ -89,7 +162,6 @@ async function getTotalSales(req) {
             });
         }
 
-        // 3. Process each year in parallel
         const data = await Promise.all(
             finYears.map(async (fy) => {
                 const boundaries = await getFinYearStartTimeEndTime(fy.id);
@@ -1046,51 +1118,31 @@ async function fetchAndFlattenSalesTableData(commonWhere, finYearString, type = 
         });
     }
 
+
+    console.log(posRecords, "posRecords", posRecords?.length)
+
     const flatArray = [];
 
     posRecords.forEach(pos => {
         const salesType = pos.isReturn ? "B2C Return" : "B2C Sales";
         const customer = pos.Party?.name || 'Walk-in';
-        pos.PosItems?.forEach(item => {
-            const price = parseAmount(item.price);
-            const qty = parseAmount(item.qty);
-            flatArray.push({
-                finYear: finYearString,
-                docId: pos.docId,
-                docDate: pos.date || pos.createdAt,
-                salesType,
-                customer,
-                itemName: item.Item?.name || item.itemName || 'Unknown',
-                invoiceQty: qty,
-                uom: item.Uom?.name || 'N/A',
-                rate: price,
-                amount: Number(pos.netAmount),
-                isReturn: pos.isReturn ? true : false
-            });
+        flatArray.push({
+            finYear: finYearString,
+            docId: pos.docId,
+            docDate: pos.date || pos.createdAt,
+            salesType,
+            customer,
+            amount: Number(pos.netAmount),
+            isReturn: pos.isReturn ? true : false
         });
     });
 
     deliveries.forEach(del => {
         const customer = del.Party?.name || 'Unknown';
-        del.SalesDeliveryItems?.forEach(item => {
-            const price = parseAmount(item.price);
-            const qty = parseAmount(item.deliveryQty || item.qty);
-
-            let rowTotal = price * qty;
-            const discountType = item.discountType;
-            const discountValue = parseAmount(item.discountValue);
-            if (discountType === "Percentage") {
-                rowTotal -= (rowTotal * discountValue) / 100;
-            } else if (discountType === "Flat") {
-                rowTotal -= discountValue;
-            }
-            rowTotal = Math.max(0, rowTotal);
-            const taxMethod = item.taxMethod || "Inclusive";
-            const taxPercent = parseAmount(item.taxPercent);
-            if (taxMethod === "Exclusive") {
-                rowTotal += (rowTotal * taxPercent) / 100;
-            }
-
+        const calculatedItems = calculateItemsWithDistributedCharges(del.SalesDeliveryItems, del, false);
+        
+        calculatedItems.forEach(calc => {
+            const item = calc.itemRef;
             flatArray.push({
                 finYear: finYearString,
                 docId: del.docId,
@@ -1098,10 +1150,7 @@ async function fetchAndFlattenSalesTableData(commonWhere, finYearString, type = 
                 salesType: "B2B Sales",
                 customer,
                 itemName: item.Item?.name || 'Unknown',
-                invoiceQty: qty,
-                uom: item.Item?.uom || 'N/A',
-                rate: price,
-                amount: Math.round(rowTotal * 100) / 100,
+                amount: calc.adjustedTotal,
                 isReturn: false
             });
         });
@@ -1109,17 +1158,10 @@ async function fetchAndFlattenSalesTableData(commonWhere, finYearString, type = 
 
     salesReturns.forEach(ret => {
         const customer = ret.Party?.name || 'Unknown';
-        ret.SalesReturnItems?.forEach(item => {
-            const price = parseAmount(item.price);
-            const qty = parseAmount(item.qty);
-
-            let rowTotal = price * qty;
-            const taxMethod = item.taxMethod || item.SalesDeliveryItems?.taxMethod || "Inclusive";
-            const taxPercent = parseAmount(item.taxPercent || item.SalesDeliveryItems?.taxPercent);
-            if (taxMethod === "Exclusive") {
-                rowTotal += (rowTotal * taxPercent) / 100;
-            }
-
+        const calculatedItems = calculateItemsWithDistributedCharges(ret.SalesReturnItems, ret, true);
+        
+        calculatedItems.forEach(calc => {
+            const item = calc.itemRef;
             flatArray.push({
                 finYear: finYearString,
                 docId: ret.docId,
@@ -1127,10 +1169,7 @@ async function fetchAndFlattenSalesTableData(commonWhere, finYearString, type = 
                 salesType: "B2B Return",
                 customer,
                 itemName: item.Item?.name || 'Unknown',
-                invoiceQty: qty,
-                uom: item.Item?.uom || 'N/A',
-                rate: price,
-                amount: Math.round(rowTotal * 100) / 100,
+                amount: calc.adjustedTotal,
                 isReturn: true
             });
         });
@@ -1140,7 +1179,7 @@ async function fetchAndFlattenSalesTableData(commonWhere, finYearString, type = 
     return flatArray;
 }
 
-async function resolveTableCommonWhere(year, company, month, startDateOverride, endDateOverride) {
+async function resolveTableCommonWhere(year, company, month, startDateOverride, endDateOverride, quarter) {
     const finYears = await prisma.finYear.findMany({ include: { Company: true } });
     const targetFinYears = finYears.filter(fy => getYearShortCode(fy.from, fy.to) === year);
     if (targetFinYears.length === 0) return null;
@@ -1179,6 +1218,37 @@ async function resolveTableCommonWhere(year, company, month, startDateOverride, 
     if (startDateOverride && endDateOverride) {
         orConditions.push({ date: { gte: startDateOverride, lte: endDateOverride } });
         orConditions.push({ date: null, createdAt: { gte: startDateOverride, lte: endDateOverride } });
+    } else if (quarter) {
+        // Find boundaries for specific quarter within fin year
+        const targetFinYear = targetFinYears[0];
+        const startYear = new Date(targetFinYear.from).getFullYear();
+        let startMonth, endMonth; // 0-indexed (Jan = 0)
+        
+        if (quarter === "Q1") {
+            startMonth = 3; // April
+            endMonth = 5;   // June
+        } else if (quarter === "Q2") {
+            startMonth = 6; // July
+            endMonth = 8;   // September
+        } else if (quarter === "Q3") {
+            startMonth = 9; // October
+            endMonth = 11;  // December
+        } else if (quarter === "Q4") {
+            startMonth = 0; // January
+            endMonth = 2;   // March
+        }
+
+        if (startMonth !== undefined) {
+            const startYearNum = startMonth >= 3 ? startYear : startYear + 1;
+            const endYearNum = endMonth >= 3 ? startYear : startYear + 1;
+            
+            const startDate = new Date(startYearNum, startMonth, 1);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(endYearNum, endMonth + 1, 0, 23, 59, 59, 999);
+            
+            orConditions.push({ date: { gte: startDate, lte: endDate } });
+            orConditions.push({ date: null, createdAt: { gte: startDate, lte: endDate } });
+        }
     } else if (month) {
         // Find boundaries for specific month within fin year
         const targetFinYear = targetFinYears[0];
@@ -1239,9 +1309,9 @@ async function getYearlySalesTable(req) {
 
 async function getQuarterSalesTable(req) {
     try {
-        const { finYear, company, month, type = 'All', SalesType = 'All' } = req.query;
+        const { finYear, company, quarter, type = 'All', SalesType = 'All' } = req.query;
         if (!finYear) return { statusCode: 1, message: "finYear is required" };
-        const commonWhere = await resolveTableCommonWhere(finYear, company, month);
+        const commonWhere = await resolveTableCommonWhere(finYear, company, null, null, null, quarter);
         if (!commonWhere) return { statusCode: 0, data: [] };
         const data = await fetchAndFlattenSalesTableData(commonWhere, finYear, type, SalesType);
         return { statusCode: 0, data };
@@ -1267,11 +1337,48 @@ async function getMonthlySalesTable(req) {
 
 async function getWeeklySalesTable(req) {
     try {
-        const { finYear, company, startDate, endDate, type = 'All', SalesType = 'All' } = req.query;
+        const { finYear, company, week, startDate, endDate, type = 'All', SalesType = 'All' } = req.query;
         if (!finYear) return { statusCode: 1, message: "finYear is required" };
 
         let sDate, eDate;
-        if (startDate && endDate) {
+        if (week) {
+            // week format example: "W1 (01 Apr - 07 Apr)"
+            const match = week.match(/W\d+\s*\((\d{2}\s+[A-Za-z]{3})\s*-\s*(\d{2}\s+[A-Za-z]{3})\)/);
+            if (match) {
+                const startStr = match[1]; // "01 Apr"
+                const endStr = match[2];   // "07 Apr"
+                
+                const finYears = await prisma.finYear.findMany();
+                const targetFinYear = finYears.find(fy => getYearShortCode(fy.from, fy.to) === finYear);
+                if (targetFinYear) {
+                    const startYear = new Date(targetFinYear.from).getFullYear();
+                    
+                    const MONTH_MAP = {
+                        jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+                        jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+                    };
+                    
+                    const [startDay, startMonthName] = startStr.split(/\s+/);
+                    const [endDay, endMonthName] = endStr.split(/\s+/);
+                    
+                    const startMonthIdx = MONTH_MAP[startMonthName.toLowerCase().slice(0, 3)];
+                    const endMonthIdx = MONTH_MAP[endMonthName.toLowerCase().slice(0, 3)];
+                    
+                    if (startMonthIdx !== undefined && endMonthIdx !== undefined) {
+                        const startYearNum = startMonthIdx >= 3 ? startYear : startYear + 1;
+                        const endYearNum = endMonthIdx >= 3 ? startYear : startYear + 1;
+                        
+                        sDate = new Date(startYearNum, startMonthIdx, parseInt(startDay));
+                        sDate.setHours(0, 0, 0, 0);
+                        
+                        eDate = new Date(endYearNum, endMonthIdx, parseInt(endDay));
+                        eDate.setHours(23, 59, 59, 999);
+                    }
+                }
+            }
+        }
+
+        if (!sDate && startDate && endDate) {
             sDate = new Date(startDate);
             sDate.setHours(0, 0, 0, 0);
             eDate = new Date(endDate);

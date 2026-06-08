@@ -3,15 +3,29 @@
  */
 
 export const getBulkAmount = (delivery) => {
-    return (delivery.SalesDeliveryItems || []).reduce((acc, item) => {
+    const itemsSum = (delivery.SalesDeliveryItems || []).reduce((acc, item) => {
         return acc + (parseFloat(item.deliveryQty || 0) * parseFloat(item.price || 0));
     }, 0);
+    const packing = delivery.packingChargeEnabled ? parseFloat(delivery.packingCharge || 0) : 0;
+    const shipping = delivery.shippingChargeEnabled ? parseFloat(delivery.shippingCharge || 0) : 0;
+    const courier = delivery.courierChargeEnabled ? parseFloat(delivery.courierCharge || 0) : 0;
+    return Math.round((itemsSum + packing + shipping + courier) * 100) / 100;
 };
 
 export const getBulkReturnAmount = (ret) => {
-    return (ret.SalesReturnItems || []).reduce((acc, item) => {
+    const itemsSum = (ret.SalesReturnItems || []).reduce((acc, item) => {
         return acc + (parseFloat(item.qty || 0) * parseFloat(item.price || 0));
     }, 0);
+    let returnChargeAmount = 0;
+    if (ret.returnChargeEnabled) {
+        const rawCharge = parseFloat(ret.returnCharge || 0);
+        if (ret.returnChargeType === "Percentage") {
+            returnChargeAmount = (itemsSum * rawCharge) / 100;
+        } else {
+            returnChargeAmount = rawCharge;
+        }
+    }
+    return Math.round((itemsSum - returnChargeAmount) * 100) / 100;
 };
 
 export const filterByTime = (items, start, end = new Date()) => {

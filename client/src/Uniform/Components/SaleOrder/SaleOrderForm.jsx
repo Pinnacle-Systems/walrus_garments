@@ -885,7 +885,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
               <div className={"col-span-1"}>
                 <ReusableInput label="Sale Order Date" value={date} type="date" required readOnly disabled />
               </div>
-              <div className={"col-span-2"}>
+              {/* <div className={"col-span-2"}>
                 <TextInput
                   name="Delivery Margin (%)"
                   type="number"
@@ -895,7 +895,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
                   min="0"
                   max="100"
                 />
-              </div>
+              </div> */}
             </TransactionHeaderSection>
 
             <TransactionHeaderSection title="Customer Details" className="col-span-3 overflow-visible" bodyClassName="grid-cols-11 gap-1 overflow-visible">

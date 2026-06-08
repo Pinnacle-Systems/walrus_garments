@@ -349,6 +349,7 @@ const WeeklySales = ({ selectedYear, selectedCompany, finYrData, type, setType, 
       {showTable && (
         <WeekWiseTable
           company={tableParams.company}
+          week={selectedMonth}
           year={tableParams.year}
           closeTable={() => setShowTable(false)}
           type={type}

@@ -3310,7 +3310,8 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       isInwardRetuenParties = false,
       isBillable = false,
       supplierId,
-      isRetunBillable
+      isRetunBillable,
+      paymentFlow
     },
     ref
   ) => {
@@ -3324,7 +3325,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     );
 
     const { data: partyList } = useGetPartyQuery({
-      params: { companyId, userId, isAddressCombined: true, isInwardRetuenParties, isBillable, isRetunBillable },
+      params: { companyId, userId, isAddressCombined: true, isInwardRetuenParties, isBillable, isRetunBillable, paymentFlow },
     });
     const [removeData] = useDeletePartyMutation();
 
@@ -3380,7 +3381,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       if (!partyList?.data) return;
 
       if (!search.trim()) {
-        setFilteredPages(partyList?.data?.filter(i => show !== "both" ? i[show] : true && isRetunBillable ? true : !i.isB2C));
+        setFilteredPages(partyList?.data?.filter(i => show !== "both" ? i[show] : true && paymentFlow == "Payout" ? true : !i.isB2C));
         return;
       }
 
@@ -3392,7 +3393,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       );
 
       setFilteredPages(filtered);
-    }, [search, partyList, id, supplierId]);
+    }, [search, partyList, id, supplierId, isRetunBillable, isBillable, paymentFlow]);
 
 
     console.log(filteredPages, "filterPages")

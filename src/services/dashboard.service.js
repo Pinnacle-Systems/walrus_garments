@@ -103,12 +103,26 @@ async function getSalesData(where, from, to) {
     });
 
     const bulkSalesBreakup = bulkSales.map(s => {
-        const amount = s.SalesDeliveryItems.reduce((acc, item) => acc + (parseFloat(item.deliveryQty || 0) * parseFloat(item.price || 0)), 0);
+        const itemsSum = s.SalesDeliveryItems.reduce((acc, item) => acc + (parseFloat(item.deliveryQty || 0) * parseFloat(item.price || 0)), 0);
+        const packing = s.packingChargeEnabled ? parseFloat(s.packingCharge || 0) : 0;
+        const shipping = s.shippingChargeEnabled ? parseFloat(s.shippingCharge || 0) : 0;
+        const courier = s.courierChargeEnabled ? parseFloat(s.courierCharge || 0) : 0;
+        const amount = Math.round((itemsSum + packing + shipping + courier) * 100) / 100;
         return { id: s.docId || s.id, party: s.Party?.name || 'N/A', amount, type: 'Bulk' };
     });
 
     const bulkReturnsBreakup = bulkReturns.map(s => {
-        const amount = s.SalesReturnItems.reduce((acc, item) => acc + (parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
+        const itemsSum = s.SalesReturnItems.reduce((acc, item) => acc + (parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
+        let returnChargeAmount = 0;
+        if (s.returnChargeEnabled) {
+            const rawCharge = parseFloat(s.returnCharge || 0);
+            if (s.returnChargeType === "Percentage") {
+                returnChargeAmount = (itemsSum * rawCharge) / 100;
+            } else {
+                returnChargeAmount = rawCharge;
+            }
+        }
+        const amount = Math.round((itemsSum - returnChargeAmount) * 100) / 100;
         return { id: s.docId || s.id, party: s.Party?.name || 'N/A', amount, type: 'Bulk' };
     });
 
@@ -648,15 +662,29 @@ async function getSalesBreakup(query) {
             ]);
 
             const getBulkAmount = (delivery) => {
-                return (delivery.SalesDeliveryItems || []).reduce((acc, item) => {
+                const itemsSum = (delivery.SalesDeliveryItems || []).reduce((acc, item) => {
                     return acc + (parseFloat(item.deliveryQty || 0) * parseFloat(item.price || 0));
                 }, 0);
+                const packing = delivery.packingChargeEnabled ? parseFloat(delivery.packingCharge || 0) : 0;
+                const shipping = delivery.shippingChargeEnabled ? parseFloat(delivery.shippingCharge || 0) : 0;
+                const courier = delivery.courierChargeEnabled ? parseFloat(delivery.courierCharge || 0) : 0;
+                return Math.round((itemsSum + packing + shipping + courier) * 100) / 100;
             };
 
             const getBulkReturnAmount = (ret) => {
-                return (ret.SalesReturnItems || []).reduce((acc, item) => {
+                const itemsSum = (ret.SalesReturnItems || []).reduce((acc, item) => {
                     return acc + (parseFloat(item.qty || 0) * parseFloat(item.price || 0));
                 }, 0);
+                let returnChargeAmount = 0;
+                if (ret.returnChargeEnabled) {
+                    const rawCharge = parseFloat(ret.returnCharge || 0);
+                    if (ret.returnChargeType === "Percentage") {
+                        returnChargeAmount = (itemsSum * rawCharge) / 100;
+                    } else {
+                        returnChargeAmount = rawCharge;
+                    }
+                }
+                return Math.round((itemsSum - returnChargeAmount) * 100) / 100;
             };
 
             const pos = posRaw.map(p => ({

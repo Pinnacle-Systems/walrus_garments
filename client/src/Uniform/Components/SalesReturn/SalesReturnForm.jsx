@@ -316,6 +316,14 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
 
+  const extraCharges = !returnChargeEnabled ? 0 : (
+    returnChargeType === "Percentage"
+      ? (netAmount * parseChargeAmount(returnCharge)) / 100
+      : parseChargeAmount(returnCharge)
+  );
+
+  const adjustedNetAmount = netAmount - extraCharges;
+
   const data = {
     docId,
     poType: transType,
@@ -349,7 +357,8 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     exchangeItems: (exchangeItems || [])?.filter(i => i.itemId),
     returnChargeType,
     returnCharge,
-    returnChargeEnabled
+    returnChargeEnabled,
+    totalNetAmount: parseFloat(adjustedNetAmount.toFixed(2))
   };
 
   console.log(data, "data")
@@ -519,13 +528,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
     return parseFloat(qty || 0).toFixed(3)
   }
 
-  const extraCharges = !returnChargeEnabled ? 0 : (
-    returnChargeType === "Percentage"
-      ? (netAmount * parseChargeAmount(returnCharge)) / 100
-      : parseChargeAmount(returnCharge)
-  );
 
-  const adjustedNetAmount = netAmount + extraCharges;
   const chargeRows = [
     ...(returnChargeEnabled
       ? [{

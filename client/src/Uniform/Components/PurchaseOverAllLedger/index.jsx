@@ -7,8 +7,10 @@ import { push } from '../../../redux/features/opentabs';
 
 const PaymentOutStandingLedger = () => {
     const [searchPartyName, setSearchPartyName] = useState('');
-    const { data } = useGetPartyQuery({ params: { isPaymentOutstanding: true, searchValue: searchPartyName } });
-    const partyList = data?.data?.filter(i => !i.isB2C && i.isClient) || [];
+    const [searchPartyContactNo, setSearchPartyContactNo] = useState('');
+
+    const { data } = useGetPartyQuery({ params: { isPaymentOutstanding: true, searchValue: searchPartyName, searchPartyContactNo } });
+    const partyList = data?.data?.filter(i => i.outstandingBalance < 0) || [];
     const dispatch = useDispatch();
     return (
         <div className={` relative w-full overflow-y-auto mx-auto py-1`}>
@@ -31,6 +33,14 @@ const PaymentOutStandingLedger = () => {
                                         onChange={(e) => { setSearchPartyName(e.target.value) }} />
                                 </div>
                             </th>
+                            <th className="table-data w-5">
+                                <div className='grid'>
+                                    <span>Contact Number</span>
+                                    <input type="text" className='focus:outline-none rounded-md text-gray-700' value={searchPartyContactNo}
+                                        onChange={(e) => { setSearchPartyContactNo(e.target.value) }} />
+                                </div>
+                            </th>
+
                             <th className="table-data w-5">Outstanding Balance</th>
                             <th className="table-data w-5">View</th>
                         </tr>
@@ -44,7 +54,9 @@ const PaymentOutStandingLedger = () => {
                                 <td className="table-data text-left px-1 py-1 text-[12px]">
                                     {party.name}
                                 </td>
-
+                                <td className="table-data text-left px-1 py-1 text-[12px]">
+                                    {party.contactPersonNumber}
+                                </td>
                                 <td className="table-data">
                                     <div className='flex items-center justify-center'>
                                         {party?.outstandingBalance}

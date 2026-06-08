@@ -326,6 +326,7 @@ const QuarterSales = ({ selectedYear, selectedCompany, chartToshow, setChartToSh
         <QuarterWiseTable
           company={tableParams.company}
           year={tableParams.year}
+          quarter={tableParams.quarter}
           // finYrData={finYrData}
           closeTable={() => setShowTable(false)}
           type={type}

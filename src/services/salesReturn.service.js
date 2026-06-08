@@ -42,9 +42,25 @@ function calculateLineNet(item) {
     }
 }
 
-function calculateTotalNet(items = [], charges = { packing: 0, shipping: 0 }) {
+function calculateTotalNet(items = [], charges = {}) {
     const itemsTotal = items.reduce((sum, item) => sum + calculateLineNet(item), 0);
-    return itemsTotal + parseFloat(charges.packing || 0) + parseFloat(charges.shipping || 0);
+    const packing = charges.packingChargeEnabled ? parseFloat(charges.packing || 0) : 0;
+    const shipping = charges.shippingChargeEnabled ? parseFloat(charges.shipping || 0) : 0;
+
+    let baseTotal = itemsTotal + packing + shipping;
+
+    if (charges.returnChargeEnabled) {
+        const rawCharge = parseFloat(charges.returnCharge || 0);
+        let returnChargeAmount = 0;
+        if (charges.returnChargeType === "Percentage") {
+            returnChargeAmount = (itemsTotal * rawCharge) / 100;
+        } else {
+            returnChargeAmount = rawCharge;
+        }
+        baseTotal -= returnChargeAmount;
+    }
+
+    return baseTotal;
 }
 
 function buildRemainingReturnQtyByDeliveryItemId(salesDelivery, excludeSalesReturnId = null) {
@@ -396,9 +412,14 @@ async function create(body) {
             }
 
             if (body.salesType === "Return") {
-                const totalNetAmount = calculateTotalNet(deliveryItems, {
-                    packing: packingChargeEnabled ? packingCharge : 0,
-                    shipping: shippingChargeEnabled ? shippingCharge : 0
+                const totalNetAmount = body.totalNetAmount ? parseFloat(body.totalNetAmount) : calculateTotalNet(deliveryItems, {
+                    packingChargeEnabled: Boolean(packingChargeEnabled),
+                    packing: packingCharge,
+                    shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                    shipping: shippingCharge,
+                    returnChargeEnabled: Boolean(returnChargeEnabled),
+                    returnChargeType: returnChargeType,
+                    returnCharge: returnCharge
                 });
 
                 await tx.ledger.create({
@@ -464,7 +485,8 @@ async function update(id, body) {
         const {
             customerId, branchId, salesDeliveryId, packingChargeEnabled, packingCharge,
             shippingChargeEnabled, shippingCharge, deliveryItems,
-            storeId, userId
+            storeId, userId,
+            returnChargeEnabled, returnChargeType, returnCharge
         } = await body;
 
         const result = await prisma.$transaction(async (tx) => {
@@ -492,6 +514,9 @@ async function update(id, body) {
                     packingCharge: packingChargeEnabled ? String(packingCharge || 0) : null,
                     shippingChargeEnabled: Boolean(shippingChargeEnabled),
                     shippingCharge: shippingChargeEnabled ? String(shippingCharge || 0) : null,
+                    returnChargeEnabled: Boolean(returnChargeEnabled),
+                    returnChargeType: returnChargeEnabled ? String(returnChargeType) : null,
+                    returnCharge: returnChargeEnabled ? String(returnCharge || 0) : null,
                     updatedById: userId ? parseInt(userId) : undefined,
                     returnType: body.salesType || "Return",
                     SalesReturnItems: {
@@ -508,9 +533,14 @@ async function update(id, body) {
             }
 
             if (body.salesType === "Return") {
-                const totalNetAmount = calculateTotalNet(deliveryItems, {
-                    packing: packingChargeEnabled ? packingCharge : 0,
-                    shipping: shippingChargeEnabled ? shippingCharge : 0
+                const totalNetAmount = body.totalNetAmount ? parseFloat(body.totalNetAmount) : calculateTotalNet(deliveryItems, {
+                    packingChargeEnabled: Boolean(packingChargeEnabled),
+                    packing: packingCharge,
+                    shippingChargeEnabled: Boolean(shippingChargeEnabled),
+                    shipping: shippingCharge,
+                    returnChargeEnabled: Boolean(returnChargeEnabled),
+                    returnChargeType: returnChargeType,
+                    returnCharge: returnCharge
                 });
 
                 await tx.ledger.create({

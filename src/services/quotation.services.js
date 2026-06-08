@@ -185,7 +185,7 @@ async function get(req) {
     const result = await Promise.all(
         data.map(async (item) => {
 
-            const paymentData = item.id
+            const paymentData = item.id && item?.customerId
                 ? await prisma.payment.findMany({
                     where: {
                         transactionType: "QUOTATION",
@@ -196,7 +196,7 @@ async function get(req) {
                 })
                 : [];
 
-            const SaleOrderpaymentData = item.Saleorder?.id
+            const SaleOrderpaymentData = item.Saleorder?.id && item?.customerId
                 ? await prisma.payment.findMany({
                     where: {
                         transactionType: "SALESORDER",

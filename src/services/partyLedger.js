@@ -64,89 +64,40 @@ export async function getPartyLedgerReport(partyId, startDate, endDate) {
 WITH opening AS (
     SELECT
         p.id AS partyId,
-        COALESCE(sd_sum.totalSales, 0)
-        - COALESCE(sr_sum.totalReturns, 0)
-        - COALESCE(pmt_sum.totalPaid, 0) AS openingBalance
+        COALESCE(SUM(
+            CASE 
+                WHEN l.creditOrDebit = 'Debit' THEN l.amount 
+                ELSE -l.amount 
+            END
+        ), 0) AS openingBalance
     FROM Party p
-    -- 🔹 Old Sales Delivery (Summing Items: deliveryQty * price)
-    LEFT JOIN (
-        SELECT sd.customerId, 
-               SUM(COALESCE(CAST(sdi.deliveryQty AS DECIMAL(10,2)), 0) * COALESCE(CAST(sdi.price AS DECIMAL(10,2)), 0)) AS totalSales
-        FROM SalesDelivery sd
-        JOIN SalesDeliveryItems sdi ON sd.id = sdi.salesDeliveryId
-        WHERE sd.createdAt < '${startDateFormatted}'
-          AND sd.isDeleted = 0
-        GROUP BY sd.customerId
-    ) sd_sum ON sd_sum.customerId = p.id
-    -- 🔹 Old Sales Return (Summing Items: qty * price)
-    LEFT JOIN (
-        SELECT sr.customerId, 
-               SUM(COALESCE(CAST(sri.qty AS DECIMAL(10,2)), 0) * COALESCE(CAST(sri.price AS DECIMAL(10,2)), 0)) AS totalReturns
-        FROM SalesReturn sr
-        JOIN SalesReturnItems sri ON sr.id = sri.salesReturnId
-        WHERE sr.createdAt < '${startDateFormatted}'
-          AND sr.isDeleted = 0
-        GROUP BY sr.customerId
-    ) sr_sum ON sr_sum.customerId = p.id
-    -- 🔹 Old Payments (Before Start Date)
-    LEFT JOIN (
-        SELECT partyId, 
-               SUM(CASE WHEN paymentFlow = 'Payout' THEN -totalAmount ELSE totalAmount END) AS totalPaid
-        FROM Payment
-        WHERE cvv < '${startDateFormatted}'
-          AND isDeleted = 0
-        GROUP BY partyId
-    ) pmt_sum ON pmt_sum.partyId = p.id
+    LEFT JOIN Ledger l ON l.partyId = p.id AND l.createdAt < '${startDateFormatted}'
     WHERE p.id = ${partyId}
+    GROUP BY p.id
 ),
 
 txns AS (
-    -- 🔹 SALES DELIVERY (DEBIT - Summing Items)
     SELECT
-        sd.docId AS transactionId,
-        sd.createdAt AS txnDateTime,
-        'SALES' AS txnType,
-        SUM(COALESCE(CAST(sdi.deliveryQty AS DECIMAL(10,2)), 0) * COALESCE(CAST(sdi.price AS DECIMAL(10,2)), 0)) AS debit,
-        0 AS credit
-    FROM SalesDelivery sd
-    JOIN SalesDeliveryItems sdi ON sd.id = sdi.salesDeliveryId
-    WHERE sd.customerId = ${partyId}
-      AND sd.createdAt >= '${startDateFormatted}'
-      AND sd.createdAt < DATE_ADD('${endDateFormatted}', INTERVAL 1 DAY)
-      AND sd.isDeleted = 0
-    GROUP BY sd.id, sd.docId, sd.createdAt
-
-    UNION ALL
-
-    -- 🔹 SALES RETURN (CREDIT - Summing Items)
-    SELECT
-        sr.docId AS transactionId,
-        sr.createdAt AS txnDateTime,
-        'RETURN' AS txnType,
-        0 AS debit,
-        SUM(COALESCE(CAST(sri.qty AS DECIMAL(10,2)), 0) * COALESCE(CAST(sri.price AS DECIMAL(10,2)), 0)) AS credit
-    FROM SalesReturn sr
-    JOIN SalesReturnItems sri ON sr.id = sri.salesReturnId
-    WHERE sr.customerId = ${partyId}
-      AND sr.createdAt >= '${startDateFormatted}'
-      AND sr.createdAt < DATE_ADD('${endDateFormatted}', INTERVAL 1 DAY)
-      AND sr.isDeleted = 0
-    GROUP BY sr.id, sr.docId, sr.createdAt
-
-    UNION ALL
-
-    -- 🔹 PAYMENT (CREDIT/DEBIT based on flow)
-    SELECT
-        docId AS transactionId,
-        cvv AS txnDateTime, 
-        'PAYMENT' AS txnType,
-        CASE WHEN paymentFlow = 'Payout' THEN totalAmount ELSE 0 END AS debit,
-        CASE WHEN paymentFlow = 'Payout' THEN 0 ELSE totalAmount END AS credit
-    FROM Payment
-    WHERE partyId = ${partyId}
-      AND cvv >= '${startDateFormatted}'
-      AND cvv < DATE_ADD('${endDateFormatted}', INTERVAL 1 DAY)
-      AND isDeleted = 0
+        l.partyBillNo AS transactionId,
+        l.createdAt AS txnDateTime,
+        CASE 
+            WHEN l.EntryType = 'Sales' THEN 
+                CASE 
+                    WHEN l.salesDeliveryId IS NOT NULL THEN 'B2B Sales'
+                    WHEN l.posId IS NOT NULL THEN 'B2C Sales'
+                    ELSE 'Sales'
+                END
+            WHEN l.EntryType = 'Credit_Note' THEN 'RETURN'
+            WHEN l.EntryType = 'Customer_Payment' THEN 'PAYMENT'
+            ELSE REPLACE(l.EntryType, '_', ' ')
+        END AS txnType,
+        CASE WHEN l.creditOrDebit = 'Debit' THEN l.amount ELSE 0 END AS debit,
+        CASE WHEN l.creditOrDebit = 'Credit' THEN l.amount ELSE 0 END AS credit
+    FROM Ledger l
+    JOIN Party p ON l.partyId = p.id
+    WHERE l.partyId = ${partyId}
+      AND l.createdAt >= '${startDateFormatted}'
+      AND l.createdAt < DATE_ADD('${endDateFormatted}', INTERVAL 1 DAY)
 )
 
 -- 🔹 1. OPENING BALANCE ROW
