@@ -10,11 +10,11 @@ const tw = createTw({
         primary: '#000000',
       },
       fontSize: {
-        'xxs': '8.5pt',
-        'xs': '10pt',
-        'sm': '11pt',
-        'base': '12pt',
-        'lg': '14pt',
+        'xxs': '9pt',
+        'xs': '11pt',
+        'sm': '12pt',
+        'base': '13.5pt',
+        'lg': '15.5pt',
       }
     },
   },
@@ -69,7 +69,7 @@ const PosMultiCopyPrint = ({
       <View style={tw('flex flex-row justify-between mb-1 py-1 border-t border-b border-gray-200')}>
         <View style={tw('flex flex-col w-1/2')}>
           <Text style={tw('text-xxs font-bold')}>{customerData?.name?.toUpperCase() || "WALK-IN CUSTOMER"}</Text>
-          {customerData?.contactPersonNumber && <Text style={tw('text-xxs font-bold]')}>{customerData.contactPersonNumber.toString()}</Text>}
+          {customerData?.contactPersonNumber && <Text style={tw('text-xxs font-bold')}>{customerData.contactPersonNumber.toString()}</Text>}
         </View>
 
         <View style={tw('flex flex-col items-end w-1/2')}>
@@ -86,8 +86,8 @@ const PosMultiCopyPrint = ({
       {/* Items Table Header */}
       <View style={styles.dottedLine} />
       <View style={tw('flex flex-row justify-between py-1')}>
-        <Text style={tw('text-xxs font-bold w-[45%]')}>Item</Text>
-        <Text style={tw('text-xxs font-bold w-[15%] text-right')}>Qty</Text>
+        <Text style={tw('text-xxs font-bold w-[50%]')}>Item</Text>
+        <Text style={tw('text-xxs font-bold w-[10%] text-right')}>Qty</Text>
         <Text style={tw('text-xxs font-bold w-[20%] text-right')}>Rate</Text>
         <Text style={tw('text-xxs font-bold w-[20%] text-right')}>Amt</Text>
       </View>
@@ -96,15 +96,19 @@ const PosMultiCopyPrint = ({
       {/* Items Rows */}
       {items.map((item, index) => {
         const rowTotal = parseFloat(item.qty || 0) * parseFloat(item.price || item.rate || 0);
+        const hasSize = item?.Size?.name || item?.sizeName;
+        const hasColor = item?.Color?.name || item?.colorName;
 
         return (
           <View key={index} style={tw('flex flex-col mb-2')}>
             <View style={tw('flex flex-row justify-between')}>
               <View style={tw('w-[50%] flex flex-col')}>
                 <Text style={tw('text-xxs font-bold')}>{item?.Item?.name || item?.itemName}</Text>
-                <Text style={tw('text-[7pt] text-gray-600')}>
-                  {item?.Size?.name || item?.sizeName} | {item?.Color?.name || item?.colorName}
-                </Text>
+                {(hasSize || hasColor) && (
+                  <Text style={tw('text-[7.5pt] text-gray-600')}>
+                    {[hasSize, hasColor].filter(Boolean).join(' | ')}
+                  </Text>
+                )}
               </View>
               <Text style={tw('text-xxs w-[10%] text-right font-bold')}>{parseFloat(item.qty || 0)}</Text>
               <Text style={tw('text-xxs w-[20%] text-right')}>{parseFloat(item.price || item.rate || 0).toFixed(0)}</Text>

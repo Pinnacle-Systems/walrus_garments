@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { io as socketIO } from 'socket.io-client';
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService"
 import { Loader } from "../../../Basic/components";
-import { findFromList, getCommonParams, getDateFromDateTimeToDisplay } from "../../../Utils/helper";
+import { findFromList, getCommonParams, getDateFromDateTimeToDisplay, getDateTimeFromDateTimeToDisplay } from "../../../Utils/helper";
 import { showEntries } from '../../../Utils/DropdownData';
 import secureLocalStorage from 'react-secure-storage';
 import {
@@ -592,7 +592,7 @@ const PosReportsNew = ({
 
 
                                             <td className="py-1.5 text-left">
-                                                {getDateFromDateTimeToDisplay(dataObj.createdAt)}
+                                                {getDateTimeFromDateTimeToDisplay(dataObj.createdAt)}
                                             </td>
 
                                             <td className="py-1.5 text-left">

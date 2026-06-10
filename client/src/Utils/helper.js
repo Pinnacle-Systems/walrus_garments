@@ -203,6 +203,7 @@ export function titleCase(str) {
 
 export const getDateFromDateTime = (dateTime) => moment.utc(dateTime).format("YYYY-MM-DD")
 export const getDateFromDateTimeToDisplay = (dateTime) => moment.utc(dateTime).format("DD-MM-YYYY")
+export const getDateTimeFromDateTimeToDisplay = (dateTime) => moment(dateTime).format("DD-MM-YYYY hh:mm A")
 
 
 export function findFromList(id, list, property) {

@@ -11,12 +11,12 @@ const tw = createTw({
         primary: '#000000',
       },
       fontSize: {
-        'xxs': '8.5pt',
-        'xs': '10pt',
-        'sm': '11pt',
-        'base': '12pt',
-        'lg': '14pt',
-        'xl': '16pt'
+        'xxs': '9pt',
+        'xs': '11pt',
+        'sm': '12pt',
+        'base': '13.5pt',
+        'lg': '15.5pt',
+        'xl': '17.5pt'
       }
     },
   },
