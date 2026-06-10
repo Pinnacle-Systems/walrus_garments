@@ -122,7 +122,7 @@ const PosDeliveryReceiptPrint = ({
   }, [docId]);
 
   const SummarySlip = () => (
-    <Page size={[226, 200]} style={tw('p-2 bg-white flex flex-col')}>
+    <Page size={[226, 1200]} style={tw('p-2 bg-white flex flex-col')}>
       <View style={tw('border-2 border-black p-3 items-center w-full')}>
         <Text style={tw('text-[10pt] font-bold mb-1')}>BILL SUMMARY SLIP</Text>
         <View style={tw('w-full border-b border-black mb-2')} />
