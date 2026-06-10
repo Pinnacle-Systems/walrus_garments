@@ -100,7 +100,8 @@ async function get(req) {
                     id: true,
                     name: true,
                     contact: true,
-                    isB2C: true
+                    isB2C: true,
+                    contactPersonNumber: true
                 }
             },
             PosItems: {

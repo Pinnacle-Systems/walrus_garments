@@ -44,7 +44,7 @@ const PosDeliveryReceiptPrint = ({
 
         {docId && (
           <View style={tw('items-center justify-center mb-2')}>
-            <BarcodeGenerator value={docId} width={90} height={32} />
+            <BarcodeGenerator value={docId} width={170} height={45} />
           </View>
         )}
 

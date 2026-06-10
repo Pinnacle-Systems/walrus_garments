@@ -55,7 +55,7 @@ const PosMultiCopyPrint = ({
       <View style={tw('flex flex-col items-center mb-2')}>
         <Text style={tw('font-bold text-base')}>{branchData?.branchName || "WALRUS"}</Text>
         <Text style={tw('text-xxs text-center w-full px-2')}>
-          {branchData?.address || "Address details not available"}
+          {branchData?.address || ""}
         </Text>
         <Text style={tw('text-xxs')}>Ph No.: {branchData?.phone || branchData?.contactMobile?.toString() || branchData?.contactPersonNumber || "9159477722"}</Text>
         {branchData?.gstNo && <Text style={tw('text-xxs font-bold')}>GSTIN: {branchData.gstNo}</Text>}
@@ -69,14 +69,17 @@ const PosMultiCopyPrint = ({
       <View style={tw('flex flex-row justify-between mb-1 py-1 border-t border-b border-gray-200')}>
         <View style={tw('flex flex-col w-1/2')}>
           <Text style={tw('text-xxs font-bold')}>{customerData?.name?.toUpperCase() || "WALK-IN CUSTOMER"}</Text>
-          {customerData?.contactPersonNumber && <Text style={tw('text-[6pt]')}>M: {customerData.contactPersonNumber.toString()}</Text>}
+          {customerData?.contactPersonNumber && <Text style={tw('text-xxs font-bold]')}>{customerData.contactPersonNumber.toString()}</Text>}
         </View>
+
         <View style={tw('flex flex-col items-end w-1/2')}>
           <Text style={tw('text-xxs')}># {docId}</Text>
           {returnReferences?.length > 0 && (
-            <Text style={tw('text-[7pt] font-bold italic')}>Against: {returnReferences.join(', ')}</Text>
+            <Text style={tw('text-xxs font-bold italic')}>Against: {returnReferences.join(', ')}</Text>
           )}
           <Text style={tw('text-xxs')}>Date: {moment(date).format('DD/MM/YYYY')}</Text>
+          <Text style={tw('text-xxs font-bold italic text-center')}>Time : {moment(date).format('DD/MM/YYYY HH:mm')}</Text>
+
         </View>
       </View>
 
@@ -177,12 +180,12 @@ const PosMultiCopyPrint = ({
       {/* Footer */}
       <View style={tw('flex flex-col items-center mt-2')}>
 
-        <Text style={tw('text-[6pt] mt-2 italic')}>Strictly No Return/Exchange of Discounted items.</Text>
-        <Text style={tw('text-[6pt] mt-2 italic')}>One Day Exchange On Size Issues</Text>
-        <Text style={tw('text-[6pt] mt-2 italic')}>No Exchange On Inners</Text>
+        <Text style={tw('text-xxs mt-2 italic')}>Strictly No Return/Exchange of Discounted items.</Text>
+        <Text style={tw('text-xxs mt-2 italic')}>One Day Exchange On Size Issues</Text>
+        <Text style={tw('text-xxs mt-2 italic')}>No Exchange On Inners</Text>
 
-        <Text style={tw('text-[8pt] font-bold')}>THANK YOU!</Text>
-        <Text style={tw('text-[7pt]')}>Visit Again</Text>
+        <Text style={tw('text-xxs font-bold')}>THANK YOU!</Text>
+        <Text style={tw('text-xxs')}>Visit Again</Text>
 
       </View>
 
