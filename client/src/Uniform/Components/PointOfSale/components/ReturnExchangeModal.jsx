@@ -122,8 +122,15 @@ const ReturnExchangeModal = ({
         );
     };
 
+    const returnableItems = selectedBill?.PosItems?.filter(item => {
+        if (item.retunBillId) return false;
+        const availableQty = parseFloat(item.qty || 0) - parseFloat(item.returnedQty || 0);
+        return availableQty > 0;
+    }) || [];
+
+    const hasAnyReturnableItems = returnableItems.length > 0;
+
     const toggleAll = () => {
-        const returnableItems = selectedBill?.PosItems?.filter(i => !i.retunBillId) || [];
         if (selectedItemIds.length === returnableItems.length) {
             setSelectedItemIds([]);
         } else {
@@ -155,7 +162,7 @@ const ReturnExchangeModal = ({
                                 type="date"
                                 value={filterDate}
                                 onChange={(e) => setFilterDate(e.target.value)}
-                                className="w-full text-[10px] font-bold uppercase text-slate-700 bg-white border border-slate-200 rounded-xl px-2 py-2.5 focus:outline-none focus:border-indigo-500 transition-colors"
+                                className="w-full text-[10px] font-bold uppercase text-slate-900 bg-white border border-slate-200 rounded-xl px-2 py-2.5 focus:outline-none focus:border-indigo-500 transition-colors"
                             />
                         </div>
 
@@ -183,7 +190,8 @@ const ReturnExchangeModal = ({
                                         boxShadow: 'none',
                                         '&:hover': { border: '1px solid #6366f1' }
                                     }),
-                                    placeholder: (base) => ({ ...base, color: '#94a3b8' }),
+                                    placeholder: (base) => ({ ...base, color: '#475569' }),
+                                    singleValue: (base) => ({ ...base, color: '#0f172a' }),
                                     option: (base, state) => ({
                                         ...base,
                                         fontSize: '11px',
@@ -201,18 +209,18 @@ const ReturnExchangeModal = ({
                             <div className="flex items-center gap-2 border-r border-slate-100 pr-3 w-1/3">
                                 <User size={14} className="text-indigo-500 shrink-0" />
                                 <div className="min-w-0">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none truncate">Customer</p>
-                                    <p className="text-[10px] font-bold text-slate-700 truncate">
+                                    <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest leading-none truncate">Customer</p>
+                                    <p className="text-[10px] font-bold text-slate-900 truncate">
                                         {selectedBill ? (selectedBill.Party?.name || selectedBill.customerName || 'Walk-in') : '-'}
                                     </p>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-2 border-r border-slate-100 pl-1 pr-3 w-1/3">
                                 <ShoppingBag size={14} className="text-indigo-500 shrink-0" />
                                 <div className="min-w-0">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none truncate">Items</p>
-                                    <p className="text-[10px] font-bold text-slate-700 truncate">
+                                    <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest leading-none truncate">Items</p>
+                                    <p className="text-[10px] font-bold text-slate-900 truncate">
                                         {selectedBill ? (selectedBill.PosItems?.length || 0) : '-'}
                                     </p>
                                 </div>
@@ -221,8 +229,8 @@ const ReturnExchangeModal = ({
                             <div className="flex items-center gap-2 pl-1 w-1/3">
                                 <div className="text-indigo-500 font-black text-[10px] shrink-0">₹</div>
                                 <div className="min-w-0">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none truncate">Amount</p>
-                                    <p className="text-[10px] font-bold text-slate-700 truncate">
+                                    <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest leading-none truncate">Amount</p>
+                                    <p className="text-[10px] font-bold text-slate-900 truncate">
                                         {selectedBill ? `₹${selectedBill.netAmount?.toLocaleString()}` : '-'}
                                     </p>
                                 </div>
@@ -238,7 +246,7 @@ const ReturnExchangeModal = ({
 
                             <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm">
                                 <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                                    <h3 className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">Select Return Items</h3>
+                                    <h3 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">Select Return Items</h3>
 
                                 </div>
 
@@ -247,35 +255,38 @@ const ReturnExchangeModal = ({
                                         <thead className="bg-[#f8fafc] border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                                             <tr>
                                                 <th className="p-2 border-r border-slate-200 w-10 text-center" rowSpan="2">
-                                                    <button onClick={toggleAll} className="p-0.5 hover:bg-slate-200 rounded transition-colors inline-flex items-center">
-                                                        {selectedItemIds.length === selectedBill.PosItems?.filter(i => !i.retunBillId).length && selectedItemIds.length > 0 ?
-                                                            <CheckSquare size={14} className="text-indigo-600" /> : <Square size={14} className="text-slate-400" />}
+                                                    <button
+                                                        onClick={toggleAll}
+                                                        disabled={!hasAnyReturnableItems}
+                                                        className={`p-0.5 hover:bg-slate-200 rounded transition-colors inline-flex items-center ${!hasAnyReturnableItems ? 'opacity-40 cursor-not-allowed' : ''}`}>
+                                                        {selectedItemIds.length === returnableItems.length && selectedItemIds.length > 0 ?
+                                                            <CheckSquare size={14} className="text-indigo-600" /> : <Square size={14} className="text-slate-600" />}
                                                     </button>
                                                 </th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-12" rowSpan="2">S No</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase w-[30%]">Item</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-32">Barcode</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-20">Size</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-24">Color</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-20">UOM</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-16" rowSpan="2">Qty</th>
-                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-500 uppercase text-center w-24" rowSpan="2">Balance Qty</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-800 uppercase text-center w-12" rowSpan="2">S No</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-800 uppercase w-[30%]">Item</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-800 uppercase text-center w-32">Barcode</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-800 uppercase text-center w-20">Size</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-800 uppercase text-center w-24">Color</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-800 uppercase text-center w-20">UOM</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-800 uppercase text-center w-16" rowSpan="2">Qty</th>
+                                                <th className="p-2 border-r border-slate-200 text-[9px] font-black text-slate-800 uppercase text-center w-24" rowSpan="2">Balance Qty</th>
                                             </tr>
                                             <tr>
                                                 <th className="p-1 border-r border-slate-200 bg-white">
-                                                    <input type="text" placeholder="Search Item..." value={searchItem} onChange={(e) => setSearchItem(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-medium normal-case" />
+                                                    <input type="text" placeholder="Search Item..." value={searchItem} onChange={(e) => setSearchItem(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-semibold text-slate-800 normal-case" />
                                                 </th>
                                                 <th className="p-1 border-r border-slate-200 bg-white">
-                                                    <input type="text" placeholder="Barcode..." value={searchBarcode} onChange={(e) => setSearchBarcode(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-medium normal-case" />
+                                                    <input type="text" placeholder="Barcode..." value={searchBarcode} onChange={(e) => setSearchBarcode(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-semibold text-slate-800 normal-case" />
                                                 </th>
                                                 <th className="p-1 border-r border-slate-200 bg-white">
-                                                    <input type="text" placeholder="Size..." value={searchSize} onChange={(e) => setSearchSize(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-medium normal-case" />
+                                                    <input type="text" placeholder="Size..." value={searchSize} onChange={(e) => setSearchSize(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-semibold text-slate-800 normal-case" />
                                                 </th>
                                                 <th className="p-1 border-r border-slate-200 bg-white">
-                                                    <input type="text" placeholder="Color..." value={searchColor} onChange={(e) => setSearchColor(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-medium normal-case" />
+                                                    <input type="text" placeholder="Color..." value={searchColor} onChange={(e) => setSearchColor(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-semibold text-slate-800 normal-case" />
                                                 </th>
                                                 <th className="p-1 border-r border-slate-200 bg-white">
-                                                    <input type="text" placeholder="UOM..." value={searchUom} onChange={(e) => setSearchUom(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-medium normal-case" />
+                                                    <input type="text" placeholder="UOM..." value={searchUom} onChange={(e) => setSearchUom(e.target.value)} className="w-full text-[9px] p-1 border border-slate-200 rounded outline-none focus:border-indigo-500 font-semibold text-slate-800 normal-case" />
                                                 </th>
                                             </tr>
                                         </thead>
@@ -289,10 +300,10 @@ const ReturnExchangeModal = ({
                                                 const uomStr = (item.Uom?.name || "").toLowerCase();
 
                                                 return itemNameStr.includes(searchItem.toLowerCase()) &&
-                                                       barcodeStr.includes(searchBarcode.toLowerCase()) &&
-                                                       sizeStr.includes(searchSize.toLowerCase()) &&
-                                                       colorStr.includes(searchColor.toLowerCase()) &&
-                                                       uomStr.includes(searchUom.toLowerCase());
+                                                    barcodeStr.includes(searchBarcode.toLowerCase()) &&
+                                                    sizeStr.includes(searchSize.toLowerCase()) &&
+                                                    colorStr.includes(searchColor.toLowerCase()) &&
+                                                    uomStr.includes(searchUom.toLowerCase());
                                             }).map((item, idx) => {
                                                 const isSelected = selectedItemIds.includes(item.id);
                                                 const availableQty = parseFloat(item.qty || 0) - parseFloat(item.returnedQty || 0);
@@ -304,31 +315,31 @@ const ReturnExchangeModal = ({
                                                         className={`border-b border-slate-100 hover:bg-indigo-50/30 transition-colors cursor-pointer ${isSelected ? 'bg-indigo-50/50' : ''} ${availableQty <= 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}`}
                                                     >
                                                         <td className="p-2 border-r border-slate-200 text-center">
-                                                            {isSelected ? <CheckSquare size={14} className="text-indigo-600 mx-auto" /> : <Square size={14} className="text-slate-300 mx-auto" />}
+                                                            {isSelected ? <CheckSquare size={14} className="text-indigo-600 mx-auto" /> : <Square size={14} className="text-slate-500 mx-auto" />}
                                                         </td>
-                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-600 text-center">{idx + 1}</td>
+                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-800 text-center">{idx + 1}</td>
                                                         <td className="p-2 border-r border-slate-200">
                                                             <div className="flex flex-col">
-                                                                <span className="text-[10px] font-black text-slate-700 uppercase tracking-tight leading-none">{item.item_name || item?.Item?.name || "Item Name"}</span>
+                                                                <span className="text-[10px] font-black text-slate-900 uppercase tracking-tight leading-none">{item.item_name || item?.Item?.name || "Item Name"}</span>
                                                                 {availableQty <= 0 && <span className="text-[7px] text-red-500 font-bold uppercase mt-1">Already Fully Returned</span>}
                                                             </div>
                                                         </td>
-                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
+                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-800 text-center uppercase">
                                                             {item.barcode || '-'}
                                                         </td>
-                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
+                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-800 text-center uppercase">
                                                             {item.size || item.Size?.name || '-'}
                                                         </td>
-                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
+                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-800 text-center uppercase">
                                                             {item.color || item.Color?.name || '-'}
                                                         </td>
-                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
+                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-800 text-center uppercase">
                                                             {item.Uom?.name || '-'}
                                                         </td>
-                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
+                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-800 text-center uppercase">
                                                             {item.qty}
                                                         </td>
-                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-500 text-center uppercase">
+                                                        <td className="p-2 border-r border-slate-200 text-[10px] font-bold text-slate-800 text-center uppercase">
                                                             {availableQty}
                                                         </td>
                                                     </tr>
@@ -337,7 +348,7 @@ const ReturnExchangeModal = ({
 
                                             {selectedBill.PosItems?.filter(i => !i.retunBillId).length === 0 && (
                                                 <tr>
-                                                    <td colSpan="9" className="p-8 text-center text-[10px] font-bold text-slate-400 uppercase italic">
+                                                    <td colSpan="9" className="p-8 text-center text-[10px] font-bold text-slate-600 uppercase italic">
                                                         No returnable items found in this bill
                                                     </td>
                                                 </tr>
@@ -348,13 +359,13 @@ const ReturnExchangeModal = ({
                             </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-center opacity-60 space-y-3">
+                        <div className="h-full flex flex-col items-center justify-center text-center opacity-85 space-y-3">
                             <div className="p-5 bg-slate-50 rounded-2xl">
-                                <Package size={48} className="text-slate-300" />
+                                <Package size={48} className="text-slate-400" />
                             </div>
                             <div className="space-y-1">
-                                <p className="text-xs font-black uppercase tracking-widest text-slate-400">Search for a bill</p>
-                                <p className="text-[10px] font-medium text-slate-400 leading-tight">Enter a valid sales number above to load items<br />for return or exchange.</p>
+                                <p className="text-xs font-black uppercase tracking-widest text-slate-700">Search for a bill</p>
+                                <p className="text-[10px] font-medium text-slate-600 leading-tight">Enter a valid sales number above to load items<br />for return or exchange.</p>
                             </div>
                         </div>
                     )}

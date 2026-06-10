@@ -929,8 +929,12 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     const totalBeforeOffer = purchaseTotalBeforeOffer - returnTotal;
     const totalBeforeDiscount = purchaseTotalBeforeOffer - totalOfferDiscount - returnTotal;
-    const totalWithoutRounding = totalBeforeDiscount - discount;
-    const total = Math.round(totalWithoutRounding);
+    // const totalWithoutRounding = totalBeforeDiscount - discount;
+    const totalWithoutRounding = totalBeforeDiscount;
+
+    // const total = Math.round(totalWithoutRounding) ;
+
+    const total = Math.round(totalWithoutRounding) - discount;
     const roundOff = parseFloat((total - totalWithoutRounding).toFixed(2));
 
     const tax = cartWithOffers.reduce((sum, item) => {
@@ -1626,7 +1630,6 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 />
             </div>
 
-            {/* Modal Post-triggers */}
             <PaymentModal
                 isOpen={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}

@@ -113,7 +113,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const { data: hsnList } = useGetHsnMasterQuery({ params });
   const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: offersData } = useGetoffersPromotionsQuery({ params: { ...params, active: true } });
-  const activeOffers = offersData?.data || [];
+  const activeOffers = offersData?.data?.filter(i => i.active) || [];
 
   const { data: collectionsData } = useGetcollectionsQuery({
     params: { branchId, userId, finYearId, active: true }
@@ -276,6 +276,9 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+  const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, saleOrderItems || []), [activeOffers, saleOrderItems]);
+  const { cartWithOffers: rawItemsWithOffers } = useMemo(() => calculateCartWithOffers(saleOrderItems || [], selectedOffersByRow, potentialOffers, activeOffers), [saleOrderItems, selectedOffersByRow, potentialOffers, activeOffers]);
+
   const data = {
     docId,
     poType: transType,
@@ -284,7 +287,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     payTermId,
     id, userId,
     storeId,
-    saleOrderItems: saleOrderItems?.filter(i => i.itemId),
+    saleOrderItems: rawItemsWithOffers?.filter(i => i.itemId),
     discountType,
     discountValue,
     dcNo,
@@ -421,9 +424,6 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
     }
   }
 
-
-  const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, saleOrderItems || []), [activeOffers, saleOrderItems]);
-  const { cartWithOffers: rawItemsWithOffers } = useMemo(() => calculateCartWithOffers(saleOrderItems || [], selectedOffersByRow, potentialOffers, activeOffers), [saleOrderItems, selectedOffersByRow, potentialOffers, activeOffers]);
 
   const saleOrderItemsWithOffers = useMemo(() => {
     let items = [...(rawItemsWithOffers || [])];

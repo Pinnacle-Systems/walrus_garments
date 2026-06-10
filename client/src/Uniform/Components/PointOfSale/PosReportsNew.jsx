@@ -19,6 +19,7 @@ import { FiPrinter, FiXCircle, FiRefreshCw, FiCalendar } from 'react-icons/fi';
 import { PDFViewer } from '@react-pdf/renderer';
 import Modal from '../../../UiComponents/Modal';
 import PosMultiCopyPrint from './PosMultiCopyPrint';
+import PosDeliveryReceiptPrint from './PosDeliveryReceiptPrint';
 import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import Swal from 'sweetalert2';
 
@@ -379,11 +380,19 @@ const PosReportsNew = ({
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
             <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
                 <PDFViewer style={{ width: "100%", height: "90vh" }}>
-                    <PosMultiCopyPrint
-                        {...printData}
-                        branchData={branchList?.data?.find(b => b.id === branchId)}
-                        showSummarySlip={printData?.showSummarySlip}
-                    />
+                    {printData?.bilStatus === "UNPAID" ? (
+                        <PosDeliveryReceiptPrint
+                            docId={printData?.docId}
+                            date={printData?.date}
+                            items={printData?.items}
+                        />
+                    ) : (
+                        <PosMultiCopyPrint
+                            {...printData}
+                            branchData={branchList?.data?.find(b => b.id === branchId)}
+                            showSummarySlip={printData?.showSummarySlip}
+                        />
+                    )}
                 </PDFViewer>
             </Modal>
 
@@ -398,17 +407,17 @@ const PosReportsNew = ({
                                         <div className="">S No</div>
                                     </th>
 
-                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
+                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-48">
                                         <div>Pos No</div>
 
                                     </th>
 
-                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-32">
+                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-36">
                                         <div>Pos Date</div>
                                     </th>
 
 
-                                    <th className="w-24  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                                    <th className="w-48  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>Bill Status</div>
                                     </th>
                                     {reportsTransactionType != "SALE" && (

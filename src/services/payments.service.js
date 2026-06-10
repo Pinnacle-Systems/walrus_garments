@@ -3,6 +3,7 @@ import { attachCurrentTime, getDateFromDateTime, getYearShortCodeForFinYear } fr
 import { getTableRecordWithId } from '../utils/helperQueries.js';
 import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
 import { prisma } from '../lib/prisma.js';
+import { getPartyCreditBalance } from './partyMaster.service.js';
 
 // Helper to determine Ledger enums based on paymentFlow and party type
 function getLedgerDetails(paymentFlow, isSupplier, paymentMode, paymentType) {
@@ -169,7 +170,10 @@ async function getOne(id) {
         }
     }
 
-    return { statusCode: 0, data: { ...data, ...{ childRecord }, isDeletable } };
+
+    const creditBalance = await getPartyCreditBalance(data?.partyId)
+
+    return { statusCode: 0, data: { ...data, ...{ childRecord }, isDeletable, creditBalance } };
 }
 
 

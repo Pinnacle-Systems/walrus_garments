@@ -118,7 +118,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
   const { data: itemPriceList } = useGetItemPriceListQuery({ params: salesItemParams });
   const { data: itemControlPanel } = useGetItemControlPanelMasterQuery({ params });
   const { data: offersData } = useGetoffersPromotionsQuery({ params: { ...params, active: true } });
-  const activeOffers = offersData?.data || [];
+  const activeOffers = offersData?.data?.filter(i => i.active) || [];
 
   const { data: collectionsData } = useGetcollectionsQuery({
     params: { branchId, userId, finYearId, active: true }
@@ -198,6 +198,9 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
+  const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, quoteItems || []), [activeOffers, quoteItems]);
+  const { cartWithOffers: quoteItemsWithOffers } = useMemo(() => calculateCartWithOffers(quoteItems || [], selectedOffersByRow, potentialOffers, activeOffers), [quoteItems, selectedOffersByRow, potentialOffers, activeOffers]);
+
   const data = {
     docId,
     poType: transType,
@@ -206,7 +209,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
     payTermId,
     id, userId,
     storeId,
-    quoteItems: quoteItems?.filter(i => i.itemId),
+    quoteItems: quoteItemsWithOffers?.filter(i => i.itemId),
     discountType,
     discountValue,
     dcNo,
@@ -374,9 +377,6 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       handleSubmitCustom(addData, data, "Added", nextProcess);
     }
   }
-
-  const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, quoteItems || []), [activeOffers, quoteItems]);
-  const { cartWithOffers: quoteItemsWithOffers } = useMemo(() => calculateCartWithOffers(quoteItems || [], selectedOffersByRow, potentialOffers, activeOffers), [quoteItems, selectedOffersByRow, potentialOffers, activeOffers]);
 
   const totalOfferDiscount = quoteItemsWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
 

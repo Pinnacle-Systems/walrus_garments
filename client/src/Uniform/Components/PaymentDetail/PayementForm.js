@@ -42,7 +42,8 @@ const PaymentForm = ({
     currentHistoryPage, setCurrentHistoryPage,
     readOnly, setReadOnly, childRecord,
     onNew, paymentHistory, setPaymentHistory, invalidateTagsDispatch,
-    outstandingAmount, setOutStandingAmount
+    outstandingAmount, setOutStandingAmount,
+    setAvailableCredit
 }) => {
 
     const calculateQuotationNetAmount = (quotationItems = [], quotation) => {
@@ -283,18 +284,39 @@ const PaymentForm = ({
         skip: !supplierId || paymentFlow !== "Payout"
     });
 
-    const { data: creditData } = useGetPartyCreditBalanceQuery(supplierId, {
+    const { data: creditData, isLoading: creditLoading, isFetching: creditFetching } = useGetPartyCreditBalanceQuery(supplierId, {
         skip: !supplierId
     });
 
+    console.log(creditData, "creditData")
+
     const availableCredit = creditData?.data?.creditValue || 0;
+
+    const usedCredit = useMemo(() => {
+        if (!id || !singleData?.data) return 0;
+        const savedMode = singleData.data.paymentMode;
+        const savedFlow = singleData.data.paymentFlow;
+        const savedType = singleData.data.paymentType;
+        const savedAmount = parseFloat(singleData.data.paidAmount || 0);
+
+        if (savedMode === "Credit_Adjustment" && savedFlow !== "Payout") {
+            return savedAmount;
+        }
+        if (savedFlow === "Payout" && savedType === "credit-balance") {
+            return savedAmount;
+        }
+        return 0;
+    }, [id, singleData]);
+
+    const effectiveAvailableCredit = availableCredit + usedCredit;
+
     const paymentModeOptions = useMemo(() => {
         const base = [...paymentModes];
-        if (availableCredit > 0 && paymentFlow !== "Payout") {
+        if ((effectiveAvailableCredit > 0 && paymentFlow !== "Payout") || id) {
             base.push({ show: "Credit_Adjustment", value: "Credit_Adjustment" });
         }
         return base;
-    }, [availableCredit, paymentFlow]);
+    }, [effectiveAvailableCredit, paymentFlow]);
 
 
 
@@ -311,21 +333,22 @@ const PaymentForm = ({
 
             setDocId(data?.docId ? data?.docId : "New");
             // if (data?.createdAt) setDate(moment.utc(data?.createdAt).format("YYYY-MM-DD"));
-            setPaidAmount(data?.paidAmount || '');
-            setDiscount(data?.discount || 0);
-            setSupplierId(data?.partyId || '');
-            setPaymentMode(data?.paymentMode || '');
+            setPaidAmount(data?.paidAmount ? data?.paidAmount : 0);
+            setDiscount(data?.discount ? data?.discount : 0);
+            setSupplierId(data?.partyId ? data?.partyId : '');
+            setPaymentMode(data?.paymentMode ? data?.paymentMode : '');
             // Auto‑populate credit when mode is Credit_Adjustment
-            if (data?.paymentMode === "Credit_Adjustment") {
-                const max = Math.min(availableCredit, Number(outstandingAmount || 0));
-                setPaidAmount(max > 0 ? max.toString() : '');
-            }
-            setPaymentType(data?.paymentType || '')
-            setPaymentRefNo(data?.paymentRefNo || '');
-            setRefId(data?.refId || '');
-            setRefDocId(data?.refDocId || '');
-            setPartyId(data?.partyId || '');
-            setTotalBillAmount(data?.totalBillAmount || '')
+            // if (data?.paymentMode === "Credit_Adjustment") {
+            //     const max = Math.min(data?.creditBalance, Number(outstandingAmount || 0));
+            //     setPaidAmount(max > 0 ? max.toString() : '');
+            //     setPaidAmount(data?.creditBalance)
+            // }
+            setPaymentType(data?.paymentType ? data?.paymentType : '')
+            setPaymentRefNo(data?.paymentRefNo ? data?.paymentRefNo : '');
+            setRefId(data?.refId ? data?.refId : '');
+            setRefDocId(data?.refDocId ? data?.refDocId : '');
+            setPartyId(data?.partyId ? data?.partyId : '');
+            setTotalBillAmount(data?.totalBillAmount ? data?.totalBillAmount : '')
             // setBillAmount(data?.totalBillAmount || '')
 
             setCvv(data?.cvv ? moment.utc(data?.cvv).format("YYYY-MM-DD") : moment.utc(new Date()).format("YYYY-MM-DD"))
@@ -340,7 +363,7 @@ const PaymentForm = ({
         }, [id])
 
 
-    console.log(totalBillAmount, "totalBillAmount")
+    console.log(paidAmount, "paidAmount", transactionId)
 
     useEffect(() => {
         if (id && singleData?.data) {
@@ -531,7 +554,7 @@ const PaymentForm = ({
     }
 
 
-    console.log(availableCredit, "value", paymentType)
+    // console.log(availableCredit, "value", paymentType)
 
     const handleChange = (e) => {
         const value = parseInt(e.target.value);
@@ -549,9 +572,19 @@ const PaymentForm = ({
             }
         }
         if (paymentMode == "Credit_Adjustment") {
-            if (value > availableCredit) {
+            if (value > effectiveAvailableCredit) {
                 Swal.fire({
-                    title: `Amount Cannot be Greater than Available Credit(${formatAmountIN(availableCredit)})!!!`,
+                    title: `Amount Cannot be Greater than Available Credit(${formatAmountIN(effectiveAvailableCredit)})!!!`,
+                    icon: "error",
+
+                });
+                return
+            }
+        }
+        if (paymentFlow == "Payout" && paymentType == "credit-balance") {
+            if (value > effectiveAvailableCredit) {
+                Swal.fire({
+                    title: `Amount Cannot be Greater than Available Credit(${formatAmountIN(effectiveAvailableCredit)})!!!`,
                     icon: "error",
 
                 });
@@ -598,17 +631,21 @@ const PaymentForm = ({
         if (paymentFlow === "Payout") {
             if (transactionType === "QUOTATION") {
                 list = (quotationList?.data || []).filter(q =>
-                    (!q.Saleorder || q.Saleorder.length === 0) &&
-                    getPayoutOutstandingForQuotation(q) > 0
+                    ((!q.Saleorder || q.Saleorder.length === 0) && getPayoutOutstandingForQuotation(q) > 0) ||
+                    (id && String(q.id) === String(transactionId))
                 );
             } else if (transactionType === "SALESORDER") {
                 list = (salesOrderList?.data || []).filter(so =>
-                    getPayoutOutstandingForSalesOrder(so, salesDeliveryList?.data) > 0
+                    (getPayoutOutstandingForSalesOrder(so, salesDeliveryList?.data) > 0) ||
+                    (id && String(so.id) === String(transactionId))
                 );
             }
         } else {
             if (transactionType === "QUOTATION") {
-                list = (quotationList?.data || []).filter(q => !q.Saleorder || q.Saleorder.length === 0);
+                list = (quotationList?.data || []).filter(q =>
+                    (!q.Saleorder || q.Saleorder.length === 0) ||
+                    (id && String(q.id) === String(transactionId))
+                );
             }
             else if (transactionType === "SALESORDER") {
                 list = salesOrderList?.data || [];
@@ -616,12 +653,13 @@ const PaymentForm = ({
 
         }
 
+        console.log(list, 'list')
         // Filter by selected party if supplierId exists
         if (supplierId) {
-            list = list.filter(item => String(item.customerId || item.partyId) === String(supplierId));
+            list = list?.filter(item => String(item.customerId || item.partyId) === String(supplierId));
         }
 
-        return list.map(item => ({ show: item.docId, value: item.id }));
+        return list?.map(item => ({ show: item.docId, value: item.id }));
     };
     console.log(transactionType, "transactionType", availableCredit, "availableCredit", outstandingAmount)
 
@@ -961,9 +999,9 @@ const PaymentForm = ({
                                             {type.show}
                                         </option>
                                     ))}
-                                    {(parseInt(availableCredit) > 0 && paymentFlow == "Payout") && (
+                                    {(parseInt(effectiveAvailableCredit) > 0 && paymentFlow == "Payout") && (
                                         <option value="credit-balance">
-                                            Credit Balance ({availableCredit})
+                                            Credit Balance ({effectiveAvailableCredit})
                                         </option>
                                     )}
 
@@ -1041,13 +1079,13 @@ const PaymentForm = ({
                                     readOnly={readOnly}
                                 />
                             </div>
-                            {paymentMode == "Credit_Adjustment" && availableCredit > 0 && paymentFlow !== "Payout" && (
+                            {paymentMode == "Credit_Adjustment" && effectiveAvailableCredit > 0 && paymentFlow !== "Payout" && (
                                 <div>
                                     <label className="block text-xs font-bold text-gray-600 mb-1">Credit Value</label>
                                     <input
                                         type="text"
                                         onChange={(e) => setPaymentRefNo(e.target.value)}
-                                        value={availableCredit}
+                                        value={effectiveAvailableCredit}
                                         disabled={true}
                                         className="w-full px-3 py-1 border border-gray-300 text-gray-700 rounded-lg focus:outline-none focus:ring-emerald-500"
                                         placeholder="Reference No"

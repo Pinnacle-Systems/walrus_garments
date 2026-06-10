@@ -13,6 +13,8 @@ import {
     FaVenus,
 } from "react-icons/fa";
 import { IoMaleFemale } from "react-icons/io5";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 
 const TodaySalesReturnsBreakup = ({ data, onClose }) => {
@@ -26,6 +28,114 @@ const TodaySalesReturnsBreakup = ({ data, onClose }) => {
         type: "",
     }); const [selectedState, setSelectedState] = useState("All");
     const [currentPage, setCurrentPage] = useState(1);
+
+    const downloadExcel = async () => {
+        if (!filteredData || !filteredData.length) {
+            alert("No data to download");
+            return;
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Today Sales Returns Breakup");
+
+        worksheet.columns = [
+            { header: "S.No", key: "sNo", width: 10 },
+            { header: "Doc ID", key: "id", width: 25 },
+            { header: "Customer Name", key: "party", width: 45 },
+            { header: "Bill Amount", key: "amount", width: 20 },
+            { header: "Sales Type", key: "type", width: 20 },
+        ];
+
+        /* ================= TITLE ================= */
+        worksheet.insertRow(1, ["Today Sales Returns Breakup"]);
+        worksheet.mergeCells("A1:E1");
+
+        const titleCell = worksheet.getCell("A1");
+        titleCell.font = { bold: true, size: 14 };
+        titleCell.alignment = { horizontal: "center", vertical: "middle" };
+        worksheet.getRow(1).height = 30;
+
+        /* ================= COLUMNS ================= */
+        const headerRow = worksheet.getRow(2);
+        headerRow.height = 26;
+
+        headerRow.eachCell((cell) => {
+            cell.font = { bold: true };
+            cell.alignment = { horizontal: "center", vertical: "middle" };
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFD9D9D9" },
+            };
+            cell.border = {
+                top: { style: "thin" },
+                bottom: { style: "thin" },
+                left: { style: "thin" },
+                right: { style: "thin" },
+            };
+        });
+
+        /* ================= DATA ================= */
+        filteredData.forEach((row, index) => {
+            worksheet.addRow({
+                sNo: index + 1,
+                id: row?.id || "",
+                party: row?.party || "",
+                amount: Number(row?.amount || 0),
+                type: row?.type || "",
+            });
+        });
+
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber <= 2) return;
+
+            row.height = 22;
+            row.getCell("sNo").alignment = { horizontal: "center", vertical: "middle" };
+            row.getCell("id").alignment = { horizontal: "left", vertical: "middle", indent: 1 };
+            row.getCell("party").alignment = { horizontal: "left", vertical: "middle", indent: 1 };
+            row.getCell("amount").alignment = { horizontal: "right", vertical: "middle", indent: 1 };
+            row.getCell("type").alignment = { horizontal: "center", vertical: "middle" };
+        });
+
+        // ================= TOTAL ROW =================
+        const totalAmount = filteredData.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+        const totalRow = worksheet.addRow({
+            sNo: "",
+            id: "",
+            party: "Total",
+            amount: totalAmount,
+            type: "",
+        });
+
+        totalRow.height = 24;
+
+        // Style TOTAL row
+        totalRow.eachCell((cell, colNumber) => {
+            cell.font = { bold: true };
+            cell.border = {
+                top: { style: "thin" },
+                bottom: { style: "double" },
+            };
+            cell.alignment = {
+                vertical: "middle",
+                horizontal: colNumber === 4 ? "right" : "center",
+                indent: colNumber === 4 ? 1 : 0
+            };
+        });
+
+        worksheet.getColumn("amount").numFmt = '₹ #,##,##0.00';
+
+        /* ================= FREEZE ================= */
+        worksheet.views = [{ state: "frozen", ySplit: 2 }];
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(
+            new Blob([buffer], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            }),
+            "Today_Sales_Returns_Breakup.xlsx"
+        );
+    };
 
     const handleFilterClick = (type) => {
         setSelectedState(type);
@@ -180,7 +290,7 @@ const TodaySalesReturnsBreakup = ({ data, onClose }) => {
                         </div>
                         <div className="right-0">
                             <button
-                                // onClick={downloadExcel}
+                                onClick={downloadExcel}
                                 className="p-0 rounded-full shadow-md hover:brightness-110 transition-all duration-300"
                                 title="Download Excel"
                             >
@@ -210,37 +320,18 @@ const TodaySalesReturnsBreakup = ({ data, onClose }) => {
                                 </thead>
                                 <tbody>
                                     {currentRecords.slice(0, 16).map((row, index) => {
-                                        const globalIndex = index; // 0–16
-                                        const serialNo =
-                                            (currentPage - 1) * recordsPerPage + globalIndex + 1;
+                                        const globalIndex = index;
+                                        const serialNo = (currentPage - 1) * recordsPerPage + globalIndex + 1;
                                         return (
                                             <tr
                                                 key={index}
                                                 className="text-gray-800 bg-white even:bg-gray-100 "
                                             >
-                                                <td className="border p-1 text-[10px] ">
-                                                    {index + 1}
-                                                </td>
-                                                <td className="border p-1 text-[10px]">
-                                                    {row?.id}
-                                                </td>
-                                                <td className="border p-1 text-[10px] ">
-                                                    {row.party}
-                                                </td>
-                                                <td
-                                                    className="border p-1 text-[10px]"
-                                                >
-                                                    {row.amount}
-                                                </td>
-
-
-
-                                                <td className="border p-1 text-sky-700  text-[10px] w-[25px]">
-                                                    {row.type}
-                                                </td>
-
-
-
+                                                <td className="border p-1 text-[10px] ">{serialNo}</td>
+                                                <td className="border p-1 text-[10px]">{row?.id}</td>
+                                                <td className="border p-1 text-[10px] ">{row.party}</td>
+                                                <td className="border p-1 text-[10px]">{row.amount}</td>
+                                                <td className="border p-1 text-sky-700  text-[10px] w-[25px]">{row.type}</td>
                                             </tr>
                                         );
                                     })}
@@ -255,58 +346,27 @@ const TodaySalesReturnsBreakup = ({ data, onClose }) => {
                             <table className="w-full border-collapse border border-gray-300 text-[11px]">
                                 <thead className="bg-gray-100 text-gray-800 sticky top-0 tracking-wider">
                                     <tr>
-                                        <th className="border p-1 text-left">S.No</th>
-                                        <th className="border p-1 text-left">Doc ID</th>
-                                        <th className="border p-1 text-left">Customer Name</th>
-                                        <th className="border p-1 text-left">Bill Amount</th>
-                                        <th className="border p-1 text-left">Sales Person</th>
-                                        <th className="border p-1 text-left">Sales Type</th>
+                                        <th className="border p-1 text-left w-[10px]">S.No</th>
+                                        <th className="border p-1 text-left w-[40px]">Doc ID</th>
+                                        <th className="border p-1 text-left w-[100px]">Customer Name</th>
+                                        <th className="border p-1 text-left w-[60px]">Bill Amount</th>
+                                        <th className="border p-1 text-left w-[30px]">Sales Type</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {currentRecords.slice(16, 32).map((row, index) => {
-                                        const globalIndex = 16 + index; // 17–33
-                                        const serialNo =
-                                            (currentPage - 1) * recordsPerPage + globalIndex + 1;
+                                        const globalIndex = 16 + index;
+                                        const serialNo = (currentPage - 1) * recordsPerPage + globalIndex + 1;
                                         return (
                                             <tr
                                                 key={index}
-                                                className="text-gray-700 bg-white even:bg-gray-100"
+                                                className="text-gray-800 bg-white even:bg-gray-100"
                                             >
-                                                <td className="border p-1 text-[10px] w-[25px]">
-                                                    {serialNo}
-                                                </td>
-                                                <td className="border p-1 text-[10px] w-[60px]">
-                                                    {row.EMPID}
-                                                </td>
-                                                <td
-                                                    className="border p-1 text-[10px] w-[100px] whitespace-nowrap overflow-hidden text-ellipsis "
-                                                    style={{ maxWidth: "100px" }}
-                                                >
-                                                    {row.FNAME}
-                                                </td>
-                                                <td className="border p-1 text-[10px] w-[30px]">
-                                                    {row.GENDER}
-                                                </td>
-                                                <td
-                                                    className="border p-1 text-[10px] w-[100px] whitespace-nowrap overflow-hidden text-ellipsis "
-                                                    style={{ maxWidth: "100px" }}
-                                                >
-                                                    {row.DEPARTMENT}
-                                                </td>
-
-                                                <td className="border p-1 text-sky-700  text-[10px] w-[25px]">
-                                                    {new Intl.NumberFormat("en-IN", {
-                                                        style: "currency",
-                                                        currency: "INR",
-                                                    }).format(row.EMPLOYER_CON)}
-                                                </td>
-                                                <td className="border p-1 text-sky-700  text-[10px] w-[25px]">
-                                                    {new Intl.NumberFormat("en-IN", {
-                                                        style: "currency",
-                                                        currency: "INR",
-                                                    }).format(row.ESI)}
-                                                </td>
+                                                <td className="border p-1 text-[10px] w-[25px]">{serialNo}</td>
+                                                <td className="border p-1 text-[10px]">{row?.id}</td>
+                                                <td className="border p-1 text-[10px]">{row.party}</td>
+                                                <td className="border p-1 text-[10px]">{row.amount}</td>
+                                                <td className="border p-1 text-sky-700 text-[10px] w-[25px]">{row.type}</td>
                                             </tr>
                                         );
                                     })}

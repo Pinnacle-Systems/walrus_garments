@@ -330,7 +330,7 @@ const QuotationItems = ({
     const potentialOffers = useMemo(() => getPotentialOffers(activeOffers, quoteItems), [activeOffers, quoteItems]);
     const { cartWithOffers: rawItemsWithOffers } = useMemo(() => calculateCartWithOffers(quoteItems, selectedOffersByRow, potentialOffers, activeOffers), [quoteItems, selectedOffersByRow, potentialOffers, activeOffers]);
 
-
+    console.log(quoteItems, "quoteItems")
 
     const quoteItemsWithOffers = useMemo(() => {
         let items = [...(rawItemsWithOffers || [])];
@@ -508,7 +508,7 @@ const QuotationItems = ({
                                 </tr>
                             </thead>
 
-                            <tbody>
+                            <tbody>{console.log(quoteItemsWithOffers, "quoteItemsWithOffers")}
 
                                 {(quoteItemsWithOffers ? quoteItemsWithOffers : [])?.map((row, index) => {
 

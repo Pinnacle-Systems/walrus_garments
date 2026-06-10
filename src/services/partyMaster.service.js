@@ -698,7 +698,7 @@ async function getPartyOutstandingBalance(id) {
     };
 }
 
-async function getPartyCreditBalance(id) {
+export async function getPartyCreditBalance(id) {
     const party = await prisma.party.findUnique({
         where: {
             id: parseInt(id)
@@ -782,6 +782,5 @@ export {
     updateContact,
     getPartyBranchOne,
     getPartyOutstandingBalance,
-    getPartyCreditBalance,
     getPartyCreditAdjustment
 }

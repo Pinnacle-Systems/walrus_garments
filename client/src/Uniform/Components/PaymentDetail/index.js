@@ -67,6 +67,7 @@ export default function Form() {
   const childRecord = useRef(0);
   const [paymentHistory, setPaymentHistory] = useState([])
   const [outstandingAmount, setOutStandingAmount] = useState(0)
+  const [availableCredit, setAvailableCredit] = useState(0)
 
 
 
@@ -249,6 +250,8 @@ export default function Form() {
           invalidateTagsDispatch={invalidateTagsDispatch}
           outstandingAmount={outstandingAmount}
           setOutStandingAmount={setOutStandingAmount}
+          setAvailableCredit={setAvailableCredit}
+          availableCredit={availableCredit}
         />
       ) : (
         <div className="bg-[#F1F1F0]">
