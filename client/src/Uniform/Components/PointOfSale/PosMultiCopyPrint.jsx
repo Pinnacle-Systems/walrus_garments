@@ -44,6 +44,7 @@ const PosMultiCopyPrint = ({
 }) => {
 
   console.log(showSummarySlip, "showSummarySlip")
+  console.log(branchData, "branchData")
 
 
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
@@ -175,9 +176,14 @@ const PosMultiCopyPrint = ({
 
       {/* Footer */}
       <View style={tw('flex flex-col items-center mt-2')}>
+
+        <Text style={tw('text-[6pt] mt-2 italic')}>Strictly No Return/Exchange of Discounted items.</Text>
+        <Text style={tw('text-[6pt] mt-2 italic')}>One Day Exchange On Size Issues</Text>
+        <Text style={tw('text-[6pt] mt-2 italic')}>No Exchange On Inners</Text>
+
         <Text style={tw('text-[8pt] font-bold')}>THANK YOU!</Text>
         <Text style={tw('text-[7pt]')}>Visit Again</Text>
-        <Text style={tw('text-[6pt] mt-2 italic')}>Product returns only valid within 7 days with original tag.</Text>
+
       </View>
 
       <View style={tw('flex flex-col items-center mt-4 border-t border-gray-100 pt-2')}>

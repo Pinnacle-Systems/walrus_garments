@@ -212,9 +212,13 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         }
     }, [cart, tabId, onCartUpdate]);
 
-    console.log(selectedReportSaleId, "selectedReportSaleId")
+    console.log(availableCredit, "availableCredit")
     // Fetch credit balance and available return bills when customer changes
     useEffect(() => {
+
+        if (selectedReportSaleId) {
+            return;
+        }
         if (selectedCustomer?.id && !selectedReportSaleId && transactionType === "SALE") {
             fetchCreditBalance(selectedCustomer.id).unwrap().then(res => {
                 if (res.statusCode === 0) setAvailableCredit(res.data);
@@ -332,7 +336,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         setApprovalStatus(sale.approvalStatus || "NA");
         setCurrentBilStatus(sale.bilStatus ? sale.bilStatus : "NA");
         setIsCancelBill(sale?.isCancel ? sale?.isCancel : false);
-        setAvailableCredit(sale?.availableCredit || 0)
+        setAvailableCredit(sale?.availableCredit ? sale?.availableCredit : 0)
 
     }, [itemsData, retailStoreId]);
 
