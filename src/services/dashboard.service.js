@@ -141,7 +141,16 @@ async function getSalesData(where, from, to) {
         total: posTotal + bulkTotal,
         returnsTotal: posReturnsTotal + bulkReturnsTotal,
         breakup: [
-            ...posSales.map(p => ({ id: p.docId || p.id, party: p.Party?.name || 'Walk-in', amount: parseFloat(p.netAmount || 0), type: 'POS' })),
+            ...posSales.map(p => ({
+                id: p.docId || p.id,
+                party: p.Party?.name || 'Walk-in',
+                amount: parseFloat(p.netAmount || 0),
+                type: 'POS',
+                //    cash:p.cashAmount,
+                //    card:p.cardAmount,
+                //    upi:p.upiAmount,
+                //    credit:p.creditAmount,
+            })),
             ...bulkSalesBreakup
         ],
         returnsBreakup: [

@@ -2,6 +2,7 @@ import React from 'react';
 import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
 import { createTw } from 'react-pdf-tailwind';
 import moment from 'moment';
+import BarcodeGenerator from '../BarcodeGenerator';
 
 const tw = createTw({
   theme: {
@@ -208,7 +209,11 @@ const PosMultiCopyPrint = ({
         <Text style={tw('text-[8pt] font-bold uppercase')}>Bill Number</Text>
         <Text style={tw('text-lg font-black')}>{docId}</Text>
 
-        <View style={tw('h-2')} />
+        {docId && (
+          <View style={tw('items-center justify-center my-2')}>
+            <BarcodeGenerator value={`${docId}`} width={170} height={45} />
+          </View>
+        )}
 
         <Text style={tw('text-[8pt] font-bold uppercase')}>Total Quantity</Text>
         <Text style={tw('text-xl font-black')}>{totalQty}</Text>
