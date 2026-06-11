@@ -560,7 +560,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     // Auto-complete suggestion queries based on active search Mode
     useEffect(() => {
         const query = searchQuery?.trim().toLowerCase();
-        if (!query || query.length < 2 || selectedReportSaleId || searchMode !== 'NAME') {
+        if (!query || query.length < 1 || selectedReportSaleId || searchMode !== 'NAME') {
             setSuggestions([]);
             setShowSuggestions(false);
             return;
@@ -570,7 +570,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         const itemPriceList = ItemPriceListData?.data || [];
         const allMatches = filterSearchSuggestions({ query, items, itemPriceList, retailStoreId });
 
-        setSuggestions(allMatches.slice(0, 10));
+        setSuggestions(allMatches.slice(0, 100));
         setShowSuggestions(allMatches.length > 0);
 
         if (allMatches.length > 0) {

@@ -1,5 +1,6 @@
-import React, { useState, Suspense, lazy } from "react";
+import React, { useState, Suspense, lazy, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useGetRoleByIdQuery } from "../../../redux/services/RolesMasterService";
 import { push, remove } from "../../../redux/features/opentabs";
 import { CLOSE_ICON, DOUBLE_NEXT_ICON } from "../../../icons";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
@@ -68,6 +69,38 @@ const ActiveTabList = ({ isSuperAdmin }) => {
   const dispatch = useDispatch();
   const [showHidden, setShowHidden] = useState(false);
   const ref = useOutsideClick(() => { setShowHidden(false) });
+
+  const defaultAdmin = JSON.parse(
+    secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "defaultAdmin"
+    )
+  );
+  const userRoleId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userRoleId"
+  );
+
+  const { data: roleData } = useGetRoleByIdQuery(userRoleId, {
+    skip: !userRoleId || isSuperAdmin || defaultAdmin,
+  });
+
+  const hasPosPermission = useMemo(() => {
+    if (isSuperAdmin || defaultAdmin) return true;
+    if (!roleData) return false;
+    return (roleData?.data?.RoleOnPage || []).some(
+      (rp) => rp.page.name === "POINT OF SALES" && rp.page.active && rp.read && roleData?.data?.name == "SALES"
+    );
+  }, [isSuperAdmin, defaultAdmin, roleData]);
+
+  // const hasDashboardPermission = useMemo(() => {
+  //   if (isSuperAdmin || defaultAdmin) return true;
+  //   if (!roleData) return false;
+  //   return (roleData?.data?.RoleOnPage || []).some(
+  //     (rp) => rp.page.name === "DASHBOARD" && rp.page.active && rp.read
+  //   );
+  // }, [isSuperAdmin, defaultAdmin, roleData]);
+
+
+  const hasDashboardPermission = true
 
   const tabs = {
     "PAGE MASTER": <PageMaster />,
@@ -187,14 +220,26 @@ const ActiveTabList = ({ isSuperAdmin }) => {
 
 
   function initialTab() {
-    if (currentShowingTabs?.length == 0 && !isSuperAdmin) {
-      dispatch(push(
-        {
-          active: true,
-          name: "DASHBOARD",
-        }
+    if (!isSuperAdmin && !defaultAdmin && userRoleId && !roleData) {
+      return;
+    }
 
-      ));
+    dispatch(push(
+      {
+        active: true,
+        name: "DASHBOARD",
+      }
+    ));
+
+    if (currentShowingTabs?.length == 0 && !isSuperAdmin) {
+      if (hasPosPermission) {
+        dispatch(push(
+          {
+            active: true,
+            name: "POINT OF SALES",
+          }
+        ));
+      }
     }
     else {
       return

@@ -820,7 +820,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             title: 'Cannot remove variant',
             text: 'One or more of the size/color variants you are trying to remove is already used in a transaction and cannot be deleted.',
           });
-          
+
           // Re-sync dropdowns with current itemPriceList
           const uniqueSizes = [...new Set(itemPriceList.map(item => item.sizeId))];
           const uniqueColors = [...new Set(itemPriceList.map(item => item.colorId))];

@@ -159,7 +159,7 @@ const Header = ({ profile, setIsGlobalOpen }) => {
 
     return (
 
-        <div className='fixed inset-x-0 top-0 z-30 flex h-9 w-full items-center justify-between bg-white px-3 shadow-sm'>
+        <div className='fixed inset-x-0 top-0 z-50 flex h-9 w-full items-center justify-between bg-white px-3 shadow-sm'>
             <Modal
                 isOpen={logout}
                 onClose={() => {
@@ -181,7 +181,7 @@ const Header = ({ profile, setIsGlobalOpen }) => {
                         <Search size={15} />
                     </div>
                 </div> */}
-                <PageSearch pageList={allowedPages?.filter(i => i.active)} />
+                <PageSearch pageList={allowedPages} />
                 <div
                     className="text-lg"
                     onClick={() => { setIsGlobalOpen(true) }}>

@@ -12,6 +12,57 @@ const SalesPersonModal = ({
     handleSalesPersonScan,
     employees
 }) => {
+    const [activeIndex, setActiveIndex] = React.useState(-1);
+    const containerRef = React.useRef(null);
+
+    const filteredEmployees = React.useMemo(() => {
+        if (salesPersonBarcode.length < 1) return [];
+        return employees.filter(emp =>
+            emp.active &&
+            (emp.name?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
+                emp.employeeId?.toLowerCase().includes(salesPersonBarcode.toLowerCase()))
+        );
+    }, [employees, salesPersonBarcode]);
+
+    React.useEffect(() => {
+        setActiveIndex(-1);
+    }, [filteredEmployees]);
+
+    React.useEffect(() => {
+        if (activeIndex >= 0 && containerRef.current) {
+            const activeEl = containerRef.current.children[activeIndex];
+            if (activeEl) {
+                activeEl.scrollIntoView({ block: 'nearest' });
+            }
+        }
+    }, [activeIndex]);
+
+    const handleKeyDown = (e) => {
+        if (filteredEmployees.length === 0) {
+            if (e.key === 'Enter') {
+                handleSalesPersonScan(salesPersonBarcode);
+            }
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setActiveIndex((prev) => (prev + 1) % filteredEmployees.length);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setActiveIndex((prev) => (prev - 1 + filteredEmployees.length) % filteredEmployees.length);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (activeIndex >= 0 && activeIndex < filteredEmployees.length) {
+                handleSalesPersonScan(filteredEmployees[activeIndex].employeeId);
+            } else {
+                handleSalesPersonScan(salesPersonBarcode);
+            }
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            onClose();
+        }
+    };
 
     console.log(employees, "employees", salesPersonBarcode)
 
@@ -44,11 +95,7 @@ const SalesPersonModal = ({
                         placeholder="SCAN OR TYPE ID..."
                         value={salesPersonBarcode}
                         onChange={(e) => setSalesPersonBarcode(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                handleSalesPersonScan(e.target.value);
-                            }
-                        }}
+                        onKeyDown={handleKeyDown}
                     />
                 </div>
 
@@ -56,23 +103,22 @@ const SalesPersonModal = ({
                 <AnimatePresence>
                     {salesPersonBarcode.length >= 1 && (
                         <motion.div
+                            ref={containerRef}
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             className="mt-4 max-h-[240px] overflow-auto border-2 border-slate-50 rounded-2xl divide-y divide-slate-50 shadow-inner bg-slate-50/30"
                         >
-                            {employees
-                                .filter(emp =>
-                                    emp.active &&
-                                    (emp.name?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
-                                        emp.employeeId?.toLowerCase().includes(salesPersonBarcode.toLowerCase()))
-                                )
-                                // .slice(0, 5) 
-                                .map(emp => (
+                            {filteredEmployees.map((emp, idx) => {
+                                const isHighlighted = idx === activeIndex;
+                                return (
                                     <button
                                         key={emp.id}
                                         onClick={() => handleSalesPersonScan(emp.employeeId)}
-                                        className="w-full p-4 text-left hover:bg-white transition-all flex items-center justify-between group"
+                                        onMouseEnter={() => setActiveIndex(idx)}
+                                        className={`w-full p-4 text-left transition-all flex items-center justify-between group ${
+                                            isHighlighted ? 'bg-indigo-50 font-bold' : 'hover:bg-white'
+                                        }`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-[10px] uppercase">
@@ -85,7 +131,8 @@ const SalesPersonModal = ({
                                         </div>
                                         <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-500 transition-all transform group-hover:translate-x-1" />
                                     </button>
-                                ))}
+                                );
+                            })}
                             {employees.filter(emp =>
                                 emp.name?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
                                 emp.employeeId?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||

@@ -80,7 +80,11 @@ const Home = () => {
             <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />
             <div className="pt-9 py-2 px-2 bg-[#f1f1f0] :tab">
               <ActiveTabList isSuperAdmin={isSuperAdmin} />
-              {openTabs.tabs.length === 0 ? <Dashboard /> : ''}
+              {openTabs.tabs.length === 0 ? (
+                <div className="flex items-center justify-center h-[80vh]">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : ''}
             </div>
 
 

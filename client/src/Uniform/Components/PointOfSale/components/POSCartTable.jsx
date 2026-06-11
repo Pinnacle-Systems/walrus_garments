@@ -105,15 +105,7 @@ const POSCartTable = ({
                                     <td className="px-2 py-1 text-center border-r border-slate-200">
                                         <div className="flex items-center justify-center gap-1.5">
                                             <span className="text-[10px] font-black text-slate-500 uppercase">{item?.stockQty || '0'}</span>
-                                            {/* {!item.isReturn && (
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); onViewStock(item); }}
-                                                    className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-all"
-                                                    title="View Store-wise Stock"
-                                                >
-                                                    <Eye size={12} />
-                                                </button>
-                                            )} */}
+
                                         </div>
                                     </td>
                                     <td className="px-2 py-0.5 border-r border-slate-200">
@@ -144,16 +136,7 @@ const POSCartTable = ({
                                         </div>
                                     </td>
                                     <td className="px-2 py-0.5 border-r border-slate-200 text-center">
-                                        {/* <select
-                                            value={item.salesPersonId || ""}
-                                            onChange={(e) => handleRowSalesPersonChange(index, e.target.value)}
-                                            className="w-full bg-transparent text-[10px] font-black text-slate-700 outline-none border-none focus:ring-0 cursor-pointer text-center p-0"
-                                        >
-                                            <option value="">- SELECT -</option>
-                                            {employees.map(emp => (
-                                                <option key={emp.id} value={emp.id}>{emp.name}</option>
-                                            ))}
-                                        </select> */}
+
                                         <div className="text-[12px] font-bold text-slate-400 mt-0.5">
                                             {item.salesPersonBarcode || ""}
                                         </div>
@@ -174,7 +157,7 @@ const POSCartTable = ({
                                     <td className="px-2 py-1 text-center bg-slate-50/50">
                                         <button
                                             disabled={isReportOnly}
-                                            onClick={(e) => { e.stopPropagation(); removeFromCart(cartKey); }} className="p-1.5 text-slate-300 hover:text-red-500 transition-all rounded-lg hover:bg-red-50"><Trash2 size={14} /></button>
+                                            onClick={(e) => { e.stopPropagation(); removeFromCart(cartKey); }} className="p-1.5 text-red-500 hover:text-red-500 transition-all rounded-lg bg-red-50"><Trash2 size={14} /></button>
                                     </td>
                                 </tr>
                             );

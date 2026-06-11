@@ -227,13 +227,7 @@ export const Reports = ({
                                                                 hoveredDeleteId === item.id && (
                                                                     <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-[12px] rounded shadow-lg w-64 z-50">
                                                                         Cannot delete. Child records exist.
-                                                                        {/* <span className="font-semibold">
-                                        {item?.referencedIn ? "in " + item?.referencedIn : ""}
-                                      </span>
-                                      . Please Remove them First.
-                                      <div className="absolute right-full top-1/2 transform -translate-y-1/2 mr-1">
-                                        <div className="border-4 border-transparent border-r-gray-900"></div>
-                                      </div> */}
+
                                                                     </div>
                                                                 )}
 

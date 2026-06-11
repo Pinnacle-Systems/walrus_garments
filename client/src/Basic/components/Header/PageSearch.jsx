@@ -145,7 +145,7 @@ const PageSearch = ({ pageList }) => {
     };
 
     return (
-        <div className='relative z-10 flex flex-col text-black' ref={inputRef}>
+        <div className='relative z-50 flex flex-col text-black' ref={inputRef}>
 
             {/* Input */}
             <div className='relative mr-3 flex h-7 items-center rounded-full border bg-white text-[12px]'>

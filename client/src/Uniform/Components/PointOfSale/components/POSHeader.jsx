@@ -26,6 +26,75 @@ const POSHeader = ({
     setSearchMode,
     cart
 }) => {
+    const [activeSuggestionIndex, setActiveSuggestionIndex] = React.useState(-1);
+    const suggestionsContainerRef = React.useRef(null);
+
+    // Reset active index when suggestions list changes or when dropdown visibility changes
+    React.useEffect(() => {
+        setActiveSuggestionIndex(-1);
+    }, [suggestions, showSuggestions]);
+
+    // Scroll highlighted suggestion into view
+    React.useEffect(() => {
+        if (activeSuggestionIndex >= 0 && suggestionsContainerRef.current) {
+            const activeEl = suggestionsContainerRef.current.children[activeSuggestionIndex];
+            if (activeEl) {
+                activeEl.scrollIntoView({ block: 'nearest' });
+            }
+        }
+    }, [activeSuggestionIndex]);
+
+    const handleInputKeyDown = (e) => {
+        if (searchMode !== 'NAME' || !showSuggestions || !suggestions || suggestions.length === 0) {
+            handleScan(e);
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setActiveSuggestionIndex((prevIndex) => {
+                let nextIndex = prevIndex;
+                for (let i = 0; i < suggestions.length; i++) {
+                    nextIndex = (nextIndex + 1) % suggestions.length;
+                    if (suggestions[nextIndex].stockQty > 0) {
+                        return nextIndex;
+                    }
+                }
+                return prevIndex;
+            });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setActiveSuggestionIndex((prevIndex) => {
+                let nextIndex = prevIndex;
+                if (nextIndex === -1) nextIndex = suggestions.length;
+                for (let i = 0; i < suggestions.length; i++) {
+                    nextIndex = (nextIndex - 1 + suggestions.length) % suggestions.length;
+                    if (suggestions[nextIndex].stockQty > 0) {
+                        return nextIndex;
+                    }
+                }
+                return prevIndex;
+            });
+        } else if (e.key === 'Enter') {
+            if (activeSuggestionIndex >= 0 && activeSuggestionIndex < suggestions.length) {
+                e.preventDefault();
+                const item = suggestions[activeSuggestionIndex];
+                if (item && item.stockQty > 0) {
+                    onSelectSuggestion(item);
+                    setActiveSuggestionIndex(-1);
+                }
+            } else {
+                handleScan(e);
+            }
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            setShowSuggestions(false);
+            setActiveSuggestionIndex(-1);
+        } else {
+            handleScan(e);
+        }
+    };
+
     return (
         <header className="h-10 bg-white border-b border-slate-200 px-4 flex items-center shrink-0 z-30 justify-between shadow-sm">
             <div className="flex items-center gap-4 flex-1">
@@ -89,37 +158,53 @@ const POSHeader = ({
                     )}
                     <input
                         ref={scannerRef}
-                        disabled={isBarcodeLoading || selectedReportSaleId || transactionType === 'RETURN'}
+                        disabled={(isBarcodeLoading && searchMode === 'BARCODE') || selectedReportSaleId || transactionType === 'RETURN'}
                         placeholder={selectedReportSaleId ? "View Only Mode" : (transactionType === 'RETURN' ? "Scanning Disabled in Return Mode" : (searchMode === 'BARCODE' ? "Scan Barcode & Press Enter [F10]" : "Search Product Name..."))}
-                        className={`w-full pl-10 pr-4 py-1 rounded-lg text-sm transition-all font-medium border outline-none ${(isBarcodeLoading || selectedReportSaleId || transactionType === 'RETURN') ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 placeholder:text-slate-400'}`}
+                        className={`w-full pl-10 pr-4 py-1 rounded-lg text-sm transition-all font-medium border outline-none ${((isBarcodeLoading && searchMode === 'BARCODE') || selectedReportSaleId || transactionType === 'RETURN') ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 placeholder:text-slate-400'}`}
                         value={searchQuery}
                         onChange={(e) => {
                             setSearchQuery(e.target.value);
                             if (searchMode === 'NAME') setShowSuggestions(true);
                         }}
-                        onKeyDown={handleScan}
+                        onKeyDown={handleInputKeyDown}
                         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                        onFocus={() => searchMode === 'NAME' && searchQuery?.length >= 2 && setShowSuggestions(true)}
+                        onFocus={() => searchMode === 'NAME' && searchQuery?.length >= 1 && setShowSuggestions(true)}
                     />
 
                     {/* Suggestions Dropdown */}{console.log(suggestions, "suggestions")}
                     {showSuggestions && suggestions?.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                            {suggestions.map((item, idx) => (
-                                <button
-                                    key={idx}
-                                    disabled={item.stockQty <= 0}
-                                    onClick={() => onSelectSuggestion(item)}
-                                    className={`w-full text-left px-4 py-2 flex items-center justify-between transition-colors border-b border-slate-50 last:border-0 ${item.stockQty <= 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'hover:bg-indigo-50 cursor-pointer'}`}
-                                >
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-bold text-slate-800">{item.item_name} | {item?.barcodeType} </span>
-                                        <span className="text-[10px] text-slate-500 uppercase tracking-tight font-black">
-                                            {item.size} | {item.color} | {item.barcode}
-                                        </span>
-                                    </div>
-                                </button>
-                            ))}
+                        <div
+                            ref={suggestionsContainerRef}
+                            className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-1 duration-200"
+                        >
+                            {suggestions.map((item, idx) => {
+                                const isHighlighted = idx === activeSuggestionIndex;
+                                return (
+                                    <button
+                                        key={idx}
+                                        disabled={item.stockQty <= 0}
+                                        onClick={() => onSelectSuggestion(item)}
+                                        onMouseEnter={() => {
+                                            if (item.stockQty > 0) {
+                                                setActiveSuggestionIndex(idx);
+                                            }
+                                        }}
+                                        className={`w-full text-left px-4 py-2 flex items-center justify-between transition-colors border-b border-slate-50 last:border-0 ${item.stockQty <= 0
+                                                ? 'opacity-50 cursor-not-allowed bg-slate-50'
+                                                : isHighlighted
+                                                    ? 'bg-indigo-100 cursor-pointer font-bold'
+                                                    : 'hover:bg-indigo-50 cursor-pointer'
+                                            }`}
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-bold text-slate-800">{item.item_name} | {item?.barcodeType} </span>
+                                            <span className="text-[10px] text-slate-500 uppercase tracking-tight font-black">
+                                                {item.size} | {item.color} | {item.barcode}
+                                            </span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
