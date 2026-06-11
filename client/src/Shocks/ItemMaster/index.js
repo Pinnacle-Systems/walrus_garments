@@ -31,7 +31,6 @@ import { useFormKeyboardNavigation } from "../../CustomHooks/useFormKeyboardNavi
 import { SubCategoryMaster } from "..";
 import MasterPageLayout from "../../Basic/components/MasterPageLayout";
 import { toast } from "react-toastify";
-import { Reports } from "./ItemMasterReport";
 import ItemBarcodePrintModal from "./ItemBarcodePrintModal";
 
 
@@ -1690,7 +1689,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       onKeyDown={handleKeyDown}
       titleClassName="text-xl font-bold font-segoe text-gray-800"
     >
-      <Reports
+      <ReusableTable
         columns={columns}
         data={allData?.data || []}
         onView={handleView}

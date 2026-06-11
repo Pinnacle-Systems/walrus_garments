@@ -8,7 +8,7 @@ import "./index.css";
 import { FormControl, MenuItem, TextField } from "@mui/material";
 import { push } from "../redux/features/opentabs";
 import { useDispatch } from "react-redux";
-import { FaChevronLeft, FaChevronRight, FaEdit, FaInfoCircle, FaPlus, FaSearch, FaTrash } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaEdit, FaInfoCircle, FaPlus, FaSearch, FaTrash, FaStepBackward, FaStepForward } from "react-icons/fa";
 import secureLocalStorage from "react-secure-storage";
 import { useDeletePartyMutation, useGetPartyQuery } from "../redux/services/PartyMasterService";
 import { useModal } from "../Basic/pages/home/context/ModalContext";
@@ -1832,10 +1832,25 @@ export const ReusableTable = ({
 }) => {
 
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math?.ceil(data?.length / itemsPerPage);
+  const [columnFilters, setColumnFilters] = useState({});
+
+  const filteredData = data?.filter(item => {
+    return Object.keys(columnFilters).every(colHeader => {
+      const filterVal = columnFilters[colHeader];
+      if (!filterVal) return true;
+
+      const column = columns.find(c => c.header === colHeader);
+      if (!column) return true;
+
+      const value = column.accessor(item);
+      return String(value || "").toLowerCase().includes(filterVal.toLowerCase());
+    });
+  }) || [];
+
+  const totalPages = Math?.ceil(filteredData?.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = data?.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredData?.slice(indexOfFirstItem, indexOfLastItem);
   const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
 
 
@@ -1853,9 +1868,20 @@ export const ReusableTable = ({
     return (
       <div className="h-10 shrink-0 flex w-full flex-col items-center justify-between border-t border-gray-200 bg-white p-2 sm:flex-row">
         <div className="mb-2 text-sm text-gray-600 sm:mb-0">
-          Showing {data?.length ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, data?.length || 0)} of {data?.length || 0} entries
+          Showing {filteredData?.length ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, filteredData?.length || 0)} of {filteredData?.length || 0} entries
         </div>
         <div className="flex gap-1">
+          <button
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            title="First Page"
+          >
+            <FaStepBackward size={12} className="inline" />
+          </button>
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
@@ -1863,6 +1889,7 @@ export const ReusableTable = ({
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
               : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
+            title="Previous Page"
           >
             <FaChevronLeft className="inline" />
           </button>
@@ -1916,8 +1943,20 @@ export const ReusableTable = ({
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
               : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
+            title="Next Page"
           >
             <FaChevronRight className="inline" />
+          </button>
+          <button
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            title="Last Page"
+          >
+            <FaStepForward size={12} className="inline" />
           </button>
         </div>
       </div>
@@ -1949,6 +1988,7 @@ export const ReusableTable = ({
                   </th>
                 )}
               </tr>
+
 
 
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { usePermissionForUsers } from "../../Basic/components/HasPermission";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaStepBackward, FaStepForward } from "react-icons/fa";
 import { childRecordCount } from "../../Inputs";
 
 export const Reports = ({
@@ -19,10 +19,28 @@ export const Reports = ({
 }) => {
 
     const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math?.ceil(data?.length / itemsPerPage);
+    const [itemNameFilter, setItemNameFilter] = useState("");
+    const [barcodeFilter, setBarcodeFilter] = useState("");
+
+    const filteredData = data?.filter(item => {
+        const matchesName = !itemNameFilter || 
+            item.name?.toLowerCase().includes(itemNameFilter.toLowerCase());
+            
+        const matchesBarcode = !barcodeFilter || 
+            item.ItemPriceList?.some(priceRow =>
+                priceRow.ItemBarcodes?.some(bc =>
+                    bc.barcode?.toLowerCase().includes(barcodeFilter.toLowerCase())
+                )
+            ) || 
+            item.barcode?.toLowerCase().includes(barcodeFilter.toLowerCase());
+
+        return matchesName && matchesBarcode;
+    }) || [];
+
+    const totalPages = Math?.ceil(filteredData?.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data?.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filteredData?.slice(indexOfFirstItem, indexOfLastItem);
     const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
 
 
@@ -40,9 +58,20 @@ export const Reports = ({
         return (
             <div className="h-10 shrink-0 flex w-full flex-col items-center justify-between border-t border-gray-200 bg-white p-2 sm:flex-row">
                 <div className="mb-2 text-sm text-gray-600 sm:mb-0">
-                    Showing {data?.length ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, data?.length || 0)} of {data?.length || 0} entries
+                    Showing {filteredData?.length ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, filteredData?.length || 0)} of {filteredData?.length || 0} entries
                 </div>
                 <div className="flex gap-1">
+                    <button
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
+                        className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        title="First Page"
+                    >
+                        <FaStepBackward size={16} />
+                    </button>
                     <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
@@ -50,6 +79,7 @@ export const Reports = ({
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             : 'bg-white text-gray-600 hover:bg-gray-100'
                             }`}
+                        title="Previous Page"
                     >
                         <FaChevronLeft className="inline" />
                     </button>
@@ -103,8 +133,20 @@ export const Reports = ({
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             : 'bg-white text-gray-600 hover:bg-gray-100'
                             }`}
+                        title="Next Page"
                     >
                         <FaChevronRight className="inline" />
+                    </button>
+                    <button
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        title="Last Page"
+                    >
+                        <FaStepForward size={16} />
                     </button>
                 </div>
             </div>
@@ -135,6 +177,44 @@ export const Reports = ({
                                         ACTIONS
                                     </th>
                                 )}
+                            </tr>
+                            <tr className="bg-gray-100 border-b border-gray-300">
+                                {columns?.map((column, index) => {
+                                    if (column.header === "Item Name") {
+                                        return (
+                                            <th key={index} className="px-2 py-1 text-center">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search Item Name..."
+                                                    value={itemNameFilter}
+                                                    onChange={(e) => {
+                                                        setItemNameFilter(e.target.value);
+                                                        setCurrentPage(1);
+                                                    }}
+                                                    className="w-full text-xs font-normal px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                                />
+                                            </th>
+                                        );
+                                    }
+                                    if (column.header === "Item Code") {
+                                        return (
+                                            <th key={index} className="px-2 py-1 text-center">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search Barcode..."
+                                                    value={barcodeFilter}
+                                                    onChange={(e) => {
+                                                        setBarcodeFilter(e.target.value);
+                                                        setCurrentPage(1);
+                                                    }}
+                                                    className="w-full text-xs font-normal px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                                />
+                                            </th>
+                                        );
+                                    }
+                                    return <th key={index} className="px-2 py-1"></th>;
+                                })}
+                                {rowActions && <th className="px-2 py-1"></th>}
                             </tr>
 
 
