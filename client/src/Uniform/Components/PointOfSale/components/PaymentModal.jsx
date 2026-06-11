@@ -65,7 +65,7 @@ const PaymentModal = ({
                             <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">
                                 Invoice Settlement Desk
                             </h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <p className="text-xs font-extrabold text-slate-500 uppercase tracking-widest">
                                 Verify totals, apply store credit, and finalize payment split
                             </p>
                         </div>
@@ -93,34 +93,34 @@ const PaymentModal = ({
                     {/* LEFT PANEL: Transaction Summary (40% width) */}
                     <div className="w-full md:w-[38%] bg-slate-50/70 p-8 border-r border-slate-100 flex flex-col justify-between space-y-6">
                         <div className="space-y-5">
-                            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <Receipt size={12} /> Transaction Summary
+                            <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                                <Receipt size={14} /> Transaction Summary
                             </h4>
 
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Invoice Amount</span>
-                                    <span className="text-base font-black text-slate-700">₹{Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className="text-xs font-black text-slate-600 uppercase tracking-wider">Invoice Amount</span>
+                                    <span className="text-lg font-black text-slate-800">₹{Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Available Store Credit</span>
-                                    <span className="text-xs font-black text-slate-700">₹{parseFloat(availableCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className="text-xs font-black text-slate-600 uppercase tracking-wider">Available Store Credit</span>
+                                    <span className="text-sm font-black text-slate-800">₹{parseFloat(availableCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
 
                                 {appliedCredit > 0 && (
-                                    <div className="flex justify-between items-center bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 text-indigo-600">
-                                        <span className="text-[10px] font-black uppercase tracking-wider">Store Credit Applied</span>
-                                        <span className="text-xs font-black">-₹{appliedCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <div className="flex justify-between items-center bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 text-indigo-700">
+                                        <span className="text-xs font-black uppercase tracking-wider">Store Credit Applied</span>
+                                        <span className="text-sm font-black">-₹{appliedCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 )}
                             </div>
 
                             <div className="pt-4 border-t border-dashed border-slate-200 flex justify-between items-center">
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                                <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
                                     {isRefund ? 'Excess Store Credit' : 'Net Balance to Collect'}
                                 </span>
-                                <span className={`text-2xl font-black font-serif ${isRefund ? 'text-amber-600' : 'text-indigo-700'}`}>
+                                <span className={`text-3xl font-black font-serif ${isRefund ? 'text-amber-600' : 'text-indigo-700'}`}>
                                     ₹{absNetPayable.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </span>
                             </div>
@@ -165,30 +165,30 @@ const PaymentModal = ({
                     {/* RIGHT PANEL: Settle & Mode Inputs (62% width) */}
                     <div className="w-full md:w-[62%] p-8 flex flex-col justify-between space-y-6">
                         <div className="space-y-4">
-                            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <UserCheck size={12} /> Payment settlement distribution
+                            <h4 className="text-xs font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                                <UserCheck size={14} /> Payment settlement distribution
                             </h4>
 
                             {/* Horizontal grid layout for payment mode inputs */}
                             <div className="grid grid-cols-2 gap-3">
                                 {[
                                     { id: 'cash', label: isRefund ? 'Settle Cash Return' : 'Collect Cash', icon: <Banknote size={14} />, value: paidCash, setter: setPaidCash, color: 'emerald' },
-                                    { id: 'upi', label: isRefund ? 'Settle UPI Refund' : 'Collect UPI', icon: <ScanBarcode size={14} />, value: paidUPI, setter: setPaidUPI, color: 'indigo' },
+                                    { id: 'GPay', label: isRefund ? 'Settle GPay Refund' : 'Collect GPay', icon: <ScanBarcode size={14} />, value: paidUPI, setter: setPaidUPI, color: 'indigo' },
                                     { id: 'online', label: isRefund ? 'Settle Online Refund' : 'Collect Online / Bank', icon: <ScanBarcode size={14} />, value: paidOnline, setter: setPaidOnline, color: 'indigo' },
                                     { id: 'card', label: isRefund ? 'Settle Card Refund' : 'Collect Card', icon: <CreditCard size={14} />, value: paidCard, setter: setPaidCard, color: 'blue' }
                                 ].map((pod) => (
                                     <div key={pod.id} className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col justify-between hover:border-slate-200 transition-all">
                                         <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-1.5 text-slate-400">
-                                                <span className={`text-${pod.color}-500`}>{pod.icon}</span>
-                                                <span className="text-[9px] font-black uppercase tracking-widest">{pod.label}</span>
+                                            <div className="flex items-center gap-1.5 text-slate-600">
+                                                <span className={`text-${pod.color}-600`}>{pod.icon}</span>
+                                                <span className="text-xs font-black uppercase tracking-wider">{pod.label}</span>
                                             </div>
                                             {/* Exact Fit Pill Button */}
                                             {!isRefund && absNetPayable > 0 && pod.value === 0 && (
                                                 <button
                                                     type="button"
                                                     onClick={() => pod.setter(absNetPayable)}
-                                                    className="text-[8px] font-extrabold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-1.5 py-0.5 rounded transition-all uppercase"
+                                                    className="text-[9px] font-black text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded transition-all uppercase"
                                                 >
                                                     Full
                                                 </button>
@@ -196,7 +196,7 @@ const PaymentModal = ({
                                         </div>
                                         <input
                                             type="number"
-                                            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm font-black text-slate-800 outline-none focus:border-indigo-500 text-right transition-all"
+                                            className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-lg font-black text-slate-900 outline-none focus:border-indigo-500 text-right transition-all"
                                             value={pod.value || ''}
                                             placeholder="0.00"
                                             onChange={(e) => pod.setter(Number(e.target.value))}
@@ -209,13 +209,13 @@ const PaymentModal = ({
                             {/* Reference Input for UPI / Online */}
                             {((paidUPI > 0) || (paidOnline > 0)) && (
                                 <div className="animate-in slide-in-from-top-1 duration-200">
-                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">
+                                    <label className="text-xs font-black text-slate-600 uppercase tracking-widest mb-1.5 block">
                                         Transaction Reference Number
                                     </label>
                                     <input
                                         type="text"
                                         placeholder="Enter Bank / UPI Transaction Reference ID (Optional)"
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all placeholder:text-slate-300"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-extrabold text-slate-800 outline-none focus:border-indigo-500 transition-all placeholder:text-slate-400"
                                         value={upiRefNo}
                                         onChange={(e) => setUpiRefNo(e.target.value)}
                                     />
@@ -225,9 +225,9 @@ const PaymentModal = ({
 
                         {/* Scenario-specific instant distribution summary */}
                         <div className="space-y-3">
-                            <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase px-2">
+                            <div className="flex justify-between items-center text-xs font-black text-slate-600 uppercase px-2">
                                 <span>{isRefund ? "Total Refund Entered" : "Total Payment Entered"}</span>
-                                <span className={isInvalid ? "text-red-500 font-extrabold" : "text-emerald-600 font-extrabold"}>
+                                <span className={isInvalid ? "text-red-600 font-black" : "text-emerald-700 font-black"}>
                                     ₹{receivedAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 })} / ₹{absNetPayable.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                 </span>
                             </div>
@@ -235,22 +235,22 @@ const PaymentModal = ({
                             {isRefund ? (
                                 <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
                                     <div className="flex justify-between items-center text-xs">
-                                        <span className="font-bold text-slate-400 uppercase tracking-wider">Instant Cashout/Refund:</span>
-                                        <span className="font-black text-rose-600">₹{instantRefundPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        <span className="font-black text-slate-500 uppercase tracking-wider">Instant Cashout/Refund:</span>
+                                        <span className="font-black text-rose-600 text-sm">₹{instantRefundPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="border-t border-slate-200/80 pt-2 flex justify-between items-center text-xs">
-                                        <span className="font-bold text-slate-500 uppercase tracking-wider">Save to Account:</span>
-                                        <span className="font-black text-emerald-600">₹{creditRetained.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        <span className="font-black text-slate-600 uppercase tracking-wider">Save to Account:</span>
+                                        <span className="font-black text-emerald-600 text-sm">₹{creditRetained.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                 </div>
                             ) : (
                                 <div className={`p-4 rounded-2xl flex items-center justify-between shadow-lg transition-colors ${receivedAmount >= absNetPayable ? 'bg-emerald-600 text-white shadow-emerald-100' : 'bg-slate-100 text-slate-400'
                                     }`}>
                                     <div className="flex flex-col leading-none">
-                                        <span className="text-[10px] font-black uppercase opacity-60 mb-1">
+                                        <span className="text-xs font-black uppercase opacity-75 mb-1">
                                             {receivedAmount >= absNetPayable ? 'Change to Return' : 'Balance to Collect'}
                                         </span>
-                                        <span className="text-xl font-black">
+                                        <span className="text-2xl font-black">
                                             ₹{Math.abs(receivedAmount - absNetPayable).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         </span>
                                     </div>

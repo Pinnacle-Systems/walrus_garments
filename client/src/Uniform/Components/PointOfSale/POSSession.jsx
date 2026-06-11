@@ -205,7 +205,6 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     // CATEGORY 5: INITIALIZATION & DATA SYNC EFFECTS
     // =========================================================================
 
-    // Notify parent tab wrapper when local cart is modified
     useEffect(() => {
         if (onCartUpdate && tabId !== undefined) {
             onCartUpdate(tabId, cart);
@@ -213,7 +212,6 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     }, [cart, tabId, onCartUpdate]);
 
     console.log(availableCredit, "availableCredit")
-    // Fetch credit balance and available return bills when customer changes
     useEffect(() => {
 
         if (selectedReportSaleId) {

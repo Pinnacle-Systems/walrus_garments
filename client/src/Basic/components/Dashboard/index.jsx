@@ -215,6 +215,9 @@ const Dashboard = () => {
             >
 
 
+
+
+
                 {modalConfig.type === 'todaySales' && <TodaySalesBreakup onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} data={dashboardData} />}
                 {modalConfig.type === 'todaySalesReturns' && <TodaySalesReturnsBreakup onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} data={dashboardData} />}
                 {modalConfig.type === 'cashFlow' && <CustomerAdvancesBreakup onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} data={dashboardData} />}

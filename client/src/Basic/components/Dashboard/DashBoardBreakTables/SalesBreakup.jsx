@@ -44,11 +44,16 @@ const TodaySalesBreakup = ({ data, onClose }) => {
             { header: "Customer Name", key: "party", width: 45 },
             { header: "Bill Amount", key: "amount", width: 20 },
             { header: "Sales Type", key: "type", width: 20 },
+            { header: "Cash", key: "cash", width: 15 },
+            { header: "Gpay", key: "gpay", width: 15 },
+            { header: "Card", key: "card", width: 15 },
+            { header: "Online", key: "online", width: 15 },
+            { header: "Store Credit", key: "storeCredit", width: 15 },
         ];
 
         /* ================= TITLE ================= */
         worksheet.insertRow(1, ["Today Sales Breakup"]);
-        worksheet.mergeCells("A1:E1");
+        worksheet.mergeCells("A1:J1");
 
         const titleCell = worksheet.getCell("A1");
         titleCell.font = { bold: true, size: 14 };
@@ -83,6 +88,11 @@ const TodaySalesBreakup = ({ data, onClose }) => {
                 party: row?.party || "",
                 amount: Number(row?.amount || 0),
                 type: row?.type || "",
+                cash: Number(row?.paymentBreakup?.cash || 0),
+                gpay: Number(row?.paymentBreakup?.gpay || 0),
+                card: Number(row?.paymentBreakup?.card || 0),
+                online: Number(row?.paymentBreakup?.online || 0),
+                storeCredit: Number(row?.paymentBreakup?.storeCredit || 0),
             });
         });
 
@@ -95,16 +105,32 @@ const TodaySalesBreakup = ({ data, onClose }) => {
             row.getCell("party").alignment = { horizontal: "left", vertical: "middle", indent: 1 };
             row.getCell("amount").alignment = { horizontal: "right", vertical: "middle", indent: 1 };
             row.getCell("type").alignment = { horizontal: "center", vertical: "middle" };
+            row.getCell("cash").alignment = { horizontal: "right", vertical: "middle", indent: 1 };
+            row.getCell("gpay").alignment = { horizontal: "right", vertical: "middle", indent: 1 };
+            row.getCell("card").alignment = { horizontal: "right", vertical: "middle", indent: 1 };
+            row.getCell("online").alignment = { horizontal: "right", vertical: "middle", indent: 1 };
+            row.getCell("storeCredit").alignment = { horizontal: "right", vertical: "middle", indent: 1 };
         });
 
         // ================= TOTAL ROW =================
         const totalAmount = filteredData.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+        const totalCash = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.cash || 0), 0);
+        const totalGpay = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.gpay || 0), 0);
+        const totalCard = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.card || 0), 0);
+        const totalOnline = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.online || 0), 0);
+        const totalStoreCredit = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.storeCredit || 0), 0);
+
         const totalRow = worksheet.addRow({
             sNo: "",
             id: "",
             party: "Total",
             amount: totalAmount,
             type: "",
+            cash: totalCash,
+            gpay: totalGpay,
+            card: totalCard,
+            online: totalOnline,
+            storeCredit: totalStoreCredit,
         });
 
         totalRow.height = 24;
@@ -118,12 +144,14 @@ const TodaySalesBreakup = ({ data, onClose }) => {
             };
             cell.alignment = {
                 vertical: "middle",
-                horizontal: colNumber === 4 ? "right" : "center",
-                indent: colNumber === 4 ? 1 : 0
+                horizontal: [4, 6, 7, 8, 9, 10].includes(colNumber) ? "right" : "center",
+                indent: [4, 6, 7, 8, 9, 10].includes(colNumber) ? 1 : 0
             };
         });
 
-        worksheet.getColumn("amount").numFmt = '₹ #,##,##0.00';
+        ["amount", "cash", "gpay", "card", "online", "storeCredit"].forEach((colKey) => {
+            worksheet.getColumn(colKey).numFmt = '₹ #,##,##0.00';
+        });
 
         /* ================= FREEZE ================= */
         worksheet.views = [{ state: "frozen", ySplit: 2 }];
@@ -303,7 +331,7 @@ const TodaySalesBreakup = ({ data, onClose }) => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid gap-6">
                         <div
                             className="overflow-x-auto max-h-[450px] "
                             style={{ border: "1px solid gray", borderRadius: "16px" }}
@@ -316,10 +344,16 @@ const TodaySalesBreakup = ({ data, onClose }) => {
                                         <th className="border p-1 text-left w-[100px]">Customer Name</th>
                                         <th className="border p-1 text-left w-[60px]">Bill Amount</th>
                                         <th className="border p-1 text-left w-[30px]">Sales Type</th>
+                                        <th className="border p-1 text-left w-[30px]">Cash</th>
+                                        <th className="border p-1 text-left w-[30px]">Gpay</th>
+                                        <th className="border p-1 text-left w-[30px]">Card</th>
+                                        <th className="border p-1 text-left w-[30px]">Online</th>
+                                        <th className="border p-1 text-left w-[30px]">Store_Credit</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {currentRecords.slice(0, 16).map((row, index) => {
+                                    {currentRecords.map((row, index) => {
                                         const globalIndex = index;
                                         const serialNo = (currentPage - 1) * recordsPerPage + globalIndex + 1;
                                         return (
@@ -342,6 +376,19 @@ const TodaySalesBreakup = ({ data, onClose }) => {
                                                 <td className="border p-1 text-sky-700  text-[10px] w-[25px]">
                                                     {row.type}
                                                 </td>
+                                                <td className="border p-1 text-[10px]">
+                                                    {row.paymentBreakup?.cash}
+                                                </td><td className="border p-1 text-[10px]">
+                                                    {row.paymentBreakup?.gpay}
+                                                </td><td className="border p-1 text-[10px]">
+                                                    {row.paymentBreakup?.card}
+                                                </td>
+                                                <td className="border p-1 text-[10px]">
+                                                    {row.paymentBreakup?.online}
+                                                </td>
+                                                <td className="border p-1 text-[10px]">
+                                                    {row.paymentBreakup?.storeCredit}
+                                                </td>
                                             </tr>
                                         );
                                     })}
@@ -349,7 +396,7 @@ const TodaySalesBreakup = ({ data, onClose }) => {
                             </table>
                         </div>
 
-                        <div
+                        {/* <div
                             className="overflow-x-auto max-h-[450px]"
                             style={{ border: "1px solid gray", borderRadius: "16px" }}
                         >
@@ -392,65 +439,65 @@ const TodaySalesBreakup = ({ data, onClose }) => {
                                     })}
                                 </tbody>
                             </table>
-                        </div>
+                        </div> */}
                     </div>
                     <div>
-                        {totalPages > 1 && (
-                            <div
-                                className="flex justify-end items-center mt-4 space-x-2 text-[11px] "
-                                style={{ position: "absolute", bottom: "5px", right: "0px" }}
+                        {/* {totalPages > 1 && ( */}
+                        <div
+                            className="flex justify-end items-center mt-4 space-x-2 text-[11px] "
+                            style={{ position: "absolute", bottom: "5px", right: "0px" }}
+                        >
+                            <button
+                                onClick={() => setCurrentPage(1)}
+                                disabled={currentPage === 1}
+                                className={`p-2 rounded-md ${currentPage === 1
+                                    ? "text-gray-400 cursor-not-allowed"
+                                    : "text-blue-600 hover:bg-gray-200"
+                                    }`}
                             >
-                                <button
-                                    onClick={() => setCurrentPage(1)}
-                                    disabled={currentPage === 1}
-                                    className={`p-2 rounded-md ${currentPage === 1
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-blue-600 hover:bg-gray-200"
-                                        }`}
-                                >
-                                    <FaStepBackward size={16} />
-                                </button>
+                                <FaStepBackward size={16} />
+                            </button>
 
-                                <button
-                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className={`p-2 rounded-md ${currentPage === 1
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-blue-600 hover:bg-gray-200"
-                                        }`}
-                                >
-                                    <FaChevronLeft size={16} />
-                                </button>
+                            <button
+                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className={`p-2 rounded-md ${currentPage === 1
+                                    ? "text-gray-400 cursor-not-allowed"
+                                    : "text-blue-600 hover:bg-gray-200"
+                                    }`}
+                            >
+                                <FaChevronLeft size={16} />
+                            </button>
 
-                                <span className="text-xs font-semibold px-3">
-                                    Page {currentPage} of {totalPages}
-                                </span>
+                            <span className="text-xs font-semibold px-3">
+                                Page {currentPage} of {totalPages}
+                            </span>
 
-                                <button
-                                    onClick={() =>
-                                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                                    }
-                                    disabled={currentPage === totalPages}
-                                    className={`p-2 rounded-md ${currentPage === totalPages
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-blue-600 hover:bg-gray-200"
-                                        }`}
-                                >
-                                    <FaChevronRight size={16} />
-                                </button>
+                            <button
+                                onClick={() =>
+                                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                                }
+                                disabled={currentPage === totalPages}
+                                className={`p-2 rounded-md ${currentPage === totalPages
+                                    ? "text-gray-400 cursor-not-allowed"
+                                    : "text-blue-600 hover:bg-gray-200"
+                                    }`}
+                            >
+                                <FaChevronRight size={16} />
+                            </button>
 
-                                <button
-                                    onClick={() => setCurrentPage(totalPages)}
-                                    disabled={currentPage === totalPages}
-                                    className={`p-2 rounded-md ${currentPage === totalPages
-                                        ? "text-gray-400 cursor-not-allowed"
-                                        : "text-blue-600 hover:bg-gray-200"
-                                        }`}
-                                >
-                                    <FaStepForward size={16} />
-                                </button>
-                            </div>
-                        )}
+                            <button
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={currentPage === totalPages}
+                                className={`p-2 rounded-md ${currentPage === totalPages
+                                    ? "text-gray-400 cursor-not-allowed"
+                                    : "text-blue-600 hover:bg-gray-200"
+                                    }`}
+                            >
+                                <FaStepForward size={16} />
+                            </button>
+                        </div>
+                        {/* )} */}
                     </div>
 
                     <div>

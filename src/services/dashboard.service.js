@@ -78,7 +78,10 @@ async function getManagementInsights(query) {
 async function getSalesData(where, from, to) {
     const posSales = await prisma.pos.findMany({
         where: { ...where, createdAt: { gte: from, lte: to }, isReturn: false },
-        include: { Party: { select: { name: true } } }
+        include: {
+            Party: { select: { name: true } },
+            PosPayments: true
+        }
     });
 
     const posReturns = await prisma.pos.findMany({
@@ -141,16 +144,36 @@ async function getSalesData(where, from, to) {
         total: posTotal + bulkTotal,
         returnsTotal: posReturnsTotal + bulkReturnsTotal,
         breakup: [
-            ...posSales.map(p => ({
-                id: p.docId || p.id,
-                party: p.Party?.name || 'Walk-in',
-                amount: parseFloat(p.netAmount || 0),
-                type: 'POS',
-                //    cash:p.cashAmount,
-                //    card:p.cardAmount,
-                //    upi:p.upiAmount,
-                //    credit:p.creditAmount,
-            })),
+            // ...posSales.map(p => ({
+            //     id: p.docId || p.id,
+            //     party: p.Party?.name || 'Walk-in',
+            //     amount: parseFloat(p.netAmount || 0),
+            //     type: 'POS',
+
+            // })),
+            ...posSales.map(p => {
+                const payments = p.PosPayments || [];
+
+                // console.log("payments", payments)
+                const cash = payments.filter(pay => pay.paymentMode == 'Cash')
+                    .reduce((acc, pay) => acc + parseFloat(pay.amount || 0), 0);
+                const gpay = payments.filter(pay => pay.paymentMode == 'UPI')
+                    .reduce((acc, pay) => acc + parseFloat(pay.amount || 0), 0);
+                const card = payments.filter(pay => pay.paymentMode == 'Card')
+                    .reduce((acc, pay) => acc + parseFloat(pay.amount || 0), 0);
+                const online = payments.filter(pay => pay.paymentMode == 'Online')
+                    .reduce((acc, pay) => acc + parseFloat(pay.amount || 0), 0);
+                const storeCredit = payments.filter(pay => pay.paymentMode == 'STORE_CREDIT')
+                    .reduce((acc, pay) => acc + parseFloat(pay.amount || 0), 0);
+
+                return {
+                    id: p.docId || p.id,
+                    party: p.Party?.name || 'Walk-in',
+                    amount: parseFloat(p.netAmount || 0),
+                    type: 'POS',
+                    paymentBreakup: { cash, gpay, card, online, storeCredit }
+                };
+            }),
             ...bulkSalesBreakup
         ],
         returnsBreakup: [
