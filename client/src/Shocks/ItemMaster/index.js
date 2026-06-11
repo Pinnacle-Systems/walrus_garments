@@ -32,6 +32,7 @@ import { SubCategoryMaster } from "..";
 import MasterPageLayout from "../../Basic/components/MasterPageLayout";
 import { toast } from "react-toastify";
 import ItemBarcodePrintModal from "./ItemBarcodePrintModal";
+import { Reports } from "./ItemMasterReport";
 
 
 
@@ -1689,7 +1690,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       onKeyDown={handleKeyDown}
       titleClassName="text-xl font-bold font-segoe text-gray-800"
     >
-      <ReusableTable
+      <Reports
         columns={columns}
         data={allData?.data || []}
         onView={handleView}

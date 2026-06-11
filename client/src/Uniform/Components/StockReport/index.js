@@ -95,7 +95,7 @@ const StockReport = () => {
                         </div> */}
                     </div>
                     <div className='flex justify-center   flex-col text-center bg-gray-200 rounded-b-md mb-3 sticky top-0 '>
-                        <div className='grid grid-cols-7 gap-4 p-2'>
+                        <div className='grid grid-cols-8 gap-4 p-2'>
 
                             <DropdownInputSearch
                                 name="Item"
@@ -103,6 +103,7 @@ const StockReport = () => {
                                 value={itemId}
                                 setValue={setItemId}
                                 placeholder="Select Item"
+                                className="col-span-2"
                             />
 
                             <DropdownInputSearch

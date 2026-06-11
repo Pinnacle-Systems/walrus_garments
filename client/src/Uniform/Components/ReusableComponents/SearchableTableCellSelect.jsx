@@ -43,19 +43,30 @@ const SearchableTableCellSelect = forwardRef(({
     const query = normalize(search);
     if (!query) return options;
 
+    const queryWords = query.split(/\s+/).filter(Boolean);
+
     return options
       .map((option) => {
         const label = normalize(option.label);
 
         let score = 0;
 
-        if (label.startsWith(query)) score = 3; // best
-        // else if (label.startsWith(query)) score = 2;
-        // else if (label.includes(query)) score = 1;
+        // Verify that every space-separated word from the search is in the label
+        const matchesAllWords = queryWords.every((word) => label.includes(word));
+
+        if (matchesAllWords) {
+          if (label.startsWith(query)) {
+            score = 3; // Starts with the exact query string
+          } else if (label.includes(query)) {
+            score = 2; // Contains the exact query string contiguously
+          } else {
+            score = 1; // Contains all query words but separated
+          }
+        }
 
         return { ...option, score };
       })
-      .filter(item => item.score > 0)
+      .filter((item) => item.score > 0)
       .sort((a, b) => b.score - a.score);
   }, [options, search]);
 

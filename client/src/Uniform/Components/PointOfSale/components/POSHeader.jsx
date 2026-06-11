@@ -99,22 +99,7 @@ const POSHeader = ({
         <header className="h-10 bg-white border-b border-slate-200 px-4 flex items-center shrink-0 z-30 justify-between shadow-sm">
             <div className="flex items-center gap-4 flex-1">
                 {/* Search Mode Toggle */}
-                <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 shadow-sm shrink-0">
-                    <button
-                        onClick={() => setSearchMode('BARCODE')}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${searchMode === 'BARCODE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <ScanBarcode size={12} />
-                        Barcode
-                    </button>
-                    <button
-                        onClick={() => setSearchMode('NAME')}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${searchMode === 'NAME' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <Search size={12} />
-                        Name
-                    </button>
-                </div>
+
 
                 <div className="flex flex-col gap-0.5">
                     {/* <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Transaction Type</label> */}
@@ -150,6 +135,22 @@ const POSHeader = ({
                         </button>
                     </div>
                 )}
+                <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 shadow-sm shrink-0">
+                    <button
+                        onClick={() => setSearchMode('BARCODE')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${searchMode === 'BARCODE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                        <ScanBarcode size={12} />
+                        Barcode
+                    </button>
+                    <button
+                        onClick={() => setSearchMode('NAME')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${searchMode === 'NAME' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                        <Search size={12} />
+                        Name
+                    </button>
+                </div>
                 <div className="flex-1 max-w-xl relative mt-1">
                     {isBarcodeLoading ? (
                         <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 animate-spin" size={16} />
@@ -190,10 +191,10 @@ const POSHeader = ({
                                             }
                                         }}
                                         className={`w-full text-left px-4 py-2 flex items-center justify-between transition-colors border-b border-slate-50 last:border-0 ${item.stockQty <= 0
-                                                ? 'opacity-50 cursor-not-allowed bg-slate-50'
-                                                : isHighlighted
-                                                    ? 'bg-indigo-100 cursor-pointer font-bold'
-                                                    : 'hover:bg-indigo-50 cursor-pointer'
+                                            ? 'opacity-50 cursor-not-allowed bg-slate-50'
+                                            : isHighlighted
+                                                ? 'bg-indigo-100 cursor-pointer font-bold'
+                                                : 'hover:bg-indigo-50 cursor-pointer'
                                             }`}
                                     >
                                         <div className="flex flex-col">

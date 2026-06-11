@@ -1014,6 +1014,12 @@ export const DropdownInputSearch = ({
           placeholder={placeholder}
           isClearable
           isSearchable
+          filterOption={(option, rawInput) => {
+            if (!rawInput) return true;
+            const words = rawInput.toLowerCase().split(/\s+/).filter(Boolean);
+            const label = (option.label || option.data?.show || "").toLowerCase();
+            return words.every(word => label.includes(word));
+          }}
           styles={customStyles}
           isDisabled={readOnly || disabled}
         />

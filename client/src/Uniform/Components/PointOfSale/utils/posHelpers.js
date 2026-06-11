@@ -73,11 +73,18 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
             allMatches.push(match);
         }
     };
+    // const matchingItems = items.filter(i =>
+    //     i.name?.toLowerCase().includes(query) ||
+    //     i.code?.toLowerCase().includes(query)
+    // );
 
-    const matchingItems = items.filter(i =>
-        i.name?.toLowerCase().includes(query) ||
-        i.code?.toLowerCase().includes(query)
-    );
+    const queryWords = query.split(/\s+/).filter(Boolean);
+    const matchingItems = items.filter(i => {
+        const itemName = i.name?.toLowerCase() || "";
+        const itemCode = i.code?.toLowerCase() || "";
+        return queryWords.every(word => itemName.includes(word) || itemCode.includes(word));
+    });
+
 
     matchingItems.forEach(item => {
         const variants = itemPriceList?.filter(p => p.itemId === item.id) || [];
