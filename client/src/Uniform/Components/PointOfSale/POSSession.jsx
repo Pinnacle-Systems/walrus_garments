@@ -566,27 +566,35 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             return;
         }
 
+        let active = true;
+
         const items = itemsData?.data || [];
         const itemPriceList = ItemPriceListData?.data || [];
         const allMatches = filterSearchSuggestions({ query, items, itemPriceList, retailStoreId });
 
-        setSuggestions(allMatches.slice(0, 100));
-        setShowSuggestions(allMatches.length > 0);
+        // Clear suggestions initially to only show items once their stock is verified
+        setSuggestions([]);
+        setShowSuggestions(false);
 
         if (allMatches.length > 0) {
             (async () => {
-                const updated = await Promise.all(allMatches.slice(0, 15).map(async (m) => {
+                const updated = await Promise.all(allMatches.slice(0, 100).map(async (m) => {
                     try {
                         const res = await getStockByBarcode({ params: { barcode: m.barcode, storeId: retailStoreId, branchId } }).unwrap();
                         const totalStock = res?.data?.stockQty || (res?.matches ? res.matches.reduce((sum, match) => sum + (match.stockQty || 0), 0) : 0);
                         return { ...m, stockQty: totalStock, uomId: res?.data?.uomId || (res?.matches?.[0]?.uomId) };
                     } catch { return m; }
                 }));
+                if (!active) return;
                 const withStockOnly = updated.filter(item => item.stockQty > 0);
                 setSuggestions(withStockOnly);
                 setShowSuggestions(withStockOnly.length > 0);
             })();
         }
+
+        return () => {
+            active = false;
+        };
     }, [searchQuery, itemsData, ItemPriceListData, selectedReportSaleId, branchId, retailStoreId, searchMode, getStockByBarcode]);
 
     // Triggers barcode resolution logic on enter
