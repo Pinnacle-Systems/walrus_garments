@@ -398,9 +398,9 @@ const SalesDeliveryItems = ({
                                                         {/* "No Size" option — represents stock recorded without a size.
                                                             Uses value="none" so state can distinguish "explicitly chosen
                                                             no-size" (truthy) from "nothing selected yet" (falsy ""). */}
-                                                        {itemHasNoSizeStock(row.itemId) && (
-                                                            <option value="none">— No Size —</option>
-                                                        )}
+                                                        {/* {itemHasNoSizeStock(row.itemId) && ( */}
+                                                        <option value="none">— No Size —</option>
+                                                        {/* )} */}
                                                         {getStockSizeOptions(row.itemId)?.map(blend => (
                                                             <option value={blend.id} key={blend.id}>{blend?.name}</option>
                                                         ))}
@@ -422,9 +422,9 @@ const SalesDeliveryItems = ({
                                                         {/* "No Color" option — represents stock recorded without a color.
                                                             Uses value="none" so state can distinguish "explicitly chosen
                                                             no-color" from "nothing selected yet". */}
-                                                        {itemHasNoColorStock(row.itemId, row.sizeId) && (
-                                                            <option value="none">— No Color —</option>
-                                                        )}
+                                                        {/* {itemHasNoColorStock(row.itemId, row.sizeId) && ( */}
+                                                        <option value="none">— No Color —</option>
+                                                        {/* )} */}
                                                         {getStockColorOptions(row.itemId, row.sizeId)?.map(blend => (
                                                             <option value={blend.id} key={blend.id}>{blend?.name}</option>
                                                         ))}

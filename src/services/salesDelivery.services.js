@@ -488,6 +488,8 @@ async function create(body) {
                         }
                     });
 
+                    console.log("stockRows", stockRows)
+
                     const availableQty = stockRows.reduce((acc, curr) => acc + parseAmount(curr.qty), 0);
                     const requestedQty = parseAmount(item.deliveryQty);
 
@@ -500,7 +502,7 @@ async function create(body) {
                         const colorName = colorData?.name || "";
                         const sizeName = sizeData?.name || "";
 
-                        throw new Error(`Item "${itemName} - ${colorName} - ${sizeName}" has only ${availableQty.toFixed(2)}  available in stock.`);
+                        throw new Error(`Item "${itemName}" ---- "${colorName}" ----- "${sizeName}" has only ${availableQty.toFixed(2)}  available in stock.`);
                     }
                 }
             }

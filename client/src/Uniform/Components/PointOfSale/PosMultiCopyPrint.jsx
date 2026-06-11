@@ -3,6 +3,7 @@ import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/rendere
 import { createTw } from 'react-pdf-tailwind';
 import moment from 'moment';
 import BarcodeGenerator from '../BarcodeGenerator';
+import { useMemo } from 'react';
 
 const tw = createTw({
   theme: {
@@ -49,6 +50,25 @@ const PosMultiCopyPrint = ({
 
 
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
+
+  const qrCodePath = useMemo(() => {
+    try {
+      if (!docId) return null;
+      const qrcode = qr(docId);
+      const cells = qrcode.modules;
+      let pathData = '';
+      cells.forEach((row, rowIndex) => {
+        row.forEach((cell, cellIndex) => {
+          if (cell) {
+            pathData += `M${cellIndex},${rowIndex} h1 v1 h-1 Z `;
+          }
+        });
+      });
+      return { pathData, size: cells.length };
+    } catch (e) {
+      return null;
+    }
+  }, [docId]);
 
   const BillPage = () => (
     <Page size={[226, 1200]} style={tw('p-1 bg-white flex flex-col')}>
@@ -201,19 +221,24 @@ const PosMultiCopyPrint = ({
   );
 
   const SummarySlip = () => (
-    <Page size={[226, 200]} style={tw('p-2 bg-white flex flex-col items-center justify-center')}>
+    <Page size={[226, 1200]} style={tw('p-2 bg-white flex flex-col')}>
       <View style={tw('border-2 border-black p-3 items-center w-full')}>
         <Text style={tw('text-[10pt] font-bold mb-1')}>BILL SUMMARY SLIP</Text>
         <View style={tw('w-full border-b border-black mb-2')} />
 
-        <Text style={tw('text-[8pt] font-bold uppercase')}>Bill Number</Text>
-        <Text style={tw('text-lg font-black')}>{docId}</Text>
-
-        {docId && (
-          <View style={tw('items-center justify-center my-2')}>
-            <BarcodeGenerator value={`${docId}`} width={170} height={45} />
+        <View style={tw('w-full flex-row justify-between items-center mb-2')}>
+          <View style={tw('flex-col items-start')}>
+            <Text style={tw('text-[8pt] font-bold uppercase')}>Bill Number</Text>
+            <Text style={tw('text-lg font-black')}>{docId}</Text>
           </View>
-        )}
+          {qrCodePath && (
+            <View style={tw('flex-col items-end justify-center mr-1')}>
+              <Svg viewBox={`0 0 ${qrCodePath.size} ${qrCodePath.size}`} style={{ width: 40, height: 40 }}>
+                <Path d={qrCodePath.pathData} fill="#000000" />
+              </Svg>
+            </View>
+          )}
+        </View>
 
         <Text style={tw('text-[8pt] font-bold uppercase')}>Total Quantity</Text>
         <Text style={tw('text-xl font-black')}>{totalQty}</Text>

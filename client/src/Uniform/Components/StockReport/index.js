@@ -13,7 +13,7 @@ import { useGetLocationMasterQuery } from '../../../redux/uniformService/Locatio
 import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import { toast } from 'react-toastify';
 import { PoTypes, poTypes } from '../../../Utils/DropdownData';
-import { DateInput, DropdownInput, DropdownWithSearch } from '../../../Inputs';
+import { DateInput, DropdownInput, DropdownInputSearch, DropdownWithSearch } from '../../../Inputs';
 import { dropDownListObject } from '../../../Utils/contructObject';
 import { useGetOrderQuery } from '../../../redux/uniformService/OrderService';
 import Swal from 'sweetalert2';
@@ -97,28 +97,29 @@ const StockReport = () => {
                     <div className='flex justify-center   flex-col text-center bg-gray-200 rounded-b-md mb-3 sticky top-0 '>
                         <div className='grid grid-cols-7 gap-4 p-2'>
 
-                            <div className=' items-center justify-center md:my-1 px-1 data flex flex-col'>
-                                <label className='block text-xs font-bold text-slate-700 mb-1'>Item</label>
-                                <select id='dd' autoFocus name="name" className='w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
-                      focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
-                      transition-all duration-150 shadow-sm' value={itemId} onChange={(e) => {
+                            <DropdownInputSearch
+                                name="Item"
+                                options={dropDownListObject(itemList?.data, "name", "id")}
+                                value={itemId}
+                                setValue={setItemId}
+                                placeholder="Select Item"
+                            />
 
-                                        setItemId(e.target.value)
-                                    }}>
-                                    <option value={""}>Select</option>
-                                    {(itemList?.data)?.map((blend) =>
-                                        <option value={blend.id} key={blend.id}>
-                                            {blend?.name}
-                                        </option>)}
-                                </select>
-                            </div>
-
-                            <DropdownInput name="Size"
+                            <DropdownInputSearch
+                                name="Size"
                                 options={dropDownListObject(sizeList?.data, "name", "id")}
-                                value={sizeId} setValue={setSizeId} required={true} clear={true} />
-                            <DropdownInput name="Color"
+                                value={sizeId}
+                                setValue={setSizeId}
+                                placeholder="Select Size"
+                            />
+
+                            <DropdownInputSearch
+                                name="Color"
                                 options={dropDownListObject(colorList?.data, "name", "id")}
-                                value={colorId} setValue={setColorId} required={true} clear={true} />
+                                value={colorId}
+                                setValue={setColorId}
+                                placeholder="Select Color"
+                            />
                             {/* <DropdownInput name="Location"
                                 options={branchList ? (dropDownListObject(branchList.data, "branchName", "id")) : []}
                                 value={localLocationId}

@@ -1460,17 +1460,17 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
             if (e.key === 'F2') {
                 e.preventDefault();
-                if (cart.length > 0) {
-                    const idx = Math.min(activeRowIndex, cart.length - 1);
-                    const item = cart[idx];
-                    const key = `${item.id}-${item.sizeId}-${item.colorId}`;
-                    qtyInputRefs.current[key]?.focus();
-                    qtyInputRefs.current[key]?.select();
-                }
+                setSearchMode('BARCODE');
+                scannerRef.current?.focus();
                 return;
             }
 
-            if (e.key === 'F3') { e.preventDefault(); discountRef.current?.focus(); discountRef.current?.select(); return; }
+            if (e.key === 'F3') {
+                e.preventDefault();
+                setSearchMode('NAME');
+                scannerRef.current?.focus();
+                return;
+            }
 
             if (e.key === 'F4' && !selectedReportSaleId) {
                 e.preventDefault();
@@ -1510,7 +1510,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [cart, activeRowIndex, isProcessing, guestName, guestMobile, isGuestCustomer, selectedCustomer, isActive, selectedReportSaleId]);
+    }, [cart, activeRowIndex, isProcessing, guestName, guestMobile, isGuestCustomer, selectedCustomer, isActive, selectedReportSaleId, setSearchMode, scannerRef]);
 
 
     // =========================================================================
@@ -1637,6 +1637,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     scannerRef={scannerRef}
                     isAdmin={isAdmin}
                     approvalStatus={approvalStatus}
+                    setSearchMode={setSearchMode}
                 />
             </div>
 
