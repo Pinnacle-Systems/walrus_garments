@@ -56,7 +56,7 @@ const POSHeader = ({
                 let nextIndex = prevIndex;
                 for (let i = 0; i < suggestions.length; i++) {
                     nextIndex = (nextIndex + 1) % suggestions.length;
-                    if (suggestions[nextIndex].stockQty > 0) {
+                    if (suggestions[nextIndex]) {
                         return nextIndex;
                     }
                 }
@@ -69,7 +69,7 @@ const POSHeader = ({
                 if (nextIndex === -1) nextIndex = suggestions.length;
                 for (let i = 0; i < suggestions.length; i++) {
                     nextIndex = (nextIndex - 1 + suggestions.length) % suggestions.length;
-                    if (suggestions[nextIndex].stockQty > 0) {
+                    if (suggestions[nextIndex]) {
                         return nextIndex;
                     }
                 }
@@ -79,7 +79,7 @@ const POSHeader = ({
             if (activeSuggestionIndex >= 0 && activeSuggestionIndex < suggestions.length) {
                 e.preventDefault();
                 const item = suggestions[activeSuggestionIndex];
-                if (item && item.stockQty > 0) {
+                if (item) {
                     onSelectSuggestion(item);
                     setActiveSuggestionIndex(-1);
                 }
@@ -95,6 +95,7 @@ const POSHeader = ({
         }
     };
 
+    console.log(searchQuery, "searchQuery")
     return (
         <header className="h-10 bg-white border-b border-slate-200 px-4 flex items-center shrink-0 z-30 justify-between shadow-sm">
             <div className="flex items-center gap-4 flex-1">
@@ -137,19 +138,20 @@ const POSHeader = ({
                 )}
                 <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 shadow-sm shrink-0">
                     <button
-                        onClick={() => setSearchMode('BARCODE')}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${searchMode === 'BARCODE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <ScanBarcode size={12} />
-                        Barcode
-                    </button>
-                    <button
                         onClick={() => setSearchMode('NAME')}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${searchMode === 'NAME' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         <Search size={12} />
                         Name
                     </button>
+                    <button
+                        onClick={() => setSearchMode('BARCODE')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${searchMode === 'BARCODE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                        <ScanBarcode size={12} />
+                        Barcode
+                    </button>
+
                 </div>
                 <div className="flex-1 max-w-xl relative mt-1">
                     {isBarcodeLoading ? (
@@ -168,40 +170,71 @@ const POSHeader = ({
                             if (searchMode === 'NAME') setShowSuggestions(true);
                         }}
                         onKeyDown={handleInputKeyDown}
-                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                        onFocus={() => searchMode === 'NAME' && searchQuery?.length >= 1 && setShowSuggestions(true)}
+                    // onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    // onFocus={() => searchMode === 'NAME' && searchQuery?.length >= 1 && setShowSuggestions(true)}
                     />
 
-                    {/* Suggestions Dropdown */}{console.log(suggestions, "suggestions")}
                     {showSuggestions && suggestions?.length > 0 && (
                         <div
                             ref={suggestionsContainerRef}
-                            className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-1 duration-200"
+                            className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto py-0 animate-in fade-in slide-in-from-top-1 duration-200"
                         >
-                            {suggestions.map((item, idx) => {
+                            {/* Table Header */}
+                            <div className="sticky top-0 bg-slate-50 border-b border-slate-200 px-4 py-2 grid grid-cols-12 text-[10px] font-black uppercase tracking-wider text-slate-500 z-10">
+                                <div className="col-span-4 text-left">Item Name</div>
+                                <div className="col-span-2 text-left">Size/Color</div>
+                                <div className="col-span-2 text-right">Sale Price</div>
+                                <div className="col-span-2 text-right">Stock</div>
+                                <div className="col-span-2 text-right">Location</div>
+                            </div>
+
+                            {/* Suggestion Rows */}
+                            {suggestions?.map((item, idx) => {
                                 const isHighlighted = idx === activeSuggestionIndex;
                                 return (
                                     <button
                                         key={idx}
-                                        disabled={item.stockQty <= 0}
                                         onClick={() => onSelectSuggestion(item)}
                                         onMouseEnter={() => {
-                                            if (item.stockQty > 0) {
-                                                setActiveSuggestionIndex(idx);
-                                            }
+                                            setActiveSuggestionIndex(idx);
                                         }}
-                                        className={`w-full text-left px-4 py-2 flex items-center justify-between transition-colors border-b border-slate-50 last:border-0 ${item.stockQty <= 0
-                                            ? 'opacity-50 cursor-not-allowed bg-slate-50'
-                                            : isHighlighted
-                                                ? 'bg-indigo-100 cursor-pointer font-bold'
-                                                : 'hover:bg-indigo-50 cursor-pointer'
+                                        className={`w-full px-4 py-2.5 grid grid-cols-12 items-center text-left transition-colors border-b border-slate-100 last:border-0 ${isHighlighted
+                                            ? 'bg-indigo-100 cursor-pointer font-bold'
+                                            : 'hover:bg-indigo-50 cursor-pointer'
                                             }`}
                                     >
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-bold text-slate-800">{item.item_name} | {item?.barcodeType} </span>
-                                            <span className="text-[10px] text-slate-500 uppercase tracking-tight font-black">
-                                                {item.size} | {item.color} | {item.barcode}
+                                        {/* Item Name & Barcode */}
+                                        <div className="col-span-4 flex flex-col pr-2">
+                                            <span className="text-xs font-bold text-slate-800 uppercase truncate" title={item.item_name}>
+                                                {item.item_name}
                                             </span>
+                                            <span className="text-[10px] text-slate-400 font-medium">
+                                                {item.barcode}
+                                            </span>
+                                        </div>
+
+                                        {/* Size & Color combined */}
+                                        <div className="col-span-2 text-left text-xs font-medium text-slate-600">
+                                            {item.size !== '-' ? item.size : ''}
+                                            {item.size !== '-' && item.color !== '-' ? ' / ' : ''}
+                                            {item.color !== '-' ? item.color : ''}
+                                            {item.size === '-' && item.color === '-' ? '-' : ''}
+                                        </div>
+
+                                        {/* Sale Price */}
+                                        <div className="col-span-2 text-right text-xs font-bold text-slate-700">
+                                            {item.salesPrice || 0}
+                                        </div>
+
+                                        {/* Stock */}
+                                        <div className={`col-span-2 text-right text-xs font-black ${item.stockQty > 0 ? 'text-emerald-600' : 'text-rose-500'
+                                            }`}>
+                                            {item.stockQty}
+                                        </div>
+
+                                        {/* Location */}
+                                        <div className="col-span-2 text-right text-xs font-medium text-slate-500">
+                                            {item.location || '-'}
                                         </div>
                                     </button>
                                 );

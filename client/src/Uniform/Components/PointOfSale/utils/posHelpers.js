@@ -101,6 +101,7 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
                     colorId: variant.colorId,
                     uomId: item.uomId,
                     storeId: retailStoreId,
+                    salesPrice: variant.salesPrice || 0,
                 });
             });
         });
@@ -126,6 +127,7 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
                         colorId: variant.colorId,
                         uomId: item.uomId,
                         storeId: retailStoreId,
+                        salesPrice: variant.salesPrice || 0,
                     });
                 }
             });

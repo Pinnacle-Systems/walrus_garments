@@ -23,6 +23,7 @@ const POSCartTable = ({
 
     const isPendingApproval = approvalStatus === 'PENDING';
     const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval) && currentBilStatus === 'PAID';
+    const [hoveredOfferName, setHoveredOfferName] = React.useState(null);
 
     console.log(cart, "cart")
     return (
@@ -71,11 +72,20 @@ const POSCartTable = ({
                             const cartKey = `${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}`;
                             const rowTotal = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
                             const isActiveRow = index === activeRowIndex;
+                            const isComboApplied = item.appliedOfferName && cart.filter(cit => cit.appliedOfferName && cit.appliedOfferName === item.appliedOfferName).length > 1;
+                            const isHoveredCombo = hoveredOfferName && item.appliedOfferName === hoveredOfferName;
+
                             return (
                                 <tr
                                     key={cartKey}
                                     onClick={() => setActiveRowIndex(index)}
-                                    className={`group transition-colors border-b border-slate-50 cursor-pointer ${isActiveRow ? 'bg-indigo-50/60 ring-1 ring-inset ring-indigo-200' : (item.priceType === 'offerPrice' ? 'bg-emerald-50/40' : 'hover:bg-indigo-50/30')}`}
+                                    onMouseEnter={() => {
+                                        if (item.priceType === 'offerPrice' && isComboApplied) {
+                                            setHoveredOfferName(item.appliedOfferName);
+                                        }
+                                    }}
+                                    onMouseLeave={() => setHoveredOfferName(null)}
+                                    className={`group transition-colors border-b border-slate-50 cursor-pointer ${isHoveredCombo ? 'bg-emerald-55/75 ring-2 ring-emerald-300 ring-inset shadow-sm' : (isActiveRow ? 'bg-indigo-50/60 ring-1 ring-inset ring-indigo-200' : (item.priceType === 'offerPrice' ? 'bg-emerald-50/40' : 'hover:bg-indigo-50/30'))}`}
                                 >
                                     <td className="px-2 py-1 text-center text-[10px] font-bold text-slate-400 border-r border-slate-200">{index + 1}</td>
                                     <td className="px-3 py-1 border-r border-slate-200">
@@ -94,7 +104,7 @@ const POSCartTable = ({
                                             {item.priceType === 'offerPrice' && (
                                                 <span className="bg-emerald-600 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5 animate-pulse">
                                                     <Gift size={10} fill="currentColor" className="text-emerald-200" />
-                                                    {item.appliedOfferName || "Offer Applied"}
+                                                    {isComboApplied ? `🔗 Combo: ${item.appliedOfferName}` : item.appliedOfferName || "Offer Applied"}
                                                 </span>
                                             )}
                                         </div>

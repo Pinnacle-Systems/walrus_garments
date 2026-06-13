@@ -2,15 +2,33 @@ import React from 'react';
 import { Gift, X, Zap, Package } from 'lucide-react';
 import Modal from '../../../../UiComponents/Modal';
 
+const formatRuleValue = (value) => {
+    if (!value) return '';
+    if (Array.isArray(value)) {
+        return value.map(v => {
+            if (typeof v === 'object' && v !== null) {
+                return v.label || v.show || v.value || JSON.stringify(v);
+            }
+            return String(v);
+        }).join(', ');
+    }
+    if (typeof value === 'object') {
+        return value.label || value.show || value.value || JSON.stringify(value);
+    }
+    return String(value);
+};
+
 const ItemOfferModal = ({
     isOpen,
     onClose,
     selectedItemForOffers,
     getItemApplicableOffers,
     selectedOffersByRow,
-    setSelectedOffersByRow,
+    onSelectOffer,
     Swal
 }) => {
+
+
 
 
     return (
@@ -22,7 +40,7 @@ const ItemOfferModal = ({
                             <Gift size={20} className="text-yellow-400" />
                         </div>
                         <div>
-                            <h2 className="text-sm font-black uppercase tracking-wider">{selectedItemForOffers?.Item?.name}</h2>
+                            <h2 className="text-sm font-black uppercase tracking-wider">{selectedItemForOffers?.Item?.name || selectedItemForOffers?.name || selectedItemForOffers?.itemName}</h2>
                             <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest leading-none">Applicable Promotions & Offers</p>
                         </div>
                     </div>
@@ -43,10 +61,10 @@ const ItemOfferModal = ({
                                         <th className="px-4 py-3 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 w-[20%]">Benefit / Reward</th>
                                         <th className="px-4 py-3 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 text-center w-[10%]">Action</th>
                                     </tr>
-                                </thead>{console.log(getItemApplicableOffers(selectedItemForOffers), "availableOffers")}
+                                </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {getItemApplicableOffers(selectedItemForOffers).map((off, idx) => {
-                                        const activeItemKey = selectedItemForOffers ? `${selectedItemForOffers.itemId}-${selectedItemForOffers.sizeId}-${selectedItemForOffers.colorId}-${selectedItemForOffers.barcodeType}` : null;
+                                        const activeItemKey = selectedItemForOffers ? `${selectedItemForOffers.itemId || selectedItemForOffers.id}-${selectedItemForOffers.sizeId || 0}-${selectedItemForOffers.colorId || 0}-${selectedItemForOffers.barcodeType || ''}` : null;
                                         const isOfferSelected = activeItemKey && selectedOffersByRow[activeItemKey] === off.id;
 
                                         return (
@@ -68,19 +86,23 @@ const ItemOfferModal = ({
 
                                                 <td className="px-4 py-4">
                                                     <div className="text-[10px] font-medium text-slate-600">
-                                                        {off.OfferRule?.[0]?.conditions?.rules?.[0] ? (
-                                                            <div className="flex flex-col gap-1">
-                                                                <span className="italic opacity-70">
-                                                                    {off.OfferRule[0].conditions.rules[0].field} {off.OfferRule[0].conditions.rules[0].operator} {off.OfferRule[0].conditions.rules[0].value}
-                                                                </span>
-                                                                {off._metrics && (
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                                                                        <span className="text-indigo-600 font-black not-italic text-[10px]">
-                                                                            {off.OfferRule[0].conditions.rules[0].field === 'Minimum Quantity' ? `${off._metrics.scopeQty} Qty matched` : `₹${off._metrics.scopeValue.toLocaleString()} matched`}
+                                                        {off.OfferRule?.[0]?.conditions?.rules?.length > 0 ? (
+                                                            <div className="flex flex-col gap-1.5">
+                                                                {off.OfferRule[0].conditions.rules.map((rule, rIdx) => (
+                                                                    <div key={rIdx} className="flex flex-col gap-0.5 border-b border-slate-50 last:border-0 pb-1 last:pb-0">
+                                                                        <span className="italic opacity-70">
+                                                                            {rule.field} {rule.operator} {formatRuleValue(rule.value)}
                                                                         </span>
+                                                                        {off._metrics && (rule.field === 'Minimum Quantity' || rule.field === 'Cart Value') && (
+                                                                            <div className="flex items-center gap-1.5">
+                                                                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                                                                                <span className="text-indigo-600 font-black not-italic text-[10px]">
+                                                                                    {rule.field === 'Minimum Quantity' ? `${off._metrics.scopeQty} Qty matched` : `₹${off._metrics.scopeValue.toLocaleString()} matched`}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
                                                                     </div>
-                                                                )}
+                                                                ))}
                                                             </div>
                                                         ) : (
                                                             <span className="text-slate-400 italic">No specific condition</span>
@@ -116,10 +138,7 @@ const ItemOfferModal = ({
                                                 <td className="px-4 py-4 text-center">
                                                     <button
                                                         onClick={() => {
-                                                            setSelectedOffersByRow(prev => ({
-                                                                ...prev,
-                                                                [activeItemKey]: isOfferSelected ? null : off.id
-                                                            }));
+                                                            onSelectOffer(selectedItemForOffers, off, isOfferSelected);
                                                             onClose();
                                                             Swal.fire({
                                                                 title: isOfferSelected ? 'Removed' : 'Applied',

@@ -19,7 +19,13 @@ async function get(req) {
         }
     });
 
-    return { statusCode: 0, data };
+    const mappedData = data.map(item => ({
+        ...item,
+        validFrom: item.startTime || (item.OfferRule?.[0]?.conditions?.metadata?.validFrom || null),
+        validTo: item.endTime || (item.OfferRule?.[0]?.conditions?.metadata?.validTo || null)
+    }));
+
+    return { statusCode: 0, data: mappedData };
 }
 
 async function getOne(id) {
@@ -32,7 +38,12 @@ async function getOne(id) {
         }
     })
     if (!data) return NoRecordFound("Offer");
-    return { statusCode: 0, data };
+    const mappedData = {
+        ...data,
+        validFrom: data.startTime || (data.OfferRule?.[0]?.conditions?.metadata?.validFrom || null),
+        validTo: data.endTime || (data.OfferRule?.[0]?.conditions?.metadata?.validTo || null)
+    };
+    return { statusCode: 0, data: mappedData };
 }
 
 async function getSearch(req) {
@@ -53,7 +64,12 @@ async function getSearch(req) {
             OfferTier: true
         }
     })
-    return { statusCode: 0, data };
+    const mappedData = data.map(item => ({
+        ...item,
+        validFrom: item.startTime || (item.OfferRule?.[0]?.conditions?.metadata?.validFrom || null),
+        validTo: item.endTime || (item.OfferRule?.[0]?.conditions?.metadata?.validTo || null)
+    }));
+    return { statusCode: 0, data: mappedData };
 }
 
 async function create(body) {
@@ -81,8 +97,8 @@ async function create(body) {
             applyToClearance: applyToClearance ? Boolean(applyToClearance) : false,
             applyToRegular: applyToRegular ? Boolean(applyToRegular) : false,
             priority: priority ? parseInt(priority) : 0,
-            startTime,
-            endTime,
+            startTime: validFrom,
+            endTime: validTo,
             daysOfWeek,
             noEndDate: noEndDate === true,
             scopeMode: scope,
@@ -129,7 +145,14 @@ async function create(body) {
             }
         }
     })
-    return { statusCode: 0, data };
+    return { 
+        statusCode: 0, 
+        data: {
+            ...data,
+            validFrom: data.startTime,
+            validTo: data.endTime
+        } 
+    };
 }
 
 async function update(id, body) {
@@ -163,8 +186,8 @@ async function update(id, body) {
             applyToClearance: applyToClearance ? Boolean(applyToClearance) : false,
             applyToRegular: applyToRegular ? Boolean(applyToRegular) : false,
             priority: priority ? parseInt(priority) : undefined,
-            startTime,
-            endTime,
+            startTime: validFrom,
+            endTime: validTo,
             daysOfWeek,
             noEndDate: noEndDate === true,
             scopeMode: scope,
@@ -216,7 +239,14 @@ async function update(id, body) {
     })
     console.log(data, "offer create data")
 
-    return { statusCode: 0, data };
+    return { 
+        statusCode: 0, 
+        data: {
+            ...data,
+            validFrom: data.startTime,
+            validTo: data.endTime
+        } 
+    };
 }
 
 async function remove(id) {

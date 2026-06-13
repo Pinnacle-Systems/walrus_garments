@@ -2,7 +2,6 @@ import Swal from "sweetalert2";
 import { findFromList } from "../../../Utils/helper";
 import { useGetStockQuery, useGetUnifiedStockQuery } from "../../../redux/services/StockService";
 import { useEffect, useState } from "react";
-import axios from "axios";
 
 export default function TransferItems({ item, index, handleRightClickFromOrder, readOnly, handleInputChangeFromOrder,
     itemList, sizeList, colorList, fromLocationId, id, locationData, toLocationId, stockDrivenFields = [],

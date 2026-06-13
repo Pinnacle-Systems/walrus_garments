@@ -243,6 +243,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                                 <td className='py-1 text-center'>
                                                     <input type="checkbox" name="" id=""
                                                         checked={isItemAdded(yarnItem)}
+                                                        readOnly
                                                     // disabled={yarnItem?.balanceQty === 0}
                                                     />
                                                 </td>
