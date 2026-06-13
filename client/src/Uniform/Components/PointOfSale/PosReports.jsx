@@ -178,6 +178,7 @@ const PosReports = ({
                                             )}
                                         </div>
                                     </td>
+                                    
                                     <td className="py-2.5 text-center">
                                         <div className="flex justify-center gap-2">
                                             <button
