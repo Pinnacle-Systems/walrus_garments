@@ -829,7 +829,7 @@ const OffersPromotions = () => {
             </div>
 
             {form && (
-                <Modal isOpen={form} form={form} widthClass="w-[95%] h-[98vh]" onClose={() => { setForm(false); setId(""); }}>
+                <Modal isOpen={form} form={form} widthClass="w-[95%] h-[95vh]" onClose={() => { setForm(false); setId(""); }}>
                     <div className="h-full flex flex-col bg-gray-200">
                         <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white rounded-t-lg">
                             <h2 className="text-lg font-semibold text-gray-800">

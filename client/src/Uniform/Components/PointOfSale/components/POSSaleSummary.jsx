@@ -88,8 +88,23 @@ const POSSaleSummary = ({
                             ref={discountRef}
                             type="number"
                             value={discount}
-                            onChange={(e) => setDiscount(Number(e.target.value))}
-                            disabled={!isAdmin || (selectedReportSaleId && !isPendingApproval)}
+                            onChange={(e) => {
+                                const val = Number(e.target.value);
+                                if (!isAdmin) {
+                                    if (val > 10) {
+                                        setDiscount(10);
+                                    } else if (val < 0) {
+                                        setDiscount(0);
+                                    } else {
+                                        setDiscount(val);
+                                    }
+                                } else {
+                                    setDiscount(val < 0 ? 0 : val);
+                                }
+                            }}
+                            min={0}
+                            max={!isAdmin ? 10 : undefined}
+                            disabled={selectedReportSaleId ? (!isAdmin || !isPendingApproval) : false}
                             className="w-16 bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-right outline-none text-emerald-600 focus:border-emerald-500 transition-colors disabled:opacity-50"
                             onFocus={(e) => e.target.select()}
                         />

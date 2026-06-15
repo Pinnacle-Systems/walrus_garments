@@ -308,7 +308,7 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
     console.log(activeOffers, "activeOffers")
     return activeOffers.map(off => {
         console.log(`[OfferEngine Debug] Evaluating offer: "${off.name}" (ID: ${off.id})`);
-        
+
         if (!isOfferDateValid(off)) {
             console.log(`[OfferEngine Debug]   Failed isOfferDateValid check for offer: ${off.name}`);
             return null;
@@ -403,6 +403,7 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
 
             if (rule.field === 'Unique Sizes') {
                 const distinctSizes = new Set(filteredScopeItems.map(cit => String(cit.sizeId)));
+                console.log(distinctSizes, "distinctSizes")
                 let passed = false;
                 if (rule.operator === '>=') passed = distinctSizes.size >= parseFloat(rule.value);
                 else if (rule.operator === '<=') passed = distinctSizes.size <= parseFloat(rule.value);

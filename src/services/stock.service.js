@@ -255,7 +255,7 @@ async function get(req) {
         },
     })
 
-    console.log(data, "data")
+    // console.log(data, "data")
     data = data.filter(item => (item._sum.qty > 0));
 
 
@@ -1034,9 +1034,9 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
             Store: true,
         }
     });
-    console.log("stockRecords count:", stockRecords.length);
-    console.log("stockRecords barcodes:", stockRecords.map(r => ({ id: r.id, barcode: r.barcode, storeId: r.storeId })));
-    console.log(stockRecords, "stockRecords")
+    // console.log("stockRecords count:", stockRecords.length);
+    // console.log("stockRecords barcodes:", stockRecords.map(r => ({ id: r.id, barcode: r.barcode, storeId: r.storeId })));
+    // console.log(stockRecords, "stockRecords")
 
     if (!stockRecords.length) {
         return { statusCode: 1, message: "No stock found for this barcode" };

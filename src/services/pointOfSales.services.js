@@ -153,7 +153,7 @@ async function get(req) {
 
     }
     data = manualFilterSearchData(searchDate, "", "", data)
-    console.log(data?.length, "data", pagination)
+    console.log(approvalStatus, "approvalStatus")
 
     if (pagination) {
         totalCount = data.length;

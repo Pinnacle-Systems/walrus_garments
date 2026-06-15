@@ -179,14 +179,14 @@ const POSHeader = ({
                     {showSuggestions && suggestions?.length > 0 && (
                         <div
                             ref={suggestionsContainerRef}
-                            className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto py-0 animate-in fade-in slide-in-from-top-1 duration-200"
+                            className="absolute top-full left-0 w-[850px] max-w-[95vw] mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-[500px] overflow-y-auto py-0 animate-in fade-in slide-in-from-top-1 duration-200"
                         >
                             <div className="sticky top-0 bg-slate-50 border-b border-slate-200 px-4 py-2 grid grid-cols-12 text-[10px] font-black uppercase tracking-wider text-slate-500 z-10">
-                                <div className="col-span-4 text-left">Item Name</div>
+                                <div className="col-span-6 text-left">Item Name</div>
                                 <div className="col-span-2 text-left">Size/Color</div>
                                 <div className="col-span-2 text-right">Sale Price</div>
                                 <div className="col-span-2 text-right">Stock</div>
-                                <div className="col-span-2 text-right">Location</div>
+                                {/* <div className="col-span-2 text-right">Location</div> */}
                             </div>
 
                             {suggestions?.map((item, idx) => {
@@ -204,8 +204,8 @@ const POSHeader = ({
                                             }`}
                                     >
                                         {/* Item Name & Barcode */}
-                                        <div className="col-span-4 flex flex-col pr-2">
-                                            <span className="text-xs font-bold text-slate-800 uppercase truncate" title={item.item_name}>
+                                        <div className="col-span-6 flex flex-col pr-2">
+                                            <span className="text-xs font-bold text-slate-800 uppercase whitespace-normal break-words" title={item.item_name}>
                                                 {item.item_name}
                                             </span>
                                             <span className="text-[10px] text-slate-400 font-medium">
@@ -233,9 +233,9 @@ const POSHeader = ({
                                         </div>
 
                                         {/* Location */}
-                                        <div className="col-span-2 text-right text-xs font-medium text-slate-500">
+                                        {/* <div className="col-span-2 text-right text-xs font-medium text-slate-500">
                                             {item.location || '-'}
-                                        </div>
+                                        </div> */}
                                     </button>
                                 );
                             })}

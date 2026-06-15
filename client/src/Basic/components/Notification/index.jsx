@@ -20,6 +20,12 @@ const NotificationBell = ({ onShowPopup }) => {
         params: { branchId, approvalStatus: targetStatus, userRole }
     });
 
+    console.log(posData, "posData for notification")
+
+
+
+
+
     const pendingDiscountCount = posData?.data?.length || 0;
 
     const {
@@ -33,7 +39,7 @@ const NotificationBell = ({ onShowPopup }) => {
         if (1 > 0) {
             setShowNotificationPopup(true);
         }
-        setShowDropdown(false);
+
     };
 
 
