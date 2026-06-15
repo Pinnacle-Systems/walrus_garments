@@ -79,6 +79,7 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
     // );
 
     const queryWords = query.split(/\s+/).filter(Boolean);
+    console.log(queryWords, "queryWords ")
     const matchingItems = items.filter(i => {
         const itemName = i.name?.toLowerCase() || "";
         const itemCode = i.code?.toLowerCase() || "";

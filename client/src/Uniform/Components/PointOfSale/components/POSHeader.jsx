@@ -90,7 +90,8 @@ const POSHeader = ({
             e.preventDefault();
             setShowSuggestions(false);
             setActiveSuggestionIndex(-1);
-        } else {
+        }
+        else {
             handleScan(e);
         }
     };
@@ -162,6 +163,7 @@ const POSHeader = ({
                     <input
                         ref={scannerRef}
                         disabled={(isBarcodeLoading && searchMode === 'BARCODE') || selectedReportSaleId || transactionType === 'RETURN'}
+
                         placeholder={selectedReportSaleId ? "View Only Mode" : (transactionType === 'RETURN' ? "Scanning Disabled in Return Mode" : (searchMode === 'BARCODE' ? "Scan Barcode & Press Enter [F10]" : "Search Product Name..."))}
                         className={`w-full pl-10 pr-4 py-1 rounded-lg text-sm transition-all font-medium border outline-none ${((isBarcodeLoading && searchMode === 'BARCODE') || selectedReportSaleId || transactionType === 'RETURN') ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 placeholder:text-slate-400'}`}
                         value={searchQuery}
@@ -169,17 +171,16 @@ const POSHeader = ({
                             setSearchQuery(e.target.value);
                             if (searchMode === 'NAME') setShowSuggestions(true);
                         }}
-                        onKeyDown={handleInputKeyDown}
+                    // onKeyDown={handleInputKeyDown}
                     // onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                     // onFocus={() => searchMode === 'NAME' && searchQuery?.length >= 1 && setShowSuggestions(true)}
-                    />
+                    />{console.log(searchQuery, "searchQuery")}
 
                     {showSuggestions && suggestions?.length > 0 && (
                         <div
                             ref={suggestionsContainerRef}
                             className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto py-0 animate-in fade-in slide-in-from-top-1 duration-200"
                         >
-                            {/* Table Header */}
                             <div className="sticky top-0 bg-slate-50 border-b border-slate-200 px-4 py-2 grid grid-cols-12 text-[10px] font-black uppercase tracking-wider text-slate-500 z-10">
                                 <div className="col-span-4 text-left">Item Name</div>
                                 <div className="col-span-2 text-left">Size/Color</div>
@@ -188,7 +189,6 @@ const POSHeader = ({
                                 <div className="col-span-2 text-right">Location</div>
                             </div>
 
-                            {/* Suggestion Rows */}
                             {suggestions?.map((item, idx) => {
                                 const isHighlighted = idx === activeSuggestionIndex;
                                 return (

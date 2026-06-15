@@ -1,5 +1,5 @@
 import React from 'react'
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { io as socketIO } from 'socket.io-client';
 import { useGetPartyQuery } from "../../../redux/services/PartyMasterService"
 import { Loader } from "../../../Basic/components";
@@ -37,7 +37,8 @@ const PosReportsNew = ({
     reportsTransactionType = "SALE",
     rowActions = true,
     lastRefresh,
-    hasPermission
+    hasPermission,
+    isActive
 
 }) => {
 
@@ -113,6 +114,22 @@ const PosReportsNew = ({
     const [billStatus, setBillStatus] = useState("")
     const [returnBill, setReturnBill] = useState("")
     const [exchangeBill, setExchangeBill] = useState("")
+
+    const searchInputRef = useRef(null);
+
+    useEffect(() => {
+        if (isActive) {
+            setSerachDocNo("");
+            setSearchDate("");
+            setBillStatus("");
+            setSearchCustomerName("");
+            setReturnBill("");
+            setExchangeBill("");
+            if (searchInputRef.current) {
+                searchInputRef.current.focus();
+            }
+        }
+    }, [isActive]);
 
     const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
@@ -457,6 +474,7 @@ const PosReportsNew = ({
 
                                     <th className=" px-1 font-bold text-[13px] border  text-gray-900  text-center w-32">
                                         <input
+                                            ref={searchInputRef}
                                             type="text"
                                             className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
                                             placeholder="Search"

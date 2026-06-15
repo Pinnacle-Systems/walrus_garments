@@ -199,6 +199,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     // Printing/Receipt States
     const [printData, setPrintData] = useState(null);
+    const [shouldRedirectOnPrintClose, setShouldRedirectOnPrintClose] = useState(false);
 
     // Reports Pagination & Search States
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
@@ -237,6 +238,13 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             onCartUpdate(tabId, cart);
         }
     }, [cart, tabId, onCartUpdate]);
+
+    useEffect(() => {
+        if (shouldRedirectOnPrintClose && !printData) {
+            setShouldRedirectOnPrintClose(false);
+            onGoToReports?.();
+        }
+    }, [printData, shouldRedirectOnPrintClose, onGoToReports]);
 
     console.log(availableCredit, "availableCredit")
     useEffect(() => {
@@ -490,12 +498,17 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     // Auto-complete suggestion queries based on active search Mode
     useEffect(() => {
         const query = searchQuery?.trim().toLowerCase();
-        if (!query || query.length < 1 || selectedReportSaleId || searchMode !== 'NAME') {
+        // if (!query || selectedReportSaleId || searchMode !== 'NAME') {
+        //     setSuggestions([]);
+        //     setShowSuggestions(false);
+        //     return;
+        // }
+        // Only trigger suggestions if query has 3 or more characters
+        if (!query || query.length < 2 || selectedReportSaleId || searchMode !== 'NAME') {
             setSuggestions([]);
             setShowSuggestions(false);
             return;
         }
-
         const items = itemsData?.data || [];
         const itemPriceList = ItemPriceListData?.data || [];
         const allMatches = filterSearchSuggestions({ query, items, itemPriceList, retailStoreId });
@@ -931,6 +944,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     setEditingInvoiceId(null);
                     setSelectedReportSaleId(null);
                     setSearchMode('BARCODE');
+                    onGoToReports?.();
                 } else {
                     throw new Error(res.message || "Failed to approve request.");
                 }
@@ -1062,6 +1076,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setSelectedCustomer(null);
             setGuestName("");
             setGuestMobile("");
+            onGoToReports?.();
         } catch (error) {
             Swal.fire({ title: "Error", text: error.message || "Failed to send request.", icon: "error" });
         } finally {
@@ -1273,6 +1288,12 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setGuestMobile("");
             setIsGuestCustomer(true);
             setSearchMode('BARCODE');
+
+            if (transactionType === 'RETURN') {
+                onGoToReports?.();
+            } else {
+                setShouldRedirectOnPrintClose(true);
+            }
 
         } catch (error) {
             Swal.fire({ title: "Error", text: error.message || "Failed to save invoice.", icon: "error" });

@@ -214,6 +214,7 @@ const POSMultiTabWrapper = () => {
                         reportsTransactionType={reportsTransactionType}
                         lastRefresh={lastRefresh}
                         hasPermission={hasPermission}
+                        isActive={currentView === 'REPORTS'}
                     />
                 </div>
             </div>
