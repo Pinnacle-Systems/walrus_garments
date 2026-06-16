@@ -28,7 +28,7 @@ import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSec
 import { areSalesRowsValid } from "../../../Utils/salesCatalogRules";
 import { useGetoffersPromotionsQuery } from "../../../redux/uniformService/Offer&PromotionsService";
 import ItemOfferModal from "../PointOfSale/components/ItemOfferModal";
-import { calculateCartWithOffers, getPotentialOffers } from "../../../Utils/offerEngine";
+import { calculateCartWithOffers, getPotentialOffers, getItemApplicableOffers } from "../../../Utils/offerEngine";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 import { useGetcollectionsQuery } from "../../../redux/uniformService/CollectionsService";
 
@@ -83,6 +83,53 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
   const [showItemOfferModal, setShowItemOfferModal] = useState(false);
   const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
+
+  const handleSelectOfferForItem = (selectedItem, offer, isDeselect) => {
+    const activeItemKey = `${selectedItem.itemId || selectedItem.id}-${selectedItem.sizeId || 0}-${selectedItem.colorId || 0}-${selectedItem.barcodeType || ""}`;
+
+    setSelectedOffersByRow((prev) => {
+      const next = { ...prev };
+
+      if (isDeselect) {
+        next[activeItemKey] = null;
+
+        // Clear from other matching combo rows as well
+        if (
+          offer.OfferRule?.[0]?.conditions?.rules?.length > 1 ||
+          offer.OfferRule?.[0]?.conditions?.rules?.[0]?.field === "Variant Matrix"
+        ) {
+          Object.keys(next).forEach((k) => {
+            if (next[k] === offer.id) {
+              next[k] = null;
+            }
+          });
+        }
+      } else {
+        next[activeItemKey] = offer.id;
+
+        const rules = offer.OfferRule?.[0]?.conditions?.rules || [];
+        const isCombo = rules.length > 1 || rules[0]?.field === "Variant Matrix";
+
+        if (isCombo) {
+          (saleOrderItems || []).forEach((item) => {
+            if (!item.itemId) return;
+            const applicable = getItemApplicableOffers(item, saleOrderItems, activeOffers, collectionsData);
+            const isEligible = applicable.some((o) => String(o.id) === String(offer.id));
+            if (!isEligible) return;
+
+            const itemKey = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.barcodeType || ""}`;
+            next[itemKey] = offer.id;
+          });
+        }
+      }
+      return next;
+    });
+  };
+
+  const getItemApplicableOffersLocal = (item) => {
+    if (!item || !activeOffers.length) return [];
+    return getItemApplicableOffers(item, saleOrderItems || [], activeOffers, collectionsData);
+  };
   const [linkedQuoteId, setLinkedQuoteId] = useState(quoteId || "");
   const [childRecord, setChildRecord] = useState(0);
 
@@ -980,13 +1027,9 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         isOpen={showItemOfferModal}
         onClose={() => setShowItemOfferModal(false)}
         selectedItemForOffers={selectedItemForOffers}
-        getItemApplicableOffers={(item) => {
-          if (!item || !activeOffers.length) return [];
-          const { getItemApplicableOffers } = require("../../../Utils/offerEngine");
-          return getItemApplicableOffers(item, saleOrderItems, activeOffers, collectionsData);
-        }}
+        getItemApplicableOffers={getItemApplicableOffersLocal}
         selectedOffersByRow={selectedOffersByRow}
-        setSelectedOffersByRow={setSelectedOffersByRow}
+        onSelectOffer={handleSelectOfferForItem}
         Swal={Swal}
       />
     </>

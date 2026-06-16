@@ -159,7 +159,7 @@ const Header = ({ profile, setIsGlobalOpen }) => {
 
     return (
 
-        <div className='fixed inset-x-0 top-0 z-50 flex h-9 w-full items-center justify-between bg-white px-3 shadow-sm'>
+        <div className='fixed inset-x-0 top-0 z-50 flex h-10 w-full items-center justify-between bg-white px-2 sm:px-4 shadow-sm'>
             <Modal
                 isOpen={logout}
                 onClose={() => {
@@ -174,7 +174,7 @@ const Header = ({ profile, setIsGlobalOpen }) => {
                     src={logo}
                     alt="" />
             </div>
-            <div className="mr-9 flex items-center gap-3">
+            <div className="mr-1 md:mr-9 flex items-center gap-1.5 sm:gap-3">
                 {/* <div className='flex items-center text-[12px] border rounded-full relative mr-3'>
                     <input className=' px-2 py-1 w-60 text-[12px] rounded-full' placeholder='search' type='text' name='password' id='password' />
                     <div className='absolute right-2  text-neutral-500'>
@@ -183,11 +183,11 @@ const Header = ({ profile, setIsGlobalOpen }) => {
                 </div> */}
                 <PageSearch pageList={allowedPages} />
                 <div
-                    className="text-lg"
+                    className="text-lg cursor-pointer"
                     onClick={() => { setIsGlobalOpen(true) }}>
                     {GLOBE_ICON}
                 </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-beige">
+                <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-beige">
                     <NotificationBell />
                 </div>
 
@@ -207,7 +207,7 @@ const Header = ({ profile, setIsGlobalOpen }) => {
 
                     </button>
                     <div
-                        className={`-ml-48 absolute mt-2 origin-top-right rounded-md z-50 ${navBatItemsStyle}`}
+                        className={`right-0 absolute mt-2 w-52 origin-top-right rounded-md z-50 shadow-lg border border-gray-100 ${navBatItemsStyle}`}
                     >
                         <div className="bg-beige flex p-2 items-center rounded-lg">
                             <div className="mr-2 w-12">

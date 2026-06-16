@@ -282,52 +282,68 @@ export default function POsDosPrinter({ printData, onClose }) {
     }, [activeData, columns]);
 
     const triggerDosPrint = () => {
-        const text = generateDosReceiptText(activeData, columns);
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'absolute';
-        iframe.style.width = '0px';
-        iframe.style.height = '0px';
-        iframe.style.border = 'none';
-        document.body.appendChild(iframe);
+        const copies = activeData.printCopies || 1;
 
-        const doc = iframe.contentWindow.document;
-        doc.open();
-        doc.write(`
-            <html>
-            <head>
-                <title>DOS_PRINT_RECEIPT_${activeData.docId}</title>
-                <style>
-                    @media print {
-                        body { margin: 0; padding: 0; }
-                        @page { 
-                            size: ${columns === 40 ? '80mm' : '58mm'} auto; 
-                            margin: 0; 
+        const printNext = (copyIndex) => {
+            if (copyIndex >= copies) return;
+
+            const text = generateDosReceiptText(activeData, columns);
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'absolute';
+            iframe.style.width = '0px';
+            iframe.style.height = '0px';
+            iframe.style.border = 'none';
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(`
+                <html>
+                <head>
+                    <title>DOS_PRINT_RECEIPT_${activeData.docId}_COPY_${copyIndex + 1}</title>
+                    <style>
+                        @media print {
+                            body { margin: 0; padding: 0; }
+                            @page { 
+                                size: ${columns === 40 ? '80mm' : '58mm'} auto; 
+                                margin: 0; 
+                            }
                         }
+                        pre {
+                            font-family: 'Courier New', Courier, monospace;
+                            font-size: 11px;
+                            line-height: 1.1;
+                            white-space: pre;
+                            margin: 0;
+                            padding: 8px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <pre>${text}</pre>
+                </body>
+                </html>
+            `);
+            doc.close();
+
+            iframe.contentWindow.onload = () => {
+                iframe.contentWindow.print();
+            };
+
+            const handleAfterPrint = () => {
+                iframe.contentWindow.removeEventListener('afterprint', handleAfterPrint);
+                setTimeout(() => {
+                    if (iframe.parentNode) {
+                        iframe.parentNode.removeChild(iframe);
                     }
-                    pre {
-                        font-family: 'Courier New', Courier, monospace;
-                        font-size: 11px;
-                        line-height: 1.1;
-                        white-space: pre;
-                        margin: 0;
-                        padding: 8px;
-                    }
-                </style>
-            </head>
-            <body>
-                <pre>${text}</pre>
-                <script>
-                    window.onload = function() {
-                        window.print();
-                        setTimeout(function() {
-                            window.frameElement.remove();
-                        }, 200);
-                    };
-                </script>
-            </body>
-            </html>
-        `);
-        doc.close();
+                    printNext(copyIndex + 1);
+                }, 300);
+            };
+
+            iframe.contentWindow.addEventListener('afterprint', handleAfterPrint);
+        };
+
+        printNext(0);
     };
 
     return (

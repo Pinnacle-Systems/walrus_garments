@@ -27,7 +27,7 @@ const POSCartTable = ({
 
     console.log(cart, "cart")
     return (
-        <main className="flex-1 min-w-0 bg-white flex flex-col relative">
+        <main className="hidden md:flex flex-1 min-w-0 bg-white flex-col relative">
             {/* Barcode Search Loader Overlay */}
             <AnimatePresence>
                 {isBarcodeLoading && (

@@ -62,7 +62,7 @@ const POSSidebar = ({
     console.log((parseFloat(total) - parseFloat(availableCredit)), "availableCredit", availableCredit)
 
     return (
-        <aside className="w-[340px] border-l border-slate-200 bg-white flex flex-col shadow-2xl relative z-10 overflow-hidden h-full select-text">
+        <aside className="w-full md:w-[340px] md:border-l border-slate-200 bg-white flex flex-col shadow-2xl relative z-10 overflow-hidden h-full select-text">
             <div className="flex-1 flex flex-col p-1 gap-4 overflow-hidden">
                 {/* Module 1: Direct Customer Entry */}
                 <div className="space-y-2 shrink-0 relative bg-white border border-slate-100 p-3 rounded-2xl shadow-sm overflow-hidden">

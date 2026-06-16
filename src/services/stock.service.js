@@ -218,8 +218,10 @@ async function get(req) {
         searchSize, searchItem, searchColor,
     } = req.query
 
-    // console.log(req)
-    let data;
+
+
+
+    let data
 
     data = await xprisma.stock.groupBy({
         where: {
@@ -242,6 +244,7 @@ async function get(req) {
 
 
         },
+
         by: [
             "itemId",
             "sizeId",

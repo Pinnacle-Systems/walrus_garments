@@ -3,6 +3,7 @@ import { ScanBarcode, Loader2, Search, Clock, ChevronDown, Eye, Plus } from 'luc
 import { DropdownInputNew } from '../../../../Inputs';
 import { ReturnType, TransactionType } from '../../../../Utils/DropdownData';
 import { IoArrowBackCircleSharp } from 'react-icons/io5';
+import Swal from 'sweetalert2';
 
 const POSHeader = ({
     isBarcodeLoading,
@@ -28,6 +29,7 @@ const POSHeader = ({
 }) => {
     const [activeSuggestionIndex, setActiveSuggestionIndex] = React.useState(-1);
     const suggestionsContainerRef = React.useRef(null);
+    const searchContainerRef = React.useRef(null);
 
     // Reset active index when suggestions list changes or when dropdown visibility changes
     React.useEffect(() => {
@@ -43,6 +45,24 @@ const POSHeader = ({
             }
         }
     }, [activeSuggestionIndex]);
+
+    // Close suggestions dropdown when clicking outside the search container
+    React.useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                showSuggestions &&
+                searchContainerRef.current &&
+                !searchContainerRef.current.contains(event.target)
+            ) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showSuggestions, setShowSuggestions]);
 
     const handleInputKeyDown = (e) => {
         if (searchMode !== 'NAME' || !showSuggestions || !suggestions || suggestions.length === 0) {
@@ -98,7 +118,7 @@ const POSHeader = ({
 
     console.log(searchQuery, "searchQuery")
     return (
-        <header className="h-10 bg-white border-b border-slate-200 px-4 flex items-center shrink-0 z-30 justify-between shadow-sm">
+        <header className="hidden md:flex h-10 bg-white border-b border-slate-200 px-4 items-center shrink-0 z-30 justify-between shadow-sm">
             <div className="flex items-center gap-4 flex-1">
                 {/* Search Mode Toggle */}
 
@@ -154,7 +174,7 @@ const POSHeader = ({
                     </button>
 
                 </div>
-                <div className="flex-1 max-w-xl relative mt-1">
+                <div ref={searchContainerRef} className="flex-1 max-w-xl relative mt-1">
                     {isBarcodeLoading ? (
                         <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 animate-spin" size={16} />
                     ) : (
@@ -179,13 +199,15 @@ const POSHeader = ({
                     {showSuggestions && suggestions?.length > 0 && (
                         <div
                             ref={suggestionsContainerRef}
-                            className="absolute top-full left-0 w-[850px] max-w-[95vw] mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-[500px] overflow-y-auto py-0 animate-in fade-in slide-in-from-top-1 duration-200"
+                            className="absolute top-full left-0 w-[1050px] max-w-[95vw] mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-50 max-h-[500px] overflow-y-auto py-0 animate-in fade-in slide-in-from-top-1 duration-200"
                         >
                             <div className="sticky top-0 bg-slate-50 border-b border-slate-200 px-4 py-2 grid grid-cols-12 text-[10px] font-black uppercase tracking-wider text-slate-500 z-10">
-                                <div className="col-span-6 text-left">Item Name</div>
+                                <div className="col-span-7 text-left">Item Name</div>
                                 <div className="col-span-2 text-left">Size/Color</div>
-                                <div className="col-span-2 text-right">Sale Price</div>
-                                <div className="col-span-2 text-right">Stock</div>
+                                <div className="col-span-1 text-left">Barcode Type</div>
+
+                                <div className="col-span-1 text-right">Sale Price</div>
+                                <div className="col-span-1 text-right">Stock</div>
                                 {/* <div className="col-span-2 text-right">Location</div> */}
                             </div>
 
@@ -194,7 +216,17 @@ const POSHeader = ({
                                 return (
                                     <button
                                         key={idx}
-                                        onClick={() => onSelectSuggestion(item)}
+                                        onClick={() => {
+                                            if (parseFloat(item.stockQty) <= 0) {
+                                                Swal.fire({
+                                                    icon: 'error',
+                                                    title: 'Out of Stock',
+                                                    text: 'This item is out of stock',
+                                                })
+                                                return;
+                                            }
+                                            onSelectSuggestion(item)
+                                        }}
                                         onMouseEnter={() => {
                                             setActiveSuggestionIndex(idx);
                                         }}
@@ -204,14 +236,16 @@ const POSHeader = ({
                                             }`}
                                     >
                                         {/* Item Name & Barcode */}
-                                        <div className="col-span-6 flex flex-col pr-2">
-                                            <span className="text-xs font-bold text-slate-800 uppercase whitespace-normal break-words" title={item.item_name}>
+                                        <div className="col-span-7 flex flex-col pr-2">
+                                            <span className="text-sm font-bold text-slate-800 uppercase whitespace-normal break-words" title={item.item_name}>
                                                 {item.item_name}
                                             </span>
-                                            <span className="text-[10px] text-slate-400 font-medium">
+                                            <span className="text-sm font-bold text-slate-800 uppercase">
                                                 {item.barcode}
                                             </span>
                                         </div>
+
+
 
                                         {/* Size & Color combined */}
                                         <div className="col-span-2 text-left text-xs font-medium text-slate-600">
@@ -220,14 +254,17 @@ const POSHeader = ({
                                             {item.color !== '-' ? item.color : ''}
                                             {item.size === '-' && item.color === '-' ? '-' : ''}
                                         </div>
+                                        <div className="col-span-1 text-sm font-bold flex flex-col pr-2">
+                                            {item.barcodeType}
 
+                                        </div>
                                         {/* Sale Price */}
-                                        <div className="col-span-2 text-right text-xs font-bold text-slate-700">
+                                        <div className="col-span-1 text-right text-xs font-bold text-slate-700">
                                             {item.salesPrice || 0}
                                         </div>
 
                                         {/* Stock */}
-                                        <div className={`col-span-2 text-right text-xs font-black ${item.stockQty > 0 ? 'text-emerald-600' : 'text-rose-500'
+                                        <div className={`col-span-1 text-right text-xs font-black ${item.stockQty > 0 ? 'text-emerald-600' : 'text-rose-500'
                                             }`}>
                                             {item.stockQty}
                                         </div>

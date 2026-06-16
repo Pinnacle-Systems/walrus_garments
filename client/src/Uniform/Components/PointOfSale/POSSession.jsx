@@ -104,7 +104,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const retailStoreId = retailLocation?.id;
 
     const { data: unifiedStockData } = useGetUnifiedStockQuery({
-        params: { branchId, storeId: retailStoreId }
+        params: { branchId }
     }, {
         skip: !branchId || !retailStoreId
     });
@@ -128,6 +128,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         }
         return map;
     }, [unifiedStockData]);
+
+    console.log(stockMap, "stockMap")
+    console.log(unifiedStockData?.data?.filter(i => i.barcode == "DD10967"), "check barcode")
 
     // Edit Transaction Query
     const [selectedReportSaleId, setSelectedReportSaleId] = useState(initialEditSaleId || null);
@@ -471,6 +474,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const handleSelectOfferForItem = (selectedItem, offer, isDeselect) => {
         const activeItemKey = `${selectedItem.itemId || selectedItem.id}-${selectedItem.sizeId || 0}-${selectedItem.colorId || 0}-${selectedItem.barcodeType || ''}`;
 
+        console.log(activeItemKey, "activeItemKey", selectedItem)
+
         setSelectedOffersByRow(prev => {
             const next = { ...prev };
 
@@ -493,34 +498,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
                 if (isCombo) {
                     cart.forEach(item => {
-                        if (item.barcodeType === 'CLEARANCE' && !offer.applyToClearance) return;
-                        if (item.barcodeType === 'REGULAR' && !offer.applyToRegular) return;
-
-                        let inScope = false;
-                        const targetId = item.itemId || item.id;
-                        if (offer.scopeMode === 'Global') {
-                            inScope = true;
-                        } else if (offer.scopeMode === 'Item') {
-                            inScope = offer.OfferScope?.some(s => String(s.refId) === String(targetId));
-                        } else if (offer.scopeMode === 'Collection') {
-                            inScope = offer.OfferScope?.some(scope => {
-                                if (scope.type !== 'Collection') return false;
-                                const matchedCollection = collectionsData?.data?.find(col => String(col.id) === String(scope.refId));
-                                return matchedCollection?.CollectionItems?.some(ci => String(ci.itemId) === String(targetId));
-                            });
-                        }
-
-                        if (!inScope) return;
-
-                        if (rules[0]?.field === 'Variant Matrix') {
-                            const matrixRules = rules[0].matrix || [];
-                            const matchesMatrix = matrixRules.some(mRow => {
-                                if (mRow.sizeId && String(item.sizeId) !== String(mRow.sizeId)) return false;
-                                if (mRow.colorId && String(item.colorId) !== String(mRow.colorId)) return false;
-                                return true;
-                            });
-                            if (!matchesMatrix) return;
-                        }
+                        const applicable = getItemApplicableOffers(item);
+                        const isEligible = applicable.some(o => String(o.id) === String(offer.id));
+                        if (!isEligible) return;
 
                         const itemKey = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.barcodeType || ''}`;
                         next[itemKey] = offer.id;

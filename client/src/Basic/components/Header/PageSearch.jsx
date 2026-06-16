@@ -148,9 +148,9 @@ const PageSearch = ({ pageList }) => {
         <div className='relative z-50 flex flex-col text-black' ref={inputRef}>
 
             {/* Input */}
-            <div className='relative mr-3 flex h-7 items-center rounded-full border bg-white text-[12px]'>
+            <div className='relative mr-1 sm:mr-3 flex h-7 items-center rounded-full border bg-white text-[12px]'>
                 <input
-                    className='h-full w-60 rounded-full bg-transparent px-3 pr-9 text-[12px] leading-none outline-none'
+                    className='h-full w-28 sm:w-44 md:w-60 rounded-full bg-transparent px-3 pr-9 text-[12px] leading-none outline-none'
                     placeholder='Global Search...'
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -164,7 +164,7 @@ const PageSearch = ({ pageList }) => {
 
             {/* List */}
             {isListShow && (
-                <ul className='absolute max-h-[300px] overflow-auto bg-white top-7 w-[250px] border rounded-lg shadow-sm'>
+                <ul className='absolute max-h-[300px] overflow-auto bg-white top-7 w-[200px] sm:w-[250px] border rounded-lg shadow-sm'>
                     {filteredPages.map((page, index) => (
                         <li
                             key={page.id}

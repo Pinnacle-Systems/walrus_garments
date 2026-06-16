@@ -49,7 +49,7 @@ const POSFooter = ({
     ];
 
     return (
-        <footer className="h-12 bg-white border-t border-slate-200 px-4 flex items-center shrink-0 z-30 gap-20">
+        <footer className="hidden md:flex h-12 bg-white border-t border-slate-200 px-4 items-center shrink-0 z-30 gap-20">
 
             <div className="flex items-center gap-3 no-scrollbar overflow-x-auto ml-4">
                 {shortcuts.map((btn) => (
