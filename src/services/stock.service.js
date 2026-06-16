@@ -225,9 +225,9 @@ async function get(req) {
         where: {
             branchId: branchId ? parseInt(branchId) : undefined,
             storeId: storeId ? parseInt(storeId) : undefined,
-            itemId: itemId ? (itemId) : undefined,
-            sizeId: sizeId ? (sizeId) : undefined,
-            colorId: colorId ? (colorId) : undefined,
+            itemId: itemId ? parseInt(itemId) : undefined,
+            sizeId: sizeId ? parseInt(sizeId) : undefined,
+            colorId: colorId ? parseInt(colorId) : undefined,
             uomId: uomId ? parseInt(uomId) : undefined,
             Item: {
                 name: Boolean(searchItem) ? { contains: searchItem } : undefined

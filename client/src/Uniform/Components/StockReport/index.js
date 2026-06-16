@@ -203,7 +203,7 @@ const StockReport = () => {
 
 
                                 <table className="min-w-[1250px] border-collapse table-fixed">
-                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10 font-bold shadow-sm">
+                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-50 font-bold shadow-sm">
 
                                         <tr>
 

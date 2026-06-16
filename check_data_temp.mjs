@@ -32,20 +32,20 @@ async function checkData() {
     if (partiesWithSD.length > 0) {
       const samplePartyId = partiesWithSD[0].customerId;
       console.log(`\nChecking sample party ID: ${samplePartyId}`);
-      
+
       const sdTotal = await prisma.$queryRaw`
         SELECT SUM(COALESCE(sdi.deliveryQty, 0) * COALESCE(sdi.price, 0)) as total
         FROM SalesDelivery sd
         JOIN SalesDeliveryItems sdi ON sd.id = sdi.salesDeliveryId
         WHERE sd.customerId = ${samplePartyId} AND sd.isDeleted = 0
       `;
-      
+
       const ledgerTotal = await prisma.$queryRaw`
         SELECT SUM(amount) as total
         FROM Ledger
         WHERE partyId = ${samplePartyId} AND creditOrDebit = 'Debit'
       `;
-      
+
       console.log(`SalesDelivery Sum: ${sdTotal[0].total}`);
       console.log(`Ledger Debit Sum: ${ledgerTotal[0].total}`);
     }

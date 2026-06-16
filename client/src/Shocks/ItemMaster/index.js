@@ -687,6 +687,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       className: "font-medium text-gray-900  w-[150px]  py-1  px-2",
       search: "Item Code",
     },
+    {
+      header: "Price",
+      accessor: (item) => item.isLegacy ? item.ItemPriceList[0].salesPrice : "--",
+      className: "font-medium text-gray-900  text-right w-[150px]  py-1  px-2",
+      // search: "price",
+    },
     // {
     //   header: "HSN Code",
     //   accessor: (item) => item.hsn?.name,

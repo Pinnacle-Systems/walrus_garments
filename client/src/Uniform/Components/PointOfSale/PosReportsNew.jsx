@@ -15,11 +15,12 @@ import { FaChevronLeft, FaChevronRight, FaEllipsisV } from 'react-icons/fa';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 import { useGetQuotationMasterQuery, useGetQuotationQuery } from '../../../redux/uniformService/quotationServices';
 import { useGetPointOfSalesQuery, useCancelPointOfSalesMutation, useLazyGetPointOfSalesQuery } from '../../../redux/uniformService/PointOfSalesService';
-import { FiPrinter, FiXCircle, FiRefreshCw, FiCalendar } from 'react-icons/fi';
+import { FiPrinter, FiXCircle, FiRefreshCw, FiCalendar, FiFileText } from 'react-icons/fi';
 import { PDFViewer } from '@react-pdf/renderer';
 import Modal from '../../../UiComponents/Modal';
 import PosMultiCopyPrint from './PosMultiCopyPrint';
 import PosDeliveryReceiptPrint from './PosDeliveryReceiptPrint';
+import POsDosPrinter from './POsDosPrinter';
 import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import Swal from 'sweetalert2';
 
@@ -136,6 +137,7 @@ const PosReportsNew = ({
     const [activeActionMenuId, setActiveActionMenuId] = useState(null);
     const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
     const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
+    const [dosPrintOpen, setDosPrintOpen] = useState(false);
     const [printData, setPrintData] = useState(null);
     const { branchId: currentBranchId, companyId } = getCommonParams();
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
@@ -412,6 +414,15 @@ const PosReportsNew = ({
                     )}
                 </PDFViewer>
             </Modal>
+
+            {dosPrintOpen && (
+                <Modal isOpen={dosPrintOpen} onClose={() => setDosPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
+                    <POsDosPrinter 
+                        printData={printData} 
+                        onClose={() => setDosPrintOpen(false)} 
+                    />
+                </Modal>
+            )}
 
             <>
                 <div className="flex h-full min-h-0 flex-col rounded-lg bg-[#F1F1F0] shadow-sm">
@@ -786,11 +797,46 @@ const PosReportsNew = ({
                                                         >
                                                             <FiPrinter className="h-4 w-4" />
                                                         </button>
+                                                        <button
+                                                            className="text-emerald-600 flex items-center px-1 bg-emerald-50 rounded hover:bg-emerald-100 transition-colors"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const received = dataObj.PosPayments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
+                                                                const total = parseFloat(dataObj.netAmount || 0);
+                                                                const balance = received - total;
 
+                                                                setPrintData({
+                                                                    docId: dataObj.docId,
+                                                                    date: dataObj.createdAt,
+                                                                    customerData: dataObj.Party || { name: "Walk-in Customer" },
+                                                                    items: dataObj.PosItems || [],
+                                                                    payments: {
+                                                                        cash: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Cash")?.amount || 0),
+                                                                        upi: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "UPI")?.amount || 0),
+                                                                        card: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Card")?.amount || 0),
+                                                                        online: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Online")?.amount || 0)
+                                                                    },
+                                                                    summary: {
+                                                                        subtotal: total + parseFloat(dataObj.discountValue || 0),
+                                                                        tax: 0,
+                                                                        discount: parseFloat(dataObj.discountValue || 0),
+                                                                        total: total,
+                                                                        received: received,
+                                                                        balance: balance,
+                                                                        roundOff: parseFloat(dataObj.roundOff || 0)
+                                                                    },
+                                                                    branchData: branchList?.data?.find(b => b.id === dataObj.branchId),
+                                                                    bilStatus: dataObj.bilStatus,
+                                                                    printCopies: 2,
+                                                                    showSummarySlip: false
+                                                                });
 
-                                                        {/* {dataObj.isCancel && (
-                                                            <span className="text-red-500 text-[10px] font-bold uppercase border border-red-200 px-1 rounded bg-red-50">Canceled</span>
-                                                        )} */}
+                                                                setDosPrintOpen(true);
+                                                            }}
+                                                            title="DOS (Monospace) Print"
+                                                        >
+                                                            <FiFileText className="h-4 w-4" />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             )}

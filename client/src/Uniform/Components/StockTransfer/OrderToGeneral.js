@@ -4,6 +4,7 @@ import { findFromList, params } from '../../../Utils/helper'
 import { HiPencil, HiPlus, HiTrash } from 'react-icons/hi'
 import { useGetYarnCountsQuery } from '../../../redux/uniformService/YarnMasterServices'
 import { useState } from 'react'
+import { FaChevronLeft, FaChevronRight, FaStepBackward, FaStepForward } from 'react-icons/fa'
 
 
 
@@ -13,7 +14,133 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
 }) {
 
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalPages = Math.ceil((tempStockItems?.length || 0) / 18);
+    const indexOfLastItem = currentPage * 18;
+    const indexOfFirstItem = indexOfLastItem - 18;
 
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    // Helper to compare items accurately based on business keys instead of volatile random IDs
+    function areItemsEqual(item1, item2) {
+        if (!item1 || !item2) return false;
+        const sameItem = parseInt(item1.itemId || 0) === parseInt(item2.itemId || 0);
+        const sameSize = parseInt(item1.sizeId || 0) === parseInt(item2.sizeId || 0);
+        const sameColor = parseInt(item1.colorId || 0) === parseInt(item2.colorId || 0);
+        const sameFields = (stockDrivenFields || []).every(field =>
+            String(item1[field.key] || "") === String(item2[field.key] || "")
+        );
+        return sameItem && sameSize && sameColor && sameFields;
+    }
+
+    // Reset pagination to first page when search terms or stock items length changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchItem, searchColor, searchSize, tempStockItems?.length]);
+
+    const paginatedStockItems = (tempStockItems ?? []).slice(indexOfFirstItem, indexOfLastItem);
+    const Pagination = () => {
+        // if (totalPages <= 1) return null;
+
+        return (
+            <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+                <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, tempStockItems?.length)} of {tempStockItems?.length} entries
+                </div>
+                <div className="flex gap-1">
+                    <button
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
+                        className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        title="First Page"
+                    >
+                        <FaStepBackward size={16} />
+                    </button>
+                    <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-1 rounded-md ${currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                    >
+                        <FaChevronLeft className="inline" />
+                    </button>
+
+                    {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                            pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                        } else {
+                            pageNum = currentPage - 2 + i;
+                        }
+
+                        return (
+                            <button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                className={`px-3 py-1 rounded-md ${currentPage === pageNum
+                                    ? 'bg-indigo-800 text-white'
+                                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                                    }`}
+                            >
+                                {pageNum}
+                            </button>
+                        );
+                    })}
+
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                        <span className="px-3 py-1">...</span>
+                    )}
+
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                        <button
+                            onClick={() => handlePageChange(totalPages)}
+                            className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                                ? 'bg-indigo-800 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
+                        >
+                            {totalPages}
+                        </button>
+                    )}
+
+                    <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                    >
+                        <FaChevronRight className="inline" />
+                    </button>
+                    <button
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        title="Last Page"
+                    >
+                        <FaStepForward size={16} />
+                    </button>
+                </div>
+            </div>
+        );
+    };
 
 
 
@@ -23,23 +150,10 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
         onClose()
     }
 
-    function handleCancel() {
-        setOrderItems([]);
-        setStockItems([])
-        onClose()
-    }
-
-
-
-
-
-
     function addItem(obj) {
         setStockItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
-            const isAlreadyAdded = newItems.some((i) =>
-                parseInt(i.id) === parseInt(obj.id)
-            );
+            const isAlreadyAdded = newItems.some((i) => areItemsEqual(i, obj));
 
             if (isAlreadyAdded) {
                 return newItems
@@ -61,9 +175,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
     function removeItem(obj) {
         setStockItems(localInwardItems => {
             let newItems = structuredClone(localInwardItems);
-            newItems = newItems?.filter(item =>
-                parseInt(item.id || 0) !== parseInt(obj?.id || 0)
-            )
+            newItems = newItems?.filter(item => !areItemsEqual(item, obj))
             return newItems
         });
     }
@@ -77,9 +189,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
     }
 
     function isItemAdded(obj) {
-        return stockItems?.some(item =>
-            parseInt(item?.id) === parseInt(obj?.id)
-        )
+        return stockItems?.some(item => areItemsEqual(item, obj))
     }
 
     function handleSelectAllChange(value, poItems) {
@@ -91,6 +201,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
     }
 
     function getSelectAll(poItems) {
+        if (!poItems || poItems.length === 0) return false;
         return poItems?.every(item => isItemAdded(item))
     }
 
@@ -139,14 +250,14 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                         </div>
                         <div className="justify-end items-center mt-4 mb-5">
 
-                            <div className="max-h-[540px] overflow-y-auto ">
+                            <div className="max-h-[540px] h-[540px]  overflow-y-auto ">
                                 <table className="w-full border-collapse table-fixed">
                                     <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10">
                                         <tr>
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">
-                                                <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, tempStockItems ? tempStockItems : [])}
+                                                {/* <input type="checkbox" onChange={(e) => handleSelectAllChange(e.target.checked, tempStockItems ? tempStockItems : [])}
                                                     checked={getSelectAll(tempStockItems ? tempStockItems : [])}
-                                                />
+                                                /> */}
                                             </th>
 
                                             <th className="border border-gray-300 px-2 py-1 text-center text-xs w-11">S No</th>
@@ -217,7 +328,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
 
 
                                     <tbody>
-                                        {(tempStockItems ?? []).map((yarnItem, index) => (
+                                        {paginatedStockItems.map((yarnItem, index) => (
                                             <tr
                                                 key={index}
                                                 className={`
@@ -248,7 +359,7 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                                     />
                                                 </td>
                                                 <td className="w-5 border border-gray-300 px-2 py-1 text-center text-xs">
-                                                    {index + 1}
+                                                    {indexOfFirstItem + index + 1}
                                                 </td>
                                                 <td className="w-5 border border-gray-300 px-2 py-1 text-left text-xs">
                                                     {findFromList(yarnItem?.itemId, itemList, "name")}
@@ -276,7 +387,9 @@ export default function OrderToGeneral({ tempOrderItems, setOrderItems, orderIte
                                     </tbody>
                                 </table>
                             </div>
-
+                            <div className="mt-2">
+                                <Pagination />
+                            </div>
                         </div>
 
                     </div>
