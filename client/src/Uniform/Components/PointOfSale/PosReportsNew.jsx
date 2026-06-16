@@ -417,9 +417,9 @@ const PosReportsNew = ({
 
             {dosPrintOpen && (
                 <Modal isOpen={dosPrintOpen} onClose={() => setDosPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
-                    <POsDosPrinter 
-                        printData={printData} 
-                        onClose={() => setDosPrintOpen(false)} 
+                    <POsDosPrinter
+                        printData={printData}
+                        onClose={() => setDosPrintOpen(false)}
                     />
                 </Modal>
             )}
@@ -777,7 +777,7 @@ const PosReportsNew = ({
                                                                         online: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Online")?.amount || 0)
                                                                     },
                                                                     summary: {
-                                                                        subtotal: total + parseFloat(dataObj.discountValue || 0), // (ஒரு தோராய கணக்கு)
+                                                                        subtotal: total + parseFloat(dataObj.discountValue || 0),
                                                                         tax: 0,
                                                                         discount: parseFloat(dataObj.discountValue || 0),
                                                                         total: total,
