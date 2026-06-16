@@ -19,6 +19,7 @@ const ReturnExchangeModal = ({
     const { branchId, companyId, finYearId } = getCommonParams();
     const [selectedBill, setSelectedBill] = useState(null);
     const [selectedItemIds, setSelectedItemIds] = useState([]);
+    const [selectInput, setSelectInput] = useState('');
     const [filterDate, setFilterDate] = useState('');
     const [searchItem, setSearchItem] = useState('');
     const [searchBarcode, setSearchBarcode] = useState('');
@@ -170,14 +171,54 @@ const ReturnExchangeModal = ({
                         <div className="col-span-4 relative">
                             <Select
                                 options={billOptions}
-                                value={billOptions.find(opt => opt.value === salesNo)}
+                                value={billOptions.find(opt => opt.value === salesNo) || null}
+                                inputValue={selectInput}
+                                onInputChange={(newValue, actionMeta) => {
+                                    if (actionMeta.action === 'input-change') {
+                                        setSelectInput(newValue);
+                                        if (newValue === '') {
+                                            setSalesNo('');
+                                            setSelectedBill(null);
+                                        }
+                                    } else if (actionMeta.action === 'input-blur' || actionMeta.action === 'menu-close') {
+                                        setSelectInput('');
+                                    }
+                                }}
+                                onFocus={(e) => {
+                                    const selectedOpt = billOptions.find(opt => opt.value === salesNo);
+                                    if (selectedOpt) {
+                                        setSelectInput(selectedOpt.label);
+                                        const length = selectedOpt.label.length;
+                                        setTimeout(() => {
+                                            const input = e.target;
+                                            if (input && typeof input.setSelectionRange === 'function') {
+                                                input.setSelectionRange(length, length);
+                                            }
+                                        }, 50);
+                                    }
+                                }}
                                 onChange={(opt) => {
-                                    setSalesNo(opt.value);
-                                    handleSearch(opt.value);
+                                    if (opt) {
+                                        setSalesNo(opt.value);
+                                        handleSearch(opt.value);
+                                        setSelectInput(opt.label);
+                                    } else {
+                                        setSalesNo('');
+                                        setSelectedBill(null);
+                                        setSelectInput('');
+                                    }
+                                }}
+                                onKeyDown={(e) => {
+                                    if ((e.key === 'Backspace' || e.key === 'Delete') && salesNo && !e.target.value) {
+                                        setSalesNo('');
+                                        setSelectedBill(null);
+                                        setSelectInput('');
+                                    }
                                 }}
                                 isLoading={isBillsFetching}
                                 placeholder="Search Bill (Doc / Cust)"
                                 isSearchable={true}
+                                isClearable={true}
                                 className="text-xs font-bold uppercase"
                                 menuPortalTarget={document.body}
                                 menuPosition="fixed"

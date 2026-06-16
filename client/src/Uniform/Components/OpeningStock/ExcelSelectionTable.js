@@ -202,7 +202,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     }
   }, [branchId]);
 
-
+  console.log(stockItems, "stockItems")
 
   const itemQueryParams = React.useMemo(() => ({ ...params, active: true }), [params]);
   const { data: itemList } = useGetItemMasterQuery({ params: itemQueryParams });
@@ -641,7 +641,6 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
         }
 
         if (isDiscountSection) {
-          // DISCOUNT SECTION: Must use CLEARANCE
           if (rowBarcode && existingRegularBarcodes.includes(rowBarcode)) {
             conflicts.push(`Row ${index + 1}: Barcode ${rowBarcode} is already a Regular barcode for item ${existingItem.name}. Cannot use it as a Clearance barcode.`);
           } else if (existingClearanceBarcodes.length > 0) {
@@ -663,7 +662,15 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
 
       const rowSalesPrice = normalizeComparablePrice(getRowSalesPrice(row));
       const itemSalesPrice = normalizeComparablePrice(getExistingLegacySalesPrice(existingItem));
-      if (rowSalesPrice && itemSalesPrice && rowSalesPrice !== itemSalesPrice) {
+      console.log({
+        index,
+        existingItemName: existingItem?.name,
+        rowSalesPrice,
+        itemSalesPrice,
+      }, "name,  sales price")
+
+
+      if (!isDiscountSection && rowSalesPrice && itemSalesPrice && rowSalesPrice !== itemSalesPrice) {
         conflicts.push(`Row ${index + 1} sales price ${rowSalesPrice} differs from Item Master sales price ${itemSalesPrice}. Update Item Master before loading stock.`);
       }
 

@@ -281,6 +281,47 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         }
     }, [initialEditSaleId]);
 
+    // Automatically clear offers from selectedOffersByRow if they are no longer eligible for the items in the cart
+    useEffect(() => {
+        if (!cart?.length) {
+            setSelectedOffersByRow({});
+            return;
+        }
+
+        setSelectedOffersByRow(prevSel => {
+            let changed = false;
+            const nextSel = { ...prevSel };
+
+            Object.keys(nextSel).forEach(key => {
+                const offerId = nextSel[key];
+                if (!offerId) return;
+
+                // Find the corresponding item in the cart
+                const cartItem = cart.find(item => {
+                    const cartKey = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.barcodeType || ''}`;
+                    return cartKey === key;
+                });
+
+                if (!cartItem) {
+                    // Item no longer exists in cart, remove it
+                    delete nextSel[key];
+                    changed = true;
+                    return;
+                }
+
+                // Check if this offer is still applicable to the item
+                const applicable = getItemApplicableOffersHelper(cartItem, cart, activeOffers, collectionsData);
+                const stillEligible = applicable.some(o => String(o.id) === String(offerId));
+                if (!stillEligible) {
+                    delete nextSel[key];
+                    changed = true;
+                }
+            });
+
+            return changed ? nextSel : prevSel;
+        });
+    }, [cart, activeOffers, collectionsData]);
+
     // DB-to-form values mapping handler
     const syncFormWithDb = useCallback((sale) => {
         console.log(sale, "sale");

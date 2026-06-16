@@ -79,12 +79,12 @@ const POSCartTable = ({
                                 <tr
                                     key={cartKey}
                                     onClick={() => setActiveRowIndex(index)}
-                                    onMouseEnter={() => {
-                                        if (item.priceType === 'offerPrice' && isComboApplied) {
-                                            setHoveredOfferName(item.appliedOfferName);
-                                        }
-                                    }}
-                                    onMouseLeave={() => setHoveredOfferName(null)}
+                                    // onMouseEnter={() => {
+                                    //     if (item.priceType === 'offerPrice' && isComboApplied) {
+                                    //         setHoveredOfferName(item.appliedOfferName);
+                                    //     }
+                                    // }}
+                                    // onMouseLeave={() => setHoveredOfferName(null)}
                                     className={`group transition-colors border-b border-slate-50 cursor-pointer ${isHoveredCombo ? 'bg-emerald-55/75 ring-2 ring-emerald-300 ring-inset shadow-sm' : (isActiveRow ? 'bg-indigo-50/60 ring-1 ring-inset ring-indigo-200' : (item.priceType === 'offerPrice' ? 'bg-emerald-50/40' : 'hover:bg-indigo-50/30'))}`}
                                 >
                                     <td className="px-2 py-1 text-center text-[10px] font-bold text-slate-400 border-r border-slate-200">{index + 1}</td>

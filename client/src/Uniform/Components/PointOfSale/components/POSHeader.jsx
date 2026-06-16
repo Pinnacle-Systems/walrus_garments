@@ -171,7 +171,7 @@ const POSHeader = ({
                             setSearchQuery(e.target.value);
                             if (searchMode === 'NAME') setShowSuggestions(true);
                         }}
-                    // onKeyDown={handleInputKeyDown}
+                        onKeyDown={handleInputKeyDown}
                     // onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                     // onFocus={() => searchMode === 'NAME' && searchQuery?.length >= 1 && setShowSuggestions(true)}
                     />{console.log(searchQuery, "searchQuery")}

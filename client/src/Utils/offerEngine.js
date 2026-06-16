@@ -39,7 +39,21 @@ const getOfferScopeQty = (item, cart, selectedOffer) => {
     });
 
     if (groupByKeys.length > 0) {
+        const hasAllGroupFields = groupByKeys.every(gField => {
+            if (gField === 'sizeId') return !!item.sizeId;
+            if (gField === 'colorId') return !!item.colorId;
+            return !!item[gField];
+        });
+        if (!hasAllGroupFields) return 0;
+
         return filteredItems.filter(cit => {
+            const hasFields = groupByKeys.every(gField => {
+                if (gField === 'sizeId') return !!cit.sizeId;
+                if (gField === 'colorId') return !!cit.colorId;
+                return !!cit[gField];
+            });
+            if (!hasFields) return false;
+
             return groupByKeys.every(gField => {
                 if (gField === 'sizeId') return String(cit.sizeId) === String(item.sizeId);
                 if (gField === 'colorId') return String(cit.colorId) === String(item.colorId);
@@ -148,11 +162,19 @@ export const getPotentialOffers = (activeOffers, cart) => {
 
             if (rule.groupBy && rule.groupBy.length > 0) {
                 const groups = {};
-                filteredScopeItems.forEach(item => {
+                const validScopeItems = filteredScopeItems.filter(cit => {
+                    return rule.groupBy.every(gField => {
+                        if (gField === 'sizeId') return !!cit.sizeId;
+                        if (gField === 'colorId') return !!cit.colorId;
+                        return !!cit[gField];
+                    });
+                });
+
+                validScopeItems.forEach(item => {
                     const key = rule.groupBy.map(gField => {
-                        if (gField === 'sizeId') return item.sizeId || '';
-                        if (gField === 'colorId') return item.colorId || '';
-                        return item[gField] || '';
+                        if (gField === 'sizeId') return item.sizeId;
+                        if (gField === 'colorId') return item.colorId;
+                        return item[gField];
                     }).join('-');
                     const qty = parseFloat(item.qty) || 0;
                     const val = ((parseFloat(item.salesPrice || item.price) || 0) * qty);
@@ -331,6 +353,8 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
             return null;
         }
 
+        console.log(cartItems, "cartItems")
+        console.log(off, "off")
         const inScopeItems = cartItems.filter(cit => {
             if (!passesTypeCheck(cit, off)) return false;
             const citQty = parseFloat(cit.qty);
@@ -338,10 +362,13 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
             const citId = cit.itemId ?? cit.id;
             return isItemInScope(citId, off);
         });
-        console.log(`[OfferEngine Debug]   In-scope cart items:`, inScopeItems.map(i => ({ sizeId: i.sizeId, colorId: i.colorId, qty: i.qty })));
+        console.log(`[OfferEngine Debug]   In-scope cart items:`, inScopeItems.map(i => ({ sizeId: i.sizeId, colorId: i.colorId, qty: i.qty, itemId: i.itemId })));
 
         const rules = off.OfferRule?.[0]?.conditions?.rules || [];
         let filteredScopeItems = [...inScopeItems];
+
+        console.log(filteredScopeItems, "filteredScopeItems Before")
+
         rules.forEach(rule => {
             if (rule.field === 'Sizes') {
                 const sizeValues = Array.isArray(rule.value) ? rule.value : (typeof rule.value === 'string' ? rule.value.split(',') : []);
@@ -354,11 +381,17 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
             }
         });
 
+        console.log(rules, "rules")
+        console.log(filteredScopeItems, "filteredScopeItems After")
+
         const isCurrentItemMatching = filteredScopeItems.some(cit => {
             const citKey = `${cit.itemId || cit.id}-${cit.sizeId || 0}-${cit.colorId || 0}`;
             const itemKey = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}`;
             return citKey === itemKey;
         });
+
+        console.log(isCurrentItemMatching, "isCurrentItemMatching")
+
         if (!isCurrentItemMatching) {
             console.log(`[OfferEngine Debug]   Current item is not matching in filteredScopeItems.`);
             return null;
@@ -423,12 +456,30 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
             }
 
             if (rule.groupBy && rule.groupBy.length > 0) {
+                const hasAllGroupFields = rule.groupBy.every(gField => {
+                    if (gField === 'sizeId') return !!item.sizeId;
+                    if (gField === 'colorId') return !!item.colorId;
+                    return !!item[gField];
+                });
+                if (!hasAllGroupFields) {
+                    console.log(`[OfferEngine Debug]   Rule ${ruleIdx + 1} (GroupBy ${rule.groupBy.join(',')}): Current item is missing required group fields.`);
+                    return false;
+                }
+
                 const groups = {};
-                filteredScopeItems.forEach(cit => {
+                const validScopeItems = filteredScopeItems.filter(cit => {
+                    return rule.groupBy.every(gField => {
+                        if (gField === 'sizeId') return !!cit.sizeId;
+                        if (gField === 'colorId') return !!cit.colorId;
+                        return !!cit[gField];
+                    });
+                });
+
+                validScopeItems.forEach(cit => {
                     const key = rule.groupBy.map(gField => {
-                        if (gField === 'sizeId') return cit.sizeId || '';
-                        if (gField === 'colorId') return cit.colorId || '';
-                        return cit[gField] || '';
+                        if (gField === 'sizeId') return cit.sizeId;
+                        if (gField === 'colorId') return cit.colorId;
+                        return cit[gField];
                     }).join('-');
                     const qty = parseFloat(cit.qty) || 0;
                     const val = ((parseFloat(cit.price || cit.salesPrice) || 0) * qty);
@@ -436,17 +487,24 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
                     groups[key].qty += qty;
                     groups[key].val += val;
                 });
-                const groupResults = Object.values(groups).map(g => {
-                    const target = rule.field === 'Minimum Quantity' ? g.qty : (rule.field === 'Cart Value' ? g.val : 0);
-                    if (rule.operator === '>=') return target >= parseFloat(rule.value);
-                    if (rule.operator === '<=') return target <= parseFloat(rule.value);
-                    if (rule.operator === '==') return target === parseFloat(rule.value);
-                    if (rule.operator === '<') return target < parseFloat(rule.value);
-                    if (rule.operator === '>') return target > parseFloat(rule.value);
-                    return false;
-                });
-                const passed = groupResults.some(r => r);
-                console.log(`[OfferEngine Debug]   Rule ${ruleIdx + 1} (GroupBy ${rule.groupBy.join(',')}): Target field ${rule.field} ${rule.operator} ${rule.value} => ${passed ? 'PASSED' : 'FAILED'}`);
+
+                const currentItemKey = rule.groupBy.map(gField => {
+                    if (gField === 'sizeId') return item.sizeId;
+                    if (gField === 'colorId') return item.colorId;
+                    return item[gField];
+                }).join('-');
+
+                const itemGroup = groups[currentItemKey];
+                let passed = false;
+                if (itemGroup) {
+                    const target = rule.field === 'Minimum Quantity' ? itemGroup.qty : (rule.field === 'Cart Value' ? itemGroup.val : 0);
+                    if (rule.operator === '>=') passed = target >= parseFloat(rule.value);
+                    else if (rule.operator === '<=') passed = target <= parseFloat(rule.value);
+                    else if (rule.operator === '==') passed = target === parseFloat(rule.value);
+                    else if (rule.operator === '<') passed = target < parseFloat(rule.value);
+                    else if (rule.operator === '>') passed = target > parseFloat(rule.value);
+                }
+                console.log(`[OfferEngine Debug]   Rule ${ruleIdx + 1} (GroupBy ${rule.groupBy.join(',')}): Target field ${rule.field} ${rule.operator} ${rule.value} for group ${currentItemKey} => ${passed ? 'PASSED' : 'FAILED'}`);
                 return passed;
             }
 
