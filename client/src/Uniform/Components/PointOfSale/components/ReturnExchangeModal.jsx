@@ -96,7 +96,7 @@ const ReturnExchangeModal = ({
             ...selectedBill,
             PosItems: selectedBill.PosItems.filter((item) => selectedItemIds.includes(item.id))
         };
-        console.log(selectedBill, "selectedBill")
+        /* console.log removed */
         onBillSelected(filteredBill);
         setSelectedBill(null);
         setSelectedItemIds([]);

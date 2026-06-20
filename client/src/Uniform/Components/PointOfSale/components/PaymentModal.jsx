@@ -33,7 +33,7 @@ const PaymentModal = ({
     const appliedCredit = Math.min(Math.max(0, total), availableCredit);
 
 
-    console.log(netPayable, "netPayable")
+    /* console.log removed */
 
     // Scenario A: Refund Calculations
     const totalExcessCredit = absNetPayable;

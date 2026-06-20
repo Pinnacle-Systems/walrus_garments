@@ -15,14 +15,16 @@ const SalesPersonModal = ({
     const [activeIndex, setActiveIndex] = React.useState(-1);
     const containerRef = React.useRef(null);
 
+    const EMPTY_ARRAY = React.useMemo(() => [], []);
+
     const filteredEmployees = React.useMemo(() => {
-        if (salesPersonBarcode.length < 1) return [];
+        if (salesPersonBarcode.length < 1) return EMPTY_ARRAY;
         return employees.filter(emp =>
             emp.active &&
             (emp.name?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
                 emp.employeeId?.toLowerCase().includes(salesPersonBarcode.toLowerCase()))
         );
-    }, [employees, salesPersonBarcode]);
+    }, [employees, salesPersonBarcode, EMPTY_ARRAY]);
 
     React.useEffect(() => {
         setActiveIndex(-1);
@@ -64,7 +66,7 @@ const SalesPersonModal = ({
         }
     };
 
-    console.log(employees, "employees", salesPersonBarcode)
+    /* console.log removed */
 
     return (
         <Modal

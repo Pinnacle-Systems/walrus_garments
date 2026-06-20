@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gift, X, Zap, Package } from 'lucide-react';
+import { Gift, X, Zap, Package, RotateCcw } from 'lucide-react';
 import Modal from '../../../../UiComponents/Modal';
 
 const formatRuleValue = (value) => {
@@ -50,7 +50,23 @@ const ItemOfferModal = ({
                 </div>
 
                 <div className="flex-1 overflow-auto bg-white p-4">
-                    {getItemApplicableOffers(selectedItemForOffers).length > 0 ? (
+                    {selectedItemForOffers?.isReturn ? (
+                        <div className="py-16 text-center">
+                            <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <RotateCcw className="text-slate-400" size={32} />
+                            </div>
+                            <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-1">Original Applied Offer</h3>
+                            {selectedItemForOffers.originalOfferId ? (
+                                <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-xl inline-block text-left">
+                                    <p className="text-[12px] font-black text-indigo-700 uppercase tracking-tight">Original Offer Linked</p>
+                                    <p className="text-[10px] font-bold text-slate-600 mt-1">This item had an offer applied in the original bill.</p>
+                                    <p className="text-[10px] text-indigo-500 font-bold mt-3 italic">Note: Modifying return quantity will automatically trigger necessary offer reversals.</p>
+                                </div>
+                            ) : (
+                                <p className="text-[10px] font-medium text-slate-400">No original offer was applied to this returned item.</p>
+                            )}
+                        </div>
+                    ) : getItemApplicableOffers(selectedItemForOffers).length > 0 ? (
                         <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-slate-50 sticky top-0 z-20">

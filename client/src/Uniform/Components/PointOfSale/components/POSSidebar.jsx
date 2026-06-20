@@ -40,7 +40,9 @@ const POSSidebar = ({
     availableReturnBills = [],
     selectedReturnBills = [],
     setSelectedReturnBills,
-    isCancelBill
+    isCancelBill,
+    totalOfferReversal = 0,
+    totalOfferReapplied = 0
 }) => {
     const netPayable = (parseFloat(total) - parseFloat(availableCredit));
     const isRefund = netPayable < 0;
@@ -49,21 +51,20 @@ const POSSidebar = ({
     const isReturnMode = transactionType === 'RETURN';
 
 
-    console.log(isUnpaidBill, "isUnpaidBill")
-    console.log(isPendingApproval, "isPendingApproval")
-    console.log(selectedReturnBills, "selectedReturnBills")
+    /* console.log removed */
+    /* console.log removed */
+    /* console.log removed */
 
 
     const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval) && currentBilStatus === 'PAID';
 
     const appliedCredit = Math.min(Math.max(0, total), availableCredit);
 
-    console.log(appliedCredit, "appliedCredit")
-    console.log((parseFloat(total) - parseFloat(availableCredit)), "availableCredit", availableCredit)
+
 
     return (
         <aside className="w-full md:w-[340px] md:border-l border-slate-200 bg-white flex flex-col shadow-2xl relative z-10 overflow-hidden h-full select-text">
-            <div className="flex-1 flex flex-col p-1 gap-4 overflow-hidden">
+            <div className="flex-1 flex flex-col p-1 gap-4 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300">
                 {/* Module 1: Direct Customer Entry */}
                 <div className="space-y-2 shrink-0 relative bg-white border border-slate-100 p-3 rounded-2xl shadow-sm overflow-hidden">
                     <div className="flex justify-between items-center">
@@ -95,7 +96,7 @@ const POSSidebar = ({
                                 type="text"
                                 placeholder="Customer Name"
                                 value={guestName}
-                                onChange={(e) => setGuestName(e.target.value.trim().toUpperCase())}
+                                onChange={(e) => setGuestName(e.target.value.toUpperCase())}
                                 disabled={selectedReportSaleId || isReturnMode}
                                 className="w-full px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 transition-all disabled:opacity-50"
                             />
@@ -190,6 +191,9 @@ const POSSidebar = ({
                         handleRequestDiscount={handleRequestDiscount}
                         returnTotal={returnTotal}
                         purchaseTotal={purchaseTotal}
+                        isUnpaidBill={isUnpaidBill}
+                        totalOfferReversal={totalOfferReversal}
+                        totalOfferReapplied={totalOfferReapplied}
                     />
                 )}
 

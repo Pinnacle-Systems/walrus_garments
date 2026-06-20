@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove } from '../services/OffersPromotions.services.js';
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, createClearanceOffers as _createClearanceOffers } from '../services/OffersPromotions.services.js';
 
 async function get(req, res, next) {
     try {
@@ -47,6 +47,16 @@ async function create(req, res, next) {
     }
 }
 
+async function createClearance(req, res, next) {
+    try {
+        res.json(await _createClearanceOffers(req.body));
+        console.log(res.statusCode);
+    } catch (error) {
+        console.error(`Error`, error.message);
+        res.json({ statusCode: 1, message: error.message });
+    }
+}
+
 async function update(req, res, next) {
     try {
         res.json(await _update(req.params.id, req.body));
@@ -89,5 +99,6 @@ export {
     getSearch,
     create,
     update,
-    remove
+    remove,
+    createClearance
 };

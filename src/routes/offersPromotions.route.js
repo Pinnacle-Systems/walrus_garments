@@ -1,9 +1,10 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch, create, update, remove } from '../controllers/OffersPromtions.controller.js';
+import { get, getOne, getSearch, create, update, remove, createClearance } from '../controllers/OffersPromtions.controller.js';
 
 
 router.post('/', create);
+router.post('/create-clearance', createClearance);
 
 router.get('/', get);
 

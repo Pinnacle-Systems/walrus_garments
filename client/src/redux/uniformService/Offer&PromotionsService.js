@@ -56,6 +56,17 @@ const offersPromotionsApi = createApi({
             }),
             invalidatesTags: ["offersPromotions"],
         }),
+        createClearanceOffers: builder.mutation({
+            query: (payload) => ({
+                url: OFFERS_PROMOTIONS + "/create-clearance",
+                method: "POST",
+                body: payload,
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                },
+            }),
+            invalidatesTags: ["offersPromotions"],
+        }),
         updateoffersPromotions: builder.mutation({
             query: (payload) => {
                 const { id, ...body } = payload;
@@ -83,6 +94,7 @@ export const {
     useAddoffersPromotionsMutation,
     useUpdateoffersPromotionsMutation,
     useDeleteoffersPromotionsMutation,
+    useCreateClearanceOffersMutation,
 } = offersPromotionsApi;
 
 export default offersPromotionsApi;

@@ -129,6 +129,30 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                         }
 
                         // DISCOUNT SECTION Logic
+                        const existingOffer = (offersData?.data || offersData || [])?.find(offer => 
+                            offer.scopeMode === 'Item' &&
+                            offer.OfferScope?.some(s => parseInt(s.refId) === parseInt(item.itemId)) &&
+                            offer.OfferRule?.some(rule => 
+                                rule.conditions?.rules?.some(r => r.field === 'Specific Barcode' && r.operator === '==')
+                            )
+                        );
+                        
+                        if (existingOffer) {
+                            const rule = existingOffer.OfferRule?.find(r => 
+                                r.conditions?.rules?.some(cond => cond.field === 'Specific Barcode' && cond.operator === '==')
+                            );
+                            const existingClearance = rule?.conditions?.rules?.find(c => c.field === 'Specific Barcode')?.value;
+                            
+                            if (item.clearanceBarcode !== existingClearance) {
+                                setTimeout(() => {
+                                    handleInputChangeFromOrder(existingClearance, index, "clearanceBarcode");
+                                    handleInputChangeFromOrder(true, index, "hasExistingOffer");
+                                    handleInputChangeFromOrder(existingOffer.discountValue, index, "manualClearancePrice");
+                                }, 0);
+                            }
+                            return existingClearance;
+                        }
+
                         const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
                         const isLegacy = itemObj?.isLegacy;
 
@@ -140,18 +164,15 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                             ))
                         );
 
-                        const existingClearance = variant?.ItemBarcodes?.find(b => b.barcodeType === "CLEARANCE")?.barcode;
                         const existingRegular = variant?.ItemBarcodes?.find(b => b.barcodeType === "REGULAR")?.barcode;
 
-                        if (existingClearance) {
-                            if (item.clearanceBarcode !== existingClearance) {
-                                setTimeout(() => handleInputChangeFromOrder(existingClearance, index, "clearanceBarcode"), 0);
-                            }
-                            return existingClearance;
-                        } else if (item.itemId && existingRegular) {
+                        if (item.itemId && existingRegular) {
                             const generatedCode = `DS-${existingRegular}`;
                             if (item.clearanceBarcode !== generatedCode) {
-                                setTimeout(() => handleInputChangeFromOrder(generatedCode, index, "clearanceBarcode"), 0);
+                                setTimeout(() => {
+                                    handleInputChangeFromOrder(generatedCode, index, "clearanceBarcode");
+                                    handleInputChangeFromOrder(false, index, "hasExistingOffer");
+                                }, 0);
                             }
                             return <span className="text-blue-600 font-medium">{generatedCode} (New)</span>;
                         }
@@ -178,8 +199,25 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                 </td>
 
                 {isDiscountSection && (
-                    <td className="w-16 border border-gray-300 text-[11px] text-right px-2">
-                        {resolvedOfferPrice ? resolvedOfferPrice.toFixed(2) : "0.00"}
+                    <td className="w-20 border border-gray-300 text-[11px] text-right p-0 focus-within:border-amber-600 focus-within:bg-amber-100">
+                        {item.hasExistingOffer ? (
+                            <div className="px-2 py-1 bg-gray-100 h-full w-full text-gray-500">
+                                {item.manualClearancePrice ? parseFloat(item.manualClearancePrice).toFixed(2) : "0.00"}
+                            </div>
+                        ) : (
+                            <input
+                                className="h-full w-full rounded-none border-0 bg-transparent px-2 py-1 text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={item?.manualClearancePrice || ""}
+                                disabled={id || readOnly}
+                                onChange={(e) => {
+                                    handleInputChangeFromOrder(e.target.value, index, "manualClearancePrice", item);
+                                }}
+                                placeholder="Price"
+                            />
+                        )}
                     </td>
                 )}
 

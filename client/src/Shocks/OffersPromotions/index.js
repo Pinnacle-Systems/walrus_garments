@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useGetoffersPromotionsQuery, useGetoffersPromotionsByIdQuery, useAddoffersPromotionsMutation, useUpdateoffersPromotionsMutation, useDeleteoffersPromotionsMutation } from '../../redux/uniformService/Offer&PromotionsService';
 import { useGetSizeMasterQuery } from "../../redux/uniformService/SizeMasterService";
-import { useGetItemMasterQuery } from "../../redux/uniformService/ItemMasterService";
+import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../redux/uniformService/ItemMasterService";
 import { useGetItemCategoryQuery } from "../../redux/uniformService/ItemCategoryMasterService";
 import { useGetcollectionsQuery } from "../../redux/uniformService/CollectionsService";
 import { useGetColorMasterQuery } from "../../redux/uniformService/ColorMasterService";
@@ -24,7 +24,7 @@ import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
 
 const OFFER_TYPES = [
     { show: 'Percentage Discount', value: 'Percentage' },
-    { show: 'Fixed Amount Off', value: 'Fixed' },
+    { show: 'Flat Amount Off', value: 'Fixed' },
     { show: 'Volume Tiered', value: 'Volume' },
     { show: 'Price Override', value: 'Override' }
 ];
@@ -43,7 +43,8 @@ const CONDITION_FIELDS = [
     { show: 'Colors', value: 'Colors' },
     { show: 'Unique Sizes Count', value: 'Unique Sizes' },
     { show: 'Unique Colors Count', value: 'Unique Colors' },
-    { show: 'Variant Matrix', value: 'Variant Matrix' }
+    { show: 'Variant Matrix', value: 'Variant Matrix' },
+    { show: 'Specific Barcode', value: 'Specific Barcode' }
 ];
 
 const OPERATORS = [
@@ -69,7 +70,7 @@ const OffersPromotions = () => {
     const [name, setName] = useState("");
     const [code, setCode] = useState("");
     const [description, setDescription] = useState("");
-    const [benefitType, setBenefitType] = useState("Percentage");
+    const [benefitType, setBenefitType] = useState("Override");
     const [status, setStatus] = useState("Active");
     const [priority, setPriority] = useState(1);
     const [scope, setScope] = useState("Global");
@@ -82,6 +83,7 @@ const OffersPromotions = () => {
     const [benefitAmount, setBenefitAmount] = useState(0);
     const [benefitMaxDiscount, setBenefitMaxDiscount] = useState(0);
     const [benefitApplyOn, setBenefitApplyOn] = useState('Each line');
+    const [originalClearancePrice, setOriginalClearancePrice] = useState(null);
     const [benefitTiers, setBenefitTiers] = useState([]);
     const [stacking, setStacking] = useState("Best Of");
     const [conditionLogic, setConditionLogic] = useState("AND");
@@ -122,6 +124,45 @@ const OffersPromotions = () => {
     const { data: collections } = useGetcollectionsQuery({ params });
     const collectionOptions = useMemo(() => (collections?.data || []).map(c => ({ label: c.name, value: c.id })), [collections]);
 
+    const { data: itemPriceList } = useGetItemPriceListQuery({ params }, { skip: !(applyToClearance && !applyToRegular) });
+
+    const clearanceBarcodes = useMemo(() => {
+        if (!itemPriceList?.data) return [];
+        let list = [];
+        itemPriceList?.data?.filter(item => !item.item?.isLegacy && item.item.active).forEach(item => {
+            if (item.ItemBarcodes && Array.isArray(item.ItemBarcodes)) {
+                item.ItemBarcodes.forEach(bc => {
+                    if (bc.barcodeType === "CLEARANCE") {
+                        const colorLabel = item?.Color?.name || colorOptions.find(o => String(o.value) === String(bc.colorId))?.label || bc.colorId || '-';
+                        const sizeLabel = item?.Size?.name || sizeOptions.find(o => String(o.value) === String(bc.sizeId))?.label || bc.sizeId || '-';
+                        const currentPrice = parseFloat(bc.mrp || bc.salesPrice || bc.price || 0);
+                        list.push({
+                            ...bc,
+                            itemName: item.item.name,
+                            itemId: item.item.id,
+                            displayColor: colorLabel,
+                            displaySize: sizeLabel,
+                            currentPrice: currentPrice
+                        });
+                    }
+                });
+            }
+        });
+        return list;
+    }, [itemPriceList, colorOptions, sizeOptions]);
+
+    console.log(itemPriceList?.data?.filter(item => !item.item?.isLegacy && item.item.active), "clearanceBarcodes")
+
+    const selectedClearanceBarcode = conditions[0]?.field === 'Specific Barcode' ? conditions[0].value : null;
+
+    const handleClearanceSelect = (bc) => {
+        setConditions([{ field: 'Specific Barcode', operator: '==', value: bc.barcode }]);
+        setScope('Item');
+        setScopeSelection([{ label: bc.itemName, value: bc.itemId }]);
+        setBenefitAmount(bc.currentPrice);
+        setOriginalClearancePrice(bc.currentPrice);
+    };
+
     const { data: allData, isLoading, isFetching } = useGetoffersPromotionsQuery({ params, searchParams: searchValue });
     const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } = useGetoffersPromotionsByIdQuery(id, { skip: !id });
 
@@ -147,7 +188,7 @@ const OffersPromotions = () => {
             setName(data.name || "");
             setCode(data.code || "");
             setDescription(data.description || "");
-            setBenefitType(data.discountType || "Percentage");
+            setBenefitType(data.discountType || "Override");
             setStatus(data.active ? 'Active' : 'Inactive');
             setPriority(data.priority || 1);
             setScope(data.scopeMode || "Global");
@@ -171,7 +212,7 @@ const OffersPromotions = () => {
             }));
 
             setBenefitPercentage(data.discountType === 'Percentage' ? data.discountValue : 0);
-            setBenefitAmount(data.discountType === 'Fixed' ? data.discountValue : 0);
+            setBenefitAmount(['Fixed', 'Override'].includes(data.discountType) ? data.discountValue : 0);
             setBenefitMaxDiscount(data.maxDiscountValue || 0);
             setBenefitApplyOn(data.applyOn || "Each line");
             setBenefitTiers(data.OfferTier?.length > 0 ? data.OfferTier : (data.tiers ? (typeof data.tiers === 'string' ? JSON.parse(data.tiers) : data.tiers) : []));
@@ -181,7 +222,7 @@ const OffersPromotions = () => {
             setName("");
             setCode("");
             setDescription("");
-            setBenefitType("Percentage");
+            setBenefitType("Override");
             setStatus("Active");
             setPriority(1);
             setScope("Global");
@@ -426,23 +467,12 @@ const OffersPromotions = () => {
                     <h3 className="font-extrabold text-gray-950 mb-1.5 text-[10.5px] uppercase tracking-wider">Targeting Strategy</h3>
                     <div className="space-y-2 text-[10px]">
                         <div>
-                            <span className="block text-gray-700 font-extrabold uppercase text-[9.5px] mb-1">Scope Mode</span>
-                            <div className="grid grid-cols-3 gap-1.5">
-                                {SCOPE_OPTIONS.map(opt => (
-                                    <div key={opt.id} onClick={() => { if (!readOnly && scope !== opt.id) { setScope(opt.id); setScopeSelection([]); } }} className={`p-1 rounded border-2 text-center cursor-pointer transition-all ${scope === opt.id ? 'border-indigo-600 bg-indigo-50 shadow-sm text-indigo-700' : 'border-gray-200 bg-gray-50 hover:bg-white text-gray-800 font-semibold'}`}>
-                                        <div className="flex justify-center mb-0.5"><opt.icon size={11} /></div>
-                                        <div className="text-[9px] font-extrabold uppercase">{opt.label}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
                             <span className="block text-gray-700 font-extrabold uppercase text-[9.5px] mb-1">Item Scope</span>
                             <div className="grid grid-cols-3 gap-1.5">
                                 {[
                                     { id: 'Regular', label: 'Regular Stock', icon: Package },
                                     { id: 'Clearance', label: 'Clearance Stock', icon: Sparkles },
-                                    { id: 'Both', label: 'Both', icon: Layers }
+                                    // { id: 'Both', label: 'Both', icon: Layers }
                                 ].map(opt => {
                                     const isActive = opt.id === 'Both' ? (applyToRegular && applyToClearance) :
                                         opt.id === 'Regular' ? (applyToRegular && !applyToClearance) :
@@ -466,6 +496,17 @@ const OffersPromotions = () => {
                                 })}
                             </div>
                         </div>
+                        <div>
+                            <span className="block text-gray-700 font-extrabold uppercase text-[9.5px] mb-1">Scope Mode</span>
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {SCOPE_OPTIONS.map(opt => (
+                                    <div key={opt.id} onClick={() => { if (!readOnly && scope !== opt.id) { setScope(opt.id); setScopeSelection([]); } }} className={`p-1 rounded border-2 text-center cursor-pointer transition-all ${scope === opt.id ? 'border-indigo-600 bg-indigo-50 shadow-sm text-indigo-700' : 'border-gray-200 bg-gray-50 hover:bg-white text-gray-800 font-semibold'}`}>
+                                        <div className="flex justify-center mb-0.5"><opt.icon size={11} /></div>
+                                        <div className="text-[9px] font-extrabold uppercase">{opt.label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                         {scope !== 'Global' && (
                             <button
                                 type="button"
@@ -483,245 +524,301 @@ const OffersPromotions = () => {
             {/* ROW 2: ELIGIBILITY RULES & REWARD BENEFIT (Grid side-by-side layout) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
 
-                {/* Column 1: Eligibility Rules (lg:col-span-8) */}
-                <div className="lg:col-span-8 bg-white rounded-md border border-gray-200 shadow-sm flex flex-col overflow-hidden">
-                    <div className="p-2 border-b bg-gray-50 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-extrabold text-gray-955 text-[11.5px] uppercase tracking-wider">Eligibility Rules</h3>
-                            <div className="flex bg-gray-200 p-0.5 rounded-md">
-                                {['AND', 'OR'].map(logic => (
-                                    <button
-                                        key={logic}
-                                        type="button"
-                                        onClick={() => !readOnly && setConditionLogic(logic)}
-                                        className={`px-3 py-1 text-[10px] font-extrabold uppercase rounded transition-all ${conditionLogic === logic ? 'bg-white text-indigo-750 shadow-sm' : 'text-gray-750 hover:text-gray-950 hover:bg-gray-100/60'}`}
-                                    >
-                                        {logic === 'AND' ? 'Match All' : 'Match Any'}
-                                    </button>
-                                ))}
-                            </div>
+                {/* Column 1: Eligibility Rules / Clearance Selection (lg:col-span-8) */}
+                {applyToClearance && !applyToRegular ? (
+                    <div className="lg:col-span-8 bg-white rounded-md border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+                        <div className="p-2 border-b bg-gray-50">
+                            <h3 className="font-extrabold text-gray-955 text-[11.5px] uppercase tracking-wider">Select Clearance Item</h3>
                         </div>
-                        {!readOnly && (
-                            <button
-                                type="button"
-                                onClick={() => setConditions([...conditions, { field: "Minimum Quantity", operator: ">=", value: 1 }])}
-                                className="text-[10.5px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 px-2.5 py-0.5 rounded transition-all uppercase"
-                            >
-                                + Add Rule
-                            </button>
-                        )}
+                        <div className="overflow-x-auto flex-1 p-2 max-h-[400px]">
+                            <table className="w-full text-left text-[10px]">
+                                <thead className="bg-gray-100/80 sticky top-0">
+                                    <tr>
+                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter w-12 text-center">Select</th>
+                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter">Item Name</th>
+                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter w-32">Barcode</th>
+                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter w-24">Color</th>
+                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter w-24">Size</th>
+                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter w-24 text-right">Current Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {clearanceBarcodes.map((bc, idx) => (
+                                        <tr key={idx} className={`hover:bg-blue-50/40 transition-colors cursor-pointer ${selectedClearanceBarcode === bc.barcode ? 'bg-indigo-50/50' : ''}`} onClick={() => !readOnly && handleClearanceSelect(bc)}>
+                                            <td className="p-2 text-center">
+                                                <input type="radio" checked={selectedClearanceBarcode === bc.barcode} onChange={() => { }} className="text-indigo-600 focus:ring-indigo-500 cursor-pointer" disabled={readOnly} />
+                                            </td>
+                                            <td className="p-2 font-bold text-gray-800">{bc.itemName}</td>
+                                            <td className="p-2 font-extrabold text-indigo-700">{bc.barcode}</td>
+                                            <td className="p-2 text-gray-600 font-semibold">{bc.displayColor}</td>
+                                            <td className="p-2 text-gray-600 font-semibold">{bc.displaySize}</td>
+                                            <td className="p-2 text-gray-800 font-extrabold text-right">₹{bc.currentPrice}</td>
+                                        </tr>
+                                    ))}
+                                    {clearanceBarcodes.length === 0 && (
+                                        <tr>
+                                            <td colSpan="6" className="p-8 text-center text-gray-500 italic font-bold">No clearance items found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-[11px] text-left table-fixed min-w-[650px]">
-                            <thead className="bg-gray-100/80 sticky top-0 z-10">
-                                <tr>
-                                    <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter text-[10px] w-12 text-center">S.No</th>
-                                    <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter text-[10px] w-40">Condition</th>
-                                    <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter text-[10px] w-48 text-center">Operation</th>
-                                    <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter text-[10px] w-80 text-center">Value</th>
-                                    {!readOnly && <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter text-[10px] w-10 text-center"></th>}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {conditions.map((cond, idx) => (
-                                    <tr key={idx} className="hover:bg-blue-50/40 transition-colors group">
-                                        <td className="p-2 text-center text-gray-900 font-extrabold">{idx + 1}</td>
-                                        <td className="p-1">
-                                            <div className="w-full overflow-hidden">
-                                                <DropdownInputNew labelHidden={true} options={applyToClearance ? CONDITION_FIELDS : CONDITION_FIELDS.filter(f => f.value !== 'Apply to Clearance Items')} value={cond.field} setValue={(v) => updateCondition(idx, 'field', v)} readOnly={readOnly} />
-                                            </div>
-                                        </td>
-                                        <td className="p-1 text-center">
-                                            <div className="w-full px-1">
-                                                {['Sizes', 'Colors', 'Variant Matrix'].includes(cond.field) ? (
-                                                    <div className="text-[10px] font-extrabold text-gray-900 uppercase py-2">Evaluate</div>
-                                                ) : (
-                                                    <DropdownInputNew labelHidden={true} options={OPERATORS} value={cond.operator || '>='} setValue={(v) => updateCondition(idx, 'operator', v)} readOnly={readOnly} />
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="p-1 text-center">
-                                            <div className="w-full px-1">
-                                                {cond.field === 'Sizes' ? (
-                                                    <div className="w-full min-w-[150px]">
-                                                        <MultiSelectDropdownNew
-                                                            labelHidden={true}
-                                                            options={sizeOptions}
-                                                            selected={cond.value || []}
-                                                            setSelected={(v) => updateCondition(idx, 'value', v)}
-                                                            readOnly={readOnly}
-                                                        />
-                                                    </div>
-                                                ) : cond.field === 'Colors' ? (
-                                                    <div className="w-full min-w-[150px]">
-                                                        <MultiSelectDropdownNew
-                                                            labelHidden={true}
-                                                            options={colorOptions}
-                                                            selected={cond.value || []}
-                                                            setSelected={(v) => updateCondition(idx, 'value', v)}
-                                                            readOnly={readOnly}
-                                                        />
-                                                    </div>
-                                                ) : cond.field === 'Variant Matrix' ? (
-                                                    <div className="flex flex-col gap-1.5 p-1 border rounded bg-gray-50/50">
-                                                        <div className="flex justify-between items-center text-[9px] font-extrabold text-indigo-950">
-                                                            <span>MATRIX CONFIG</span>
-                                                            {!readOnly && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const matrix = cond.matrix || [];
-                                                                        updateCondition(idx, 'matrix', [...matrix, { sizeId: '', colorId: '', qty: 1 }]);
-                                                                    }}
-                                                                    className="hover:underline text-indigo-700 font-bold"
-                                                                >
-                                                                    + Add Matrix Row
-                                                                </button>
-                                                            )}
+                ) : (
+                    <div className="lg:col-span-8 bg-white rounded-md border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+                        <div className="p-2 border-b bg-gray-50 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-extrabold text-gray-955 text-[11.5px] uppercase tracking-wider">Eligibility Rules</h3>
+                                <div className="flex bg-gray-200 p-0.5 rounded-md">
+                                    {['AND', 'OR'].map(logic => (
+                                        <button
+                                            key={logic}
+                                            type="button"
+                                            onClick={() => !readOnly && setConditionLogic(logic)}
+                                            className={`px-3 py-1 text-[10px] font-extrabold uppercase rounded transition-all ${conditionLogic === logic ? 'bg-white text-indigo-750 shadow-sm' : 'text-gray-750 hover:text-gray-950 hover:bg-gray-100/60'}`}
+                                        >
+                                            {logic === 'AND' ? 'Match All' : 'Match Any'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            {!readOnly && (
+                                <button
+                                    type="button"
+                                    onClick={() => setConditions([...conditions, { field: "Minimum Quantity", operator: ">=", value: 1 }])}
+                                    className="text-[10.5px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 px-2.5 py-0.5 rounded transition-all uppercase"
+                                >
+                                    + Add Rule
+                                </button>
+                            )}
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-[11px] text-left table-fixed min-w-[650px]">
+                                <thead className="bg-gray-100/80 sticky top-0 z-10">
+                                    <tr>
+                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter text-[10px] w-12 text-center">S.No</th>
+                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter text-[10px] w-40">Condition</th>
+                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter text-[10px] w-48 text-center">Operation</th>
+                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter text-[10px] w-80 text-center">Value</th>
+                                        {!readOnly && <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter text-[10px] w-10 text-center"></th>}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {conditions.map((cond, idx) => (
+                                        <tr key={idx} className="hover:bg-blue-50/40 transition-colors group">
+                                            <td className="p-2 text-center text-gray-900 font-extrabold">{idx + 1}</td>
+                                            <td className="p-1">
+                                                <div className="w-full overflow-hidden">
+                                                    <DropdownInputNew labelHidden={true} options={applyToClearance ? CONDITION_FIELDS : CONDITION_FIELDS.filter(f => f.value !== 'Apply to Clearance Items')} value={cond.field} setValue={(v) => updateCondition(idx, 'field', v)} readOnly={readOnly} />
+                                                </div>
+                                            </td>
+                                            <td className="p-1 text-center">
+                                                <div className="w-full px-1">
+                                                    {['Sizes', 'Colors', 'Variant Matrix'].includes(cond.field) ? (
+                                                        <div className="text-[10px] font-extrabold text-gray-900 uppercase py-2">Evaluate</div>
+                                                    ) : (
+                                                        <DropdownInputNew labelHidden={true} options={OPERATORS} value={cond.operator || '>='} setValue={(v) => updateCondition(idx, 'operator', v)} readOnly={readOnly} />
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="p-1 text-center">
+                                                <div className="w-full px-1">
+                                                    {cond.field === 'Sizes' ? (
+                                                        <div className="w-full min-w-[150px]">
+                                                            <MultiSelectDropdownNew
+                                                                labelHidden={true}
+                                                                options={sizeOptions}
+                                                                selected={cond.value || []}
+                                                                setSelected={(v) => updateCondition(idx, 'value', v)}
+                                                                readOnly={readOnly}
+                                                            />
                                                         </div>
-                                                        <div className="space-y-1 max-h-[120px] overflow-y-auto">
-                                                            {(cond.matrix || []).map((mRow, mIdx) => (
-                                                                <div key={mIdx} className="flex gap-1 items-center bg-white p-1 rounded border">
-                                                                    <div className="flex-1">
-                                                                        <DropdownInputNew
-                                                                            labelHidden={true}
-                                                                            options={sizeOptions.map(o => ({ show: o.label, value: o.value }))}
-                                                                            value={mRow.sizeId}
-                                                                            setValue={(v) => {
-                                                                                const updatedMatrix = [...(cond.matrix || [])];
-                                                                                updatedMatrix[mIdx] = { ...updatedMatrix[mIdx], sizeId: v };
-                                                                                updateCondition(idx, 'matrix', updatedMatrix);
-                                                                            }}
-                                                                            readOnly={readOnly}
-                                                                        />
-                                                                    </div>
-                                                                    <div className="flex-1">
-                                                                        <DropdownInputNew
-                                                                            labelHidden={true}
-                                                                            options={[{ show: 'Any Color', value: '' }, ...colorOptions.map(o => ({ show: o.label, value: o.value }))]}
-                                                                            value={mRow.colorId || ''}
-                                                                            setValue={(v) => {
-                                                                                const updatedMatrix = [...(cond.matrix || [])];
-                                                                                updatedMatrix[mIdx] = { ...updatedMatrix[mIdx], colorId: v };
-                                                                                updateCondition(idx, 'matrix', updatedMatrix);
-                                                                            }}
-                                                                            readOnly={readOnly}
-                                                                        />
-                                                                    </div>
-                                                                    <div className="w-14">
-                                                                        <TextInputNew1
-                                                                            labelHidden={true}
-                                                                            type="number"
-                                                                            value={mRow.qty}
-                                                                            setValue={(v) => {
-                                                                                const updatedMatrix = [...(cond.matrix || [])];
-                                                                                updatedMatrix[mIdx] = { ...updatedMatrix[mIdx], qty: v };
-                                                                                updateCondition(idx, 'matrix', updatedMatrix);
-                                                                            }}
-                                                                            readOnly={readOnly}
-                                                                        />
-                                                                    </div>
-                                                                    {!readOnly && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                const updatedMatrix = (cond.matrix || []).filter((_, i) => i !== mIdx);
-                                                                                updateCondition(idx, 'matrix', updatedMatrix);
-                                                                            }}
-                                                                            className="text-red-500 hover:text-red-750"
-                                                                        >
-                                                                            <Trash2 size={10} />
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            ))}
+                                                    ) : cond.field === 'Colors' ? (
+                                                        <div className="w-full min-w-[150px]">
+                                                            <MultiSelectDropdownNew
+                                                                labelHidden={true}
+                                                                options={colorOptions}
+                                                                selected={cond.value || []}
+                                                                setSelected={(v) => updateCondition(idx, 'value', v)}
+                                                                readOnly={readOnly}
+                                                            />
                                                         </div>
-                                                        <div className="flex items-center gap-1.5 mt-1 border-t pt-1">
-                                                            <span className="text-[9.5px] font-extrabold text-gray-800 uppercase">Match Logic:</span>
-                                                            <div className="flex bg-gray-200 p-0.5 rounded scale-90">
-                                                                {['AND', 'OR'].map(l => (
+                                                    ) : cond.field === 'Variant Matrix' ? (
+                                                        <div className="flex flex-col gap-1.5 p-1 border rounded bg-gray-50/50">
+                                                            <div className="flex justify-between items-center text-[9px] font-extrabold text-indigo-950">
+                                                                <span>MATRIX CONFIG</span>
+                                                                {!readOnly && (
                                                                     <button
-                                                                        key={l}
                                                                         type="button"
-                                                                        onClick={() => !readOnly && updateCondition(idx, 'logic', l || 'AND')}
-                                                                        className={`px-2 py-0.5 text-[8px] font-extrabold rounded ${cond.logic === l ? 'bg-white text-indigo-750 shadow-sm' : 'text-gray-800 hover:text-gray-950'}`}
+                                                                        onClick={() => {
+                                                                            const matrix = cond.matrix || [];
+                                                                            updateCondition(idx, 'matrix', [...matrix, { sizeId: '', colorId: '', qty: 1 }]);
+                                                                        }}
+                                                                        className="hover:underline text-indigo-700 font-bold"
                                                                     >
-                                                                        {l}
+                                                                        + Add Matrix Row
                                                                     </button>
+                                                                )}
+                                                            </div>
+                                                            <div className="space-y-1 max-h-[120px] overflow-y-auto">
+                                                                {(cond.matrix || []).map((mRow, mIdx) => (
+                                                                    <div key={mIdx} className="flex gap-1 items-center bg-white p-1 rounded border">
+                                                                        <div className="flex-1">
+                                                                            <DropdownInputNew
+                                                                                labelHidden={true}
+                                                                                options={sizeOptions.map(o => ({ show: o.label, value: o.value }))}
+                                                                                value={mRow.sizeId}
+                                                                                setValue={(v) => {
+                                                                                    const updatedMatrix = [...(cond.matrix || [])];
+                                                                                    updatedMatrix[mIdx] = { ...updatedMatrix[mIdx], sizeId: v };
+                                                                                    updateCondition(idx, 'matrix', updatedMatrix);
+                                                                                }}
+                                                                                readOnly={readOnly}
+                                                                            />
+                                                                        </div>
+                                                                        <div className="flex-1">
+                                                                            <DropdownInputNew
+                                                                                labelHidden={true}
+                                                                                options={[{ show: 'Any Color', value: '' }, ...colorOptions.map(o => ({ show: o.label, value: o.value }))]}
+                                                                                value={mRow.colorId || ''}
+                                                                                setValue={(v) => {
+                                                                                    const updatedMatrix = [...(cond.matrix || [])];
+                                                                                    updatedMatrix[mIdx] = { ...updatedMatrix[mIdx], colorId: v };
+                                                                                    updateCondition(idx, 'matrix', updatedMatrix);
+                                                                                }}
+                                                                                readOnly={readOnly}
+                                                                            />
+                                                                        </div>
+                                                                        <div className="w-14">
+                                                                            <TextInputNew1
+                                                                                labelHidden={true}
+                                                                                type="number"
+                                                                                value={mRow.qty}
+                                                                                setValue={(v) => {
+                                                                                    const updatedMatrix = [...(cond.matrix || [])];
+                                                                                    updatedMatrix[mIdx] = { ...updatedMatrix[mIdx], qty: v };
+                                                                                    updateCondition(idx, 'matrix', updatedMatrix);
+                                                                                }}
+                                                                                readOnly={readOnly}
+                                                                            />
+                                                                        </div>
+                                                                        {!readOnly && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    const updatedMatrix = (cond.matrix || []).filter((_, i) => i !== mIdx);
+                                                                                    updateCondition(idx, 'matrix', updatedMatrix);
+                                                                                }}
+                                                                                className="text-red-500 hover:text-red-750"
+                                                                            >
+                                                                                <Trash2 size={10} />
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
                                                                 ))}
                                                             </div>
+                                                            <div className="flex items-center gap-1.5 mt-1 border-t pt-1">
+                                                                <span className="text-[9.5px] font-extrabold text-gray-800 uppercase">Match Logic:</span>
+                                                                <div className="flex bg-gray-200 p-0.5 rounded scale-90">
+                                                                    {['AND', 'OR'].map(l => (
+                                                                        <button
+                                                                            key={l}
+                                                                            type="button"
+                                                                            onClick={() => !readOnly && updateCondition(idx, 'logic', l || 'AND')}
+                                                                            className={`px-2 py-0.5 text-[8px] font-extrabold rounded ${cond.logic === l ? 'bg-white text-indigo-750 shadow-sm' : 'text-gray-800 hover:text-gray-950'}`}
+                                                                        >
+                                                                            {l}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ) : cond.field === 'Cart Value' ? (
-                                                    <div className="relative">
-                                                        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-800 font-extrabold text-[10px] z-10">₹</div>
-                                                        <TextInputNew1 labelHidden={true} type="number" value={cond.value} setValue={(v) => updateCondition(idx, 'value', v)} readOnly={readOnly} />
-                                                    </div>
-                                                ) : (
-                                                    <TextInputNew1 labelHidden={true} type="number" value={cond.value} setValue={(v) => updateCondition(idx, 'value', v)} readOnly={readOnly} className={"text-right font-extrabold text-gray-900"} />
-                                                )}
+                                                    ) : cond.field === 'Cart Value' ? (
+                                                        <div className="relative">
+                                                            <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-800 font-extrabold text-[10px] z-10">₹</div>
+                                                            <TextInputNew1 labelHidden={true} type="number" value={cond.value} setValue={(v) => updateCondition(idx, 'value', v)} readOnly={readOnly} />
+                                                        </div>
+                                                    ) : (
+                                                        <TextInputNew1 labelHidden={true} type="number" value={cond.value} setValue={(v) => updateCondition(idx, 'value', v)} readOnly={readOnly} className={"text-right font-extrabold text-gray-900"} />
+                                                    )}
 
-                                                {/* Group By Checks for Qty / Value rules */}
-                                                {['Minimum Quantity', 'Cart Value'].includes(cond.field) && (
-                                                    <div className="flex gap-2.5 justify-center mt-1 pt-1 border-t border-dashed border-gray-150">
-                                                        <label className="flex items-center gap-1 cursor-pointer">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={cond.groupBy?.includes('sizeId') || false}
-                                                                disabled={readOnly}
-                                                                onChange={(e) => {
-                                                                    let grp = cond.groupBy || [];
-                                                                    if (e.target.checked) grp = [...new Set([...grp, 'sizeId'])];
-                                                                    else grp = grp.filter(g => g !== 'sizeId');
-                                                                    updateCondition(idx, 'groupBy', grp);
-                                                                }}
-                                                                className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500"
-                                                            />
-                                                            <span className="text-[9px] font-extrabold text-gray-900 uppercase tracking-tighter">Same Size</span>
-                                                        </label>
-                                                        <label className="flex items-center gap-1 cursor-pointer">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={cond.groupBy?.includes('colorId') || false}
-                                                                disabled={readOnly}
-                                                                onChange={(e) => {
-                                                                    let grp = cond.groupBy || [];
-                                                                    if (e.target.checked) grp = [...new Set([...grp, 'colorId'])];
-                                                                    else grp = grp.filter(g => g !== 'colorId');
-                                                                    updateCondition(idx, 'groupBy', grp);
-                                                                }}
-                                                                className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500"
-                                                            />
-                                                            <span className="text-[9px] font-extrabold text-gray-900 uppercase tracking-tighter">Same Color</span>
-                                                        </label>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        {!readOnly && (
-                                            <td className="p-1 text-center">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConditions(conditions.filter((_, i) => i !== idx))}
-                                                    className="text-red-500 hover:text-red-700 transition-colors p-1"
-                                                >
-                                                    <Trash2 size={12} />
-                                                </button>
+                                                    {/* Group By Checks for Qty / Value rules */}
+                                                    {['Minimum Quantity', 'Cart Value'].includes(cond.field) && (
+                                                        <div className="flex gap-2.5 justify-center mt-1 pt-1 border-t border-dashed border-gray-150">
+                                                            <label className="flex items-center gap-1 cursor-pointer">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={cond.groupBy?.includes('sizeId') || false}
+                                                                    disabled={readOnly}
+                                                                    onChange={(e) => {
+                                                                        let grp = cond.groupBy || [];
+                                                                        if (e.target.checked) grp = [...new Set([...grp, 'sizeId'])];
+                                                                        else grp = grp.filter(g => g !== 'sizeId');
+                                                                        updateCondition(idx, 'groupBy', grp);
+                                                                    }}
+                                                                    className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500"
+                                                                />
+                                                                <span className="text-[9px] font-extrabold text-gray-900 uppercase tracking-tighter">Same Size</span>
+                                                            </label>
+                                                            <label className="flex items-center gap-1 cursor-pointer">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={cond.groupBy?.includes('colorId') || false}
+                                                                    disabled={readOnly}
+                                                                    onChange={(e) => {
+                                                                        let grp = cond.groupBy || [];
+                                                                        if (e.target.checked) grp = [...new Set([...grp, 'colorId'])];
+                                                                        else grp = grp.filter(g => g !== 'colorId');
+                                                                        updateCondition(idx, 'groupBy', grp);
+                                                                    }}
+                                                                    className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500"
+                                                                />
+                                                                <span className="text-[9px] font-extrabold text-gray-900 uppercase tracking-tighter">Same Color</span>
+                                                            </label>
+                                                            <label className="flex items-center gap-1 cursor-pointer">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={cond.groupBy?.includes('sameItem') || false}
+                                                                    disabled={readOnly}
+                                                                    onChange={(e) => {
+                                                                        let grp = cond.groupBy || [];
+                                                                        if (e.target.checked) grp = [...new Set([...grp, 'sameItem'])];
+                                                                        else grp = grp.filter(g => g !== 'sameItem');
+                                                                        updateCondition(idx, 'groupBy', grp);
+                                                                    }}
+                                                                    className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500"
+                                                                />
+                                                                <span className="text-[9px] font-extrabold text-gray-900 uppercase tracking-tighter">Same Item</span>
+                                                            </label>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </td>
-                                        )}
-                                    </tr>
-                                ))}
-                                {conditions.length === 0 && (
-                                    <tr>
-                                        <td colSpan={readOnly ? 3 : 4} className="p-8 text-center text-gray-700 italic font-bold tracking-tight">
-                                            No conditions set. Offer applies to all eligible scope items.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                            {!readOnly && (
+                                                <td className="p-1 text-center">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setConditions(conditions.filter((_, i) => i !== idx))}
+                                                        className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                </td>
+                                            )}
+                                        </tr>
+                                    ))}
+                                    {conditions.length === 0 && (
+                                        <tr>
+                                            <td colSpan={readOnly ? 3 : 4} className="p-8 text-center text-gray-700 italic font-bold tracking-tight">
+                                                No conditions set. Offer applies to all eligible scope items.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Column 2: Reward Benefit (lg:col-span-4) */}
                 <div className="lg:col-span-4 bg-white p-3 rounded-md border border-gray-200 shadow-sm flex flex-col">
@@ -729,24 +826,22 @@ const OffersPromotions = () => {
                         <h3 className="font-extrabold text-gray-955 text-[11.5px] uppercase tracking-wider">Reward Benefit</h3>
                         {!readOnly && (
                             <div className="flex items-center gap-2">
-                                {['Percentage', 'Fixed'].includes(benefitType) && (
-                                    <div className="flex bg-gray-200 p-0.5 rounded-md text-xs">
-                                        {[{ l: '%', v: 'Percentage' }, { l: 'Flat', v: 'Fixed' }].map(t => (
-                                            <button
-                                                key={t.v}
-                                                type="button"
-                                                onClick={() => setBenefitType(t.v)}
-                                                className={`px-4 py-1 text-xs font-extrabold uppercase rounded-md transition-all ${benefitType === t.v ? 'bg-white text-indigo-750 shadow-sm' : 'text-gray-750 hover:text-gray-955'}`}
-                                            >
-                                                {t.l}
-                                            </button>
-                                        ))}
-                                    </div>
+                                {['Percentage', 'Fixed', 'Override'].includes(benefitType) && (
+                                    <select
+                                        value={benefitType}
+                                        onChange={(e) => setBenefitType(e.target.value)}
+                                        disabled={readOnly}
+                                        className="bg-gray-100 border border-gray-300 text-gray-750 text-xs rounded-md focus:ring-indigo-500 focus:border-indigo-500 block p-1 font-extrabold uppercase outline-none"
+                                    >
+                                        <option value="Percentage">Percentage (%)</option>
+                                        <option value="Fixed">Flat Amount Off</option>
+                                        <option value="Override">Override Price</option>
+                                    </select>
                                 )}
-                                {['Volume', 'Override'].includes(benefitType) && (
+                                {['Volume'].includes(benefitType) && (
                                     <button
                                         type="button"
-                                        onClick={() => setBenefitTiers([...benefitTiers, { minQty: 1, type: 'Percentage', value: 0 }])}
+                                        onClick={() => setBenefitTiers([...benefitTiers, { minQty: 1, type: 'Override', value: 0 }])}
                                         className="text-[10.5px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 px-2.5 py-0.5 rounded transition-all uppercase"
                                     >
                                         + Add Tier
@@ -765,7 +860,17 @@ const OffersPromotions = () => {
                         {benefitType === 'Fixed' && (
                             <TextInputNew1 name="Flat Amount Off (₹)" type="number" value={benefitAmount} setValue={setBenefitAmount} readOnly={readOnly} />
                         )}
-                        {['Volume', 'Override'].includes(benefitType) && (
+                        {benefitType === 'Override' && (
+                            <div className="space-y-1.5">
+                                <TextInputNew1 name="Override Price (₹)" type="number" value={benefitAmount} setValue={setBenefitAmount} readOnly={readOnly} />
+                                {applyToClearance && !applyToRegular && originalClearancePrice !== null && parseFloat(benefitAmount) !== originalClearancePrice && (
+                                    <div className="text-[9.5px] text-amber-700 font-bold bg-amber-50 p-1.5 rounded border border-amber-200">
+                                        ⚠️ Note: You are changing the original clearance price (₹{originalClearancePrice}).
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {['Volume'].includes(benefitType) && (
                             <div className="flex flex-col h-full overflow-hidden">
                                 <div className="flex-1 overflow-auto bg-white rounded border border-gray-100 shadow-inner mb-1">
                                     <table className="w-full text-left text-[10px] min-w-[200px]">
@@ -783,7 +888,7 @@ const OffersPromotions = () => {
                                                     <td className="p-1 border border-gray-200 font-bold"><input type="number" value={tier.minQty} onChange={(e) => updateTier(idx, 'minQty', e.target.value)} className="w-12 bg-transparent border-0 focus:ring-0 text-gray-800 text-[10px]" /></td>
                                                     <td className="p-1 border border-gray-200 text-center">
                                                         <div className="flex bg-gray-200 p-0.5 rounded w-fit mx-auto">
-                                                            {[{ l: '%', v: 'Percentage' }, { l: 'Flat', v: 'Fixed' }].map(t => (
+                                                            {[{ l: '%', v: 'Percentage' }, { l: 'Flat', v: 'Fixed' }, { l: 'Override', v: 'Override' }].map(t => (
                                                                 <button
                                                                     key={t.v}
                                                                     type="button"

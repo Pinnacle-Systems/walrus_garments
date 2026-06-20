@@ -22,7 +22,10 @@ const POSSaleSummary = ({
     cart,
     handleRequestDiscount,
     returnTotal = 0,
-    purchaseTotal = 0
+    purchaseTotal = 0,
+    isUnpaidBill,
+    totalOfferReversal = 0,
+    totalOfferReapplied = 0
 }) => {
     return (
         <div className="space-y-2 shrink-0 bg-white border border-slate-100 p-3 rounded-2xl shadow-sm animate-in fade-in duration-200">
@@ -30,18 +33,41 @@ const POSSaleSummary = ({
                 <ShoppingCart size={12} /> Sale Summary
             </h3>
             <div className="space-y-2">
+
+                <>
+                    <div className="flex justify-between items-center text-xs font-bold text-rose-500">
+                        <span className="text-[11px] uppercase tracking-wider">Return Amount</span>
+                        <span>₹{Math.abs(returnTotal).toLocaleString()}</span>
+                    </div>
+                </>
+
+                {totalOfferReversal > 0 && (
+                    <>
+
+                        <div className="flex justify-between items-center text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100 mt-1 mb-1 animate-in slide-in-from-right-2">
+                            <span className="text-[10px] uppercase tracking-wider">Offer Penalty</span>
+                            <span>₹{totalOfferReversal.toLocaleString()}</span>
+                        </div>
+                    </>
+                )}
                 {returnTotal !== 0 && (
                     <div className="space-y-1 mb-2 pb-2 border-b border-dashed border-slate-100">
                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                             <span className="text-[11px] uppercase tracking-wider text-slate-400">New Purchase</span>
                             <span>₹{purchaseTotal.toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between items-center text-xs font-bold text-rose-500">
-                            <span className="text-[11px] uppercase tracking-wider">Return Amount</span>
-                            <span>-₹{Math.abs(returnTotal).toLocaleString()}</span>
-                        </div>
+
+
                     </div>
                 )}
+
+                {totalOfferReapplied > 0 && (
+                    <div className="flex justify-between items-center text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 mt-1 mb-1 animate-in slide-in-from-right-2">
+                        <span className="text-[10px] uppercase tracking-wider">Offer Restored</span>
+                        <span>-₹{totalOfferReapplied.toLocaleString()}</span>
+                    </div>
+                )}
+
                 <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                     <span className="text-[11px] uppercase tracking-wider text-slate-400">Gross Total</span>
                     <span>₹{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -111,7 +137,7 @@ const POSSaleSummary = ({
                         {!isAdmin && (
                             <button
                                 onClick={() => handleRequestDiscount()}
-                                disabled={isProcessing || cart.length === 0 || selectedReportSaleId}
+                                disabled={isProcessing || cart.length === 0 || (selectedReportSaleId && !isUnpaidBill)}
                                 className="ml-1 px-2 py-1 bg-amber-100 text-amber-600 rounded-lg text-[9px] font-black uppercase hover:bg-amber-200 transition-colors disabled:opacity-50"
                             >
                                 Request

@@ -43,7 +43,7 @@ const PosReportsNew = ({
 
 }) => {
 
-    console.log(reportsTransactionType, "reportsTransactionType")
+    /* console.log removed */
 
     const calculateQuotationNetAmount = (quotationItems = [], quotation = {}) => {
         const packingCharge = parseFloat(quotation?.packingCharge || 0);
@@ -240,7 +240,6 @@ const PosReportsNew = ({
 
         socket.on('pos_changed', (data) => {
             if (data && parseInt(data.branchId) === parseInt(branchId)) {
-                console.log("Real-time POS update received, refetching...");
                 refetch();
             }
         });
@@ -308,7 +307,7 @@ const PosReportsNew = ({
     const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
 
-    console.log(indexOfFirstItem, 'indexOfFirstItem', currentItems)
+    /* console.log removed */
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -759,7 +758,7 @@ const PosReportsNew = ({
                                                             className="text-orange-600 flex items-center px-1 bg-orange-50 rounded hover:bg-orange-100 transition-colors"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                console.log(dataObj, "dataObj")
+                                                                /* console.log removed */
                                                                 const received = dataObj.PosPayments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
                                                                 const total = parseFloat(dataObj.netAmount || 0);
                                                                 const balance = received - total;

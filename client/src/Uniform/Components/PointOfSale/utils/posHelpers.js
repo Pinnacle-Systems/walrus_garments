@@ -64,6 +64,10 @@ export const allocateStock = (totalQty, stockDetails, retailStoreId) => {
  * Pure helper function to search and filter product item suggestions by name, code or barcode matches.
  */
 export const filterSearchSuggestions = ({ query, items, itemPriceList, retailStoreId }) => {
+
+    console.log("query", query);
+
+
     let allMatches = [];
     const barcodeMap = new Map();
 
@@ -79,7 +83,7 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
     // );
 
     const queryWords = query.split(/\s+/).filter(Boolean);
-    console.log(queryWords, "queryWords ")
+    /* console.log removed */
     const matchingItems = items.filter(i => {
         const itemName = i.name?.toLowerCase() || "";
         const itemCode = i.code?.toLowerCase() || "";
@@ -109,11 +113,14 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
     });
 
     const barcodeMatches = items.filter(i =>
-        i.ItemPriceList?.some(row => row.ItemBarcodes?.some(b => b.barcode.toLowerCase().includes(query)))
+        i.ItemPriceList?.some(row => row.ItemBarcodes?.every(b => b.barcode.toLowerCase().includes(query)))
     );
 
     barcodeMatches.forEach(item => {
         const variants = itemPriceList?.filter(p => p.itemId === item.id) || [];
+
+        console.log(variants, "variants")
+
         variants.forEach(variant => {
             variant.ItemBarcodes?.forEach(bc => {
                 if (bc.barcode.toLowerCase().includes(query)) {

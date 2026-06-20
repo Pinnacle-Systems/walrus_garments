@@ -42,6 +42,7 @@ const getOfferScopeQty = (item, cart, selectedOffer) => {
         const hasAllGroupFields = groupByKeys.every(gField => {
             if (gField === 'sizeId') return !!item.sizeId;
             if (gField === 'colorId') return !!item.colorId;
+            if (gField === 'sameItem') return !!item.itemId || !!item.id;
             return !!item[gField];
         });
         if (!hasAllGroupFields) return 0;
@@ -50,6 +51,7 @@ const getOfferScopeQty = (item, cart, selectedOffer) => {
             const hasFields = groupByKeys.every(gField => {
                 if (gField === 'sizeId') return !!cit.sizeId;
                 if (gField === 'colorId') return !!cit.colorId;
+                if (gField === 'sameItem') return !!cit.itemId || !!cit.id;
                 return !!cit[gField];
             });
             if (!hasFields) return false;
@@ -57,6 +59,7 @@ const getOfferScopeQty = (item, cart, selectedOffer) => {
             return groupByKeys.every(gField => {
                 if (gField === 'sizeId') return String(cit.sizeId) === String(item.sizeId);
                 if (gField === 'colorId') return String(cit.colorId) === String(item.colorId);
+                if (gField === 'sameItem') return String(cit.itemId || cit.id) === String(item.itemId || item.id);
                 return String(cit[gField]) === String(item[gField]);
             });
         }).reduce((sum, cit) => sum + (parseFloat(cit.qty) || 0), 0);
@@ -227,6 +230,468 @@ export const getPotentialOffers = (activeOffers, cart) => {
     return potential;
 };
 
+// Evaluates potential offers specifically for exchange carts, factoring in 'keptQty' 
+// (items the customer previously bought and is keeping) rather than just active cart quantities.
+export const getPotentialExchangeOffers = (activeOffers, cart) => {
+    if (!activeOffers?.length || !cart?.length) return [];
+
+    const potential = [];
+    activeOffers.forEach(off => {
+        if (!isOfferDateValid(off)) return;
+        const inScopeItems = cart.filter(item => {
+            if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+            if (off.scopeMode === 'Global') return true;
+            const targetId = item.itemId || item.id;
+            if (off.scopeMode === 'Item' || off.scopeMode === 'Collection') {
+                return off.OfferScope?.some(s => String(s.refId) === String(targetId));
+            }
+            return false;
+        });
+        if (!inScopeItems.length) return;
+
+        const rules = off.OfferRule?.[0]?.conditions?.rules || [];
+        let filteredScopeItems = [...inScopeItems];
+        rules.forEach(rule => {
+            if (rule.field === 'Sizes') {
+                const sizeValues = Array.isArray(rule.value) ? rule.value : (typeof rule.value === 'string' ? rule.value.split(',') : []);
+                const sizeIds = sizeValues.map(v => typeof v === 'object' ? String(v.value) : String(v));
+                filteredScopeItems = filteredScopeItems.filter(cit => sizeIds.includes(String(cit.sizeId)));
+            } else if (rule.field === 'Colors') {
+                const colorValues = Array.isArray(rule.value) ? rule.value : (typeof rule.value === 'string' ? rule.value.split(',') : []);
+                const colorIds = colorValues.map(v => typeof v === 'object' ? String(v.value) : String(v));
+                filteredScopeItems = filteredScopeItems.filter(cit => colorIds.includes(String(cit.colorId)));
+            }
+        });
+
+        // Exchange-aware qty & value helpers
+        const getEffectiveQty = (item) => {
+            return item.isReturn ? Math.max(0, parseFloat(item.originalQty || 0) - parseFloat(item.qty || 0)) : (parseFloat(item.qty) || 0);
+        };
+        const getEffectiveValue = (item) => {
+            return (parseFloat(item.salesPrice || item.price) || 0) * getEffectiveQty(item);
+        };
+
+        const scopeQty = filteredScopeItems.reduce((sum, i) => sum + getEffectiveQty(i), 0);
+        const scopeValue = filteredScopeItems.reduce((sum, i) => sum + getEffectiveValue(i), 0);
+
+        const results = rules.map(rule => {
+            if (rule.field === 'Sizes' || rule.field === 'Colors') return true;
+
+            if (rule.field === 'Variant Matrix') {
+                const matrixRules = rule.matrix || [];
+                const res = matrixRules.map(mRow => {
+                    const matchQty = filteredScopeItems
+                        .filter(item => {
+                            if (mRow.sizeId && String(item.sizeId) !== String(mRow.sizeId)) return false;
+                            if (mRow.colorId && String(item.colorId) !== String(mRow.colorId)) return false;
+                            return true;
+                        })
+                        .reduce((sum, i) => sum + getEffectiveQty(i), 0);
+                    return matchQty >= parseFloat(mRow.qty);
+                });
+                return rule.logic === 'OR' ? res.some(r => r) : res.every(r => r);
+            }
+
+            if (rule.field === 'Unique Sizes') {
+                const distinctSizes = new Set(filteredScopeItems.filter(i => getEffectiveQty(i) > 0).map(item => String(item.sizeId)));
+                if (rule.operator === '>=') return distinctSizes.size >= parseFloat(rule.value);
+                if (rule.operator === '<=') return distinctSizes.size <= parseFloat(rule.value);
+                if (rule.operator === '==') return distinctSizes.size === parseFloat(rule.value);
+                return false;
+            }
+
+            if (rule.field === 'Unique Colors') {
+                const distinctColors = new Set(filteredScopeItems.filter(i => getEffectiveQty(i) > 0).map(item => String(item.colorId)));
+                if (rule.operator === '>=') return distinctColors.size >= parseFloat(rule.value);
+                if (rule.operator === '<=') return distinctColors.size <= parseFloat(rule.value);
+                if (rule.operator === '==') return distinctColors.size === parseFloat(rule.value);
+                return false;
+            }
+
+            if (rule.groupBy && rule.groupBy.length > 0) {
+                const groups = {};
+                const validScopeItems = filteredScopeItems.filter(cit => {
+                    return rule.groupBy.every(gField => {
+                        if (gField === 'sizeId') return !!cit.sizeId;
+                        if (gField === 'colorId') return !!cit.colorId;
+                        return !!cit[gField];
+                    });
+                });
+
+                validScopeItems.forEach(item => {
+                    const key = rule.groupBy.map(gField => {
+                        if (gField === 'sizeId') return item.sizeId;
+                        if (gField === 'colorId') return item.colorId;
+                        return item[gField];
+                    }).join('-');
+                    const qty = getEffectiveQty(item);
+                    const val = getEffectiveValue(item);
+                    if (!groups[key]) groups[key] = { qty: 0, val: 0 };
+                    groups[key].qty += qty;
+                    groups[key].val += val;
+                });
+                const groupResults = Object.values(groups).map(g => {
+                    const target = rule.field === 'Minimum Quantity' ? g.qty : (rule.field === 'Cart Value' ? g.val : 0);
+                    if (rule.operator === '>=') return target >= parseFloat(rule.value);
+                    if (rule.operator === '<=') return target <= parseFloat(rule.value);
+                    if (rule.operator === '==') return target === parseFloat(rule.value);
+                    if (rule.operator === '<') return target < parseFloat(rule.value);
+                    if (rule.operator === '>') return target > parseFloat(rule.value);
+                    return false;
+                });
+                return groupResults.some(r => r);
+            }
+
+            const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
+            if (rule.operator === '>=') return target >= parseFloat(rule.value);
+            if (rule.operator === '<=') return target <= parseFloat(rule.value);
+            if (rule.operator === '==') return target === parseFloat(rule.value);
+            if (rule.operator === '<') return target < parseFloat(rule.value);
+            if (rule.operator === '>') return target > parseFloat(rule.value);
+            return true;
+        });
+
+        const isValid = off.OfferRule?.[0]?.logic === 'OR' ? results.some(r => r) : results.every(r => r);
+        if (!isValid && rules.length > 0) return;
+
+        let discountValue = 0;
+        if (off.discountType === 'Percentage') {
+            discountValue = (scopeValue * (off.discountValue || 0)) / 100;
+            if (off.maxDiscountValue && discountValue > off.maxDiscountValue) discountValue = off.maxDiscountValue;
+        } else if (off.discountType === 'Fixed') {
+            discountValue = off.discountValue || 0;
+        } else if (['Volume', 'Override'].includes(off.discountType)) {
+            const sortedTiers = [...(off.OfferTier || [])].sort((a, b) => b.minQty - a.minQty);
+            const tier = sortedTiers.find(t => scopeQty >= t.minQty);
+
+            if (tier) {
+                if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
+                else if (off.discountType === 'Override') discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
+                else discountValue = tier.value;
+            }
+        }
+        if (discountValue > 0) potential.push({ ...off, calculatedDiscount: discountValue, inScopeItems });
+    });
+    return potential;
+};
+
+
+
+
+
+
+export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffersByRow) => {
+    if (!cart?.length) return cart;
+
+    const returnItems = cart.filter(item => item.isReturn);
+    const newItems = cart.filter(item => !item.isReturn);
+
+    const reappliedTracker = {};
+
+    const computed = cart.map(item => {
+        const cartKey = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.barcodeType || ''}`;
+
+        let rowOfferId = selectedOffersByRow[cartKey] || item.originalOfferId;
+
+        console.log({
+            selectedOffersByRow,
+            cartKey,
+            rowOfferId
+        })
+
+        if (!item.isReturn && !rowOfferId) {
+            if (!item.isExchangeItem) {
+                const directMatch = activeOffers.find(off => {
+                    if (!isOfferDateValid(off)) return false;
+                    if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+                    if (off.scopeMode === 'Global') return true;
+                    const targetId = item.itemId || item.id;
+                    return off.OfferScope?.some(s => String(s.refId) === String(targetId));
+                });
+                if (directMatch) rowOfferId = directMatch.id;
+            } else {
+                const exactMatchReturn = returnItems.find(r =>
+                    (r.itemId || r.id) === (item.itemId || item.id) &&
+                    String(r.sizeId || '') === String(item.sizeId || '') &&
+                    String(r.colorId || '') === String(item.colorId || '') &&
+                    (r.originalOfferId || r.appliedOfferSnapshot)
+                );
+
+                if (exactMatchReturn) {
+                    rowOfferId = exactMatchReturn.originalOfferId || exactMatchReturn.appliedOfferSnapshot?.id;
+                } else {
+                    // 2. Same item match - only inherit if the offer doesn't restrict by specific variants/groups
+                    const sameItemReturn = returnItems.find(r =>
+                        (r.itemId || r.id) === (item.itemId || item.id) && (r.originalOfferId || r.appliedOfferSnapshot)
+                    );
+
+                    if (sameItemReturn) {
+                        const snap = sameItemReturn.appliedOfferSnapshot || activeOffers.find(o => String(o.id) === String(sameItemReturn.originalOfferId || sameItemReturn.appliedOfferSnapshot?.id));
+                        if (snap) {
+                            const rules = snap.OfferRule?.[0]?.conditions?.rules || [];
+                            const isStrict = rules.some(rule =>
+                                ['Sizes', 'Colors', 'Variant Matrix', 'Unique Sizes', 'Unique Colors'].includes(rule.field) ||
+                                (rule.groupBy && rule.groupBy.length > 0)
+                            );
+                            // If no strict rules, it's safe to inherit for a different variant
+                            if (!isStrict) {
+                                rowOfferId = sameItemReturn.originalOfferId || snap.id;
+                            }
+                        }
+                    }
+
+                    // 3. NEW: If still no offer, check if any activeOffer directly applies to this new item
+                    if (!rowOfferId) {
+                        const directMatch = activeOffers.find(off => {
+                            if (!isOfferDateValid(off)) return false;
+                            if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;
+                            if (off.scopeMode === 'Global') return true;
+                            const targetId = item.itemId || item.id;
+                            return off.OfferScope?.some(s => String(s.refId) === String(targetId));
+                        });
+                        if (directMatch) rowOfferId = directMatch.id;
+                    }
+                }
+            }
+        }
+
+        // Base values
+        const salesPrice = parseFloat(item.originalSalesPrice || item.price || item.salesPrice || 0);
+        // const salesPrice = parseFloat(item.price || 0);
+        let currentItemPrice = salesPrice;
+        let appliedOfferName = null;
+        let offerReversal = 0;
+        let offerReapplied = 0;
+
+        if (!rowOfferId) {
+            return {
+                ...item,
+                priceType: 'SalesPrice',
+                price: currentItemPrice,
+                appliedOfferName: null,
+                offerReversal,
+                offerReapplied
+            };
+        }
+
+        const selectedOffer = item.appliedOfferSnapshot || activeOffers.find(o => String(o.id) === String(rowOfferId));
+
+
+        console.log(selectedOffer, "selectedOffer")
+
+        // For return items, we use the snapshot/original offer and DO NOT validate if it's currently active.
+        if (!selectedOffer || (!item.isReturn && !isOfferDateValid(selectedOffer))) {
+            return {
+                ...item,
+                priceType: 'SalesPrice',
+                price: currentItemPrice,
+                appliedOfferName: null,
+                offerReversal,
+                offerReapplied
+            };
+        }
+
+        appliedOfferName = selectedOffer.name;
+
+        let keptQty = 0;
+        let newQty = 0;
+        let matchingReturns = [];
+        let matchingNew = [];
+
+        if (!item.isExchangeItem && !item.isReturn) {
+            matchingReturns = returnItems.filter(r => {
+                const isSameProduct = (r.itemId || r.id) === (item.itemId || item.id);
+                if (isSameProduct) return false;
+                return selectedOffer.scopeMode === 'Global';
+            });
+            matchingNew = newItems.filter(n => {
+                const isSameProduct = (n.itemId || n.id) === (item.itemId || item.id);
+                if (isSameProduct && n.isExchangeItem) return false;
+                return isSameProduct || selectedOffer.scopeMode === 'Global';
+            });
+            keptQty = matchingReturns.reduce((sum, r) => sum + (parseFloat(r.originalQty || 0) - parseFloat(r.qty || 0)), 0);
+            newQty = matchingNew.reduce((sum, n) => sum + parseFloat(n.qty || 0), 0);
+        } else {
+            matchingReturns = returnItems.filter(r => (r.itemId || r.id) === (item.itemId || item.id) || selectedOffer.scopeMode === 'Global');
+            matchingNew = newItems.filter(n => {
+                const isSameProduct = (n.itemId || n.id) === (item.itemId || item.id);
+                if (isSameProduct && !n.isExchangeItem) return false;
+                return isSameProduct || selectedOffer.scopeMode === 'Global';
+            });
+            keptQty = matchingReturns.reduce((sum, r) => sum + (parseFloat(r.originalQty || 0) - parseFloat(r.qty || 0)), 0);
+            newQty = matchingNew.reduce((sum, n) => sum + parseFloat(n.qty || 0), 0);
+        }
+
+        console.log(matchingReturns, 'matchingReturns')
+        console.log(matchingNew, 'matchingNew')
+
+        const getPriceAtQty = (qtyToEvaluate, basePrice = salesPrice) => {
+
+            console.log(basePrice, "basePrice", qtyToEvaluate)
+
+            let offerPrice = basePrice;
+            if (selectedOffer.discountType === 'Percentage') {
+                offerPrice *= (1 - parseFloat(selectedOffer.discountValue || 0) / 100);
+            } else if (selectedOffer.discountType === 'Fixed') {
+                offerPrice = Math.max(0, basePrice - ((selectedOffer.discountValue || 0) / Math.max(1, qtyToEvaluate)));
+            } else if (['Override', 'Volume'].includes(selectedOffer.discountType)) {
+                const tier = [...(selectedOffer.OfferTier || [])].sort((a, b) => b.minQty - a.minQty)
+                    .find(t => qtyToEvaluate >= t.minQty);
+                if (tier) {
+                    console.log(tier, "tier")
+                    if (tier.type === 'Fixed') {
+                        if (selectedOffer.discountType === 'Volume') {
+                            offerPrice = Math.max(0, basePrice - (parseFloat(tier.value || 0) / Math.max(1, qtyToEvaluate)));
+                        } else {
+                            offerPrice = tier.value;
+                        }
+                    }
+                    else offerPrice *= (1 - parseFloat(tier.value || 0) / 100);
+                }
+                console.log(offerPrice, "offerPrice",)
+
+            }
+            return Math.max(0, offerPrice);
+        };
+
+        if (item.isReturn) {
+            // For return items, calculate Reversal based strictly on keptQty
+            currentItemPrice = getPriceAtQty(keptQty);
+            const originalOfferPrice = parseFloat(item.originalPrice || 0);
+
+
+            console.log({
+                currentItemPrice,
+                originalOfferPrice,
+                item,
+
+            })
+
+
+            if (currentItemPrice > originalOfferPrice) {
+                // Tier broken or offer lost for the kept items
+                offerReversal = (currentItemPrice - originalOfferPrice) * (item.originalQty - item.qty);
+            } else {
+
+            }
+        } else {
+
+            const evalQty = keptQty + newQty;
+            currentItemPrice = getPriceAtQty(evalQty);
+
+
+            // Reapplication: check if tier improved for the RETURN items by adding this new item
+            let tierImproved = false;
+            let totalRestoredAmount = 0;
+
+            /* console.log removed */
+
+            matchingReturns.forEach(r => {
+                const rSalesPrice = parseFloat(r.originalSalesPrice || r.salesPrice || r.price || 0);
+                const rOriginalOfferPrice = parseFloat(r.originalPrice || 0);
+
+                const originalOffer = r.appliedOfferSnapshot || selectedOffer;
+
+                const getPriceWithOffer = (qtyToEvaluate, basePrice, offerToUse) => {
+                    let offerPrice = basePrice;
+                    if (!offerToUse) return offerPrice;
+
+                    if (offerToUse.discountType === 'Percentage') {
+                        offerPrice *= (1 - parseFloat(offerToUse.discountValue || 0) / 100);
+                    } else if (offerToUse.discountType === 'Fixed') {
+                        offerPrice = Math.max(0, basePrice - ((offerToUse.discountValue || 0) / Math.max(1, qtyToEvaluate)));
+                    } else if (['Override', 'Volume'].includes(offerToUse.discountType)) {
+                        const tier = [...(offerToUse.OfferTier || [])].sort((a, b) => b.minQty - a.minQty)
+                            .find(t => qtyToEvaluate >= t.minQty);
+                        if (tier) {
+                            if (tier.type === 'Fixed') {
+                                if (offerToUse.discountType === 'Volume') {
+                                    offerPrice = Math.max(0, basePrice - (parseFloat(tier.value || 0) / Math.max(1, qtyToEvaluate)));
+                                } else {
+                                    offerPrice = tier.value;
+                                }
+                            }
+                            else offerPrice *= (1 - parseFloat(tier.value || 0) / 100);
+                        }
+                    }
+                    return Math.max(0, offerPrice);
+                };
+
+                const priceForKeptOnly = getPriceWithOffer(keptQty, rSalesPrice, originalOffer);
+                const priceWithNewItem = getPriceWithOffer(evalQty, rSalesPrice, originalOffer);
+
+                console.log({
+                    priceForKeptOnly,
+                    priceWithNewItem
+                })
+                // If adding the new item makes the price for the return items CLOSER to the original offer price
+                if (priceForKeptOnly > priceWithNewItem) {
+                    tierImproved = true;
+
+                    // How much penalty was there originally?
+                    let originalPenalty = 0;
+                    if (priceForKeptOnly > rOriginalOfferPrice) {
+                        originalPenalty = (priceForKeptOnly - rOriginalOfferPrice) * (r.originalQty - r.qty);
+                    }
+
+                    // How much penalty is there NOW (with the new item)?
+                    let newPenalty = 0;
+                    if (priceWithNewItem > rOriginalOfferPrice) {
+                        newPenalty = (priceWithNewItem - rOriginalOfferPrice) * (r.originalQty - r.qty);
+                    }
+
+                    // The amount restored is the difference
+                    if (originalPenalty > newPenalty) {
+                        totalRestoredAmount += (originalPenalty - newPenalty);
+                    }
+
+                    console.log({
+                        originalPenalty,
+                        newPenalty,
+                        totalRestoredAmount,
+                        tierImproved,
+                        selectedOffer
+                    })
+                }
+
+
+            });
+
+
+
+
+
+            if (tierImproved && totalRestoredAmount > 0) {
+                if (!reappliedTracker[selectedOffer.id]) {
+                    offerReapplied = totalRestoredAmount;
+                    reappliedTracker[selectedOffer.id] = true;
+                } else {
+                }
+            } else {
+            }
+        }
+
+        return {
+            ...item,
+            priceType: 'offerPrice',
+            price: item.isReturn ? parseFloat(item.originalPrice || item.price || 0) : currentItemPrice,
+            appliedOfferName,
+            appliedOfferId: selectedOffer ? selectedOffer.id : null,
+            appliedOfferSnapshot: selectedOffer ? selectedOffer : null,
+            offerReversal,
+            offerReapplied
+        };
+    });
+
+    return { cartWithOffers: computed, appliedOffers: [] };
+};
+
+
+
+
+
+
+
 
 export const calculateCartWithOffers = (cart, selectedOffersByRow, potentialOffers, activeOffers) => {
     if (!cart?.length) return { cartWithOffers: [], appliedOffers: [] };
@@ -271,7 +736,13 @@ export const calculateCartWithOffers = (cart, selectedOffersByRow, potentialOffe
                 .find(t => evalQty >= t.minQty);
 
             if (tier) {
-                if (tier.type === 'Fixed') currentItemPrice = tier.value;
+                if (tier.type === 'Fixed') {
+                    if (selectedOffer.discountType === 'Volume') {
+                        currentItemPrice = Math.max(0, currentItemPrice - (parseFloat(tier.value || 0) / Math.max(1, evalQty)));
+                    } else {
+                        currentItemPrice = tier.value;
+                    }
+                }
                 else currentItemPrice *= (1 - parseFloat(tier.value || 0) / 100);
             }
         }
@@ -280,7 +751,9 @@ export const calculateCartWithOffers = (cart, selectedOffersByRow, potentialOffe
             ...item,
             priceType: 'offerPrice',
             price: Math.max(0, currentItemPrice),
-            appliedOfferName: selectedOffer.name
+            appliedOfferName: selectedOffer.name,
+            appliedOfferId: selectedOffer.id,
+            appliedOfferSnapshot: selectedOffer
         };
     });
 
@@ -291,15 +764,7 @@ export const calculateCartWithOffers = (cart, selectedOffersByRow, potentialOffe
 export const getItemApplicableOffers = (item, cartItems, activeOffers, collectionsData) => {
     if (!item || !activeOffers?.length) return [];
 
-    console.log("[OfferEngine Debug] Checking applicable offers for item:", {
-        id: item.id,
-        itemId: item.itemId,
-        itemName: item.itemName || item.Item?.name,
-        sizeId: item.sizeId,
-        colorId: item.colorId,
-        qty: item.qty,
-        barcodeType: item.barcodeType
-    });
+    /* console.log removed */;
 
     const isItemInScope = (itemId, off) => {
         if (off.scopeMode === 'Global') return true;
@@ -327,47 +792,54 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
         return true;
     };
 
-    console.log(activeOffers, "activeOffers")
+    /* console.log removed */
+    /* console.log removed */
+
     return activeOffers.map(off => {
-        console.log(`[OfferEngine Debug] Evaluating offer: "${off.name}" (ID: ${off.id})`);
 
         if (!isOfferDateValid(off)) {
-            console.log(`[OfferEngine Debug]   Failed isOfferDateValid check for offer: ${off.name}`);
             return null;
         }
 
         if (!passesTypeCheck(item, off)) {
-            console.log(`[OfferEngine Debug]   Failed passesTypeCheck for item. Item barcodeType: ${item.barcodeType}, Offer applyToRegular: ${off.applyToRegular}, applyToClearance: ${off.applyToClearance}`);
             return null;
         }
 
         const itemQty = parseFloat(item.qty);
         if (!itemQty || itemQty <= 0) {
-            console.log(`[OfferEngine Debug]   Failed itemQty check: ${itemQty}`);
             return null;
         }
 
         const targetId = item.itemId ?? item.id;
         if (!isItemInScope(targetId, off)) {
-            console.log(`[OfferEngine Debug]   Failed isItemInScope check. TargetId: ${targetId}, scopeMode: ${off.scopeMode}, scopeRefIds:`, off.OfferScope?.map(s => s.refId));
             return null;
         }
 
-        console.log(cartItems, "cartItems")
-        console.log(off, "off")
+        /* console.log removed */
+        /* console.log removed */
         const inScopeItems = cartItems.filter(cit => {
             if (!passesTypeCheck(cit, off)) return false;
             const citQty = parseFloat(cit.qty);
             if (!citQty || citQty <= 0) return false;
+
+            const isSameProduct = (cit.itemId ?? cit.id) === (item.itemId ?? item.id) &&
+                (cit.sizeId || 0) === (item.sizeId || 0) &&
+                (cit.colorId || 0) === (item.colorId || 0);
+
+            if (isSameProduct) {
+                if (item.isExchangeNewItem && !cit.isExchangeNewItem) return false;
+                if (!item.isReturn && !item.isExchangeNewItem && cit.isExchangeNewItem) return false;
+                if (item.isReturn && cit.isExchangeNewItem) return false;
+            }
+
             const citId = cit.itemId ?? cit.id;
             return isItemInScope(citId, off);
         });
-        console.log(`[OfferEngine Debug]   In-scope cart items:`, inScopeItems.map(i => ({ sizeId: i.sizeId, colorId: i.colorId, qty: i.qty, itemId: i.itemId })));
 
         const rules = off.OfferRule?.[0]?.conditions?.rules || [];
         let filteredScopeItems = [...inScopeItems];
 
-        console.log(filteredScopeItems, "filteredScopeItems Before")
+        /* console.log removed */
 
         rules.forEach(rule => {
             if (rule.field === 'Sizes') {
@@ -381,8 +853,8 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
             }
         });
 
-        console.log(rules, "rules")
-        console.log(filteredScopeItems, "filteredScopeItems After")
+        /* console.log removed */
+        /* console.log removed */
 
         const isCurrentItemMatching = filteredScopeItems.some(cit => {
             const citKey = `${cit.itemId || cit.id}-${cit.sizeId || 0}-${cit.colorId || 0}`;
@@ -390,10 +862,9 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
             return citKey === itemKey;
         });
 
-        console.log(isCurrentItemMatching, "isCurrentItemMatching")
+        /* console.log removed */
 
         if (!isCurrentItemMatching) {
-            console.log(`[OfferEngine Debug]   Current item is not matching in filteredScopeItems.`);
             return null;
         }
 
@@ -405,18 +876,16 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
         );
 
         if (!rules.length) {
-            console.log(`[OfferEngine Debug]   No rules found. Offer is matched.`);
             return { ...off, _metrics: { scopeQty, scopeValue } };
         }
 
-        console.log(filteredScopeItems, "filteredScopeItems")
+        /* console.log removed */
 
         const results = rules.map((rule, ruleIdx) => {
             if (rule.field === 'Sizes' || rule.field === 'Colors') return true;
 
             if (rule.field === 'Variant Matrix') {
                 const matrixRules = rule.matrix || [];
-                console.log(`[OfferEngine Debug]   Rule ${ruleIdx + 1} (Variant Matrix): matrixRules:`, matrixRules);
                 const res = matrixRules.map((mRow, mIdx) => {
                     const matchQty = filteredScopeItems
                         .filter(cit => {
@@ -426,22 +895,19 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
                         })
                         .reduce((sum, i) => sum + (parseFloat(i.qty) || 0), 0);
                     const passed = matchQty >= parseFloat(mRow.qty);
-                    console.log(`[OfferEngine Debug]     Matrix Row ${mIdx + 1} (sizeId: ${mRow.sizeId}, colorId: ${mRow.colorId}): matched in-cart qty ${matchQty} vs required ${mRow.qty} => ${passed ? 'PASSED' : 'FAILED'}`);
                     return passed;
                 });
                 const finalMatrixResult = rule.logic === 'OR' ? res.some(r => r) : res.every(r => r);
-                console.log(`[OfferEngine Debug]     Matrix Logic: ${rule.logic || 'AND'}, final result: ${finalMatrixResult}`);
                 return finalMatrixResult;
             }
 
             if (rule.field === 'Unique Sizes') {
                 const distinctSizes = new Set(filteredScopeItems.map(cit => String(cit.sizeId)));
-                console.log(distinctSizes, "distinctSizes")
+                /* console.log removed */
                 let passed = false;
                 if (rule.operator === '>=') passed = distinctSizes.size >= parseFloat(rule.value);
                 else if (rule.operator === '<=') passed = distinctSizes.size <= parseFloat(rule.value);
                 else if (rule.operator === '==') passed = distinctSizes.size === parseFloat(rule.value);
-                console.log(`[OfferEngine Debug]   Rule ${ruleIdx + 1} (Unique Sizes): distinct sizes count ${distinctSizes.size} vs ${rule.operator} ${rule.value} => ${passed ? 'PASSED' : 'FAILED'}`);
                 return passed;
             }
 
@@ -451,18 +917,18 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
                 if (rule.operator === '>=') passed = distinctColors.size >= parseFloat(rule.value);
                 else if (rule.operator === '<=') passed = distinctColors.size <= parseFloat(rule.value);
                 else if (rule.operator === '==') passed = distinctColors.size === parseFloat(rule.value);
-                console.log(`[OfferEngine Debug]   Rule ${ruleIdx + 1} (Unique Colors): distinct colors count ${distinctColors.size} vs ${rule.operator} ${rule.value} => ${passed ? 'PASSED' : 'FAILED'}`);
                 return passed;
             }
 
             if (rule.groupBy && rule.groupBy.length > 0) {
                 const hasAllGroupFields = rule.groupBy.every(gField => {
                     if (gField === 'sizeId') return !!item.sizeId;
+
                     if (gField === 'colorId') return !!item.colorId;
+                    if (gField === 'sameItem') return !!item.itemId || !!item.id;
                     return !!item[gField];
                 });
                 if (!hasAllGroupFields) {
-                    console.log(`[OfferEngine Debug]   Rule ${ruleIdx + 1} (GroupBy ${rule.groupBy.join(',')}): Current item is missing required group fields.`);
                     return false;
                 }
 
@@ -471,6 +937,7 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
                     return rule.groupBy.every(gField => {
                         if (gField === 'sizeId') return !!cit.sizeId;
                         if (gField === 'colorId') return !!cit.colorId;
+                        if (gField === 'sameItem') return !!cit.itemId || !!cit.id;
                         return !!cit[gField];
                     });
                 });
@@ -479,6 +946,7 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
                     const key = rule.groupBy.map(gField => {
                         if (gField === 'sizeId') return cit.sizeId;
                         if (gField === 'colorId') return cit.colorId;
+                        if (gField === 'sameItem') return cit.itemId || cit.id;
                         return cit[gField];
                     }).join('-');
                     const qty = parseFloat(cit.qty) || 0;
@@ -491,9 +959,11 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
                 const currentItemKey = rule.groupBy.map(gField => {
                     if (gField === 'sizeId') return item.sizeId;
                     if (gField === 'colorId') return item.colorId;
+                    if (gField === 'sameItem') return item.itemId || item.id;
                     return item[gField];
                 }).join('-');
 
+                /* console.log removed */
                 const itemGroup = groups[currentItemKey];
                 let passed = false;
                 if (itemGroup) {
@@ -504,29 +974,37 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
                     else if (rule.operator === '<') passed = target < parseFloat(rule.value);
                     else if (rule.operator === '>') passed = target > parseFloat(rule.value);
                 }
-                console.log(`[OfferEngine Debug]   Rule ${ruleIdx + 1} (GroupBy ${rule.groupBy.join(',')}): Target field ${rule.field} ${rule.operator} ${rule.value} for group ${currentItemKey} => ${passed ? 'PASSED' : 'FAILED'}`);
                 return passed;
             }
 
+            // Debug: log target computation for each rule
             const target =
                 rule.field === 'Minimum Quantity' ? scopeQty :
                     rule.field === 'Cart Value' ? scopeValue : 0;
 
+
+            // Evaluate rule operator against target
             let passed = false;
             if (rule.operator === '>=') passed = target >= parseFloat(rule.value);
             else if (rule.operator === '<=') passed = target <= parseFloat(rule.value);
             else if (rule.operator === '==') passed = target === parseFloat(rule.value);
             else if (rule.operator === '<') passed = target < parseFloat(rule.value);
             else if (rule.operator === '>') passed = target > parseFloat(rule.value);
-            console.log(`[OfferEngine Debug]   Rule ${ruleIdx + 1} (${rule.field}): target value ${target} vs ${rule.operator} ${rule.value} => ${passed ? 'PASSED' : 'FAILED'}`);
+
+            // Log target and related values before evaluation
+            /* console.log removed */
+            /* console.log removed */
+
             return passed;
         });
+
+        /* console.log removed */
+
 
         const isMatched = off.OfferRule?.[0]?.logic === 'OR'
             ? results.some(r => r)
             : results.every(r => r);
 
-        console.log(`[OfferEngine Debug]   Final Match Result for "${off.name}": ${isMatched ? 'MATCHED' : 'NOT MATCHED'}`);
 
         if (isMatched) {
             return { ...off, _metrics: { scopeQty, scopeValue } };

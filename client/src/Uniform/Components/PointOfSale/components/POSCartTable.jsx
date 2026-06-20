@@ -69,7 +69,7 @@ const POSCartTable = ({
                     </thead>
                     <tbody>
                         {cart.map((item, index) => {
-                            const cartKey = `${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}`;
+                            const cartKey = `${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}-${!!item.isExchangeItem}`;
                             const rowTotal = (parseFloat(item.price) || 0) * (parseFloat(item.qty) || 0);
                             const isActiveRow = index === activeRowIndex;
                             const isComboApplied = item.appliedOfferName && cart.filter(cit => cit.appliedOfferName && cit.appliedOfferName === item.appliedOfferName).length > 1;
@@ -98,8 +98,24 @@ const POSCartTable = ({
                                                     RETURN
                                                 </span>
                                             )}
-                                            {parseFloat(item.salesPrice) > parseFloat(item.price) && !item.isReturn && (
-                                                <span className="text-[10px] font-bold text-slate-300 line-through">₹{parseFloat(item.salesPrice).toLocaleString()}</span>
+                                            {item.isExchangeItem && (
+                                                <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5">
+                                                    <RefreshCw size={10} className="text-blue-200" />
+                                                    EXCHANGE
+                                                </span>
+                                            )}
+                                            {parseFloat(item.originalSalesPrice) > parseFloat(item.price) && (
+                                                <span className="text-[10px] font-bold text-slate-300 line-through">₹{parseFloat(item.originalSalesPrice).toLocaleString()}</span>
+                                            )}
+                                            {parseFloat(item.offerReversal) > 0 && (
+                                                <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-sm flex items-center gap-1.5 border border-orange-200">
+                                                    Offer Reversal -₹{parseFloat(item.offerReversal).toFixed(2)}
+                                                </span>
+                                            )}
+                                            {parseFloat(item.offerReapplied) > 0 && (
+                                                <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-sm flex items-center gap-1.5 border border-emerald-200">
+                                                    Offer Reapplied +₹{parseFloat(item.offerReapplied).toFixed(2)}
+                                                </span>
                                             )}
                                             {item.priceType === 'offerPrice' && (
                                                 <span className="bg-emerald-600 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5 animate-pulse">
@@ -122,19 +138,19 @@ const POSCartTable = ({
                                         <div className="flex items-center gap-1 justify-center">
                                             <button
                                                 disabled={isReportOnly}
-                                                onClick={() => updateQuantity(item.id, -1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">-</button>
+                                                onClick={() => updateQuantity(item.id, -1, item.sizeId, item.colorId, false, item.isReturn, item.isExchangeItem)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">-</button>
                                             <input
                                                 ref={ref => qtyInputRefs.current[cartKey] = ref}
                                                 type="number"
                                                 value={item.qty}
-                                                onChange={(e) => updateQuantity(item.id, e.target.value, item.sizeId, item.colorId, true)}
+                                                onChange={(e) => updateQuantity(item.id, e.target.value, item.sizeId, item.colorId, true, item.isReturn, item.isExchangeItem)}
                                                 className="w-10 text-center bg-transparent text-[11px] font-black focus:outline-none"
                                                 onFocus={(e) => { e.target.select(); setActiveRowIndex(index); }}
                                                 disabled={isReportOnly}
                                             />
                                             <button
                                                 disabled={isReportOnly}
-                                                onClick={() => updateQuantity(item.id, 1, item.sizeId, item.colorId)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">+</button>
+                                                onClick={() => updateQuantity(item.id, 1, item.sizeId, item.colorId, false, item.isReturn, item.isExchangeItem)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">+</button>
                                             <button
                                                 disabled={isReportOnly}
                                                 onClick={(e) => { e.stopPropagation(); handleShowItemOffers(item); }}
@@ -151,15 +167,22 @@ const POSCartTable = ({
                                             {item.salesPersonBarcode || ""}
                                         </div>
                                     </td>
-                                    <td className="px-2 py-0.5 border-r border-slate-200">
-                                        <input
-                                            type="number"
-                                            value={item.price}
-                                            onChange={(e) => updateRate(item.id, e.target.value, item.sizeId, item.colorId)}
-                                            className={`w-full py-0.5 text-right bg-transparent border-transparent hover:border-slate-200 focus:bg-white focus:border-indigo-400 rounded transition-all font-black text-sm outline-none ${item.priceType === 'offerPrice' ? 'text-emerald-600' : 'text-slate-800'}`}
-                                            onFocus={(e) => e.target.select()}
-                                            disabled={true}
-                                        />
+                                    <td className="px-2 py-0.5 border-r border-slate-200 align-middle">
+                                        <div className="flex flex-col items-end justify-center">
+                                            {parseFloat(item.originalSalesPrice) > parseFloat(item.price) && (
+                                                <span className="text-[10px] font-bold text-slate-400 line-through leading-none mb-0.5 block">
+                                                    ₹{parseFloat(item.originalSalesPrice).toLocaleString()}
+                                                </span>
+                                            )}
+                                            <input
+                                                type="number"
+                                                value={item.price}
+                                                onChange={(e) => updateRate(item.id, e.target.value, item.sizeId, item.colorId)}
+                                                className={`w-full py-0.5 text-right bg-transparent border-transparent hover:border-slate-200 focus:bg-white focus:border-indigo-400 rounded transition-all font-black text-sm outline-none leading-none ${item.priceType === 'offerPrice' ? 'text-emerald-600' : 'text-slate-800'}`}
+                                                onFocus={(e) => e.target.select()}
+                                                disabled={true}
+                                            />
+                                        </div>
                                     </td>
                                     <td className="px-2 py-1 text-right border-r border-slate-200 bg-slate-50/50 font-serif">
                                         <span className="text-[12px] font-black text-indigo-700">₹{rowTotal.toLocaleString()}</span>

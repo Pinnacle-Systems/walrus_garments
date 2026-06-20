@@ -21,7 +21,7 @@ import { useGetLocationMasterQuery } from "../../../redux/uniformService/Locatio
 import { useGetUomQuery } from "../../../redux/services/UomMasterService";
 import { useGetItemMasterQuery, useGetItemPriceListQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
-import { useGetoffersPromotionsQuery } from "../../../redux/uniformService/Offer&PromotionsService";
+import { useGetoffersPromotionsQuery, useCreateClearanceOffersMutation } from "../../../redux/uniformService/Offer&PromotionsService";
 import { useGetcollectionsQuery } from "../../../redux/uniformService/CollectionsService";
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
 import Modal from "../../../UiComponents/Modal";
@@ -79,6 +79,7 @@ const StockTransferForm = ({
 
     const [addData] = useAddStockTransferMutation();
     const [updateData] = useUpdateStockTransferMutation();
+    const [createClearanceOffers] = useCreateClearanceOffersMutation();
     const stockDrivenFields = getConfiguredStockDrivenFields(stockReportControlData?.data?.[0]);
 
     const { data: singleData, isLoading: isSingleDataLoading, isFetching: isSingleDataFetching, refetch } = useGetStockTransferByIdQuery(id, { skip: !id });
@@ -357,29 +358,14 @@ const StockTransferForm = ({
         if (findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION") {
             const selectedItems = stockItems?.filter(i => i.itemId);
             for (const item of selectedItems) {
-                const hasClearanceOffer = offersData?.data?.some(offer => {
-                    if (!offer.applyToClearance) return false;
-                    if (offer.scopeMode === 'Global') return true;
-
-                    return offer.OfferScope?.some(scope => {
-                        const type = String(scope.type).toLowerCase();
-                        if (type === 'item' && scope.refId === parseInt(item.itemId)) return true;
-                        if (type === 'collection') {
-                            const collection = collectionsData?.data?.find(c => c.id === scope.refId);
-                            return collection?.CollectionItems?.some(ci => ci.itemId === parseInt(item.itemId));
-                        }
-                        return false;
-                    });
-                });
-
-                if (!hasClearanceOffer) {
+                if (!item.hasExistingOffer) {
                     const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
                     Swal.fire({
                         title: "Offer Required",
-                        text: `Item "${itemObj?.name || item.itemId}" does not have an active clearance offer.`,
+                        text: `Item "${itemObj?.name || item.itemId}" does not have a registered clearance offer. Please click 'Create Offers' first.`,
                         icon: "error"
                     });
-                    return;
+                    return false;
                 }
             }
 
@@ -670,28 +656,13 @@ const StockTransferForm = ({
                                         return;
                                     }
 
-                                    // 2️⃣ Clearance offer check
+                                    // 2️⃣ Clearance Price/Offer Check
                                     for (const item of selectedItems) {
-                                        const hasClearanceOffer = offersData?.data?.some(offer => {
-                                            if (!offer.applyToClearance) return false;
-                                            if (offer.scopeMode === 'Global') return true;
-
-                                            return offer.OfferScope?.some(scope => {
-                                                const type = String(scope.type).toLowerCase();
-                                                if (type === 'item' && scope.refId === parseInt(item.itemId)) return true;
-                                                if (type === 'collection') {
-                                                    const collection = collectionsData?.data?.find(c => c.id === scope.refId);
-                                                    return collection?.CollectionItems?.some(ci => ci.itemId === parseInt(item.itemId));
-                                                }
-                                                return false;
-                                            });
-                                        });
-
-                                        if (!hasClearanceOffer) {
+                                        if (!item.hasExistingOffer) {
                                             const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
                                             Swal.fire({
                                                 title: "Offer Required",
-                                                text: `Item "${itemObj?.name || item.itemId}" does not have an active clearance offer.`,
+                                                text: `Item "${itemObj?.name || item.itemId}" does not have a registered clearance offer. Please click 'Create Offers' first.`,
                                                 icon: "error"
                                             });
                                             return;
@@ -704,6 +675,60 @@ const StockTransferForm = ({
                                 <FiPrinter className="w-4 h-4 mr-2" />
                                 Barcode Generation
                             </button>
+
+                            {findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION" && (
+                                <button className="bg-purple-600 text-white px-4 py-1.5 rounded-md hover:bg-purple-700 flex items-center text-sm shadow-sm transition-all active:scale-95"
+                                    onClick={async () => {
+                                        const selectedItems = stockItems?.filter(i => i.itemId && i.transferQty);
+                                        const itemsWithoutOffer = selectedItems.filter(i => !i.hasExistingOffer);
+
+                                        if (!itemsWithoutOffer.length) {
+                                            Swal.fire({
+                                                icon: "info",
+                                                text: "All items already have clearance offers created.",
+                                            });
+                                            return;
+                                        }
+
+                                        for (const item of itemsWithoutOffer) {
+                                            if (!item.manualClearancePrice || parseFloat(item.manualClearancePrice) <= 0) {
+                                                const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
+                                                Swal.fire({
+                                                    title: "Price Required",
+                                                    text: `Please enter a valid clearance price for item "${itemObj?.name || item.itemId}" before creating offers.`,
+                                                    icon: "error"
+                                                });
+                                                return;
+                                            }
+                                        }
+
+                                        try {
+                                            const response = await createClearanceOffers({ items: itemsWithoutOffer }).unwrap();
+                                            if (response.statusCode === 0) {
+                                                Swal.fire({
+                                                    icon: "success",
+                                                    text: "Clearance Offers Created Successfully!",
+                                                });
+                                                invalidateTagsDispatch(["offersPromotions"]);
+                                                refetch();
+                                            } else {
+                                                Swal.fire({
+                                                    icon: "error",
+                                                    text: response.message || "Failed to create offers",
+                                                });
+                                            }
+                                        } catch (err) {
+                                            Swal.fire({
+                                                icon: "error",
+                                                text: "Something went wrong while creating offers.",
+                                            });
+                                        }
+                                    }}
+                                >
+                                    <HiPlus className="w-4 h-4 mr-2" />
+                                    Create Offers
+                                </button>
+                            )}
 
                         </div>
                     </div>

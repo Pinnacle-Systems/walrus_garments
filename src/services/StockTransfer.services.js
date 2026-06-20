@@ -556,6 +556,7 @@ async function createStocktransferItems(
                                 }
                             });
                         }
+
                         // Use clearance barcode for the transfer record when destination is discount
                         transferItemBarcode = String(item.clearanceBarcode).trim();
                     }
@@ -610,43 +611,12 @@ async function create(req) {
 
     let data;
     await prisma.$transaction(async (tx) => {
-        // Validation for DISCOUNT SECTION (Offer Check)
+        // Validation for DISCOUNT SECTION removed as Offer is automatically created.
         const toLocation = await tx.location.findUnique({ where: { id: parseInt(toLocationId) } });
         if (toLocation?.storeName === "DISCOUNT SECTION") {
             for (const item of stockItems) {
                 if (!item.itemId) continue;
-
-                // Check for active clearance offer (Item, Collection or Global)
-                const itemCollections = await tx.collectionItems.findMany({
-                    where: { itemId: parseInt(item.itemId) },
-                    select: { collectionId: true }
-                });
-                const collectionIds = itemCollections.map(c => c.collectionId).filter(Boolean);
-
-                const offerCount = await tx.offer.count({
-                    where: {
-                        active: true,
-                        applyToClearance: true,
-                        OR: [
-                            { scopeMode: 'Global' },
-                            {
-                                OfferScope: {
-                                    some: {
-                                        OR: [
-                                            { type: { in: ['item', 'Item'] }, refId: parseInt(item.itemId) },
-                                            { type: { in: ['collection', 'Collection'] }, refId: { in: collectionIds } }
-                                        ]
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                });
-
-                if (offerCount === 0) {
-                    const itemObj = await tx.item.findUnique({ where: { id: parseInt(item.itemId) }, select: { name: true } });
-                    throw new Error(`Item "${itemObj?.name || item.itemId}" does not have an active clearance offer. Cannot transfer to DISCOUNT SECTION.`);
-                }
+                // No need to check global offer, we generate specific offer automatically.
             }
         }
 
@@ -783,38 +753,7 @@ const update = async (id, body) => {
         if (toLocation?.storeName === "DISCOUNT SECTION") {
             for (const item of stockItems) {
                 if (!item.itemId) continue;
-
-                // Check for active clearance offer (Item, Collection or Global)
-                const itemCollections = await tx.collectionItems.findMany({
-                    where: { itemId: parseInt(item.itemId) },
-                    select: { collectionId: true }
-                });
-                const collectionIds = itemCollections.map(c => c.collectionId).filter(Boolean);
-
-                const offerCount = await tx.offer.count({
-                    where: {
-                        active: true,
-                        applyToClearance: true,
-                        OR: [
-                            { scopeMode: 'Global' },
-                            {
-                                OfferScope: {
-                                    some: {
-                                        OR: [
-                                            { type: { in: ['item', 'Item'] }, refId: parseInt(item.itemId) },
-                                            { type: { in: ['collection', 'Collection'] }, refId: { in: collectionIds } }
-                                        ]
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                });
-
-                if (offerCount === 0) {
-                    const itemObj = await tx.item.findUnique({ where: { id: parseInt(item.itemId) }, select: { name: true } });
-                    throw new Error(`Item "${itemObj?.name || item.itemId}" does not have an active clearance offer. Cannot transfer to DISCOUNT SECTION.`);
-                }
+                // No need to check global offer, we generate specific offer automatically.
 
                 // 1. Check stock in From Location
                 const currentStock = await tx.stock.aggregate({

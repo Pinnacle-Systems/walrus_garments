@@ -162,120 +162,120 @@ async function getTotalSales(req) {
             });
         }
 
-        const data = await Promise.all(
-            finYears.map(async (fy) => {
-                const boundaries = await getFinYearStartTimeEndTime(fy.id);
-                if (!boundaries) {
-                    return {
-                        year: getYearShortCode(fy.from, fy.to),
-                        company: fy.Company?.name || 'N/A',
-                        totalSales: 0,
-                        b2bSales: 0,
-                        b2cSales: 0
-                    };
+        const data = [];
+        for (const fy of finYears) {
+            const boundaries = await getFinYearStartTimeEndTime(fy.id);
+            if (!boundaries) {
+                data.push({
+                    year: getYearShortCode(fy.from, fy.to),
+                    company: fy.Company?.name || 'N/A',
+                    totalSales: 0,
+                    b2bSales: 0,
+                    b2cSales: 0
+                });
+                continue;
+            }
+
+            const { startDateStartTime, endDateEndTime } = boundaries;
+
+            const dateFilter = {
+                OR: [
+                    { date: { gte: startDateStartTime, lte: endDateEndTime } },
+                    { date: null, createdAt: { gte: startDateStartTime, lte: endDateEndTime } }
+                ]
+            };
+
+            const commonWhere = {
+                branchId: branchFilter,
+                ...dateFilter
+            };
+
+            // Fetch B2C Pos records
+            const posRecords = await prisma.pos.findMany({
+                where: {
+                    ...commonWhere,
+                    isCancel: false
+                },
+                select: {
+                    netAmount: true,
+                    isReturn: true
                 }
+            });
 
-                const { startDateStartTime, endDateEndTime } = boundaries;
+            // Fetch B2B Sales Delivery records
+            const deliveries = await prisma.salesDelivery.findMany({
+                where: {
+                    ...commonWhere,
+                    isDeleted: false,
+                    status: "APPROVED"
+                },
+                include: {
+                    SalesDeliveryItems: true
+                }
+            });
 
-                const dateFilter = {
-                    OR: [
-                        { date: { gte: startDateStartTime, lte: endDateEndTime } },
-                        { date: null, createdAt: { gte: startDateStartTime, lte: endDateEndTime } }
-                    ]
-                };
-
-                const commonWhere = {
-                    branchId: branchFilter,
-                    ...dateFilter
-                };
-
-                // Fetch B2C Pos records
-                const posRecords = await prisma.pos.findMany({
-                    where: {
-                        ...commonWhere,
-                        isCancel: false
-                    },
-                    select: {
-                        netAmount: true,
-                        isReturn: true
-                    }
-                });
-
-                // Fetch B2B Sales Delivery records
-                const deliveries = await prisma.salesDelivery.findMany({
-                    where: {
-                        ...commonWhere,
-                        isDeleted: false,
-                        status: "APPROVED"
-                    },
-                    include: {
-                        SalesDeliveryItems: true
-                    }
-                });
-
-                // Fetch B2B Sales Return records
-                const salesReturns = await prisma.salesReturn.findMany({
-                    where: {
-                        ...commonWhere,
-                        isDeleted: false
-                    },
-                    include: {
-                        SalesReturnItems: {
-                            include: {
-                                SalesDeliveryItems: true
-                            }
+            // Fetch B2B Sales Return records
+            const salesReturns = await prisma.salesReturn.findMany({
+                where: {
+                    ...commonWhere,
+                    isDeleted: false
+                },
+                include: {
+                    SalesReturnItems: {
+                        include: {
+                            SalesDeliveryItems: true
                         }
                     }
-                });
-
-                // Calculate B2C Totals
-                let posSalesTotal = 0;
-                let posReturnTotal = 0;
-                posRecords.forEach((rec) => {
-                    const amt = parseAmount(rec.netAmount);
-                    if (rec.isReturn) {
-                        posReturnTotal += amt;
-                    } else {
-                        posSalesTotal += amt;
-                    }
-                });
-                const b2cTotal = posSalesTotal - posReturnTotal;
-
-                // Calculate B2B Totals
-                const b2bSalesTotal = deliveries.reduce(
-                    (sum, del) => sum + calculateHeaderTotal(del.SalesDeliveryItems, del, false),
-                    0
-                );
-                const b2bReturnTotal = salesReturns.reduce(
-                    (sum, ret) => sum + calculateHeaderTotal(ret.SalesReturnItems, ret, true),
-                    0
-                );
-                const b2bTotal = b2bSalesTotal - b2bReturnTotal;
-
-                const salesTotal = posSalesTotal + b2bSalesTotal;
-                const returnTotal = posReturnTotal + b2bReturnTotal;
-
-                let finalTotal = 0;
-                if (SalesType === "Sales") {
-                    finalTotal = salesTotal;
-                } else if (SalesType === "Returns") {
-                    finalTotal = returnTotal;
-                } else {
-                    finalTotal = salesTotal - returnTotal;
                 }
+            });
 
-                return {
-                    year: getYearShortCode(fy.from, fy.to),
-                    finYearId: fy.id,
-                    company: fy.Company?.name || 'N/A',
-                    totalSales: Math.round(finalTotal * 100) / 100,
-                    salesTotal: Math.round(salesTotal * 100) / 100,
-                    returnTotal: Math.round(returnTotal * 100) / 100,
-                    b2bSales: Math.round(b2bTotal * 100) / 100,
-                    b2cSales: Math.round(b2cTotal * 100) / 100
-                };
-            })
-        );
+            // Calculate B2C Totals
+            let posSalesTotal = 0;
+            let posReturnTotal = 0;
+            posRecords.forEach((rec) => {
+                const amt = parseAmount(rec.netAmount);
+                if (rec.isReturn) {
+                    posReturnTotal += amt;
+                } else {
+                    posSalesTotal += amt;
+                }
+            });
+            const b2cTotal = posSalesTotal - posReturnTotal;
+
+            // Calculate B2B Totals
+            const b2bSalesTotal = deliveries.reduce(
+                (sum, del) => sum + calculateHeaderTotal(del.SalesDeliveryItems, del, false),
+                0
+            );
+            const b2bReturnTotal = salesReturns.reduce(
+                (sum, ret) => sum + calculateHeaderTotal(ret.SalesReturnItems, ret, true),
+                0
+            );
+            const b2bTotal = b2bSalesTotal - b2bReturnTotal;
+
+            const salesTotal = posSalesTotal + b2bSalesTotal;
+            const returnTotal = posReturnTotal + b2bReturnTotal;
+
+            let finalTotal = 0;
+            if (SalesType === "Sales") {
+                finalTotal = salesTotal;
+            } else if (SalesType === "Returns") {
+                finalTotal = returnTotal;
+            } else {
+                finalTotal = salesTotal - returnTotal;
+            }
+
+            data.push({
+                year: getYearShortCode(fy.from, fy.to),
+                finYearId: fy.id,
+                company: fy.Company?.name || 'N/A',
+                totalSales: Math.round(finalTotal * 100) / 100,
+                salesTotal: Math.round(salesTotal * 100) / 100,
+                returnTotal: Math.round(returnTotal * 100) / 100,
+                b2bSales: Math.round(b2bTotal * 100) / 100,
+                b2cSales: Math.round(b2cTotal * 100) / 100
+            });
+        }
 
         return { statusCode: 0, data };
     } catch (error) {

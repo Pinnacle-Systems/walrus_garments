@@ -22,23 +22,13 @@ async function getManagementInsights(query) {
         const commonWhere = { branchId: branchId ? parseInt(branchId) : undefined };
 
         // 1. Fetch all data segments in parallel
-        const [
-            salesData,
-            collectionData,
-            pipelineData,
-            advanceData,
-            expenseData,
-            topProducts,
-            recentDeliveries
-        ] = await Promise.all([
-            getSalesData(commonWhere, from, to),
-            getCollectionData(commonWhere, from, to),
-            getOrderPipeline(commonWhere),
-            getCustomerAdvanceData(commonWhere, from, to),
-            getExpenseData(commonWhere, from, to),
-            getTopSellingProducts(commonWhere),
-            getRecentDeliveries(commonWhere)
-        ]);
+        const salesData = await getSalesData(commonWhere, from, to);
+        const collectionData = await getCollectionData(commonWhere, from, to);
+        const pipelineData = await getOrderPipeline(commonWhere);
+        const advanceData = await getCustomerAdvanceData(commonWhere, from, to);
+        const expenseData = await getExpenseData(commonWhere, from, to);
+        const topProducts = await getTopSellingProducts(commonWhere);
+        const recentDeliveries = await getRecentDeliveries(commonWhere);
 
         return {
             statusCode: 0,
@@ -184,16 +174,15 @@ async function getSalesData(where, from, to) {
 }
 
 async function getCollectionData(where, from, to) {
-    const [bulkRaw, posRaw] = await Promise.all([
-        prisma.payment.findMany({
-            where: { ...where, date: { gte: from, lte: to }, isDeleted: false },
-            include: { Party: { select: { name: true } } }
-        }),
-        prisma.posPayments.findMany({
-            where: { date: { gte: from, lte: to } },
-            include: { Pos: { select: { Party: { select: { name: true } } } } }
-        })
-    ]);
+    const bulkRaw = await prisma.payment.findMany({
+        where: { ...where, date: { gte: from, lte: to }, isDeleted: false },
+        include: { Party: { select: { name: true } } }
+    });
+    
+    const posRaw = await prisma.posPayments.findMany({
+        where: { date: { gte: from, lte: to } },
+        include: { Pos: { select: { Party: { select: { name: true } } } } }
+    });
 
     const bulkBreakup = bulkRaw.map(c => ({
         id: c.docId || c.id, party: c.Party?.name || 'N/A', amount: c.paidAmount || 0, mode: c.paymentMode || 'Bulk', type: 'Bulk'
@@ -403,20 +392,19 @@ async function getTopSellingProducts(where) {
 }
 
 async function getRecentDeliveries(where) {
-    const [posRaw, bulkRaw] = await Promise.all([
-        prisma.pos.findMany({
-            where: { ...where, isReturn: false },
-            include: { Party: { select: { name: true } } },
-            orderBy: { createdAt: 'desc' },
-            take: 5
-        }),
-        prisma.salesDelivery.findMany({
-            where: { ...where, isDeleted: false },
-            include: { Party: { select: { name: true } } },
-            orderBy: { createdAt: 'desc' },
-            take: 5
-        })
-    ]);
+    const posRaw = await prisma.pos.findMany({
+        where: { ...where, isReturn: false },
+        include: { Party: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+    });
+
+    const bulkRaw = await prisma.salesDelivery.findMany({
+        where: { ...where, isDeleted: false },
+        include: { Party: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+    });
 
     const pos = posRaw.map(p => ({
         id: p.docId || p.id,
@@ -480,32 +468,33 @@ async function getSalesAnalytics(query) {
         console.log(queryStartDate, queryEndDate, "queryStartDate, queryEndDate")
 
         // --- QUERY DATA ---
-        const [posSalesRaw, bulkSalesRaw, posReturnsRaw, bulkReturnsRaw] = await Promise.all([
-            prisma.pos.findMany({
-                where: { ...commonWhere, createdAt: { gte: queryStartDate, lte: queryEndDate }, isReturn: false },
-                include: {
-                    Party: { select: { name: true } },
-                    PosItems: { include: { Item: { include: { MainCategory: true } } } },
-                    PosPayments: true
-                }
-            }),
-            prisma.salesDelivery.findMany({
-                where: { ...commonWhere, createdAt: { gte: queryStartDate, lte: queryEndDate }, isDeleted: false },
-                include: {
-                    Party: { select: { name: true } },
-                    SalesDeliveryItems: { include: { Item: { include: { MainCategory: true } } } }
-                }
-            }),
-            prisma.pos.findMany({
-                where: { ...commonWhere, createdAt: { gte: queryStartDate, lte: queryEndDate }, isReturn: true }
-            }),
-            prisma.salesReturn.findMany({
-                where: { ...commonWhere, createdAt: { gte: queryStartDate, lte: queryEndDate }, isDeleted: false },
-                include: {
-                    SalesReturnItems: true
-                }
-            })
-        ]);
+        const posSalesRaw = await prisma.pos.findMany({
+            where: { ...commonWhere, createdAt: { gte: queryStartDate, lte: queryEndDate }, isReturn: false },
+            include: {
+                Party: { select: { name: true } },
+                PosItems: { include: { Item: { include: { MainCategory: true } } } },
+                PosPayments: true
+            }
+        });
+        
+        const bulkSalesRaw = await prisma.salesDelivery.findMany({
+            where: { ...commonWhere, createdAt: { gte: queryStartDate, lte: queryEndDate }, isDeleted: false },
+            include: {
+                Party: { select: { name: true } },
+                SalesDeliveryItems: { include: { Item: { include: { MainCategory: true } } } }
+            }
+        });
+
+        const posReturnsRaw = await prisma.pos.findMany({
+            where: { ...commonWhere, createdAt: { gte: queryStartDate, lte: queryEndDate }, isReturn: true }
+        });
+
+        const bulkReturnsRaw = await prisma.salesReturn.findMany({
+            where: { ...commonWhere, createdAt: { gte: queryStartDate, lte: queryEndDate }, isDeleted: false },
+            include: {
+                SalesReturnItems: true
+            }
+        });
 
         let posSales = posSalesRaw;
         let bulkSales = bulkSalesRaw;
@@ -672,26 +661,26 @@ async function getSalesBreakup(query) {
                 data: itemsBreakup
             };
         } else {
-            const [posRaw, bulkRaw, bulkReturnsRaw] = await Promise.all([
-                prisma.pos.findMany({
-                    where: { ...commonWhere, createdAt: { gte: startDate, lte: endDate } },
-                    include: { Party: { select: { name: true } } }
-                }),
-                prisma.salesDelivery.findMany({
-                    where: { ...commonWhere, createdAt: { gte: startDate, lte: endDate }, isDeleted: false },
-                    include: {
-                        Party: { select: { name: true } },
-                        SalesDeliveryItems: true
-                    }
-                }),
-                prisma.salesReturn.findMany({
-                    where: { ...commonWhere, createdAt: { gte: startDate, lte: endDate }, isDeleted: false },
-                    include: {
-                        Party: { select: { name: true } },
-                        SalesReturnItems: true
-                    }
-                })
-            ]);
+            const posRaw = await prisma.pos.findMany({
+                where: { ...commonWhere, createdAt: { gte: startDate, lte: endDate } },
+                include: { Party: { select: { name: true } } }
+            });
+            
+            const bulkRaw = await prisma.salesDelivery.findMany({
+                where: { ...commonWhere, createdAt: { gte: startDate, lte: endDate }, isDeleted: false },
+                include: {
+                    Party: { select: { name: true } },
+                    SalesDeliveryItems: true
+                }
+            });
+
+            const bulkReturnsRaw = await prisma.salesReturn.findMany({
+                where: { ...commonWhere, createdAt: { gte: startDate, lte: endDate }, isDeleted: false },
+                include: {
+                    Party: { select: { name: true } },
+                    SalesReturnItems: true
+                }
+            });
 
             const getBulkAmount = (delivery) => {
                 const itemsSum = (delivery.SalesDeliveryItems || []).reduce((acc, item) => {

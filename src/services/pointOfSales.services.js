@@ -263,7 +263,7 @@ async function create(body) {
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
         const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-        const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE/RETURN" && parseFloat(netAmount || 0) < 0);
+        const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE" && parseFloat(netAmount || 0) < 0);
         let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
 
         const result = await prisma.$transaction(async (tx) => {
@@ -285,6 +285,8 @@ async function create(body) {
                     availableCredit: body.availableCredit ? parseInt(body.availableCredit) : undefined,
                     isExchange: body.isExchange ? true : false,
                     isExchangeBillId: body.isExchangeBillId ? parseInt(body.isExchangeBillId) : undefined,
+                    offerPenalty: body.offerPenalty ? String(body.offerPenalty) : null,
+                    offerRestored: body.offerRestored ? String(body.offerRestored) : null,
                     PosItems: {
                         createMany: {
                             data: (posItems || []).map((item) => ({
@@ -296,10 +298,18 @@ async function create(body) {
                                 price: String(item.price),
                                 salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
                                 isReturn: item.isReturn || false,
+                                isExchangeItem: item.isExchangeItem || false,
                                 originalItemId: item.originalItemId || null,
                                 retunBillId: item.retunBillId || null,
                                 barcode: item.barcode || null,
                                 barcodeType: item.barcodeType || null,
+                                appliedOfferId: item.appliedOfferId ? parseInt(item.appliedOfferId) : null,
+                                appliedOfferSnapshot: item.appliedOfferSnapshot ? JSON.stringify(item.appliedOfferSnapshot) : null,
+                                originalSalesPrice: item.salesPrice !== undefined ? parseFloat(item.salesPrice) : null,
+                                offerReversal: item.offerReversal ? String(item.offerReversal) : null,
+                                offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
+                                priceType: item.priceType || null,
+                                appliedOfferName: item.appliedOfferName || null,
                             }))
                         }
                     },
@@ -421,18 +431,42 @@ async function create(body) {
                 data: stockEntries
             });
 
-            await tx.ledger.create({
-                data: {
-                    EntryType: isReturn ? "Credit_Note" : "Sales",
-                    LedgerType: "Customer",
-                    creditOrDebit: isReturn ? "Credit" : "Debit",
-                    partyId: parseInt(customerId),
-                    amount: Math.abs(parseFloat(netAmount || 0)),
-                    partyBillNo: posRecord.docId,
-                    partyBillDate: new Date(),
-                    posId: posRecord.id
-                }
-            });
+            const grossReturnAmount = (posItems || [])
+                .filter(i => i.isReturn)
+                .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
+            
+            const passedNetAmount = parseFloat(netAmount || 0);
+            const effectiveSaleAmount = grossReturnAmount + (isReturn ? -passedNetAmount : passedNetAmount);
+
+            if (grossReturnAmount > 0) {
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Credit_Note",
+                        LedgerType: "Customer",
+                        creditOrDebit: "Credit",
+                        partyId: parseInt(customerId),
+                        amount: grossReturnAmount,
+                        partyBillNo: posRecord.docId,
+                        partyBillDate: new Date(),
+                        posId: posRecord.id
+                    }
+                });
+            }
+
+            if (effectiveSaleAmount > 0) {
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Sales",
+                        LedgerType: "Customer",
+                        creditOrDebit: "Debit",
+                        partyId: parseInt(customerId),
+                        amount: effectiveSaleAmount,
+                        partyBillNo: posRecord.docId,
+                        partyBillDate: new Date(),
+                        posId: posRecord.id
+                    }
+                });
+            }
 
             if (!isReturn) {
                 const actualPaymentAmount = (posPayments || [])
@@ -488,7 +522,7 @@ async function update(id, body) {
         if (!dataFound) return NoRecordFound("POS");
 
         let finalDocId = dataFound.docId;
-        const isReturn = transactionType === "RETURN";
+        const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE" && parseFloat(netAmount || 0) < 0);
 
         if ((dataFound.docId === 'DRAFT')) {
             const finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -531,6 +565,8 @@ async function update(id, body) {
                     isReturn: isReturn,
                     isRetrunBillId: body.isRetrunBillId ? parseInt(body.isRetrunBillId) : undefined,
                     availableCredit: body.availableCredit ? parseInt(body.availableCredit) : undefined,
+                    offerPenalty: body.offerPenalty ? String(body.offerPenalty) : null,
+                    offerRestored: body.offerRestored ? String(body.offerRestored) : null,
                 }
             });
 
@@ -547,8 +583,16 @@ async function update(id, body) {
                     price: String(item.price),
                     salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
                     isReturn: item.isReturn || false,
+                    isExchangeItem: item.isExchangeItem || false,
                     barcode: item.barcode || null,
                     barcodeType: item.barcodeType || null,
+                    appliedOfferId: item.appliedOfferId ? parseInt(item.appliedOfferId) : null,
+                    appliedOfferSnapshot: item.appliedOfferSnapshot ? JSON.stringify(item.appliedOfferSnapshot) : null,
+                    originalSalesPrice: item.salesPrice !== undefined ? parseFloat(item.salesPrice) : null,
+                    offerReversal: item.offerReversal ? String(item.offerReversal) : null,
+                    offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
+                    priceType: item.priceType || null,
+                    appliedOfferName: item.appliedOfferName || null,
                 }))
             });
 
@@ -632,18 +676,42 @@ async function update(id, body) {
                 where: { posId: parseInt(id) }
             });
 
-            await tx.ledger.create({
-                data: {
-                    EntryType: isReturn ? "Credit_Note" : "Sales",
-                    LedgerType: "Customer",
-                    creditOrDebit: isReturn ? "Credit" : "Debit",
-                    partyId: parseInt(customerId || updatedPos.customerId),
-                    amount: Math.abs(parseFloat(netAmount || updatedPos.netAmount || 0)),
-                    partyBillNo: updatedPos.docId,
-                    partyBillDate: new Date(),
-                    posId: parseInt(id)
-                }
-            });
+            const grossReturnAmount = (posItems || [])
+                .filter(i => i.isReturn)
+                .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
+            
+            const passedNetAmount = parseFloat(netAmount || updatedPos.netAmount || 0);
+            const effectiveSaleAmount = grossReturnAmount + (isReturn ? -passedNetAmount : passedNetAmount);
+
+            if (grossReturnAmount > 0) {
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Credit_Note",
+                        LedgerType: "Customer",
+                        creditOrDebit: "Credit",
+                        partyId: parseInt(customerId || updatedPos.customerId),
+                        amount: grossReturnAmount,
+                        partyBillNo: updatedPos.docId,
+                        partyBillDate: new Date(),
+                        posId: parseInt(id)
+                    }
+                });
+            }
+
+            if (effectiveSaleAmount > 0) {
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Sales",
+                        LedgerType: "Customer",
+                        creditOrDebit: "Debit",
+                        partyId: parseInt(customerId || updatedPos.customerId),
+                        amount: effectiveSaleAmount,
+                        partyBillNo: updatedPos.docId,
+                        partyBillDate: new Date(),
+                        posId: parseInt(id)
+                    }
+                });
+            }
 
             if (!isReturn) {
                 const actualPaymentAmount = (posPayments || [])

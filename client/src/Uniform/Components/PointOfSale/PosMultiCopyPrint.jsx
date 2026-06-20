@@ -45,8 +45,8 @@ const PosMultiCopyPrint = ({
   showSummarySlip,
 }) => {
 
-  console.log(showSummarySlip, "showSummarySlip")
-  console.log(branchData, "branchData")
+  /* console.log removed */
+  /* console.log removed */
 
 
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
@@ -83,7 +83,9 @@ const PosMultiCopyPrint = ({
       </View>
 
       <View style={tw('flex flex-col items-center my-1')}>
-        <Text style={tw('font-bold text-xs underline')}>Cash Sale</Text>
+        <Text style={tw('font-bold text-xs underline')}>
+          {summary.total < 0 || bilStatus === "RETURNED" ? "CREDIT NOTE / EXCHANGE RECEIPT" : "TAX INVOICE"}
+        </Text>
       </View>
 
       {/* Transaction Info */}
@@ -124,7 +126,11 @@ const PosMultiCopyPrint = ({
           <View key={index} style={tw('flex flex-col mb-2')}>
             <View style={tw('flex flex-row justify-between')}>
               <View style={tw('w-[50%] flex flex-col')}>
-                <Text style={tw('text-xxs font-bold')}>{item?.Item?.name || item?.itemName}</Text>
+                <Text style={tw('text-xxs font-bold')}>
+                  {item?.Item?.name || item?.itemName}
+                  {item?.isReturn && <Text style={tw('text-red-600')}> [RETURN]</Text>}
+                  {item?.isExchangeItem && <Text style={tw('text-blue-600')}> [EXCHANGE]</Text>}
+                </Text>
                 {(hasSize || hasColor) && (
                   <Text style={tw('text-[7.5pt] text-gray-600')}>
                     {[hasSize, hasColor].filter(Boolean).join(' | ')}
@@ -170,8 +176,17 @@ const PosMultiCopyPrint = ({
           </View>
         )}
         <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
-          <Text style={tw('text-sm font-black')}>GRAND TOTAL :</Text>
-          <Text style={tw('text-sm font-black')}>Rs. {summary.total.toFixed(0)}</Text>
+          {summary.total < 0 ? (
+            <>
+              <Text style={tw('text-sm font-black')}>STORE CREDIT ISSUED :</Text>
+              <Text style={tw('text-sm font-black')}>Rs. {Math.abs(summary.total).toFixed(0)}</Text>
+            </>
+          ) : (
+            <>
+              <Text style={tw('text-sm font-black')}>GRAND TOTAL :</Text>
+              <Text style={tw('text-sm font-black')}>Rs. {summary.total.toFixed(0)}</Text>
+            </>
+          )}
         </View>
       </View>
 

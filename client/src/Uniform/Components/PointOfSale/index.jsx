@@ -120,6 +120,7 @@ const POSMultiTabWrapper = () => {
         const reserved = {};
         tabs.forEach(tab => {
             (tab.cart || []).forEach(item => {
+                if (item.isReturn) return;
                 // Key format matches what is used in POS (e.g. itemId-sizeId-colorId)
                 const key = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}`;
                 if (!reserved[key]) reserved[key] = 0;

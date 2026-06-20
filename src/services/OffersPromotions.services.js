@@ -256,11 +256,101 @@ async function remove(id) {
     return { statusCode: 0, data };
 }
 
+async function createClearanceOffers(body) {
+    const { items } = body;
+    
+    await prisma.$transaction(async (tx) => {
+        for (const item of items) {
+            if (!item.itemId || !item.clearanceBarcode || !item.manualClearancePrice) continue;
+            
+            // Check if offer already exists for this barcode
+            const existingOfferRules = await tx.offerRule.findMany({
+                where: {
+                    Offer: {
+                        OfferScope: { some: { type: "Item", refId: parseInt(item.itemId) } }
+                    }
+                }
+            });
+            
+            let offerExists = false;
+            for (let rule of existingOfferRules) {
+                const rulesArr = rule.conditions?.rules || [];
+                if (rulesArr.some(r => r.field === "Specific Barcode" && String(r.value).trim() === String(item.clearanceBarcode).trim())) {
+                    offerExists = true;
+                    break;
+                }
+            }
+            
+            if (!offerExists) {
+                // 1. Create the Offer
+                await tx.offer.create({
+                    data: {
+                        name: `Clearance - ${item.clearanceBarcode}`,
+                        code: `CLR-${item.clearanceBarcode}`,
+                        discountType: "Override",
+                        discountValue: parseFloat(item.manualClearancePrice || 0),
+                        active: true,
+                        scopeMode: "Item",
+                        applyToClearance: true,
+                        OfferScope: {
+                            create: [{ type: "Item", refId: parseInt(item.itemId) }]
+                        },
+                        OfferRule: {
+                            create: [{
+                                logic: "AND",
+                                conditions: {
+                                    rules: [{ field: "Specific Barcode", operator: "==", value: String(item.clearanceBarcode).trim() }]
+                                }
+                            }]
+                        }
+                    }
+                });
+
+                // 2. Create the ItemBarcode
+                const itemRecord = await tx.item.findUnique({ where: { id: parseInt(item.itemId) } });
+                const isLegacy = itemRecord?.isLegacy;
+
+                const priceListEntry = await tx.itemPriceList.findFirst({
+                    where: {
+                        itemId: parseInt(item.itemId),
+                        sizeId: isLegacy ? null : (item.sizeId ? parseInt(item.sizeId) : null),
+                        colorId: isLegacy ? null : (item.colorId ? parseInt(item.colorId) : null),
+                    }
+                });
+
+                if (priceListEntry) {
+                    const existingBarcode = await tx.itemBarcode.findFirst({
+                        where: {
+                            itemPriceListId: priceListEntry.id,
+                            barcode: String(item.clearanceBarcode).trim(),
+                            active: true
+                        }
+                    });
+
+                    if (!existingBarcode) {
+                        await tx.itemBarcode.create({
+                            data: {
+                                itemPriceListId: priceListEntry.id,
+                                barcode: String(item.clearanceBarcode).trim(),
+                                barcodeType: "CLEARANCE",
+                                active: true
+                            }
+                        });
+                    }
+                }
+            }
+        }
+    });
+
+    return { statusCode: 0, message: "Offers created successfully" };
+}
+
 export {
     get,
     getOne,
     getSearch,
     create,
     update,
-    remove
+    remove,
+    createClearanceOffers
 }

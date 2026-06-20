@@ -47,7 +47,7 @@ import StockLocationModal from './components/StockLocationModal';
 import { useGetcollectionsQuery } from '../../../redux/uniformService/CollectionsService';
 import { useGetRolesQuery } from '../../../redux/services/RolesMasterService';
 import secureLocalStorage from 'react-secure-storage';
-import { calculateCartWithOffers, getPotentialOffers, getItemApplicableOffers as getItemApplicableOffersHelper } from '../../../Utils/offerEngine';
+import { calculateCartWithOffers, calculateExchangeCartWithOffers, getPotentialOffers, getPotentialExchangeOffers, getItemApplicableOffers as getItemApplicableOffersHelper } from '../../../Utils/offerEngine';
 
 const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock = {}, initialEditSaleId = null, onGoToReports, autoOpenPayment = false }) => {
 
@@ -129,8 +129,6 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         return map;
     }, [unifiedStockData]);
 
-    console.log(stockMap, "stockMap")
-    console.log(unifiedStockData?.data?.filter(i => i.barcode == "DD10967"), "check barcode")
 
     // Edit Transaction Query
     const [selectedReportSaleId, setSelectedReportSaleId] = useState(initialEditSaleId || null);
@@ -222,14 +220,15 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const qtyInputRefs = useRef({});
     const salesPersonScannerRef = useRef(null);
 
+    const EMPTY_ARRAY = useMemo(() => [], []);
 
     // =========================================================================
     // CATEGORY 4: CONFIGURED DATA TRANSFORMS & CONSTANTS
     // =========================================================================
-    const employees = employeeData?.data || [];
-    const recentSales = posData?.data?.slice(0, 50) || [];
-    const customers = (customerData?.data || []);
-    const activeOffers = offersData?.data || [];
+    const employees = employeeData?.data || EMPTY_ARRAY;
+    const recentSales = useMemo(() => posData?.data?.slice(0, 50) || EMPTY_ARRAY, [posData?.data, EMPTY_ARRAY]);
+    const customers = customerData?.data || EMPTY_ARRAY;
+    const activeOffers = offersData?.data || EMPTY_ARRAY;
 
 
     // =========================================================================
@@ -249,7 +248,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         }
     }, [printData, shouldRedirectOnPrintClose, onGoToReports]);
 
-    console.log(availableCredit, "availableCredit")
+    /* console.log removed */
     useEffect(() => {
 
         if (selectedReportSaleId) {
@@ -287,7 +286,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     // Automatically clear offers from selectedOffersByRow if they are no longer eligible for the items in the cart
     useEffect(() => {
         if (!cart?.length) {
-            setSelectedOffersByRow({});
+            setSelectedOffersByRow(prev => Object.keys(prev).length === 0 ? prev : {});
             return;
         }
 
@@ -321,13 +320,47 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 }
             });
 
+            // Auto-apply if there is exactly 1 offer and it hasn't been explicitly deselected
+            cart.forEach(item => {
+                if (item.isReturn || item.isExchangeItem) return;
+
+                const itemKey = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.barcodeType || ''}`;
+
+                if (nextSel[itemKey] === undefined) {
+                    const applicable = getItemApplicableOffersHelper(item, cart, activeOffers, collectionsData);
+                    if (applicable.length === 1) {
+                        nextSel[itemKey] = applicable[0].id;
+                        changed = true;
+                    }
+                }
+            });
+
             return changed ? nextSel : prevSel;
         });
     }, [cart, activeOffers, collectionsData]);
 
+    // Dynamically update transactionType based on cart contents
+    useEffect(() => {
+        // If viewing an old report, do not override
+        if (selectedReportSaleId && !editMode) return;
+
+        if (!cart || cart.length === 0) {
+            setTransactionType("SALE");
+            return;
+        }
+
+        const allReturns = cart.every(item => item.isReturn);
+        const someReturns = cart.some(item => item.isReturn);
+
+        if (allReturns) {
+            setTransactionType("RETURN");
+        } else {
+            setTransactionType("SALE");
+        }
+    }, [cart, selectedReportSaleId, editMode]);
+
     // DB-to-form values mapping handler
     const syncFormWithDb = useCallback((sale) => {
-        console.log(sale, "sale");
 
         if (!sale) {
             setCart([]);
@@ -361,7 +394,12 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 salesPersonId: item.salesPersonId,
                 salesPersonBarcode: item?.Employee?.employeeId,
                 stockQty: 0,
-                sourceStoreId: retailStoreId
+                sourceStoreId: retailStoreId,
+                offerReversal: item.offerReversal,
+                offerReapplied: item.offerReapplied,
+                priceType: item.priceType,
+                appliedOfferName: item.appliedOfferName,
+                isExchangeItem: item.isExchangeItem === true
             };
         });
 
@@ -448,13 +486,26 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     // Evaluates which store promotions/offers are valid for current cart
     const potentialOffers = useMemo(() => {
+        const hasReturns = cart.some(item => item.isReturn);
+        if (hasReturns) {
+            return getPotentialExchangeOffers(activeOffers, cart);
+        }
         return getPotentialOffers(activeOffers, cart);
     }, [cart, activeOffers]);
 
     // Recalculates item pricing based on selected promotions
     const { cartWithOffers, appliedOffers } = useMemo(() => {
-        return calculateCartWithOffers(cart, selectedOffersByRow, potentialOffers, activeOffers);
-    }, [cart, selectedOffersByRow, potentialOffers, activeOffers]);
+        if ((selectedReportSaleId && !editMode) || editingInvoiceId) {
+            return { cartWithOffers: cart, appliedOffers: [] };
+        }
+
+        const hasReturns = cart.some(item => item.isReturn);
+        if (hasReturns) {
+            return calculateExchangeCartWithOffers(cart, activeOffers, selectedOffersByRow);
+        } else {
+            return calculateCartWithOffers(cart, selectedOffersByRow, potentialOffers, activeOffers);
+        }
+    }, [cart, selectedOffersByRow, potentialOffers, activeOffers, selectedReportSaleId, editMode]);
 
     const totalOfferDiscount = cartWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
 
@@ -464,17 +515,21 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     };
 
     // Resolves promotions that are explicitly applicable to a product
-    const getItemApplicableOffers = (item) => {
-        return getItemApplicableOffersHelper(item, cart, activeOffers, collectionsData);
-    };
+    const
+        getItemApplicableOffers = (item) => {
+            return getItemApplicableOffersHelper(item, cart, activeOffers, collectionsData);
+        };
 
-    console.log(getItemApplicableOffers(selectedItemForOffers), "avialaleoffersInModal")
-    console.log(selectedItemForOffers, "selectedItemForOffers")
+
+
+
+    /* console.log removed */
+    /* console.log removed */
 
     const handleSelectOfferForItem = (selectedItem, offer, isDeselect) => {
         const activeItemKey = `${selectedItem.itemId || selectedItem.id}-${selectedItem.sizeId || 0}-${selectedItem.colorId || 0}-${selectedItem.barcodeType || ''}`;
 
-        console.log(activeItemKey, "activeItemKey", selectedItem)
+        /* console.log removed */
 
         setSelectedOffersByRow(prev => {
             const next = { ...prev };
@@ -483,7 +538,10 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 next[activeItemKey] = null;
 
                 // Clear from other matching combo rows as well
-                if (offer.OfferRule?.[0]?.conditions?.rules?.length > 1 || offer.OfferRule?.[0]?.conditions?.rules?.[0]?.field === 'Variant Matrix') {
+                const rules = offer.OfferRule?.[0]?.conditions?.rules || [];
+                const isCombo = rules.length > 1 || rules[0]?.field === 'Variant Matrix' || rules.some(r => r.groupBy && r.groupBy.length > 0);
+
+                if (isCombo) {
                     Object.keys(next).forEach(k => {
                         if (next[k] === offer.id) {
                             next[k] = null;
@@ -494,11 +552,12 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 next[activeItemKey] = offer.id;
 
                 const rules = offer.OfferRule?.[0]?.conditions?.rules || [];
-                const isCombo = rules.length > 1 || rules[0]?.field === 'Variant Matrix';
+                const isCombo = rules.length > 1 || rules[0]?.field === 'Variant Matrix' || rules.some(r => r.groupBy && r.groupBy.length > 0);
 
                 if (isCombo) {
                     cart.forEach(item => {
                         const applicable = getItemApplicableOffers(item);
+                        console.log(applicable, "applicable")
                         const isEligible = applicable.some(o => String(o.id) === String(offer.id));
                         if (!isEligible) return;
 
@@ -636,13 +695,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     };
 
 
-    // =========================================================================
-    // CATEGORY 8: CART OPERATIONS (Cart modifiers, Stock allocations)
-    // =========================================================================
 
-    // Greedy stock allocation helper is imported from utils/posHelpers.js
-
-    // Resolves and appends items to shopping Cart list
     const addToCart = (product) => {
         const itemId = product.itemId || product.id;
         const sizeId = product.sizeId || 0;
@@ -651,16 +704,42 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         const barcode = product.barcode || "";
 
         setCart(prev => {
-            const existingIndex = prev.findIndex((item) => {
+            const isMatch = (item, checkReturnMatch, checkExchangeNewMatch) => {
                 const isIdMatch = (item.itemId === itemId) || (item.id === itemId);
                 const isSizeMatch = (item.sizeId || 0) === (sizeId || 0);
                 const isColorMatch = (item.colorId || 0) === (colorId || 0);
                 const isUomMatch = (item.uomId || 0) === (uomId || 0);
                 const isBarcodeMatch = (item.barcode || "") === (barcode || "");
-                const isReturnMatch = !!item.isReturn === !!product.isReturn;
+                const isReturnMatch = checkReturnMatch !== undefined ? !!item.isReturn === checkReturnMatch : true;
+                const isExchangeMatch = checkExchangeNewMatch !== undefined ? !!item.isExchangeItem === checkExchangeNewMatch : true;
 
-                return isIdMatch && isSizeMatch && isColorMatch && isUomMatch && isBarcodeMatch && isReturnMatch;
-            });
+                return isIdMatch && isSizeMatch && isColorMatch && isUomMatch && isBarcodeMatch && isReturnMatch && isExchangeMatch;
+            };
+
+            let existingIndex = -1;
+            let forceNewItem = false;
+
+            if (product.isReturn) {
+                existingIndex = prev.findIndex(item => isMatch(item, true, false));
+            } else {
+                const returnMatchItem = prev.find(item => isMatch(item, true, undefined));
+                const returnQty = returnMatchItem ? parseFloat(returnMatchItem.qty) : 0;
+
+                if (returnQty > 0) {
+                    const exchangeIndex = prev.findIndex(item => isMatch(item, false, true));
+                    const exchangeQty = exchangeIndex > -1 ? parseFloat(prev[exchangeIndex].qty) : 0;
+
+                    if (exchangeQty < returnQty) {
+                        existingIndex = exchangeIndex;
+                        forceNewItem = true;
+                    } else {
+                        existingIndex = prev.findIndex(item => isMatch(item, false, false));
+                        forceNewItem = false;
+                    }
+                } else {
+                    existingIndex = prev.findIndex(item => isMatch(item, false, false));
+                }
+            }
 
             if (existingIndex > -1) {
                 const existing = prev[existingIndex];
@@ -753,6 +832,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 fulfillments: initialFulfillments,
                 sourceStoreId: retailStoreId,
                 barcodeType: barcodeDetails?.barcodeType,
+                isExchangeItem: forceNewItem,
             }];
         });
 
@@ -776,39 +856,84 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     // Removes an element matching given composite keys
     const removeFromCart = (cartKey) => {
-        setCart(prev => prev.filter(item => `${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}` !== cartKey));
+        setCart(prev => prev.filter(item => `${item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}-${!!item.isReturn}-${!!item.isExchangeItem}` !== cartKey));
     };
 
     // Adjusts element quantity within stock parameters
-    const updateQuantity = (id, value, sizeId, colorId, isDirect = false) => {
-        setCart(prev => prev.map(item => {
-            if (item.id === id && item.sizeId === sizeId && item.colorId === colorId) {
-                const key = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}`;
-                const othersReserved = (globalReservedStock[key] || 0) - (parseFloat(item.qty) || 0);
-                const stockLimit = Math.max(0, (parseFloat(item.stockQty) || 0) - Math.max(0, othersReserved));
-                const isReturn = !!item.isReturn;
+    const updateQuantity = (id, value, sizeId, colorId, isDirect = false, isReturn = false, isExchangeItem = false) => {
+        setCart(prev => {
+            let nextCart = [...prev];
+            const itemIndex = nextCart.findIndex(item =>
+                (item.itemId === id || item.id === id) &&
+                item.sizeId === sizeId &&
+                item.colorId === colorId &&
+                !!item.isReturn === !!isReturn &&
+                !!item.isExchangeItem === !!isExchangeItem
+            );
 
-                let newQty;
-                if (isReturn) {
-                    newQty = isDirect ? (parseFloat(value) || 0) : (parseFloat(item.qty) || 0) + (parseFloat(value) || 0);
-                    if (newQty > (item.maxReturnQty || 0)) {
-                        Swal.fire({ title: "Warning", text: `Maximum return quantity is ${item.maxReturnQty}`, icon: "warning" });
-                        newQty = (item.maxReturnQty || 0);
-                    }
-                    if (newQty < 0) newQty = 0;
-                } else {
-                    newQty = isDirect ? Math.max(0, parseFloat(value) || 0) : Math.max(1, (parseFloat(item.qty) || 0) + (parseFloat(value) || 0));
-                    if (newQty > stockLimit) {
-                        Swal.fire({ title: "Warning", text: `Stock limit: ${stockLimit} (Reserved in other tabs)`, icon: "warning" });
-                        newQty = stockLimit;
-                    }
+            if (itemIndex === -1) return prev;
+
+            const item = nextCart[itemIndex];
+            const key = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}`;
+            const othersReserved = (globalReservedStock[key] || 0) - (parseFloat(item.qty) || 0);
+            const stockLimit = Math.max(0, (parseFloat(item.stockQty) || 0) - Math.max(0, othersReserved));
+
+            let newQty;
+            if (isReturn) {
+                newQty = isDirect ? Math.max(0, parseFloat(value) || 0) : Math.max(1, (parseFloat(item.qty) || 0) + (parseFloat(value) || 0));
+                if (newQty > (item.maxReturnQty || 0)) {
+                    Swal.fire({ title: "Warning", text: `Maximum return quantity is ${item.maxReturnQty}`, icon: "warning" });
+                    newQty = (item.maxReturnQty || 0);
+                }
+                const updatedFulfillments = allocateStock(newQty, item.stockDetails, retailStoreId);
+                nextCart[itemIndex] = { ...item, qty: newQty, fulfillments: updatedFulfillments };
+            } else {
+                newQty = isDirect ? Math.max(0, parseFloat(value) || 0) : Math.max(1, (parseFloat(item.qty) || 0) + (parseFloat(value) || 0));
+
+                if (newQty > stockLimit) {
+                    Swal.fire({ title: "Warning", text: `Stock limit: ${stockLimit} (Reserved in other tabs)`, icon: "warning" });
+                    newQty = stockLimit;
                 }
 
+                if (isExchangeItem) {
+                    const isMatch = (i, checkReturn, checkExchange) => {
+                        return (i.itemId === item.itemId || i.id === item.id) &&
+                            (i.sizeId || 0) === (item.sizeId || 0) &&
+                            (i.colorId || 0) === (item.colorId || 0) &&
+                            (i.uomId || 0) === (item.uomId || 0) &&
+                            (checkReturn !== undefined ? !!i.isReturn === checkReturn : true) &&
+                            (checkExchange !== undefined ? !!i.isExchangeItem === checkExchange : true);
+                    };
+                    const returnItem = nextCart.find(i => isMatch(i, true, undefined));
+                    const returnQty = returnItem ? parseFloat(returnItem.qty) : 0;
+
+                    if (returnQty > 0 && newQty > returnQty) {
+                        const excessQty = newQty - returnQty;
+                        newQty = returnQty;
+
+                        const newItemIndex = nextCart.findIndex(i => isMatch(i, false, false));
+                        if (newItemIndex > -1) {
+                            const newRow = nextCart[newItemIndex];
+                            let combinedNewQty = (parseFloat(newRow.qty) || 0) + excessQty;
+                            if (newQty + combinedNewQty > stockLimit) {
+                                combinedNewQty = stockLimit - newQty;
+                            }
+                            const updatedNewFulfillments = allocateStock(combinedNewQty, newRow.stockDetails, retailStoreId);
+                            nextCart[newItemIndex] = { ...newRow, qty: combinedNewQty, fulfillments: updatedNewFulfillments };
+                        } else {
+                            const newItemRow = { ...item, isExchangeItem: false, qty: excessQty };
+                            const updatedNewFulfillments = allocateStock(excessQty, newItemRow.stockDetails, retailStoreId);
+                            newItemRow.fulfillments = updatedNewFulfillments;
+                            nextCart.push(newItemRow);
+                        }
+                    }
+                }
                 const updatedFulfillments = allocateStock(newQty, item.stockDetails, retailStoreId);
-                return { ...item, qty: newQty, fulfillments: updatedFulfillments };
+                nextCart[itemIndex] = { ...item, qty: newQty, fulfillments: updatedFulfillments };
             }
-            return item;
-        }));
+
+            return nextCart;
+        });
     };
 
     // Custom stock location fulfillment update callback
@@ -882,14 +1007,14 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     };
 
 
-    // =========================================================================
-    // CATEGORY 11: FINANCIAL CALCULATIONS & TOTALS
-    // =========================================================================
+    const totalOfferReversal = cartWithOffers.reduce((sum, item) => sum + (parseFloat(item.offerReversal) || 0), 0);
+    const totalOfferReapplied = cartWithOffers.reduce((sum, item) => sum + (parseFloat(item.offerReapplied) || 0), 0);
+
     const returnTotal = cartWithOffers.reduce((sum, item) => item.isReturn ? sum + (parseFloat(item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
     const purchaseTotalBeforeOffer = cartWithOffers.reduce((sum, item) => !item.isReturn ? sum + (parseFloat(item.salesPrice || item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
 
     const totalBeforeOffer = purchaseTotalBeforeOffer - returnTotal;
-    const totalBeforeDiscount = purchaseTotalBeforeOffer - totalOfferDiscount - returnTotal;
+    const totalBeforeDiscount = purchaseTotalBeforeOffer - totalOfferDiscount - returnTotal + totalOfferReversal - totalOfferReapplied;
     // const totalWithoutRounding = totalBeforeDiscount - discount;
     const totalWithoutRounding = totalBeforeDiscount;
 
@@ -964,7 +1089,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     setEditMode(false);
                     setEditingInvoiceId(null);
                     setSelectedReportSaleId(null);
-                    setSearchMode('BARCODE');
+                    setSearchMode('NAME');
                     onGoToReports?.();
                 } else {
                     throw new Error(res.message || "Failed to approve request.");
@@ -1003,16 +1128,16 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setShowPaymentModal(true);
         }
     };
-    const triggerSilentPrint = async (printPayload) => {
-        <Modal isOpen={true} widthClass="w-[300pt] h-[95%]">
-            <PDFViewer style={{ width: "100%", height: "90vh" }}>
-                <PosMultiCopyPrint
-                    {...printPayload}
-                // branchData={branchList?.data?.find(b => b.id === branchId)}
-                />
-            </PDFViewer>
-        </Modal>
-    };
+    // const triggerSilentPrint = async (printPayload) => {
+    //     <Modal isOpen={true} widthClass="w-[300pt] h-[95%]">
+    //         <PDFViewer style={{ width: "100%", height: "90vh" }}>
+    //             <PosMultiCopyPrint
+    //                 {...printPayload}
+    //             // branchData={branchList?.data?.find(b => b.id === branchId)}
+    //             />
+    //         </PDFViewer>
+    //     </Modal>
+    // };
 
 
     const handleRequestDiscount = async () => {
@@ -1082,6 +1207,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 promotionalDiscount: totalOfferDiscount, manualDiscount: 0, roundOff,
                 approvalStatus: "PENDING",
                 transactionType,
+                offerPenalty: totalOfferReversal,
+                offerRestored: totalOfferReapplied
                 // bilStatus: "UNPAID"
             };
 
@@ -1144,7 +1271,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         handleCheckout(true, false, "UNPAID", "DELIVERYRECEIPT");
     };
 
-    console.log(editMode, "editMode", editingInvoiceId)
+    /* console.log removed */
 
 
     const handleCheckout = async (isApprovalOnly = false, isCreditSale = false, saleType = '', printType = '') => {
@@ -1232,6 +1359,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff, transactionType,
                 exchangeSalesNo: returnBillId,
                 returnBillId: returnBillId,
+                offerPenalty: totalOfferReversal,
+                offerRestored: totalOfferReapplied,
                 bilStatus: transactionType == "RETURN" ? "RETURNED" : saleType,
                 isRetrunBillId: selectedReturnBills?.value || null,
                 isExchange: selectedReturnBills ? true : false,
@@ -1279,7 +1408,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 };
 
 
-                console.log(printType == 'RECEIPTWITHBILL', "printType")
+                /* console.log removed */
 
 
                 if (printType == "DELIVERYRECEIPT") {
@@ -1308,7 +1437,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setGuestName("");
             setGuestMobile("");
             setIsGuestCustomer(true);
-            setSearchMode('BARCODE');
+            setSearchMode('NAME');
 
             if (transactionType === 'RETURN') {
                 onGoToReports?.();
@@ -1325,7 +1454,6 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     // Loads return items from older transactions into cart
     const handleBillSelected = (bill) => {
-        console.log(bill, "bill");
         if (!bill) return;
 
         if (bill.Party) {
@@ -1353,7 +1481,16 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 originalItemId: item.id,
                 taxPercent: masterItem?.Hsn?.tax || 5,
                 sourceStoreId: retailStoreId,
-                salesPersonBarcode: item.Employee?.employeeId
+                salesPersonBarcode: item.Employee?.employeeId,
+                originalOfferId: item.offerId || item.appliedOfferId || null,
+                appliedOfferSnapshot: item.appliedOfferSnapshot ? (typeof item.appliedOfferSnapshot === 'string' ? JSON.parse(item.appliedOfferSnapshot) : item.appliedOfferSnapshot) : null,
+                originalPrice: parseFloat(item.price || 0),
+                originalSalesPrice: parseFloat(item.originalSalesPrice || item.salesPrice || item.price || 0),
+                originalQty: parseFloat(item.qty || 0) - parseFloat(item.returnedQty || 0),
+                offerReversal: item.offerReversal,
+                offerReapplied: item.offerReapplied,
+                priceType: item.priceType,
+                appliedOfferName: item.appliedOfferName
             };
         });
 
@@ -1397,7 +1534,6 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     // Redirects editing triggers inside recent transactions list
     const handleEditPOS = (sale) => {
-        console.log(sale, 'sale');
         setEditMode(true);
         setSelectedReportSaleId(sale.id);
     };
@@ -1582,6 +1718,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                         selectedReturnBills={selectedReturnBills}
                         setSelectedReturnBills={setSelectedReturnBills}
                         isCancelBill={isCancelBill}
+                        totalOfferReversal={totalOfferReversal}
+                        totalOfferReapplied={totalOfferReapplied}
                     />
                 </div>
 
