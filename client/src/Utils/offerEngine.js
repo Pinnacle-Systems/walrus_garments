@@ -28,6 +28,14 @@ const getOfferScopeQty = (item, cart, selectedOffer) => {
             const colorValues = Array.isArray(rule.value) ? rule.value : (typeof rule.value === 'string' ? rule.value.split(',') : []);
             const colorIds = colorValues.map(v => typeof v === 'object' ? String(v.value) : String(v));
             filteredItems = filteredItems.filter(cit => colorIds.includes(String(cit.colorId)));
+        } else if (rule.field === 'Specific Barcode') {
+            const barcodeValue = String(rule.value).trim();
+            filteredItems = filteredItems.filter(cit => {
+                const itemBarcode = String(cit.barcode || cit.clearanceBarcode || cit.regularBarcode || '').trim();
+                if (rule.operator === '==') return itemBarcode === barcodeValue;
+                if (rule.operator === '!=') return itemBarcode !== barcodeValue;
+                return false;
+            });
         }
     });
 
@@ -123,6 +131,14 @@ export const getPotentialOffers = (activeOffers, cart) => {
                 const colorValues = Array.isArray(rule.value) ? rule.value : (typeof rule.value === 'string' ? rule.value.split(',') : []);
                 const colorIds = colorValues.map(v => typeof v === 'object' ? String(v.value) : String(v));
                 filteredScopeItems = filteredScopeItems.filter(cit => colorIds.includes(String(cit.colorId)));
+            } else if (rule.field === 'Specific Barcode') {
+                const barcodeValue = String(rule.value).trim();
+                filteredScopeItems = filteredScopeItems.filter(cit => {
+                    const itemBarcode = String(cit.barcode || cit.clearanceBarcode || cit.regularBarcode || '').trim();
+                    if (rule.operator === '==') return itemBarcode === barcodeValue;
+                    if (rule.operator === '!=') return itemBarcode !== barcodeValue;
+                    return false;
+                });
             }
         });
 
@@ -130,7 +146,7 @@ export const getPotentialOffers = (activeOffers, cart) => {
         const scopeValue = filteredScopeItems.reduce((sum, i) => sum + ((parseFloat(i.salesPrice || i.price) || 0) * (parseFloat(i.qty) || 0)), 0);
 
         const results = rules.map(rule => {
-            if (rule.field === 'Sizes' || rule.field === 'Colors') return true;
+            if (rule.field === 'Sizes' || rule.field === 'Colors' || rule.field === 'Specific Barcode') return true;
 
             if (rule.field === 'Variant Matrix') {
                 const matrixRules = rule.matrix || [];
@@ -169,6 +185,7 @@ export const getPotentialOffers = (activeOffers, cart) => {
                     return rule.groupBy.every(gField => {
                         if (gField === 'sizeId') return !!cit.sizeId;
                         if (gField === 'colorId') return !!cit.colorId;
+                        if (gField === 'sameItem') return !!cit.itemId || !!cit.id;
                         return !!cit[gField];
                     });
                 });
@@ -177,6 +194,7 @@ export const getPotentialOffers = (activeOffers, cart) => {
                     const key = rule.groupBy.map(gField => {
                         if (gField === 'sizeId') return item.sizeId;
                         if (gField === 'colorId') return item.colorId;
+                        if (gField === 'sameItem') return item.itemId || item.id;
                         return item[gField];
                     }).join('-');
                     const qty = parseFloat(item.qty) || 0;
@@ -221,7 +239,7 @@ export const getPotentialOffers = (activeOffers, cart) => {
 
             if (tier) {
                 if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
-                else if (off.discountType === 'Override') discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
+                else if (off.discountType === 'Override' || tier.type === 'Override') discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
                 else discountValue = tier.value;
             }
         }
@@ -260,6 +278,14 @@ export const getPotentialExchangeOffers = (activeOffers, cart) => {
                 const colorValues = Array.isArray(rule.value) ? rule.value : (typeof rule.value === 'string' ? rule.value.split(',') : []);
                 const colorIds = colorValues.map(v => typeof v === 'object' ? String(v.value) : String(v));
                 filteredScopeItems = filteredScopeItems.filter(cit => colorIds.includes(String(cit.colorId)));
+            } else if (rule.field === 'Specific Barcode') {
+                const barcodeValue = String(rule.value).trim();
+                filteredScopeItems = filteredScopeItems.filter(cit => {
+                    const itemBarcode = String(cit.barcode || cit.clearanceBarcode || cit.regularBarcode || '').trim();
+                    if (rule.operator === '==') return itemBarcode === barcodeValue;
+                    if (rule.operator === '!=') return itemBarcode !== barcodeValue;
+                    return false;
+                });
             }
         });
 
@@ -275,7 +301,7 @@ export const getPotentialExchangeOffers = (activeOffers, cart) => {
         const scopeValue = filteredScopeItems.reduce((sum, i) => sum + getEffectiveValue(i), 0);
 
         const results = rules.map(rule => {
-            if (rule.field === 'Sizes' || rule.field === 'Colors') return true;
+            if (rule.field === 'Sizes' || rule.field === 'Colors' || rule.field === 'Specific Barcode') return true;
 
             if (rule.field === 'Variant Matrix') {
                 const matrixRules = rule.matrix || [];
@@ -314,6 +340,7 @@ export const getPotentialExchangeOffers = (activeOffers, cart) => {
                     return rule.groupBy.every(gField => {
                         if (gField === 'sizeId') return !!cit.sizeId;
                         if (gField === 'colorId') return !!cit.colorId;
+                        if (gField === 'sameItem') return !!cit.itemId || !!cit.id;
                         return !!cit[gField];
                     });
                 });
@@ -322,6 +349,7 @@ export const getPotentialExchangeOffers = (activeOffers, cart) => {
                     const key = rule.groupBy.map(gField => {
                         if (gField === 'sizeId') return item.sizeId;
                         if (gField === 'colorId') return item.colorId;
+                        if (gField === 'sameItem') return item.itemId || item.id;
                         return item[gField];
                     }).join('-');
                     const qty = getEffectiveQty(item);
@@ -366,7 +394,7 @@ export const getPotentialExchangeOffers = (activeOffers, cart) => {
 
             if (tier) {
                 if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
-                else if (off.discountType === 'Override') discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
+                else if (off.discountType === 'Override' || tier.type === 'Override') discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
                 else discountValue = tier.value;
             }
         }
@@ -379,6 +407,130 @@ export const getPotentialExchangeOffers = (activeOffers, cart) => {
 
 
 
+
+export const areRulesSatisfiedForItems = (offer, items) => {
+    if (!offer) return false;
+    const rules = offer.OfferRule?.[0]?.conditions?.rules || [];
+    if (!rules.length) return true;
+
+    const inScopeItems = items.filter(item => {
+        if (item.barcodeType === 'CLEARANCE' && !offer.applyToClearance) return false;
+        if (offer.scopeMode === 'Global') return true;
+        const targetId = item.itemId || item.id;
+        if (offer.scopeMode === 'Item' || offer.scopeMode === 'Collection') {
+            return offer.OfferScope?.some(s => String(s.refId) === String(targetId));
+        }
+        return false;
+    });
+
+    let filteredScopeItems = [...inScopeItems];
+    rules.forEach(rule => {
+        if (rule.field === 'Sizes') {
+            const sizeValues = Array.isArray(rule.value) ? rule.value : (typeof rule.value === 'string' ? rule.value.split(',') : []);
+            const sizeIds = sizeValues.map(v => typeof v === 'object' ? String(v.value) : String(v));
+            filteredScopeItems = filteredScopeItems.filter(cit => sizeIds.includes(String(cit.sizeId)));
+        } else if (rule.field === 'Colors') {
+            const colorValues = Array.isArray(rule.value) ? rule.value : (typeof rule.value === 'string' ? rule.value.split(',') : []);
+            const colorIds = colorValues.map(v => typeof v === 'object' ? String(v.value) : String(v));
+            filteredScopeItems = filteredScopeItems.filter(cit => colorIds.includes(String(cit.colorId)));
+        } else if (rule.field === 'Specific Barcode') {
+            const barcodeValue = String(rule.value).trim();
+            filteredScopeItems = filteredScopeItems.filter(cit => {
+                const itemBarcode = String(cit.barcode || cit.clearanceBarcode || cit.regularBarcode || '').trim();
+                if (rule.operator === '==') return itemBarcode === barcodeValue;
+                if (rule.operator === '!=') return itemBarcode !== barcodeValue;
+                return false;
+            });
+        }
+    });
+
+    const getQty = (item) => parseFloat(item.qty || 0);
+    const getValue = (item) => (parseFloat(item.salesPrice || item.price || 0) * getQty(item));
+
+    const scopeQty = filteredScopeItems.reduce((sum, i) => sum + getQty(i), 0);
+    const scopeValue = filteredScopeItems.reduce((sum, i) => sum + getValue(i), 0);
+
+    const results = rules.map(rule => {
+        if (rule.field === 'Sizes' || rule.field === 'Colors' || rule.field === 'Specific Barcode') return true;
+
+        if (rule.field === 'Variant Matrix') {
+            const matrixRules = rule.matrix || [];
+            const res = matrixRules.map(mRow => {
+                const matchQty = filteredScopeItems
+                    .filter(item => {
+                        if (mRow.sizeId && String(item.sizeId) !== String(mRow.sizeId)) return false;
+                        if (mRow.colorId && String(item.colorId) !== String(mRow.colorId)) return false;
+                        return true;
+                    })
+                    .reduce((sum, i) => sum + getQty(i), 0);
+                return matchQty >= parseFloat(mRow.qty);
+            });
+            return rule.logic === 'OR' ? res.some(r => r) : res.every(r => r);
+        }
+
+        if (rule.field === 'Unique Sizes') {
+            const distinctSizes = new Set(filteredScopeItems.filter(i => getQty(i) > 0).map(item => String(item.sizeId)));
+            if (rule.operator === '>=') return distinctSizes.size >= parseFloat(rule.value);
+            if (rule.operator === '<=') return distinctSizes.size <= parseFloat(rule.value);
+            if (rule.operator === '==') return distinctSizes.size === parseFloat(rule.value);
+            return false;
+        }
+
+        if (rule.field === 'Unique Colors') {
+            const distinctColors = new Set(filteredScopeItems.filter(i => getQty(i) > 0).map(item => String(item.colorId)));
+            if (rule.operator === '>=') return distinctColors.size >= parseFloat(rule.value);
+            if (rule.operator === '<=') return distinctColors.size <= parseFloat(rule.value);
+            if (rule.operator === '==') return distinctColors.size === parseFloat(rule.value);
+            return false;
+        }
+
+        if (rule.groupBy && rule.groupBy.length > 0) {
+            const groups = {};
+            const validScopeItems = filteredScopeItems.filter(cit => {
+                return rule.groupBy.every(gField => {
+                    if (gField === 'sizeId') return !!cit.sizeId;
+                    if (gField === 'colorId') return !!cit.colorId;
+                    if (gField === 'sameItem') return !!cit.itemId || !!cit.id;
+                    return !!cit[gField];
+                });
+            });
+
+            validScopeItems.forEach(item => {
+                const key = rule.groupBy.map(gField => {
+                    if (gField === 'sizeId') return item.sizeId;
+                    if (gField === 'colorId') return item.colorId;
+                    if (gField === 'sameItem') return item.itemId || item.id;
+                    return item[gField];
+                }).join('-');
+                const qty = getQty(item);
+                const val = getValue(item);
+                if (!groups[key]) groups[key] = { qty: 0, val: 0 };
+                groups[key].qty += qty;
+                groups[key].val += val;
+            });
+            const groupResults = Object.values(groups).map(g => {
+                const target = rule.field === 'Minimum Quantity' ? g.qty : (rule.field === 'Cart Value' ? g.val : 0);
+                if (rule.operator === '>=') return target >= parseFloat(rule.value);
+                if (rule.operator === '<=') return target <= parseFloat(rule.value);
+                if (rule.operator === '==') return target === parseFloat(rule.value);
+                if (rule.operator === '<') return target < parseFloat(rule.value);
+                if (rule.operator === '>') return target > parseFloat(rule.value);
+                return false;
+            });
+            return groupResults.some(r => r);
+        }
+
+        const target = rule.field === 'Minimum Quantity' ? scopeQty : (rule.field === 'Cart Value' ? scopeValue : 0);
+        if (rule.operator === '>=') return target >= parseFloat(rule.value);
+        if (rule.operator === '<=') return target <= parseFloat(rule.value);
+        if (rule.operator === '==') return target === parseFloat(rule.value);
+        if (rule.operator === '<') return target < parseFloat(rule.value);
+        if (rule.operator === '>') return target > parseFloat(rule.value);
+        return true;
+    });
+
+    return offer.OfferRule?.[0]?.logic === 'OR' ? results.some(r => r) : results.every(r => r);
+};
 
 export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffersByRow) => {
     if (!cart?.length) return cart;
@@ -430,7 +582,7 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
                         if (snap) {
                             const rules = snap.OfferRule?.[0]?.conditions?.rules || [];
                             const isStrict = rules.some(rule =>
-                                ['Sizes', 'Colors', 'Variant Matrix', 'Unique Sizes', 'Unique Colors'].includes(rule.field) ||
+                                ['Sizes', 'Colors', 'Specific Barcode', 'Variant Matrix', 'Unique Sizes', 'Unique Colors'].includes(rule.field) ||
                                 (rule.groupBy && rule.groupBy.length > 0)
                             );
                             // If no strict rules, it's safe to inherit for a different variant
@@ -545,18 +697,32 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
                         } else {
                             offerPrice = tier.value;
                         }
+                    } else if (tier.type === 'Override') {
+                        offerPrice = parseFloat(tier.value || 0);
+                    } else {
+                        offerPrice *= (1 - parseFloat(tier.value || 0) / 100);
                     }
-                    else offerPrice *= (1 - parseFloat(tier.value || 0) / 100);
                 }
                 console.log(offerPrice, "offerPrice",)
 
             }
-            return Math.max(0, offerPrice);
+            return Math.round(Math.max(0, offerPrice) * 100) / 100;
         };
+
+        const keptItemsToCheck = matchingReturns.map(r => ({
+            ...r,
+            qty: Math.max(0, parseFloat(r.originalQty || 0) - parseFloat(r.qty || 0))
+        }));
+
+        const combinedItemsToCheck = [
+            ...keptItemsToCheck,
+            ...matchingNew.map(n => ({ ...n, qty: parseFloat(n.qty || 0) }))
+        ];
 
         if (item.isReturn) {
             // For return items, calculate Reversal based strictly on keptQty
-            currentItemPrice = getPriceAtQty(keptQty);
+            const isKeptRulesValid = areRulesSatisfiedForItems(selectedOffer, keptItemsToCheck);
+            currentItemPrice = isKeptRulesValid ? getPriceAtQty(keptQty) : salesPrice;
             const originalOfferPrice = parseFloat(item.originalPrice || 0);
 
 
@@ -577,7 +743,8 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
         } else {
 
             const evalQty = keptQty + newQty;
-            currentItemPrice = getPriceAtQty(evalQty);
+            const isCombinedRulesValid = areRulesSatisfiedForItems(selectedOffer, combinedItemsToCheck);
+            currentItemPrice = isCombinedRulesValid ? getPriceAtQty(evalQty) : salesPrice;
 
 
             // Reapplication: check if tier improved for the RETURN items by adding this new item
@@ -610,15 +777,21 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
                                 } else {
                                     offerPrice = tier.value;
                                 }
+                            } else if (tier.type === 'Override') {
+                                offerPrice = parseFloat(tier.value || 0);
+                            } else {
+                                offerPrice *= (1 - parseFloat(tier.value || 0) / 100);
                             }
-                            else offerPrice *= (1 - parseFloat(tier.value || 0) / 100);
                         }
                     }
-                    return Math.max(0, offerPrice);
+                    return Math.round(Math.max(0, offerPrice) * 100) / 100;
                 };
 
-                const priceForKeptOnly = getPriceWithOffer(keptQty, rSalesPrice, originalOffer);
-                const priceWithNewItem = getPriceWithOffer(evalQty, rSalesPrice, originalOffer);
+                const isKeptRulesValidForR = areRulesSatisfiedForItems(originalOffer, keptItemsToCheck);
+                const isCombinedRulesValidForR = areRulesSatisfiedForItems(originalOffer, combinedItemsToCheck);
+
+                const priceForKeptOnly = isKeptRulesValidForR ? getPriceWithOffer(keptQty, rSalesPrice, originalOffer) : rSalesPrice;
+                const priceWithNewItem = isCombinedRulesValidForR ? getPriceWithOffer(evalQty, rSalesPrice, originalOffer) : rSalesPrice;
 
                 console.log({
                     priceForKeptOnly,
@@ -674,12 +847,12 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
         return {
             ...item,
             priceType: 'offerPrice',
-            price: item.isReturn ? parseFloat(item.originalPrice || item.price || 0) : currentItemPrice,
+            price: item.isReturn ? parseFloat(item.originalPrice || item.price || 0) : Math.round(currentItemPrice * 100) / 100,
             appliedOfferName,
             appliedOfferId: selectedOffer ? selectedOffer.id : null,
             appliedOfferSnapshot: selectedOffer ? selectedOffer : null,
-            offerReversal,
-            offerReapplied
+            offerReversal: Math.round(offerReversal * 100) / 100,
+            offerReapplied: Math.round(offerReapplied * 100) / 100
         };
     });
 
@@ -723,6 +896,15 @@ export const calculateCartWithOffers = (cart, selectedOffersByRow, potentialOffe
             };
         }
 
+        if (!areRulesSatisfiedForItems(selectedOffer, cart)) {
+            return {
+                ...item,
+                priceType: 'SalesPrice',
+                price: item.salesPrice !== undefined ? item.salesPrice : (item.price || 0),
+                appliedOfferName: null
+            };
+        }
+
         appliedSet.add(selectedOffer);
         let currentItemPrice = item.salesPrice !== undefined ? parseFloat(item.salesPrice) : parseFloat(item.price || 0);
 
@@ -742,15 +924,18 @@ export const calculateCartWithOffers = (cart, selectedOffersByRow, potentialOffe
                     } else {
                         currentItemPrice = tier.value;
                     }
+                } else if (tier.type === 'Override') {
+                    currentItemPrice = parseFloat(tier.value || 0);
+                } else {
+                    currentItemPrice *= (1 - parseFloat(tier.value || 0) / 100);
                 }
-                else currentItemPrice *= (1 - parseFloat(tier.value || 0) / 100);
             }
         }
 
         return {
             ...item,
             priceType: 'offerPrice',
-            price: Math.max(0, currentItemPrice),
+            price: Math.round(Math.max(0, currentItemPrice) * 100) / 100,
             appliedOfferName: selectedOffer.name,
             appliedOfferId: selectedOffer.id,
             appliedOfferSnapshot: selectedOffer

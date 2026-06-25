@@ -281,7 +281,11 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             accessor: (item) => item?.name,
             className: "font-medium text-gray-900 text-left uppercase w-96",
         },
-
+        {
+            header: "Code",
+            accessor: (item) => item?.code,
+            className: "font-medium text-gray-900 text-left uppercase w-96",
+        },
         {
             header: "Status",
             accessor: (item) => (item.active ? ACTIVE : INACTIVE),

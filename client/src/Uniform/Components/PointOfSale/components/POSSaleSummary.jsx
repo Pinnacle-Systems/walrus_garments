@@ -25,7 +25,8 @@ const POSSaleSummary = ({
     purchaseTotal = 0,
     isUnpaidBill,
     totalOfferReversal = 0,
-    totalOfferReapplied = 0
+    totalOfferReapplied = 0,
+    netPayableTotal
 }) => {
     return (
         <div className="space-y-2 shrink-0 bg-white border border-slate-100 p-3 rounded-2xl shadow-sm animate-in fade-in duration-200">
@@ -35,10 +36,13 @@ const POSSaleSummary = ({
             <div className="space-y-2">
 
                 <>
-                    <div className="flex justify-between items-center text-xs font-bold text-rose-500">
-                        <span className="text-[11px] uppercase tracking-wider">Return Amount</span>
-                        <span>₹{Math.abs(returnTotal).toLocaleString()}</span>
-                    </div>
+                    {returnTotal > 0 && (
+                        <div className="flex justify-between items-center text-xs font-bold text-rose-500">
+                            <span className="text-[11px] uppercase tracking-wider">Return Amount</span>
+                            <span>₹{Math.abs(returnTotal).toLocaleString()}</span>
+                        </div>
+                    )}
+
                 </>
 
                 {totalOfferReversal > 0 && (
@@ -68,27 +72,29 @@ const POSSaleSummary = ({
                     </div>
                 )}
 
-                <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                    <span className="text-[11px] uppercase tracking-wider text-slate-400">Gross Total</span>
-                    <span>₹{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
+                {netPayableTotal > 0 && (
+                    <>
+                        <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Gross Total</span>
+                            <span>₹{total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
 
-                <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                    <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
-                    <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
+                        <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Subtotal (Excl. Tax)</span>
+                            <span>₹{subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
 
+                        <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Tax Amount</span>
+                            <span>₹{tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
 
-
-                <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                    <span className="text-[11px] uppercase tracking-wider text-slate-400">Tax Amount</span>
-                    <span>₹{tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
-
-                <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                    <span className="text-[11px] uppercase tracking-wider text-slate-400">Round Off</span>
-                    <span>₹{roundOff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
+                        <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                            <span className="text-[11px] uppercase tracking-wider text-slate-400">Round Off</span>
+                            <span>₹{roundOff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                    </>
+                )}
 
                 {appliedCredit > 0 && (
                     <div className="flex justify-between items-center text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100 mt-1">
@@ -98,14 +104,12 @@ const POSSaleSummary = ({
                         <span>-₹{appliedCredit.toLocaleString()}</span>
                     </div>
                 )}
-
                 <div className={`flex justify-between items-center font-black text-lg pt-2.5 border-t border-slate-200 mt-2 ${isRefund ? 'text-rose-600' : 'text-indigo-700'}`}>
                     <span className={`text-[12px] uppercase tracking-widest ${isRefund ? 'text-rose-400' : 'text-indigo-400'}`}>
-                        {isRefund ? 'Refund Amount' : 'Net Payable'}
+                        {isRefund ? 'Issue Credit / Refund Amount' : 'Net Payable'}
                     </span>
-                    <span>₹{Math.abs(netPayable).toLocaleString()}</span>
+                    <span>₹{isRefund ? Math.abs(netPayable).toLocaleString() : Math.abs(netPayableTotal).toLocaleString()}</span>
                 </div>
-
                 <div className="flex justify-between items-center text-emerald-500 text-xs font-bold">
                     <span className="text-[11px] uppercase tracking-wider">Manual Disc</span>
                     <div className="flex items-center gap-1">

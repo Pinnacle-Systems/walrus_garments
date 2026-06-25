@@ -73,7 +73,7 @@ async function get(req) {
 
 
     const { branchId, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus,
-        userRole, reportsTransactionType, pagination, currentPageNumber, dataPerPage, exchangeBill
+        userRole, reportsTransactionType, pagination, currentPageNumber, dataPerPage, exchangeBill, filterDate
     } = req.query;
 
 
@@ -152,7 +152,7 @@ async function get(req) {
         }
 
     }
-    data = manualFilterSearchData(searchDate, "", "", data)
+    data = manualFilterSearchData(searchDate || filterDate, "", "", data)
     console.log(approvalStatus, "approvalStatus")
 
     if (pagination) {
@@ -434,7 +434,7 @@ async function create(body) {
             const grossReturnAmount = (posItems || [])
                 .filter(i => i.isReturn)
                 .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
-            
+
             const passedNetAmount = parseFloat(netAmount || 0);
             const effectiveSaleAmount = grossReturnAmount + (isReturn ? -passedNetAmount : passedNetAmount);
 
@@ -679,7 +679,7 @@ async function update(id, body) {
             const grossReturnAmount = (posItems || [])
                 .filter(i => i.isReturn)
                 .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
-            
+
             const passedNetAmount = parseFloat(netAmount || updatedPos.netAmount || 0);
             const effectiveSaleAmount = grossReturnAmount + (isReturn ? -passedNetAmount : passedNetAmount);
 

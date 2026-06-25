@@ -13,6 +13,7 @@ import { useGetLocationMasterQuery } from "../../../redux/uniformService/Locatio
 import { useAddSizeMasterMutation, useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import { useAddUnitOfMeasurementMasterMutation, useGetUnitOfMeasurementMasterQuery } from "../../../redux/uniformService/UnitOfMeasurementServices";
+import { useCreateClearanceOffersMutation } from "../../../redux/uniformService/Offer&PromotionsService";
 import {
   getCommonParams,
   getStockMaintenanceConfig,
@@ -130,6 +131,9 @@ function getExistingLegacyBarcode(item, isDiscountSection) {
   const priceRow = item?.ItemPriceList?.[0];
   const barcodes = priceRow?.ItemBarcodes || [];
 
+
+  // console.log(item, "itemitem", isDiscountSection)
+
   if (isDiscountSection) {
     const clearance = barcodes.find(b => b.active !== false && b.barcodeType === "CLEARANCE");
     if (clearance) return normalizeCodeValue(clearance.barcode);
@@ -219,7 +223,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
   const [addSize] = useAddSizeMasterMutation();
   const [addColor] = useAddColorMasterMutation();
   const [addUom] = useAddUnitOfMeasurementMasterMutation();
-
+  const [createClearanceOffers] = useCreateClearanceOffersMutation();
 
   const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
   const {
@@ -243,6 +247,8 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
   );
 
   const isDiscountSection = locationList?.data?.find(loc => String(loc.id) === String(selectedLocationId))?.storeName?.toUpperCase() === "DISCOUNT SECTION";
+
+  console.log(isDiscountSection, 'isDiscountSection', selectedLocationId)
 
   const applyResolvedLegacyItemToRow = React.useCallback((row, resolvedItem) => {
     if (!resolvedItem) return row;
@@ -922,6 +928,25 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
       if (returnData.statusCode === 1) {
         Swal.fire({ icon: "error", title: returnData?.message, showConfirmButton: false });
       } else if (returnData.statusCode === 0) {
+        if (isDiscountSection) {
+          const uniqueOfferPayload = Array.from(
+            new Map(
+              mappedStockItems.map((item) => [
+                normalizeCodeValue(item.item_code),
+                {
+                  itemId: item.itemId,
+                  clearanceBarcode: normalizeCodeValue(item.item_code),
+                  manualClearancePrice: getRowSalesPrice(item) || 0,
+                },
+              ])
+            ).values()
+          );
+
+          if (uniqueOfferPayload.length > 0) {
+            await createClearanceOffers({ items: uniqueOfferPayload }).unwrap();
+          }
+        }
+
         await Swal.fire({
           icon: "success",
           title: "Stock Added Successfully",
@@ -942,6 +967,7 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
     branchId,
     clearWorkspace,
     companyId,
+    createClearanceOffers,
     finYearId,
     getMissingRequiredRowMessage,
     getExistingLegacyConflicts,
@@ -1519,37 +1545,11 @@ const ExcelSelectionTable = ({ file, setFile, params, stockItems = [], setStockI
                             );
                           })}
                           <td className={transactionTableActionCellClassName}>
-                            {/* <button
-                              onClick={() =>
-                                updateRows((previousRows) =>
-                                  previousRows.filter(
-                                    (entry) => entry._rowId !== row._rowId
-                                  )
-                                )
-                              }
-                              className="mx-auto inline-flex h-7 w-7 items-center justify-center rounded bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700"
-                              title="Delete Row"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                            </button> */}
+
                             <button
                               onClick={addManualRow}
                               className="mx-auto inline-flex h-6 w-10 items-center justify-center rounded bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700"
-                            // disabled={readOnly}
-                            // className="h-full w-full rounded-none bg-blue-50 py-0"
+
                             >
                               +
                             </button>

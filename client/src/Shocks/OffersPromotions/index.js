@@ -91,6 +91,9 @@ const OffersPromotions = () => {
     const [applyToRegular, setApplyToRegular] = useState(true);
     const [applyToClearance, setApplyToClearance] = useState(false);
 
+    const [clearanceSearchItem, setClearanceSearchItem] = useState("");
+    const [clearanceSearchBarcode, setClearanceSearchBarcode] = useState("");
+
     const [showSelectionModal, setShowSelectionModal] = useState(false);
     const [selectionSearch, setSelectionSearch] = useState("");
     const [previewItem, setPreviewItem] = useState(null);
@@ -129,7 +132,7 @@ const OffersPromotions = () => {
     const clearanceBarcodes = useMemo(() => {
         if (!itemPriceList?.data) return [];
         let list = [];
-        itemPriceList?.data?.filter(item => !item.item?.isLegacy && item.item.active).forEach(item => {
+        itemPriceList?.data?.filter(item => item.item.active).forEach(item => {
             if (item.ItemBarcodes && Array.isArray(item.ItemBarcodes)) {
                 item.ItemBarcodes.forEach(bc => {
                     if (bc.barcodeType === "CLEARANCE") {
@@ -151,9 +154,21 @@ const OffersPromotions = () => {
         return list;
     }, [itemPriceList, colorOptions, sizeOptions]);
 
-    console.log(itemPriceList?.data?.filter(item => !item.item?.isLegacy && item.item.active), "clearanceBarcodes")
-
     const selectedClearanceBarcode = conditions[0]?.field === 'Specific Barcode' ? conditions[0].value : null;
+
+    const filteredClearanceBarcodes = useMemo(() => {
+        let list = clearanceBarcodes;
+        if (id && selectedClearanceBarcode) {
+            list = list.filter(bc => bc.barcode === selectedClearanceBarcode);
+        }
+        return list.filter(bc => {
+            const matchItem = bc.itemName?.toLowerCase().includes(clearanceSearchItem.toLowerCase());
+            const matchBarcode = String(bc.barcode || "").toLowerCase().includes(clearanceSearchBarcode.toLowerCase());
+            return matchItem && matchBarcode;
+        });
+    }, [clearanceBarcodes, clearanceSearchItem, clearanceSearchBarcode, id, selectedClearanceBarcode]);
+
+    console.log(itemPriceList?.data?.filter(item => !item.item?.isLegacy && item.item.active), "clearanceBarcodes")
 
     const handleClearanceSelect = (bc) => {
         setConditions([{ field: 'Specific Barcode', operator: '==', value: bc.barcode }]);
@@ -309,6 +324,23 @@ const OffersPromotions = () => {
 
     const saveData = async (nextProcess) => {
         const finalData = { ...dataForSubmit };
+
+        if (applyToClearance && !applyToRegular && selectedClearanceBarcode) {
+            const existingOffer = allData?.data?.find(offer =>
+                offer.id !== id &&
+                offer.applyToClearance &&
+                offer.OfferRule?.[0]?.conditions?.rules?.some(r => r.field === 'Specific Barcode' && r.value === selectedClearanceBarcode)
+            );
+
+            if (existingOffer) {
+                Swal.fire({
+                    title: 'Offer Already Exists!',
+                    text: 'Already this clearance item has an offer!',
+                    icon: 'warning'
+                });
+                return;
+            }
+        }
 
         if (!validateData(finalData)) {
             Swal.fire({
@@ -496,26 +528,30 @@ const OffersPromotions = () => {
                                 })}
                             </div>
                         </div>
-                        <div>
-                            <span className="block text-gray-700 font-extrabold uppercase text-[9.5px] mb-1">Scope Mode</span>
-                            <div className="grid grid-cols-3 gap-1.5">
-                                {SCOPE_OPTIONS.map(opt => (
-                                    <div key={opt.id} onClick={() => { if (!readOnly && scope !== opt.id) { setScope(opt.id); setScopeSelection([]); } }} className={`p-1 rounded border-2 text-center cursor-pointer transition-all ${scope === opt.id ? 'border-indigo-600 bg-indigo-50 shadow-sm text-indigo-700' : 'border-gray-200 bg-gray-50 hover:bg-white text-gray-800 font-semibold'}`}>
-                                        <div className="flex justify-center mb-0.5"><opt.icon size={11} /></div>
-                                        <div className="text-[9px] font-extrabold uppercase">{opt.label}</div>
+                        {!(applyToClearance && !applyToRegular) && (
+                            <>
+                                <div>
+                                    <span className="block text-gray-700 font-extrabold uppercase text-[9.5px] mb-1">Scope Mode</span>
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        {SCOPE_OPTIONS.map(opt => (
+                                            <div key={opt.id} onClick={() => { if (!readOnly && scope !== opt.id) { setScope(opt.id); setScopeSelection([]); } }} className={`p-1 rounded border-2 text-center cursor-pointer transition-all ${scope === opt.id ? 'border-indigo-600 bg-indigo-50 shadow-sm text-indigo-700' : 'border-gray-200 bg-gray-50 hover:bg-white text-gray-800 font-semibold'}`}>
+                                                <div className="flex justify-center mb-0.5"><opt.icon size={11} /></div>
+                                                <div className="text-[9px] font-extrabold uppercase">{opt.label}</div>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-                        {scope !== 'Global' && (
-                            <button
-                                type="button"
-                                onClick={() => setShowSelectionModal(true)}
-                                className="w-full py-1.5 px-3 bg-indigo-50 border border-indigo-200 rounded text-indigo-700 font-bold text-[10px] uppercase hover:bg-indigo-100 transition-all flex justify-between items-center"
-                            >
-                                <span>{scopeSelection?.length || 0} {scope}s Included</span>
-                                <Settings size={12} className="opacity-70" />
-                            </button>
+                                </div>
+                                {scope !== 'Global' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowSelectionModal(true)}
+                                        className="w-full py-1.5 px-3 bg-indigo-50 border border-indigo-200 rounded text-indigo-700 font-bold text-[10px] uppercase hover:bg-indigo-100 transition-all flex justify-between items-center"
+                                    >
+                                        <span>{scopeSelection?.length || 0} {scope}s Included</span>
+                                        <Settings size={12} className="opacity-70" />
+                                    </button>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -539,11 +575,23 @@ const OffersPromotions = () => {
                                         <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter w-32">Barcode</th>
                                         <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter w-24">Color</th>
                                         <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter w-24">Size</th>
-                                        <th className="p-2 border-b font-extrabold text-gray-950 uppercase tracking-tighter w-24 text-right">Current Price</th>
+
+                                    </tr>
+                                    <tr>
+                                        <th className="p-1 border-b bg-gray-50"></th>
+                                        <th className="p-1 border-b bg-gray-50">
+                                            <input type="text" placeholder="Search Item..." className="w-full p-1.5 text-[10px] border border-gray-300 rounded font-normal focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500" value={clearanceSearchItem} onChange={e => setClearanceSearchItem(e.target.value)} disabled={readOnly} />
+                                        </th>
+                                        <th className="p-1 border-b bg-gray-50">
+                                            <input type="text" placeholder="Search Barcode..." className="w-full p-1.5 text-[10px] border border-gray-300 rounded font-normal focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500" value={clearanceSearchBarcode} onChange={e => setClearanceSearchBarcode(e.target.value)} disabled={readOnly} />
+                                        </th>
+                                        <th className="p-1 border-b bg-gray-50"></th>
+                                        <th className="p-1 border-b bg-gray-50"></th>
+                                        <th className="p-1 border-b bg-gray-50"></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {clearanceBarcodes.map((bc, idx) => (
+                                    {filteredClearanceBarcodes.map((bc, idx) => (
                                         <tr key={idx} className={`hover:bg-blue-50/40 transition-colors cursor-pointer ${selectedClearanceBarcode === bc.barcode ? 'bg-indigo-50/50' : ''}`} onClick={() => !readOnly && handleClearanceSelect(bc)}>
                                             <td className="p-2 text-center">
                                                 <input type="radio" checked={selectedClearanceBarcode === bc.barcode} onChange={() => { }} className="text-indigo-600 focus:ring-indigo-500 cursor-pointer" disabled={readOnly} />
@@ -552,10 +600,9 @@ const OffersPromotions = () => {
                                             <td className="p-2 font-extrabold text-indigo-700">{bc.barcode}</td>
                                             <td className="p-2 text-gray-600 font-semibold">{bc.displayColor}</td>
                                             <td className="p-2 text-gray-600 font-semibold">{bc.displaySize}</td>
-                                            <td className="p-2 text-gray-800 font-extrabold text-right">₹{bc.currentPrice}</td>
                                         </tr>
                                     ))}
-                                    {clearanceBarcodes.length === 0 && (
+                                    {filteredClearanceBarcodes.length === 0 && (
                                         <tr>
                                             <td colSpan="6" className="p-8 text-center text-gray-500 italic font-bold">No clearance items found.</td>
                                         </tr>
@@ -865,7 +912,7 @@ const OffersPromotions = () => {
                                 <TextInputNew1 name="Override Price (₹)" type="number" value={benefitAmount} setValue={setBenefitAmount} readOnly={readOnly} />
                                 {applyToClearance && !applyToRegular && originalClearancePrice !== null && parseFloat(benefitAmount) !== originalClearancePrice && (
                                     <div className="text-[9.5px] text-amber-700 font-bold bg-amber-50 p-1.5 rounded border border-amber-200">
-                                        ⚠️ Note: You are changing the original clearance price (₹{originalClearancePrice}).
+                                        ⚠️ Note: You are changing the original clearance price (₹{benefitAmount}).
                                     </div>
                                 )}
                             </div>
@@ -930,7 +977,7 @@ const OffersPromotions = () => {
     return (
         <MasterPageLayout title="Offers & Promotions" onAdd={onNew} addButtonLabel="+ Add New Offer">
             <div className="bg-white rounded-xl shadow-sm overflow-hidden h-full">
-                <ReusableTable columns={columns} data={allData?.data} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={12} isLoading={isLoading || isFetching} />
+                <ReusableTable columns={columns} data={allData?.data} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={15} isLoading={isLoading || isFetching} />
             </div>
 
             {form && (

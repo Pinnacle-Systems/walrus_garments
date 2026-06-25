@@ -103,10 +103,7 @@ const useInvalidateTags = () => {
             type: `offersPromotions/invalidateTags`,
             payload: ["offersPromotions"],
         },
-        {
-            type: `offersPromotions/invalidateTags`,
-            payload: ["offersPromotions"],
-        },
+
 
 
 

@@ -56,8 +56,13 @@ const SearchableTableCellSelectWithValue = ({
     const handleBlur = (event) => {
         // Check if the focus is moving to an element outside the container
         if (containerRef.current && !containerRef.current.contains(event.relatedTarget)) {
-            if (isOpen && isSearching && search.trim() !== "" && filteredOptions.length === 0) {
-                commitSelection(search.trim());
+            if (isOpen && isSearching && search.trim() !== "") {
+                const exactMatch = filteredOptions.find((opt) => normalize(opt.label) === normalize(search));
+                if (exactMatch) {
+                    commitSelection(exactMatch.value);
+                } else {
+                    commitSelection(search.trim());
+                }
             } else {
                 closeDropdown();
             }
@@ -98,11 +103,9 @@ const SearchableTableCellSelectWithValue = ({
     };
 
     useEffect(() => {
-        if (search.trim() !== "" && filteredOptions.length > 0) {
-            setHighlightedIndex(0);
-        } else {
-            setHighlightedIndex(-2);
-        }
+        // Do not auto-select the first option when typing.
+        // Let the user explicitly arrow down or use exact match.
+        setHighlightedIndex(-2);
     }, [search, filteredOptions]);
 
     const scrollIntoView = (index) => {
@@ -186,9 +189,19 @@ const SearchableTableCellSelectWithValue = ({
                             return;
                         }
 
-                        if (isOpen && isSearching && filteredOptions.length === 0 && search.trim() !== "") {
+                        if (isOpen && isSearching && search.trim() !== "") {
                             event.preventDefault();
-                            commitSelection(search.trim());
+                            
+                            const exactMatch = filteredOptions.find((opt) => normalize(opt.label) === normalize(search));
+                            if (exactMatch) {
+                                commitSelection(exactMatch.value);
+                            } else {
+                                commitSelection(search.trim());
+                            }
+                            
+                            if (handlers?.handleTabKeyDown) {
+                                handlers.handleTabKeyDown(event);
+                            }
                             return;
                         }
 

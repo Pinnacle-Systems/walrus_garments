@@ -591,7 +591,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         }
         const items = itemsData?.data || [];
         const itemPriceList = ItemPriceListData?.data || [];
-        const allMatches = filterSearchSuggestions({ query, items, itemPriceList, retailStoreId });
+        const allMatches = filterSearchSuggestions({ query, items, itemPriceList, retailStoreId, offersData: offersData?.data || offersData });
 
         // Map stock details from the pre-loaded local stockMap
         const updated = allMatches.map(m => {
@@ -605,7 +605,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
         setSuggestions(updated);
         setShowSuggestions(updated.length > 0);
-    }, [searchQuery, itemsData, ItemPriceListData, selectedReportSaleId, searchMode, stockMap, retailStoreId]);
+    }, [searchQuery, itemsData, ItemPriceListData, selectedReportSaleId, searchMode, stockMap, retailStoreId, offersData]);
+
+    console.log('suggestions', suggestions)
 
     // Triggers barcode resolution logic on enter
     const handleScan = async (e) => {
@@ -799,6 +801,30 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             const masterItem = product?.Item || items.find(i => i.id === itemId);
             const barcodeDetails = ItemPriceListData?.data?.flatMap(item => item.ItemBarcodes)?.filter(i => i.barcode === barcode)?.[0];
 
+            let finalPrice = product.salesPrice || lookupPrice;
+            let isOfferPrice = false;
+
+            console.log(ItemPriceListData?.data?.flatMap(item => item.ItemBarcodes)?.filter(i => i.barcode === barcode), "barcodeDetails", barcode)
+
+            if (barcodeDetails?.barcodeType === "CLEARANCE") {
+                const clearanceOffer = (offersData?.data || offersData || []).find(offer =>
+                    offer.scopeMode === 'Item' &&
+                    offer.OfferScope?.some(s => parseInt(s.refId) === parseInt(itemId)) &&
+                    offer.OfferRule?.some(rule =>
+                        rule.conditions?.rules?.some(r =>
+                            r.field === 'Specific Barcode' &&
+                            r.operator === '==' &&
+                            String(r.value).trim() === String(barcode).trim()
+                        )
+                    )
+                );
+
+                if (clearanceOffer && clearanceOffer.discountType === "Override") {
+                    finalPrice = clearanceOffer.discountValue;
+                    isOfferPrice = true;
+                }
+            }
+
             const stockDetails = [{
                 storeId: product.storeId || product.locationId || retailStoreId,
                 storeName: product.location || "Retail Store",
@@ -821,9 +847,10 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 ...product,
                 itemId,
                 Item: masterItem,
-                salesPrice: lookupPrice,
-                price: lookupPrice,
-                rate: lookupPrice,
+                salesPrice: finalPrice,
+                price: finalPrice,
+                rate: finalPrice,
+                isofferprice: isOfferPrice,
                 qty: 1,
                 priceType: 'SalesPrice',
                 taxPercent: masterItem?.Hsn?.tax || 5,
@@ -1192,6 +1219,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 }
             }
 
+            const isFullReturn = cart.length > 0 && cart.every(item => item.isReturn);
+            const isExchangeFlag = selectedReturnBills ? true : (total < 0 && !isFullReturn);
+
             const invoicePayload = {
                 date: new Date().toISOString().split('T')[0],
                 customerId,
@@ -1208,7 +1238,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 approvalStatus: "PENDING",
                 transactionType,
                 offerPenalty: totalOfferReversal,
-                offerRestored: totalOfferReapplied
+                offerRestored: totalOfferReapplied,
+                isExchange: isExchangeFlag
                 // bilStatus: "UNPAID"
             };
 
@@ -1344,6 +1375,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 ...(paidOnline > 0 ? [{ amount: String(paidOnline), paymentMode: isRefundMode ? 'Online Refund' : 'Online' }] : []),
             ];
 
+            const isFullReturn = cart.length > 0 && cart.every(item => item.isReturn);
+            const isExchangeFlag = selectedReturnBills ? true : (total < 0 && !isFullReturn);
+
             const invoicePayload = {
                 date: new Date().toISOString().split('T')[0],
                 customerId,
@@ -1363,7 +1397,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 offerRestored: totalOfferReapplied,
                 bilStatus: transactionType == "RETURN" ? "RETURNED" : saleType,
                 isRetrunBillId: selectedReturnBills?.value || null,
-                isExchange: selectedReturnBills ? true : false,
+                isExchange: isExchangeFlag,
                 isExchangeBillId: selectedReturnBills?.value || null,
 
                 availableCredit,
@@ -1404,7 +1438,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     returnReferences: selectedReturnBills ? [selectedReturnBills.label] : (returnBillId ? [returnBillId] : []),
                     bilStatus: transactionType == "RETURN" ? "RETURNED" : saleType,
                     printCopies: 2,
-                    showSummarySlip: editMode ? false : true
+                    showSummarySlip: editMode ? false : true,
+                    isExchange: isExchangeFlag,
+                    isRefund: isRefundMode
                 };
 
 

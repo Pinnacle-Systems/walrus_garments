@@ -63,7 +63,7 @@ export const allocateStock = (totalQty, stockDetails, retailStoreId) => {
 /**
  * Pure helper function to search and filter product item suggestions by name, code or barcode matches.
  */
-export const filterSearchSuggestions = ({ query, items, itemPriceList, retailStoreId }) => {
+export const filterSearchSuggestions = ({ query, items, itemPriceList, retailStoreId, offersData }) => {
 
     console.log("query", query);
 
@@ -91,10 +91,32 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
     });
 
 
+
     matchingItems.forEach(item => {
         const variants = itemPriceList?.filter(p => p.itemId === item.id) || [];
+        console.log(variants, 'variants')
         variants.forEach(variant => {
             variant.ItemBarcodes?.forEach(bc => {
+                let finalSalesPrice = variant.salesPrice || 0;
+
+                if (bc.barcodeType === "CLEARANCE") {
+                    const clearanceOffer = (offersData || []).find(offer =>
+                        offer.scopeMode === 'Item' &&
+                        offer.OfferScope?.some(s => parseInt(s.refId) === parseInt(item.id)) &&
+                        offer.OfferRule?.some(rule =>
+                            rule.conditions?.rules?.some(r =>
+                                r.field === 'Specific Barcode' &&
+                                r.operator === '==' &&
+                                String(r.value).trim() === String(bc.barcode).trim()
+                            )
+                        )
+                    );
+
+                    if (clearanceOffer && clearanceOffer.discountType === "Override") {
+                        finalSalesPrice = clearanceOffer.discountValue;
+                    }
+                }
+
                 addMatch({
                     barcode: bc.barcode,
                     barcodeType: bc.barcodeType,
@@ -106,24 +128,47 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
                     colorId: variant.colorId,
                     uomId: item.uomId,
                     storeId: retailStoreId,
-                    salesPrice: variant.salesPrice || 0,
+                    salesPrice: finalSalesPrice,
                 });
             });
         });
     });
 
     const barcodeMatches = items.filter(i =>
-        i.ItemPriceList?.some(row => row.ItemBarcodes?.every(b => b.barcode.toLowerCase().includes(query)))
+        i.ItemPriceList?.some(row => row.ItemBarcodes?.some(b => b.barcode.toLowerCase().includes(query)))
     );
+
+    console.log(barcodeMatches, "barcodeMatches")
+
 
     barcodeMatches.forEach(item => {
         const variants = itemPriceList?.filter(p => p.itemId === item.id) || [];
 
-        console.log(variants, "variants")
+        // console.log(variants, "variants")
 
         variants.forEach(variant => {
             variant.ItemBarcodes?.forEach(bc => {
                 if (bc.barcode.toLowerCase().includes(query)) {
+                    let finalSalesPrice = variant.salesPrice || 0;
+
+                    if (bc.barcodeType === "CLEARANCE") {
+                        const clearanceOffer = (offersData || []).find(offer =>
+                            offer.scopeMode === 'Item' &&
+                            offer.OfferScope?.some(s => parseInt(s.refId) === parseInt(item.id)) &&
+                            offer.OfferRule?.some(rule =>
+                                rule.conditions?.rules?.some(r =>
+                                    r.field === 'Specific Barcode' &&
+                                    r.operator === '==' &&
+                                    String(r.value).trim() === String(bc.barcode).trim()
+                                )
+                            )
+                        );
+
+                        if (clearanceOffer && clearanceOffer.discountType === "Override") {
+                            finalSalesPrice = clearanceOffer.discountValue;
+                        }
+                    }
+
                     addMatch({
                         barcode: bc.barcode,
                         barcodeType: bc.barcodeType,
@@ -135,7 +180,7 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
                         colorId: variant.colorId,
                         uomId: item.uomId,
                         storeId: retailStoreId,
-                        salesPrice: variant.salesPrice || 0,
+                        salesPrice: finalSalesPrice,
                     });
                 }
             });

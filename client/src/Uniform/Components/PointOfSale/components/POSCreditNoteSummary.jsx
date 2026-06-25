@@ -20,15 +20,21 @@ const POSCreditNoteSummary = ({ cart, total, returnTotal, purchaseTotal }) => {
                 <CreditCard size={12} className="text-rose-500" /> Credit Note Summary
             </h3>
             <div className="space-y-2">
-                <div className="flex justify-between items-center text-xs font-bold text-slate-600">
-                    <span className="text-[11px] uppercase tracking-wider text-slate-400">Items Purchased</span>
-                    <span>₹{purchaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
+
 
                 <div className="flex justify-between items-center text-xs font-bold text-rose-600">
                     <span className="text-[11px] uppercase tracking-wider">Items Returned</span>
                     <span>₹{itemsReturned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
+
+                {purchaseTotal > 0 && (
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                        <span className="text-[11px] uppercase tracking-wider text-slate-400">Items Purchased</span>
+                        <span>₹{purchaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                )}
+
+
 
                 <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                     <span className="text-[11px] uppercase tracking-wider text-slate-400">Credit Subtotal</span>

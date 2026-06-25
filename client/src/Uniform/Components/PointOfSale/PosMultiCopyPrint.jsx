@@ -32,6 +32,7 @@ const styles = StyleSheet.create({
 });
 
 const PosMultiCopyPrint = ({
+  dataObj,
   docId,
   date,
   branchData,
@@ -43,13 +44,18 @@ const PosMultiCopyPrint = ({
   bilStatus = "PAID",
   printCopies = 2,
   showSummarySlip,
+  isExchange = false,
+  isRefund = false
 }) => {
 
-  /* console.log removed */
-  /* console.log removed */
+  console.log(summary, "summary")
 
 
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
+  const returnTotal = items.reduce((acc, item) => item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
+  const purchaseTotal = items.reduce((acc, item) => !item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
+  const totalOfferReversal = items.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
+  const totalOfferReapplied = items.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
 
   const qrCodePath = useMemo(() => {
     try {
@@ -84,7 +90,9 @@ const PosMultiCopyPrint = ({
 
       <View style={tw('flex flex-col items-center my-1')}>
         <Text style={tw('font-bold text-xs underline')}>
-          {summary.total < 0 || bilStatus === "RETURNED" ? "CREDIT NOTE / EXCHANGE RECEIPT" : "TAX INVOICE"}
+          {/* {dataObj?.isExchange ? 'ISSUE CREDIT AMOUNT :' : 'TAX INVOICE'} */}
+          {'TAX INVOICE'}
+
         </Text>
       </View>
 
@@ -100,8 +108,8 @@ const PosMultiCopyPrint = ({
           {returnReferences?.length > 0 && (
             <Text style={tw('text-xxs font-bold italic')}>Against: {returnReferences.join(', ')}</Text>
           )}
-          <Text style={tw('text-xxs')}>Date: {moment(date).format('DD/MM/YYYY')}</Text>
-          <Text style={tw('text-xxs font-bold italic text-center')}>Time : {moment(date).format('DD/MM/YYYY HH:mm')}</Text>
+          {/* <Text style={tw('text-xxs')}>Date: {moment(date).format('DD/MM/YYYY')}</Text> */}
+          <Text style={tw('text-xxs font-bold italic text-center')}>Date : {moment(date).format('DD/MM/YYYY HH:mm')}</Text>
 
         </View>
       </View>
@@ -157,7 +165,7 @@ const PosMultiCopyPrint = ({
           <Text style={tw('text-xxs')}>Subtotal (Excl. Tax) :</Text>
           <Text style={tw('text-xxs')}>{summary.subtotal.toFixed(2)}</Text>
         </View>
-        {summary.tax > 0 && (
+        {/* {summary.tax > 0 && (
           <>
             <View style={tw('flex flex-row justify-between')}>
               <Text style={tw('text-xxs')}>CGST :</Text>
@@ -168,27 +176,52 @@ const PosMultiCopyPrint = ({
               <Text style={tw('text-xxs')}>{(summary.tax / 2).toFixed(2)}</Text>
             </View>
           </>
-        )}
+        )} */}
+        <View style={tw('flex flex-row justify-between')}>
+          <Text style={tw('text-xxs')}>Tax Amount :</Text>
+          <Text style={tw('text-xxs')}>{summary.tax.toFixed(2)}</Text>
+        </View>
         {summary.discount > 0 && (
           <View style={tw('flex flex-row justify-between')}>
             <Text style={tw('text-xxs')}>Discount :</Text>
             <Text style={tw('text-xxs text-red-500')}>-{summary.discount.toFixed(2)}</Text>
           </View>
         )}
+
+        {returnTotal > 0 && (
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>Return Amount :</Text>
+            <Text style={tw('text-xxs text-red-500')}>{returnTotal.toFixed(2)}</Text>
+          </View>
+        )}
+        {totalOfferReversal > 0 && (
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>Offer Penalty :</Text>
+            <Text style={tw('text-xxs')}>{totalOfferReversal.toFixed(2)}</Text>
+          </View>
+        )}
+        {returnTotal > 0 && purchaseTotal > 0 && (
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>New Purchase :</Text>
+            <Text style={tw('text-xxs')}>{purchaseTotal.toFixed(2)}</Text>
+          </View>
+        )}
+        {totalOfferReapplied > 0 && (
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>Offer Restored :</Text>
+            <Text style={tw('text-xxs text-green-600')}>-{totalOfferReapplied.toFixed(2)}</Text>
+          </View>
+        )}
+
         <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
-          {summary.total < 0 ? (
-            <>
-              <Text style={tw('text-sm font-black')}>STORE CREDIT ISSUED :</Text>
-              <Text style={tw('text-sm font-black')}>Rs. {Math.abs(summary.total).toFixed(0)}</Text>
-            </>
-          ) : (
-            <>
-              <Text style={tw('text-sm font-black')}>GRAND TOTAL :</Text>
-              <Text style={tw('text-sm font-black')}>Rs. {summary.total.toFixed(0)}</Text>
-            </>
-          )}
+          <Text style={tw('text-sm font-black')}>
+            {dataObj?.availableCredit ? 'Credit Applied :' :
+              dataObj?.isExchange ? 'Store Credit Issued :' : 'Grand Total :'
+            }
+          </Text>
+          <Text style={tw('text-sm font-black')}>Rs. {Math.abs(summary.total).toFixed(0)}</Text>
         </View>
-      </View>
+      </View>{console.log(summary, "summary")}
 
       <View style={styles.dottedLine} />
 

@@ -5,6 +5,8 @@ import BarCodePrintFormat from "../../Uniform/Components/PurchaseInward/BarcodeP
 import { findFromList } from "../../Utils/helper";
 import { useGetSizeMasterQuery } from "../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../redux/uniformService/ColorMasterService";
+import { useGetoffersPromotionsQuery } from "../../redux/uniformService/Offer&PromotionsService";
+import secureLocalStorage from "react-secure-storage";
 
 /**
  * ItemBarcodePrintModal
@@ -16,6 +18,18 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
     const [printQuantities, setPrintQuantities] = useState({}); // { barcode: qty }
     const [showPreview, setShowPreview] = useState(false);
 
+    const params = {
+        companyId: secureLocalStorage.getItem(
+            sessionStorage.getItem("sessionId") + "userCompanyId"
+        ),
+        branchId: secureLocalStorage.getItem(
+            sessionStorage.getItem("sessionId") + "branchId"
+        ),
+    };
+
+    const { data: offersResponse } = useGetoffersPromotionsQuery({ params });
+    const offersData = offersResponse?.data || [];
+
     // Prepare a flat list of all barcodes with variant info for the table
     const variantBarcodes = useMemo(() => {
         if (!item?.ItemPriceList) return [];
@@ -25,19 +39,45 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
             const colorName = findFromList(priceRow.colorId, colorData?.data, "name");
             const variantLabel = colorName ? `${sizeName} / ${colorName}` : sizeName;
 
-            return (priceRow.ItemBarcodes || []).map(bc => ({
-                ...bc,
-                variantLabel,
-                sizeId: priceRow.sizeId,
-                colorId: priceRow.colorId,
-                salesPrice: priceRow.salesPrice,
-                priceRowId: priceRow.id
-            }));
+            console.log(priceRow, "priceRow")
+
+            return (priceRow.ItemBarcodes || []).map(bc => {
+                let finalSalesPrice = priceRow.salesPrice;
+
+                if (bc.barcodeType === "CLEARANCE") {
+                    const clearanceOffer = offersData.find(offer =>
+                        offer.scopeMode === 'Item' &&
+                        offer.OfferScope?.some(s => parseInt(s.refId) === parseInt(item.id)) &&
+                        offer.OfferRule?.some(rule =>
+                            rule.conditions?.rules?.some(r =>
+                                r.field === 'Specific Barcode' &&
+                                r.operator === '==' &&
+                                String(r.value).trim() === String(bc.barcode).trim()
+                            )
+                        )
+                    );
+
+                    console.log(clearanceOffer, "clearanceOffer")
+
+                    if (clearanceOffer && clearanceOffer.discountType === "Override") {
+                        finalSalesPrice = clearanceOffer.discountValue;
+                    }
+                }
+
+                return {
+                    ...bc,
+                    variantLabel,
+                    sizeId: priceRow.sizeId,
+                    colorId: priceRow.colorId,
+                    salesPrice: finalSalesPrice,
+                    priceRowId: priceRow.id
+                };
+            });
         });
-    }, [item, sizeData, colorData]);
+    }, [item, sizeData, colorData, offersData]);
 
     // Filter based on search term
-    const filteredBarcodes = variantBarcodes.filter(bc => 
+    const filteredBarcodes = variantBarcodes.filter(bc =>
         bc.variantLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bc.barcode.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -65,11 +105,12 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
         return variantBarcodes
             .filter(bc => printQuantities[bc.barcode] > 0)
             .map(bc => ({
+                ...bc,
                 itemId: item.id,
                 sizeId: bc.sizeId,
                 colorId: bc.colorId,
                 qty: printQuantities[bc.barcode],
-                barcode: bc.barcode // We pass barcode explicitly to ensure the right one is used
+                barcode: bc.barcode
             }));
     }, [variantBarcodes, printQuantities, item]);
 
@@ -84,7 +125,7 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
                 <div className="h-full flex flex-col">
                     <div className="flex justify-between items-center p-3 border-b bg-gray-50">
                         <p className="text-sm text-gray-600">Total Labels to Print: <span className="font-bold text-indigo-600">{totalLabels}</span></p>
-                        <button 
+                        <button
                             onClick={() => setShowPreview(false)}
                             className="flex items-center gap-2 px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md text-xs font-medium transition-colors"
                         >
@@ -92,7 +133,7 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
                         </button>
                     </div>
                     <div className="flex-1 min-h-0">
-                        <BarCodePrintFormat 
+                        <BarCodePrintFormat
                             data={printData}
                             sizeList={sizeData}
                             itemList={{ data: [item] }}
@@ -116,7 +157,7 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
                 <div className="p-4 border-b bg-white flex flex-wrap items-center justify-between gap-4">
                     <div className="relative flex-1 min-w-[200px]">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input 
+                        <input
                             type="text"
                             placeholder="Search variant or barcode..."
                             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
@@ -125,13 +166,13 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
                         />
                     </div>
                     <div className="flex items-center gap-2">
-                        <button 
+                        <button
                             onClick={() => handleQuickAction("setAll1")}
                             className="px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors border border-indigo-100"
                         >
                             Set All to 1
                         </button>
-                        <button 
+                        <button
                             onClick={() => handleQuickAction("clear")}
                             className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors border border-gray-200"
                         >
@@ -164,30 +205,29 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
                                                 <code className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">{bc.barcode}</code>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                                    bc.barcodeType === 'REGULAR' 
-                                                        ? 'bg-blue-50 text-blue-600 border border-blue-100' 
-                                                        : 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                }`}>
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${bc.barcodeType === 'REGULAR'
+                                                    ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                    : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                    }`}>
                                                     {bc.barcodeType}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center justify-center gap-1">
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleQtyChange(bc.barcode, (printQuantities[bc.barcode] || 0) - 1)}
                                                         className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all"
                                                     >
                                                         <Minus size={14} />
                                                     </button>
-                                                    <input 
+                                                    <input
                                                         type="number"
                                                         className="w-16 text-center border-b border-gray-200 focus:border-indigo-500 focus:outline-none text-sm font-semibold bg-transparent"
                                                         value={printQuantities[bc.barcode] || 0}
                                                         onChange={(e) => handleQtyChange(bc.barcode, e.target.value)}
                                                         onFocus={(e) => e.target.select()}
                                                     />
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleQtyChange(bc.barcode, (printQuantities[bc.barcode] || 0) + 1)}
                                                         className="p-1 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-md transition-all"
                                                     >
@@ -218,13 +258,13 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        <button 
+                        <button
                             onClick={onClose}
                             className="px-6 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
                         >
                             Cancel
                         </button>
-                        <button 
+                        <button
                             disabled={totalLabels === 0}
                             onClick={() => setShowPreview(true)}
                             className="flex items-center gap-2 px-8 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-lg shadow-indigo-100 transition-all transform active:scale-95"

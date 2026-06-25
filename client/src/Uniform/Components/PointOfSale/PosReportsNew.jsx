@@ -763,8 +763,11 @@ const PosReportsNew = ({
                                                                 const total = parseFloat(dataObj.netAmount || 0);
                                                                 const balance = received - total;
 
+                                                                console.log(total / 1.05, "totaltotal")
+
                                                                 // 2. Mapping
                                                                 setPrintData({
+                                                                    dataObj,
                                                                     docId: dataObj.docId,
                                                                     date: dataObj.createdAt,
                                                                     customerData: dataObj.Party || { name: "Walk-in Customer" },
@@ -776,8 +779,8 @@ const PosReportsNew = ({
                                                                         online: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Online")?.amount || 0)
                                                                     },
                                                                     summary: {
-                                                                        subtotal: total + parseFloat(dataObj.discountValue || 0),
-                                                                        tax: 0,
+                                                                        subtotal: total / 1.05,
+                                                                        tax: total - (total / 1.05),
                                                                         discount: parseFloat(dataObj.discountValue || 0),
                                                                         total: total,
                                                                         received: received,
@@ -805,6 +808,7 @@ const PosReportsNew = ({
                                                                 const balance = received - total;
 
                                                                 setPrintData({
+                                                                    dataObj,
                                                                     docId: dataObj.docId,
                                                                     date: dataObj.createdAt,
                                                                     customerData: dataObj.Party || { name: "Walk-in Customer" },
@@ -816,8 +820,8 @@ const PosReportsNew = ({
                                                                         online: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Online")?.amount || 0)
                                                                     },
                                                                     summary: {
-                                                                        subtotal: total + parseFloat(dataObj.discountValue || 0),
-                                                                        tax: 0,
+                                                                        subtotal: total / 1.05,
+                                                                        tax: total - (total / 1.05),
                                                                         discount: parseFloat(dataObj.discountValue || 0),
                                                                         total: total,
                                                                         received: received,
@@ -855,7 +859,7 @@ const PosReportsNew = ({
                 </div>
             </>
 
-        </div>
+        </div >
     );
 };
 

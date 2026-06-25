@@ -27,10 +27,15 @@ const PaymentModal = ({
 }) => {
     if (!isOpen) return null;
 
-    const netPayable = (parseFloat(total) - parseFloat(availableCredit));
-    const isRefund = netPayable < 0;
-    const absNetPayable = Math.abs(netPayable);
-    const appliedCredit = Math.min(Math.max(0, total), availableCredit);
+    const transactionTotal = parseFloat(total) || 0;
+    const customerCredit = parseFloat(availableCredit) || 0;
+
+    const appliedCredit = Math.min(Math.max(0, transactionTotal), customerCredit);
+    const netPayableAmount = Math.max(0, transactionTotal - appliedCredit);
+    const refundAmount = transactionTotal < 0 ? Math.abs(transactionTotal) : 0;
+
+    const isRefund = refundAmount > 0;
+    const absNetPayable = isRefund ? refundAmount : netPayableAmount;
 
 
     /* console.log removed */

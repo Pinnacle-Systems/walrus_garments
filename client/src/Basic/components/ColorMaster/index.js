@@ -299,6 +299,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       //   cellClass: () => "font-medium  text-gray-900",
       className: "font-medium text-gray-900 text-left pl-2 uppercase w-96",
     },
+    {
+      header: "Code",
+      accessor: (item) => item?.code,
+      //   cellClass: () => "font-medium  text-gray-900",
+      className: "font-medium text-gray-900 text-left pl-2 uppercase w-48",
+    },
 
     {
       header: "Status",

@@ -56,7 +56,7 @@ const BarCodePrintFormat = ({
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: findFromList(item.itemId, itemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
-      price: priceRow?.salesPrice
+      price: item?.salesPrice
     }));
   });
 

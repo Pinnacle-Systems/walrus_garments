@@ -21,7 +21,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
     if (item?.colorId) searchParams.searchColor = item.colorId;
     if (item?.sizeId) searchParams.searchSize = item.sizeId;
 
-    console.log(item, "itemitem", searchParams)
+    console.log(offersData, "offersData")
 
     const { data: allStockData, isLoading, isFetching } = useGetStockQuery(
         {
@@ -119,39 +119,9 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                 <td className="w-48 border border-gray-300 text-[11px]  px-2">
                     {findFromList(item?.colorId, colorList, "name")}
                 </td>
-                <td className="w-48 border border-gray-300 text-[11px] text-left px-2">
+                {/* <td className="w-48 border border-gray-300 text-[11px] text-left px-2">
                     {(() => {
                         const isDiscountSection = findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION";
-                        const regularBarcode = item?.barcode || "";
-
-                        if (!isDiscountSection) {
-                            return regularBarcode;
-                        }
-
-                        // DISCOUNT SECTION Logic
-                        const existingOffer = (offersData?.data || offersData || [])?.find(offer => 
-                            offer.scopeMode === 'Item' &&
-                            offer.OfferScope?.some(s => parseInt(s.refId) === parseInt(item.itemId)) &&
-                            offer.OfferRule?.some(rule => 
-                                rule.conditions?.rules?.some(r => r.field === 'Specific Barcode' && r.operator === '==')
-                            )
-                        );
-                        
-                        if (existingOffer) {
-                            const rule = existingOffer.OfferRule?.find(r => 
-                                r.conditions?.rules?.some(cond => cond.field === 'Specific Barcode' && cond.operator === '==')
-                            );
-                            const existingClearance = rule?.conditions?.rules?.find(c => c.field === 'Specific Barcode')?.value;
-                            
-                            if (item.clearanceBarcode !== existingClearance) {
-                                setTimeout(() => {
-                                    handleInputChangeFromOrder(existingClearance, index, "clearanceBarcode");
-                                    handleInputChangeFromOrder(true, index, "hasExistingOffer");
-                                    handleInputChangeFromOrder(existingOffer.discountValue, index, "manualClearancePrice");
-                                }, 0);
-                            }
-                            return existingClearance;
-                        }
 
                         const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
                         const isLegacy = itemObj?.isLegacy;
@@ -165,6 +135,124 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                         );
 
                         const existingRegular = variant?.ItemBarcodes?.find(b => b.barcodeType === "REGULAR")?.barcode;
+                        const regularBarcode = item?.barcode || existingRegular || "";
+
+                        if (!isDiscountSection) {
+                            return regularBarcode;
+                        }
+
+                        console.log(regularBarcode, "regularBarcode")
+
+                        // DISCOUNT SECTION Logic
+                        const existingOffer = (offersData?.data || offersData || [])?.find(offer =>
+                            offer.scopeMode === 'Item' &&
+                            offer.OfferScope?.some(s => parseInt(s.refId) === parseInt(item.itemId)) &&
+                            offer.OfferRule?.some(rule =>
+                                rule.conditions?.rules?.some(r =>
+                                    r.field === 'Specific Barcode' &&
+                                    r.operator === '==' &&
+                                    String(r.value).trim() === String(regularBarcode).trim()
+                                )
+                            )
+                        );
+
+                        console.log(item?.itemId ? existingOffer : "no data", "existingOffer")
+                        // console.log(item?.itemId ? offersData : "no data", "offersData")
+
+                        if (existingOffer) {
+                            const rule = existingOffer.OfferRule?.find(r =>
+                                r.conditions?.rules?.some(cond =>
+                                    cond.field === 'Specific Barcode' &&
+                                    cond.operator === '==' &&
+                                    String(cond.value).trim() === String(regularBarcode).trim()
+                                )
+                            );
+                            const existingClearance = rule?.conditions?.rules?.find(c => c.field === 'Specific Barcode')?.value;
+
+                            if (item.clearanceBarcode !== existingClearance || !item.hasExistingOffer) {
+                                setTimeout(() => {
+                                    handleInputChangeFromOrder(existingClearance, index, "clearanceBarcode");
+                                    handleInputChangeFromOrder(true, index, "hasExistingOffer");
+                                    handleInputChangeFromOrder(existingOffer.discountValue, index, "manualClearancePrice");
+                                }, 0);
+                            }
+                            return existingClearance;
+                        }
+
+                        if (item.itemId && existingRegular) {
+                            const generatedCode = `DS-${existingRegular}`;
+                            if (item.clearanceBarcode !== generatedCode) {
+                                setTimeout(() => {
+                                    handleInputChangeFromOrder(generatedCode, index, "clearanceBarcode");
+                                    handleInputChangeFromOrder(false, index, "hasExistingOffer");
+                                }, 0);
+                            }
+                            return <span className="text-blue-600 font-medium">{generatedCode} (New)</span>;
+                        }
+                        return "";
+                    })()}
+                </td> */}
+                <td className="w-48 border border-gray-300 text-[11px] text-left px-2">
+                    {(() => {
+                        const isDiscountSection = findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION";
+
+                        const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
+                        const isLegacy = itemObj?.isLegacy;
+
+                        const variant = (itemPriceList?.data || itemPriceList || [])?.find(p =>
+                            parseInt(p.itemId) === parseInt(item.itemId) &&
+                            (isLegacy ? true : (
+                                parseInt(p.sizeId) === parseInt(item.sizeId) &&
+                                parseInt(p.colorId) === parseInt(item.colorId)
+                            ))
+                        );
+
+                        const existingRegular = variant?.ItemBarcodes?.find(b => b.barcodeType === "REGULAR")?.barcode;
+                        const regularBarcode = item?.barcode || existingRegular || "";
+
+                        if (!isDiscountSection) {
+                            return regularBarcode;
+                        }
+
+                        console.log(regularBarcode, "regularBarcode")
+
+                        // DISCOUNT SECTION Logic
+                        const existingOffer = (offersData?.data || offersData || [])?.find(offer =>
+                            offer.scopeMode === 'Item' &&
+                            offer.OfferScope?.some(s => parseInt(s.refId) === parseInt(item.itemId)) &&
+                            offer.OfferRule?.some(rule =>
+                                rule.conditions?.rules?.some(r =>
+                                    r.field === 'Specific Barcode' &&
+                                    r.operator === '==' &&
+                                    // Keela ulla line-la '===' ku pathila '.includes()' mathiyachu (Fix 1)
+                                    String(r.value).trim().includes(String(regularBarcode).trim())
+                                )
+                            )
+                        );
+
+                        console.log(item?.itemId ? existingOffer : "no data", "existingOffer")
+                        // console.log(item?.itemId ? offersData : "no data", "offersData")
+
+                        if (existingOffer) {
+                            const rule = existingOffer.OfferRule?.find(r =>
+                                r.conditions?.rules?.some(cond =>
+                                    cond.field === 'Specific Barcode' &&
+                                    cond.operator === '==' &&
+                                    // Ingeyeyum '===' ku pathila '.includes()' mathiyachu (Fix 2)
+                                    String(cond.value).trim().includes(String(regularBarcode).trim())
+                                )
+                            );
+                            const existingClearance = rule?.conditions?.rules?.find(c => c.field === 'Specific Barcode')?.value;
+
+                            if (item.clearanceBarcode !== existingClearance || !item.hasExistingOffer) {
+                                setTimeout(() => {
+                                    handleInputChangeFromOrder(existingClearance, index, "clearanceBarcode");
+                                    handleInputChangeFromOrder(true, index, "hasExistingOffer");
+                                    handleInputChangeFromOrder(existingOffer.discountValue, index, "manualClearancePrice");
+                                }, 0);
+                            }
+                            return existingClearance;
+                        }
 
                         if (item.itemId && existingRegular) {
                             const generatedCode = `DS-${existingRegular}`;
@@ -179,6 +267,7 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                         return "";
                     })()}
                 </td>
+
                 {stockDrivenFields.map((field) => (
                     <td key={field.key} className="w-32 border border-gray-300 text-[11px]  px-2">
                         {item?.[field.key] || ""}

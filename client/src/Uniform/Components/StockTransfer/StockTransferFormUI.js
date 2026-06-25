@@ -62,7 +62,7 @@ const StockTransferForm = ({
     const { data: sizeList } = useGetSizeMasterQuery({ params });
     const { data: locationData } = useGetLocationMasterQuery({ params: { ...params } });
     const { data: stockReportControlData } = useGetStockReportControlQuery({ params });
-    const { data: offersData } = useGetoffersPromotionsQuery({ params: { active: true } });
+    const { data: offersData, refetch: refetchOffersData } = useGetoffersPromotionsQuery({ params: { active: true } });
     const { data: collectionsData } = useGetcollectionsQuery({ params: { active: true } });
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
@@ -674,13 +674,17 @@ const StockTransferForm = ({
                             >
                                 <FiPrinter className="w-4 h-4 mr-2" />
                                 Barcode Generation
-                            </button>
+                            </button>{console.log(stockItems, "stockItems")}
 
                             {findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION" && (
                                 <button className="bg-purple-600 text-white px-4 py-1.5 rounded-md hover:bg-purple-700 flex items-center text-sm shadow-sm transition-all active:scale-95"
                                     onClick={async () => {
+
                                         const selectedItems = stockItems?.filter(i => i.itemId && i.transferQty);
-                                        const itemsWithoutOffer = selectedItems.filter(i => !i.hasExistingOffer);
+
+                                        const itemsWithoutOffer = stockItems.filter(i => i.itemId && !i.hasExistingOffer);
+
+
 
                                         if (!itemsWithoutOffer.length) {
                                             Swal.fire({
@@ -709,8 +713,8 @@ const StockTransferForm = ({
                                                     icon: "success",
                                                     text: "Clearance Offers Created Successfully!",
                                                 });
-                                                invalidateTagsDispatch(["offersPromotions"]);
-                                                refetch();
+                                                invalidateTagsDispatch()
+                                                refetchOffersData();
                                             } else {
                                                 Swal.fire({
                                                     icon: "error",
@@ -718,6 +722,7 @@ const StockTransferForm = ({
                                                 });
                                             }
                                         } catch (err) {
+                                            console.log(err, "create offer")
                                             Swal.fire({
                                                 icon: "error",
                                                 text: "Something went wrong while creating offers.",

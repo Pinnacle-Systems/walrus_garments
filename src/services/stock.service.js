@@ -219,18 +219,23 @@ async function get(req) {
     } = req.query
 
 
+    const sanitizeInt = (value) => {
+        if (value === null || value === undefined) return undefined;
+        const parsed = typeof value === 'string' ? parseInt(value) : value;
+        return isNaN(parsed) ? null : parsed;
+    };
 
 
     let data
 
     data = await xprisma.stock.groupBy({
         where: {
-            branchId: branchId ? parseInt(branchId) : undefined,
-            storeId: storeId ? parseInt(storeId) : undefined,
-            itemId: itemId ? parseInt(itemId) : undefined,
-            sizeId: sizeId ? parseInt(sizeId) : undefined,
-            colorId: colorId ? parseInt(colorId) : undefined,
-            uomId: uomId ? parseInt(uomId) : undefined,
+            branchId: sanitizeInt(branchId),
+            storeId: sanitizeInt(storeId),
+            itemId: sanitizeInt(itemId),
+            sizeId: sanitizeInt(sizeId),
+            colorId: sanitizeInt(colorId),
+            uomId: sanitizeInt(uomId),
             Item: {
                 name: Boolean(searchItem) ? { contains: searchItem } : undefined
             },

@@ -44,12 +44,22 @@ const POSSidebar = ({
     totalOfferReversal = 0,
     totalOfferReapplied = 0
 }) => {
-    const netPayable = (parseFloat(total) - parseFloat(availableCredit));
-    const isRefund = netPayable < 0;
+    const transactionTotal = parseFloat(total) || 0;
+    const customerCredit = parseFloat(availableCredit) || 0;
+
+    const appliedCredit = Math.min(Math.max(0, transactionTotal), customerCredit);
+    const netPayableAmount = Math.max(0, transactionTotal - appliedCredit);
+    const refundAmount = transactionTotal < 0 ? Math.abs(transactionTotal) : 0;
+
+    const isRefund = refundAmount > 0;
+    const netPayable = isRefund ? -refundAmount : netPayableAmount;
+    const netPayableTotal = netPayableAmount;
+
     const isPendingApproval = approvalStatus === 'PENDING';
     const isUnpaidBill = currentBilStatus === 'UNPAID';
-    const isReturnMode = transactionType === 'RETURN';
+    const isReturnMode = cart.length > 0 && cart.every(item => item.isReturn);
 
+    console.log(netPayable, "netPayable", total)
 
     /* console.log removed */
     /* console.log removed */
@@ -57,9 +67,6 @@ const POSSidebar = ({
 
 
     const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval) && currentBilStatus === 'PAID';
-
-    const appliedCredit = Math.min(Math.max(0, total), availableCredit);
-
 
 
     return (
@@ -180,6 +187,7 @@ const POSSidebar = ({
                         tax={tax}
                         roundOff={roundOff}
                         appliedCredit={appliedCredit}
+                        netPayableTotal={netPayableTotal}
                         exchangeSalesNo={exchangeSalesNo}
                         netPayable={netPayable}
                         isRefund={isRefund}

@@ -20,7 +20,11 @@ const ReturnExchangeModal = ({
     const [selectedBill, setSelectedBill] = useState(null);
     const [selectedItemIds, setSelectedItemIds] = useState([]);
     const [selectInput, setSelectInput] = useState('');
-    const [filterDate, setFilterDate] = useState('');
+    const [filterDate, setFilterDate] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        return d.toISOString().split('T')[0];
+    });
     const [searchItem, setSearchItem] = useState('');
     const [searchBarcode, setSearchBarcode] = useState('');
     const [searchSize, setSearchSize] = useState('');
@@ -39,10 +43,11 @@ const ReturnExchangeModal = ({
                     branchId,
                     companyId,
                     finYearId,
+                    filterDate
                 }
             });
         }
-    }, [isOpen, branchId, companyId, finYearId, fetchBills]);
+    }, [isOpen, branchId, companyId, finYearId, filterDate, fetchBills]);
 
     useEffect(() => {
         if (isOpen && salesNo && !selectedBill) {
@@ -157,14 +162,21 @@ const ReturnExchangeModal = ({
 
                 <div className="p-2 border-b border-slate-100 bg-slate-50/50">
                     <div className="grid grid-cols-12 gap-2 items-center">
-                        {/* Date Filter */}
-                        <div className="col-span-2">
-                            <input
-                                type="date"
-                                value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
-                                className="w-full text-[10px] font-bold uppercase text-slate-900 bg-white border border-slate-200 rounded-xl px-2 py-2.5 focus:outline-none focus:border-indigo-500 transition-colors"
-                            />
+                        <div className="col-span-2 relative group">
+                            <div className={selectedBill ? "cursor-not-allowed" : ""}>
+                                <input
+                                    type="date"
+                                    value={filterDate}
+                                    onChange={(e) => setFilterDate(e.target.value)}
+                                    disabled={selectedBill}
+                                    className={`w-full text-[10px] font-bold uppercase text-slate-900 bg-white border border-slate-200 rounded-xl px-2 py-2.5 focus:outline-none transition-colors ${selectedBill ? 'pointer-events-none opacity-70' : 'focus:border-indigo-500'}`}
+                                />
+                            </div>
+                            {selectedBill && (
+                                <div className="absolute top-full left-0 mt-1 hidden group-hover:block w-max bg-slate-800 text-white text-[9px] font-bold px-2 py-1 rounded shadow-lg z-50">
+                                    Clear selected bill to change date
+                                </div>
+                            )}
                         </div>
 
                         {/* Bill Search */}

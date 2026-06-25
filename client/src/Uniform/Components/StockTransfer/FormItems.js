@@ -89,7 +89,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
             const newBlend = structuredClone(stock);
 
             // Avoid parseFloat for string fields like barcode or clearanceBarcode
-            if (field === "clearanceBarcode" || field === "barcode") {
+            if (field === "clearanceBarcode" || field === "barcode" || field === "hasExistingOffer") {
                 newBlend[index][field] = value;
             } else {
                 newBlend[index][field] = parseFloat(value);

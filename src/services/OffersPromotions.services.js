@@ -14,18 +14,18 @@ async function get(req) {
             OfferRule: true,
             OfferTier: true
         },
-        orderBy: {
-            priority: 'desc'
-        }
+        // orderBy: {
+        //     priority: 'desc'
+        // }
     });
 
-    const mappedData = data.map(item => ({
-        ...item,
-        validFrom: item.startTime || (item.OfferRule?.[0]?.conditions?.metadata?.validFrom || null),
-        validTo: item.endTime || (item.OfferRule?.[0]?.conditions?.metadata?.validTo || null)
-    }));
+    // const mappedData = data.map(item => ({
+    //     ...item,
+    //     validFrom: item.startTime || (item.OfferRule?.[0]?.conditions?.metadata?.validFrom || null),
+    //     validTo: item.endTime || (item.OfferRule?.[0]?.conditions?.metadata?.validTo || null)
+    // }));
 
-    return { statusCode: 0, data: mappedData };
+    return { statusCode: 0, data: data };
 }
 
 async function getOne(id) {
@@ -145,13 +145,13 @@ async function create(body) {
             }
         }
     })
-    return { 
-        statusCode: 0, 
+    return {
+        statusCode: 0,
         data: {
             ...data,
             validFrom: data.startTime,
             validTo: data.endTime
-        } 
+        }
     };
 }
 
@@ -239,13 +239,13 @@ async function update(id, body) {
     })
     console.log(data, "offer create data")
 
-    return { 
-        statusCode: 0, 
+    return {
+        statusCode: 0,
         data: {
             ...data,
             validFrom: data.startTime,
             validTo: data.endTime
-        } 
+        }
     };
 }
 
@@ -258,20 +258,20 @@ async function remove(id) {
 
 async function createClearanceOffers(body) {
     const { items } = body;
-    
+
     await prisma.$transaction(async (tx) => {
         for (const item of items) {
             if (!item.itemId || !item.clearanceBarcode || !item.manualClearancePrice) continue;
-            
+
             // Check if offer already exists for this barcode
             const existingOfferRules = await tx.offerRule.findMany({
                 where: {
-                    Offer: {
+                    offer: {
                         OfferScope: { some: { type: "Item", refId: parseInt(item.itemId) } }
                     }
                 }
             });
-            
+
             let offerExists = false;
             for (let rule of existingOfferRules) {
                 const rulesArr = rule.conditions?.rules || [];
@@ -280,7 +280,7 @@ async function createClearanceOffers(body) {
                     break;
                 }
             }
-            
+
             if (!offerExists) {
                 // 1. Create the Offer
                 await tx.offer.create({

@@ -42,11 +42,16 @@ const PosThermalPrint = ({
   items = [],
   payments = { cash: 0, upi: 0, card: 0 },
   summary = { subtotal: 0, tax: 0, discount: 0, total: 0, received: 0, balance: 0 },
-  returnReferences = []
+  returnReferences = [],
+  isExchange = false,
+  isRefund = false
 }) => {
 
-
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
+  const returnTotal = items.reduce((acc, item) => item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
+  const purchaseTotal = items.reduce((acc, item) => !item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
+  const totalOfferReversal = items.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
+  const totalOfferReapplied = items.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
 
   return (
     <Document title={`POS_RECEIPT_${docId}`}>
@@ -124,7 +129,7 @@ const PosThermalPrint = ({
             <Text style={tw('text-xxs')}>Subtotal (Excl. Tax) :</Text>
             <Text style={tw('text-xxs')}>{summary.subtotal.toFixed(2)}</Text>
           </View>
-          {summary.tax > 0 && (
+          {/* {summary.tax > 0 && (
             <>
               <View style={tw('flex flex-row justify-between')}>
                 <Text style={tw('text-xxs')}>CGST :</Text>
@@ -135,16 +140,49 @@ const PosThermalPrint = ({
                 <Text style={tw('text-xxs')}>{(summary.tax / 2).toFixed(2)}</Text>
               </View>
             </>
-          )}
+          )} */}
+
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>Tax Amount :</Text>
+            <Text style={tw('text-xxs')}>{summary.tax.toFixed(2)}</Text>
+          </View>
           {summary.discount > 0 && (
             <View style={tw('flex flex-row justify-between')}>
               <Text style={tw('text-xxs')}>Discount :</Text>
               <Text style={tw('text-xxs text-red-500')}>-{summary.discount.toFixed(2)}</Text>
             </View>
           )}
+
+          {returnTotal > 0 && (
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>Return Amount :</Text>
+              <Text style={tw('text-xxs text-red-500')}>-{returnTotal.toFixed(2)}</Text>
+            </View>
+          )}
+          {totalOfferReversal > 0 && (
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>Offer Penalty :</Text>
+              <Text style={tw('text-xxs')}>{totalOfferReversal.toFixed(2)}</Text>
+            </View>
+          )}
+          {returnTotal > 0 && purchaseTotal > 0 && (
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>New Purchase :</Text>
+              <Text style={tw('text-xxs')}>{purchaseTotal.toFixed(2)}</Text>
+            </View>
+          )}
+          {totalOfferReapplied > 0 && (
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>Offer Restored :</Text>
+              <Text style={tw('text-xxs text-green-600')}>-{totalOfferReapplied.toFixed(2)}</Text>
+            </View>
+          )}
+
           <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
-            <Text style={tw('text-sm font-black')}>GRAND TOTAL :</Text>
-            <Text style={tw('text-sm font-black')}>Rs. {summary.total.toFixed(0)}</Text>
+            <Text style={tw('text-sm font-black')}>
+              {dataObj?.isExchange ? 'ISSUE CREDIT AMOUNT :' : 'NET PAYABLE :'}
+            </Text>
+            <Text style={tw('text-sm font-black')}>Rs. {Math.abs(summary.total).toFixed(0)}</Text>
           </View>
         </View>
 
