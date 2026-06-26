@@ -1,7 +1,7 @@
 import React from 'react';
 import { CreditCard } from 'lucide-react';
 
-const POSCreditNoteSummary = ({ cart, total, returnTotal, purchaseTotal }) => {
+const POSCreditNoteSummary = ({ cart, total, returnTotal, purchaseTotal, totalOfferReversal }) => {
     // Dynamic returns-only tax calculation
     const returnTax = cart.reduce((sum, item) => {
         if (!item.isReturn) return sum;
@@ -27,6 +27,15 @@ const POSCreditNoteSummary = ({ cart, total, returnTotal, purchaseTotal }) => {
                     <span>₹{itemsReturned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
 
+                {totalOfferReversal > 0 && (
+                    <>
+
+                        <div className="flex justify-between items-center text-xs font-bold text-amber-600 bg-amber-50 py-1 rounded-lg border border-amber-100 mt-1 mb-1 animate-in slide-in-from-right-2">
+                            <span className="text-[10px] uppercase tracking-wider">Offer Penalty</span>
+                            <span>₹{totalOfferReversal.toLocaleString()}</span>
+                        </div>
+                    </>
+                )}
                 {purchaseTotal > 0 && (
                     <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                         <span className="text-[11px] uppercase tracking-wider text-slate-400">Items Purchased</span>
@@ -36,19 +45,19 @@ const POSCreditNoteSummary = ({ cart, total, returnTotal, purchaseTotal }) => {
 
 
 
-                <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                {/* <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                     <span className="text-[11px] uppercase tracking-wider text-slate-400">Credit Subtotal</span>
                     <span>₹{creditSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
+                </div> */}
 
-                <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                {/* <div className="flex justify-between items-center text-xs font-bold text-slate-600">
                     <span className="text-[11px] uppercase tracking-wider text-slate-400">Tax Credited</span>
                     <span>₹{returnTax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
+                </div> */}
 
-                <div className="flex justify-between items-center font-black text-lg pt-2.5 border-t border-rose-200 mt-2 text-rose-600">
-                    <span className="text-[12px] uppercase tracking-widest text-rose-400">
-                        Credit Issued
+                <div className={`flex justify-between items-center font-black text-lg pt-2.5 border-t mt-2 ${total > 0 ? 'border-amber-200 text-amber-600' : 'border-rose-200 text-rose-600'}`}>
+                    <span className={`text-[12px] uppercase tracking-widest ${total > 0 ? 'text-amber-500' : 'text-rose-400'}`}>
+                        {total > 0 ? 'Amount Payable' : 'Credit Issued'}
                     </span>
                     <span>₹{Math.abs(total).toLocaleString()}</span>
                 </div>

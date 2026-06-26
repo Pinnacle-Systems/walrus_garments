@@ -48,12 +48,19 @@ const POSSaleSummary = ({
                 {totalOfferReversal > 0 && (
                     <>
 
-                        <div className="flex justify-between items-center text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100 mt-1 mb-1 animate-in slide-in-from-right-2">
+                        <div className="flex justify-between items-center text-xs font-bold text-amber-600 bg-amber-50 py-1  rounded-lg border border-amber-100 mt-1 mb-1 animate-in slide-in-from-right-2">
                             <span className="text-[10px] uppercase tracking-wider">Offer Penalty</span>
                             <span>₹{totalOfferReversal.toLocaleString()}</span>
                         </div>
                     </>
                 )}
+                {totalOfferReapplied > 0 && (
+                    <div className="flex justify-between items-center text-xs font-bold text-emerald-600 bg-emerald-50 py-1 rounded-lg border border-emerald-100 mt-1 mb-1 animate-in slide-in-from-right-2">
+                        <span className="text-[10px] uppercase tracking-wider">Offer Restored</span>
+                        <span>-₹{totalOfferReapplied.toLocaleString()}</span>
+                    </div>
+                )}
+
                 {returnTotal !== 0 && (
                     <div className="space-y-1 mb-2 pb-2 border-b border-dashed border-slate-100">
                         <div className="flex justify-between items-center text-xs font-bold text-slate-600">
@@ -65,12 +72,6 @@ const POSSaleSummary = ({
                     </div>
                 )}
 
-                {totalOfferReapplied > 0 && (
-                    <div className="flex justify-between items-center text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 mt-1 mb-1 animate-in slide-in-from-right-2">
-                        <span className="text-[10px] uppercase tracking-wider">Offer Restored</span>
-                        <span>-₹{totalOfferReapplied.toLocaleString()}</span>
-                    </div>
-                )}
 
                 {netPayableTotal > 0 && (
                     <>

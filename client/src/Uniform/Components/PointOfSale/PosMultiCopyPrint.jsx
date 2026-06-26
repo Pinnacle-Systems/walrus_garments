@@ -137,7 +137,7 @@ const PosMultiCopyPrint = ({
                 <Text style={tw('text-xxs font-bold')}>
                   {item?.Item?.name || item?.itemName}
                   {item?.isReturn && <Text style={tw('text-red-600')}> [RETURN]</Text>}
-                  {item?.isExchangeItem && <Text style={tw('text-blue-600')}> [EXCHANGE]</Text>}
+                  {(item?.isExchangeItem || item?.isAddedDuringExchange) && <Text style={tw('text-blue-600')}> [EXCHANGE]</Text>}
                 </Text>
                 {(hasSize || hasColor) && (
                   <Text style={tw('text-[7.5pt] text-gray-600')}>
@@ -161,26 +161,22 @@ const PosMultiCopyPrint = ({
           <Text style={tw('text-xxs font-bold')}>Total Items:</Text>
           <Text style={tw('text-xxs')}>{items.length} (Qty: {totalQty})</Text>
         </View>
-        <View style={tw('flex flex-row justify-between')}>
-          <Text style={tw('text-xxs')}>Subtotal (Excl. Tax) :</Text>
-          <Text style={tw('text-xxs')}>{summary.subtotal.toFixed(2)}</Text>
-        </View>
-        {/* {summary.tax > 0 && (
+        {summary.subtotal > 0 && (
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>Subtotal (Excl. Tax) :</Text>
+            <Text style={tw('text-xxs')}>{summary.subtotal.toFixed(2)}</Text>
+          </View>
+        )}
+
+        {summary.tax > 0 && (
           <>
             <View style={tw('flex flex-row justify-between')}>
-              <Text style={tw('text-xxs')}>CGST :</Text>
-              <Text style={tw('text-xxs')}>{(summary.tax / 2).toFixed(2)}</Text>
-            </View>
-            <View style={tw('flex flex-row justify-between')}>
-              <Text style={tw('text-xxs')}>SGST :</Text>
-              <Text style={tw('text-xxs')}>{(summary.tax / 2).toFixed(2)}</Text>
+              <Text style={tw('text-xxs')}>Tax Amount :</Text>
+              <Text style={tw('text-xxs')}>{summary.tax.toFixed(2)}</Text>
             </View>
           </>
-        )} */}
-        <View style={tw('flex flex-row justify-between')}>
-          <Text style={tw('text-xxs')}>Tax Amount :</Text>
-          <Text style={tw('text-xxs')}>{summary.tax.toFixed(2)}</Text>
-        </View>
+        )}
+
         {summary.discount > 0 && (
           <View style={tw('flex flex-row justify-between')}>
             <Text style={tw('text-xxs')}>Discount :</Text>
@@ -196,14 +192,8 @@ const PosMultiCopyPrint = ({
         )}
         {totalOfferReversal > 0 && (
           <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Offer Penalty :</Text>
+            <Text style={tw('text-xxs')}>Offer Reversal :</Text>
             <Text style={tw('text-xxs')}>{totalOfferReversal.toFixed(2)}</Text>
-          </View>
-        )}
-        {returnTotal > 0 && purchaseTotal > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>New Purchase :</Text>
-            <Text style={tw('text-xxs')}>{purchaseTotal.toFixed(2)}</Text>
           </View>
         )}
         {totalOfferReapplied > 0 && (
@@ -212,14 +202,25 @@ const PosMultiCopyPrint = ({
             <Text style={tw('text-xxs text-green-600')}>-{totalOfferReapplied.toFixed(2)}</Text>
           </View>
         )}
+        {returnTotal > 0 && purchaseTotal > 0 && (
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>New Purchase :</Text>
+            <Text style={tw('text-xxs')}>{purchaseTotal.toFixed(2)}</Text>
+          </View>
+        )}
+
 
         <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
           <Text style={tw('text-sm font-black')}>
             {dataObj?.availableCredit ? 'Credit Applied :' :
-              dataObj?.isExchange ? 'Store Credit Issued :' : 'Grand Total :'
+              (dataObj?.isExchange || dataObj?.transactionType === 'RETURN' || isRefund) ?
+                (summary.total > 0 ? 'Amount Payable :' : 'Store Credit Issued :')
+                : 'Grand Total :'
             }
           </Text>
-          <Text style={tw('text-sm font-black')}>Rs. {Math.abs(summary.total).toFixed(0)}</Text>
+          <Text style={tw('text-sm font-black')}>Rs.
+            {summary.total > 0 ? summary.total.toFixed(0) :
+              (((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied) > 0 ? (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied) : ((purchaseTotal - returnTotal))).toFixed(2)}</Text>
         </View>
       </View>{console.log(summary, "summary")}
 

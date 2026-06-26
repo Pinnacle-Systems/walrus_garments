@@ -51,15 +51,32 @@ const POSSidebar = ({
     const netPayableAmount = Math.max(0, transactionTotal - appliedCredit);
     const refundAmount = transactionTotal < 0 ? Math.abs(transactionTotal) : 0;
 
-    const isRefund = refundAmount > 0;
+    const isRefund = refundAmount > 0;  // only return
     const netPayable = isRefund ? -refundAmount : netPayableAmount;
     const netPayableTotal = netPayableAmount;
 
     const isPendingApproval = approvalStatus === 'PENDING';
     const isUnpaidBill = currentBilStatus === 'UNPAID';
-    const isReturnMode = cart.length > 0 && cart.every(item => item.isReturn);
+    const isReturnMode = cart.length > 0 && cart.every(item => item.isReturn)
 
-    console.log(netPayable, "netPayable", total)
+    console.log(netPayable, "netPayable", total, total < 0)
+
+    console.log({
+        transactionTotal,
+        customerCredit,
+        appliedCredit,
+        netPayableAmount,
+        refundAmount,
+        isRefund,
+        netPayable,
+        netPayableTotal,
+        isPendingApproval,
+        isUnpaidBill,
+        isReturnMode,
+
+
+
+    })
 
     /* console.log removed */
     /* console.log removed */
@@ -98,7 +115,7 @@ const POSSidebar = ({
                             />
                         </div>
 
-                        <div className="relative group">
+                        {/* <div className="relative group">
                             <input
                                 type="text"
                                 placeholder="Customer Name"
@@ -107,7 +124,7 @@ const POSSidebar = ({
                                 disabled={selectedReportSaleId || isReturnMode}
                                 className="w-full px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 transition-all disabled:opacity-50"
                             />
-                        </div>
+                        </div> */}
                         {((availableCredit > 0 && availableReturnBills.length > 0) || selectedReturnBills) && (
                             <div className="space-y-1 z-[100]">
                                 <label className="text-[9px] font-black text-indigo-600 uppercase tracking-widest px-1">Against Returns</label>
@@ -174,6 +191,7 @@ const POSSidebar = ({
                         total={total}
                         returnTotal={returnTotal}
                         purchaseTotal={purchaseTotal}
+                        totalOfferReversal={totalOfferReversal}
                     />
                 ) : (
                     <POSSaleSummary

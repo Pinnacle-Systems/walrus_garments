@@ -266,6 +266,22 @@ async function create(body) {
         const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE" && parseFloat(netAmount || 0) < 0);
         let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
 
+
+
+        const grossReturnAmount = (posItems || [])
+            .filter(i => i.isReturn)
+            .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
+
+        const passedNetAmount = parseFloat(netAmount || 0);
+        const effectiveSaleAmount = grossReturnAmount + passedNetAmount;
+
+
+        console.log({
+            grossReturnAmount,
+            passedNetAmount,
+            effectiveSaleAmount
+        })
+
         const result = await prisma.$transaction(async (tx) => {
 
             const finalDocId = approvalStatus === 'PENDING' ? 'DRAFT' : (approvalStatus === 'APPROVED' ? 'PROCEED' : docId);
@@ -276,7 +292,7 @@ async function create(body) {
                     docId: finalDocId,
                     branchId: branchId ? parseInt(branchId) : undefined,
                     createdById: body.userId ? parseInt(body.userId) : undefined,
-                    netAmount: netAmount ? String(Math.abs(parseFloat(netAmount || 0))) : undefined,
+                    netAmount: passedNetAmount > 0 ? String(parseFloat(netAmount || 0)) : undefined,
                     approvalStatus: approvalStatus || "NONE",
                     bilStatus: body.bilStatus ? body?.bilStatus : "NA",
                     transactionType: transactionType ? transactionType : "NA",
@@ -299,6 +315,7 @@ async function create(body) {
                                 salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
                                 isReturn: item.isReturn || false,
                                 isExchangeItem: item.isExchangeItem || false,
+                                isAddedDuringExchange: item.isAddedDuringExchange || false,
                                 originalItemId: item.originalItemId || null,
                                 retunBillId: item.retunBillId || null,
                                 barcode: item.barcode || null,
@@ -313,18 +330,7 @@ async function create(body) {
                             }))
                         }
                     },
-                    // PosPayments: {
-                    //     createMany: {
-                    //         data: (posPayments || []).map(p => ({
-                    //             amount: String(p.amount),
-                    //             paymentMode: p.paymentMode,
-                    //             reference_no: p.reference_no,
-                    //             transaction_id: p.transaction_id,
-                    //             retunBillId: exchangeSalesNo ? parseInt(exchangeSalesNo) : null,
-                    //             date: new Date()
-                    //         }))
-                    //     }
-                    // }
+
                 }
             });
 
@@ -431,12 +437,6 @@ async function create(body) {
                 data: stockEntries
             });
 
-            const grossReturnAmount = (posItems || [])
-                .filter(i => i.isReturn)
-                .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
-
-            const passedNetAmount = parseFloat(netAmount || 0);
-            const effectiveSaleAmount = grossReturnAmount + (isReturn ? -passedNetAmount : passedNetAmount);
 
             if (grossReturnAmount > 0) {
                 await tx.ledger.create({
@@ -584,6 +584,7 @@ async function update(id, body) {
                     salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
                     isReturn: item.isReturn || false,
                     isExchangeItem: item.isExchangeItem || false,
+                    isAddedDuringExchange: item.isAddedDuringExchange || false,
                     barcode: item.barcode || null,
                     barcodeType: item.barcodeType || null,
                     appliedOfferId: item.appliedOfferId ? parseInt(item.appliedOfferId) : null,
@@ -680,8 +681,15 @@ async function update(id, body) {
                 .filter(i => i.isReturn)
                 .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
 
-            const passedNetAmount = parseFloat(netAmount || updatedPos.netAmount || 0);
-            const effectiveSaleAmount = grossReturnAmount + (isReturn ? -passedNetAmount : passedNetAmount);
+            const grossPurchaseAmount = (posItems || [])
+                .filter(i => !i.isReturn)
+                .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
+
+            const currentDiscount = parseFloat(discountValue !== undefined ? discountValue : (updatedPos.discountValue || 0));
+            const currentPenalty = parseFloat(body.offerPenalty !== undefined ? body.offerPenalty : (updatedPos.offerPenalty || 0));
+            const currentRestored = parseFloat(body.offerRestored !== undefined ? body.offerRestored : (updatedPos.offerRestored || 0));
+
+            const effectiveSaleAmount = grossPurchaseAmount - currentDiscount + currentPenalty - currentRestored;
 
             if (grossReturnAmount > 0) {
                 await tx.ledger.create({

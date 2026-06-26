@@ -500,14 +500,24 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         }
 
         const hasReturns = cart.some(item => item.isReturn);
+        let result;
         if (hasReturns) {
-            return calculateExchangeCartWithOffers(cart, activeOffers, selectedOffersByRow);
+            result = calculateExchangeCartWithOffers(cart, activeOffers, selectedOffersByRow);
         } else {
-            return calculateCartWithOffers(cart, selectedOffersByRow, potentialOffers, activeOffers);
+            result = calculateCartWithOffers(cart, selectedOffersByRow, potentialOffers, activeOffers);
         }
+
+        if (hasReturns) {
+            result.cartWithOffers = result.cartWithOffers.map(item => ({
+                ...item,
+                isAddedDuringExchange: !item.isReturn ? true : (item.isAddedDuringExchange || false)
+            }));
+        }
+
+        return result;
     }, [cart, selectedOffersByRow, potentialOffers, activeOffers, selectedReportSaleId, editMode]);
 
-    const totalOfferDiscount = cartWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.salesPrice || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
+    const totalOfferDiscount = cartWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.price || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
 
     const handleShowItemOffers = (item) => {
         setSelectedItemForOffers(item);
@@ -1038,17 +1048,28 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const totalOfferReapplied = cartWithOffers.reduce((sum, item) => sum + (parseFloat(item.offerReapplied) || 0), 0);
 
     const returnTotal = cartWithOffers.reduce((sum, item) => item.isReturn ? sum + (parseFloat(item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
-    const purchaseTotalBeforeOffer = cartWithOffers.reduce((sum, item) => !item.isReturn ? sum + (parseFloat(item.salesPrice || item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
+    const purchaseTotalBeforeOffer = cartWithOffers.reduce((sum, item) => !item.isReturn ? sum + (parseFloat(item.price || item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
 
-    const totalBeforeOffer = purchaseTotalBeforeOffer - returnTotal;
     const totalBeforeDiscount = purchaseTotalBeforeOffer - totalOfferDiscount - returnTotal + totalOfferReversal - totalOfferReapplied;
-    // const totalWithoutRounding = totalBeforeDiscount - discount;
     const totalWithoutRounding = totalBeforeDiscount;
 
     // const total = Math.round(totalWithoutRounding) ;
 
     const total = Math.round(totalWithoutRounding) - discount;
     const roundOff = parseFloat((total - totalWithoutRounding).toFixed(2));
+
+    console.log({
+        returnTotal,
+        purchaseTotalBeforeOffer,
+        totalOfferDiscount,
+        totalOfferReversal,
+        totalOfferReapplied,
+        total
+
+
+    })
+
+    console.log(cartWithOffers, "cartWithOffers")
 
     const tax = cartWithOffers.reduce((sum, item) => {
         const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
@@ -1076,7 +1097,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const handlePayNow = async () => {
         if (cart.length === 0 || isProcessing) return;
 
-        if (transactionType === 'RETURN') {
+        if (transactionType === 'RETURN' && total <= 0) {
             const result = await Swal.fire({
                 title: 'Save Return?',
                 text: 'Do you want to save this return transaction?',
@@ -1386,11 +1407,13 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 paymentMethod,
                 storeId: retailStoreId,
                 poType: "General", poInwardOrDirectInward: "DirectInward",
-                netAmount: total, taxAmount: tax, discountValue: discount, discountType: "Flat",
+                netAmount: Math.max(0, total - appliedCredit),
+                taxAmount: tax, discountValue: discount, discountType: "Flat",
                 paidCash, paidUPI, paidCard, paidOnline, receivedAmount, balanceReturn,
                 posItems: cartWithOffers,
                 posPayments,
-                promotionalDiscount: totalOfferDiscount, manualDiscount: discount, roundOff, transactionType,
+                promotionalDiscount: totalOfferDiscount,
+                manualDiscount: discount, roundOff, transactionType,
                 exchangeSalesNo: returnBillId,
                 returnBillId: returnBillId,
                 offerPenalty: totalOfferReversal,
@@ -1431,7 +1454,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     docId: apiResponse?.data?.docId || docId,
                     date: new Date(),
                     customerData: selectedCustomer || { name: guestName, contactPersonNumber: guestMobile },
-                    items: cart,
+                    items: cartWithOffers,
                     payments: { cash: paidCash, upi: paidUPI, card: paidCard },
                     summary: { subtotal, tax, discount, total, received: Math.abs(receivedAmount), balance: Math.abs(balanceReturn), roundOff },
                     branchData: locations.find(l => l.id === retailStoreId),

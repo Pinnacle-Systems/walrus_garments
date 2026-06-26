@@ -16,16 +16,31 @@ const ReceiptViewerModal = ({
 
     const handleDirectPrint = async () => {
         try {
-            const blob = await pdf(<PrintComponent {...printData} />).toBlob();
+            // Force 1 copy per PDF so the thermal printer can cut after each single-page print job
+            const modifiedPrintData = { ...printData, printCopies: 1 };
+            const blob = await pdf(<PrintComponent {...modifiedPrintData} />).toBlob();
             const blobURL = URL.createObjectURL(blob);
 
-            printJS({
-                printable: blobURL,
-                type: 'pdf',
-                onPrintDialogClose: () => {
-                    URL.revokeObjectURL(blobURL);
-                }
-            });
+            const totalCopies = printData.printCopies || 2;
+            let currentCopy = 1;
+
+            const printNextCopy = () => {
+                printJS({
+                    printable: blobURL,
+                    type: 'pdf',
+                    onPrintDialogClose: () => {
+                        if (currentCopy < totalCopies) {
+                            currentCopy++;
+                            // Delay slightly before next prompt so the browser handles it cleanly
+                            setTimeout(printNextCopy, 500);
+                        } else {
+                            URL.revokeObjectURL(blobURL);
+                        }
+                    }
+                });
+            };
+
+            printNextCopy();
         } catch (error) {
             console.error('Direct Print Failed:', error);
             Swal.fire({ title: "Print Error", text: error.message || "Failed to print.", icon: "error" });
@@ -49,7 +64,7 @@ const ReceiptViewerModal = ({
                         </PDFViewer>
                     </div>
                 </div>
-                {/* <div className="p-6 bg-white border-t border-slate-100 flex items-center gap-4">
+                <div className="p-6 bg-white border-t border-slate-100 flex items-center gap-4">
                     <button onClick={() => setPrintData(null)} className="flex-1 py-4 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-all">Close Viewer</button>
                     <button
                         onClick={handleDirectPrint}
@@ -58,7 +73,7 @@ const ReceiptViewerModal = ({
                         <Printer size={16} />
                         Send to Thermal Printer
                     </button>
-                </div> */}
+                </div>
             </div>
         </div>
     );
