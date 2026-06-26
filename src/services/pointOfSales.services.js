@@ -257,7 +257,7 @@ async function create(body) {
     try {
         const {
             customerId, posItems, posPayments, finYearId, branchId, storeId, exchangeSalesNo,
-            netAmount, approvalStatus, transactionType
+            netAmount, approvalStatus, transactionType, manualDiscount
         } = await body;
 
 
@@ -272,14 +272,21 @@ async function create(body) {
             .filter(i => i.isReturn)
             .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
 
-        const passedNetAmount = parseFloat(netAmount || 0);
-        const effectiveSaleAmount = grossReturnAmount + passedNetAmount;
+
+        const grossPurchaseAmount = (posItems || [])
+            .filter(i => !i.isReturn)
+            .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
+
+        const billAmount = grossPurchaseAmount - manualDiscount
+
+
+
+        const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount : netAmount
+
 
 
         console.log({
             grossReturnAmount,
-            passedNetAmount,
-            effectiveSaleAmount
         })
 
         const result = await prisma.$transaction(async (tx) => {
@@ -292,7 +299,7 @@ async function create(body) {
                     docId: finalDocId,
                     branchId: branchId ? parseInt(branchId) : undefined,
                     createdById: body.userId ? parseInt(body.userId) : undefined,
-                    netAmount: passedNetAmount > 0 ? String(parseFloat(netAmount || 0)) : undefined,
+                    netAmount: finalNetAmount > 0 ? String(parseFloat(finalNetAmount || 0)) : undefined,
                     approvalStatus: approvalStatus || "NONE",
                     bilStatus: body.bilStatus ? body?.bilStatus : "NA",
                     transactionType: transactionType ? transactionType : "NA",
@@ -453,14 +460,14 @@ async function create(body) {
                 });
             }
 
-            if (effectiveSaleAmount > 0) {
+            if (billAmount > 0) {
                 await tx.ledger.create({
                     data: {
                         EntryType: "Sales",
                         LedgerType: "Customer",
                         creditOrDebit: "Debit",
                         partyId: parseInt(customerId),
-                        amount: effectiveSaleAmount,
+                        amount: billAmount,
                         partyBillNo: posRecord.docId,
                         partyBillDate: new Date(),
                         posId: posRecord.id

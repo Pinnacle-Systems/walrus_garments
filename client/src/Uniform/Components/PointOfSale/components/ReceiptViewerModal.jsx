@@ -16,31 +16,59 @@ const ReceiptViewerModal = ({
 
     const handleDirectPrint = async () => {
         try {
-            // Force 1 copy per PDF so the thermal printer can cut after each single-page print job
-            const modifiedPrintData = { ...printData, printCopies: 1 };
-            const blob = await pdf(<PrintComponent {...modifiedPrintData} />).toBlob();
-            const blobURL = URL.createObjectURL(blob);
-
             const totalCopies = printData.printCopies || 2;
+            const needsSummarySlip = printData.showSummarySlip;
+
+            // Generate blob for the BillPage (1 copy, no summary slip)
+            const billPrintData = { ...printData, printCopies: 1, showSummarySlip: false };
+            const billBlob = await pdf(<PrintComponent {...billPrintData} />).toBlob();
+            const billBlobURL = URL.createObjectURL(billBlob);
+
+            // Generate blob for the SummarySlip (0 bill copies, yes summary slip)
+            let summaryBlobURL = null;
+            if (needsSummarySlip) {
+                const summaryPrintData = { ...printData, printCopies: 0, showSummarySlip: true };
+                const summaryBlob = await pdf(<PrintComponent {...summaryPrintData} />).toBlob();
+                summaryBlobURL = URL.createObjectURL(summaryBlob);
+            }
+
             let currentCopy = 1;
 
-            const printNextCopy = () => {
+            const printSummarySlip = () => {
+                if (summaryBlobURL) {
+                    printJS({
+                        printable: summaryBlobURL,
+                        type: 'pdf',
+                        onPrintDialogClose: () => {
+                            URL.revokeObjectURL(summaryBlobURL);
+                        }
+                    });
+                }
+            };
+
+            const printNextBillCopy = () => {
                 printJS({
-                    printable: blobURL,
+                    printable: billBlobURL,
                     type: 'pdf',
                     onPrintDialogClose: () => {
                         if (currentCopy < totalCopies) {
                             currentCopy++;
-                            // Delay slightly before next prompt so the browser handles it cleanly
-                            setTimeout(printNextCopy, 500);
+                            setTimeout(printNextBillCopy, 500);
                         } else {
-                            URL.revokeObjectURL(blobURL);
+                            URL.revokeObjectURL(billBlobURL);
+                            if (needsSummarySlip) {
+                                setTimeout(printSummarySlip, 500);
+                            }
                         }
                     }
                 });
             };
 
-            printNextCopy();
+            if (totalCopies > 0) {
+                printNextBillCopy();
+            } else if (needsSummarySlip) {
+                printSummarySlip();
+            }
         } catch (error) {
             console.error('Direct Print Failed:', error);
             Swal.fire({ title: "Print Error", text: error.message || "Failed to print.", icon: "error" });
