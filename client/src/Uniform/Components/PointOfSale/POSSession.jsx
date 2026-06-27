@@ -1169,7 +1169,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 confirmButtonText: 'Yes, Save'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    handleCheckout();
+                    handleCheckout(null, null, "PAID", "INVOICE");
                 }
             });
         } else {
@@ -1464,7 +1464,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     printCopies: 2,
                     showSummarySlip: editMode ? false : true,
                     isExchange: isExchangeFlag,
-                    isRefund: isRefundMode
+                    isRefund: isRefundMode,
+                    availableCredit
                 };
 
 

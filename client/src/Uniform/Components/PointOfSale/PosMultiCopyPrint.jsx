@@ -45,10 +45,11 @@ const PosMultiCopyPrint = ({
   printCopies = 2,
   showSummarySlip,
   isExchange = false,
-  isRefund = false
+  isRefund = false,
+  availableCredit
 }) => {
 
-  console.log(summary, "summary")
+  console.log(summary, "summary", dataObj)
 
 
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
@@ -190,7 +191,19 @@ const PosMultiCopyPrint = ({
             <Text style={tw('text-xxs text-red-500')}>{returnTotal.toFixed(2)}</Text>
           </View>
         )}
-        {totalOfferReversal > 0 && (
+        {totalOfferReversal !== totalOfferReapplied ?
+          <>
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>Offer Reversal :</Text>
+              <Text style={tw('text-xxs')}>{totalOfferReversal.toFixed(2)}</Text>
+            </View>
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>Offer Restored :</Text>
+              <Text style={tw('text-xxs text-green-600')}>-{totalOfferReapplied.toFixed(2)}</Text>
+            </View>
+          </>
+          : <></>}
+        {/* {totalOfferReversal > 0 && (
           <View style={tw('flex flex-row justify-between')}>
             <Text style={tw('text-xxs')}>Offer Reversal :</Text>
             <Text style={tw('text-xxs')}>{totalOfferReversal.toFixed(2)}</Text>
@@ -201,7 +214,7 @@ const PosMultiCopyPrint = ({
             <Text style={tw('text-xxs')}>Offer Restored :</Text>
             <Text style={tw('text-xxs text-green-600')}>-{totalOfferReapplied.toFixed(2)}</Text>
           </View>
-        )}
+        )} */}
         {returnTotal > 0 && purchaseTotal > 0 && (
           <View style={tw('flex flex-row justify-between')}>
             <Text style={tw('text-xxs')}>New Purchase :</Text>
@@ -212,10 +225,17 @@ const PosMultiCopyPrint = ({
 
         <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
           <Text style={tw('text-sm font-black')}>
-            {dataObj?.availableCredit ? 'Credit Applied :' :
+            {/* {dataObj?.availableCredit ? 'Credit Applied :' :
               (dataObj?.isExchange || dataObj?.transactionType === 'RETURN' || isRefund) ?
                 (summary.total > 0 ? 'Amount Payable :' : 'Store Credit Issued :')
                 : 'Grand Total :'
+            } */}{console.log({
+              returnTotal,
+              purchaseTotal
+            }, "purchaseTotal")}
+            {returnTotal > purchaseTotal - totalOfferReversal + totalOfferReapplied ? "Store Credit Issued" :
+              returnTotal < purchaseTotal ?
+                availableCredit ? "Credit Apllied" : "Total Payable" : "Grant Total"
             }
           </Text>
           <Text style={tw('text-sm font-black')}>Rs.

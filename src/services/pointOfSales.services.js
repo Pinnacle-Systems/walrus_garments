@@ -80,7 +80,7 @@ async function get(req) {
     let where = {
         branchId: branchId ? parseInt(branchId) : undefined,
         docId: serachDocNo ? { contains: serachDocNo } : undefined,
-        Party: searchCustomerName ? { name: { contains: searchCustomerName } } : undefined,
+        Party: searchCustomerName ? { contactPersonNumber: { contains: searchCustomerName } } : undefined,
         approvalStatus: approvalStatus ? approvalStatus : undefined,
         customerId: req.query.customerId ? parseInt(req.query.customerId) : undefined,
         isReturn: reportsTransactionType === "RETURN" ? true : reportsTransactionType === "SALE" ? false : undefined,
@@ -120,9 +120,9 @@ async function get(req) {
 
     data = await Promise.all(data.map(async (item) => {
         const [linkedReturn, linkedExchange] = await Promise.all([
-            item.isReturnBillId
+            item.isRetrunBillId
                 ? prisma.pos.findUnique({
-                    where: { id: item.isReturnBillId },
+                    where: { id: item.isRetrunBillId },
                     select: { id: true, docId: true }
                 })
                 : null,
@@ -285,9 +285,7 @@ async function create(body) {
 
 
 
-        console.log({
-            grossReturnAmount,
-        })
+
 
         const result = await prisma.$transaction(async (tx) => {
 
@@ -360,7 +358,20 @@ async function create(body) {
                 }
             }
 
-
+            if (billAmount > 0) {
+                await tx.ledger.create({
+                    data: {
+                        EntryType: "Sales",
+                        LedgerType: "Customer",
+                        creditOrDebit: "Debit",
+                        partyId: parseInt(customerId),
+                        amount: billAmount,
+                        partyBillNo: posRecord.docId,
+                        partyBillDate: new Date(),
+                        posId: posRecord.id
+                    }
+                });
+            }
 
             if (approvalStatus === 'PENDING' || body?.bilStatus == "UNPAID") {
                 return posRecord;
@@ -460,20 +471,7 @@ async function create(body) {
                 });
             }
 
-            if (billAmount > 0) {
-                await tx.ledger.create({
-                    data: {
-                        EntryType: "Sales",
-                        LedgerType: "Customer",
-                        creditOrDebit: "Debit",
-                        partyId: parseInt(customerId),
-                        amount: billAmount,
-                        partyBillNo: posRecord.docId,
-                        partyBillDate: new Date(),
-                        posId: posRecord.id
-                    }
-                });
-            }
+
 
             if (!isReturn) {
                 const actualPaymentAmount = (posPayments || [])
@@ -519,7 +517,7 @@ async function update(id, body) {
     try {
         const {
             customerId, posItems, posPayments, branchId, storeId,
-            netAmount, taxAmount, discountValue, transactionType, finYearId, bilStatus
+            netAmount, taxAmount, discountValue, transactionType, finYearId, bilStatus, manualDiscount
         } = await body;
 
 
@@ -530,6 +528,9 @@ async function update(id, body) {
 
         let finalDocId = dataFound.docId;
         const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE" && parseFloat(netAmount || 0) < 0);
+
+        const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount : netAmount
+
 
         if ((dataFound.docId === 'DRAFT')) {
             const finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -567,7 +568,7 @@ async function update(id, body) {
                     approvalStatus: (body.bilStatus === 'PAID' || body.bilStatus === 'UNPAID') ? "COMPLETED" : (body.approvalStatus || dataFound.approvalStatus),
                     bilStatus: body.bilStatus || dataFound.bilStatus || "PAID",
                     discountValue: discountValue ? String(discountValue) : undefined,
-                    netAmount: netAmount ? String(Math.abs(parseFloat(netAmount || 0))) : undefined,
+                    netAmount: finalNetAmount ? String(Math.abs(parseFloat(finalNetAmount || 0))) : undefined,
                     transactionType: transactionType ? transactionType : "DEFAULT",
                     isReturn: isReturn,
                     isRetrunBillId: body.isRetrunBillId ? parseInt(body.isRetrunBillId) : undefined,
@@ -692,11 +693,12 @@ async function update(id, body) {
                 .filter(i => !i.isReturn)
                 .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
 
+            const billAmount = grossPurchaseAmount - manualDiscount
+
             const currentDiscount = parseFloat(discountValue !== undefined ? discountValue : (updatedPos.discountValue || 0));
             const currentPenalty = parseFloat(body.offerPenalty !== undefined ? body.offerPenalty : (updatedPos.offerPenalty || 0));
             const currentRestored = parseFloat(body.offerRestored !== undefined ? body.offerRestored : (updatedPos.offerRestored || 0));
 
-            const effectiveSaleAmount = grossPurchaseAmount - currentDiscount + currentPenalty - currentRestored;
 
             if (grossReturnAmount > 0) {
                 await tx.ledger.create({
@@ -713,14 +715,14 @@ async function update(id, body) {
                 });
             }
 
-            if (effectiveSaleAmount > 0) {
+            if (billAmount > 0) {
                 await tx.ledger.create({
                     data: {
                         EntryType: "Sales",
                         LedgerType: "Customer",
                         creditOrDebit: "Debit",
                         partyId: parseInt(customerId || updatedPos.customerId),
-                        amount: effectiveSaleAmount,
+                        amount: billAmount,
                         partyBillNo: updatedPos.docId,
                         partyBillDate: new Date(),
                         posId: parseInt(id)

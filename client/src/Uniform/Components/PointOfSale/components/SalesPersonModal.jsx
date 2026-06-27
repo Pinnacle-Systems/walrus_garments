@@ -117,7 +117,7 @@ const SalesPersonModal = ({
                                     <button
                                         key={emp.id}
                                         onClick={() => handleSalesPersonScan(emp.employeeId)}
-                                        onMouseEnter={() => setActiveIndex(idx)}
+                                        onMouseEnter={() => handleSalesPersonScan(idx)}
                                         className={`w-full p-4 text-left transition-all flex items-center justify-between group ${
                                             isHighlighted ? 'bg-indigo-50 font-bold' : 'hover:bg-white'
                                         }`}

@@ -59,6 +59,8 @@ const POSSidebar = ({
     const isUnpaidBill = currentBilStatus === 'UNPAID';
     const isReturnMode = cart.length > 0 && cart.every(item => item.isReturn)
 
+    const isCustomerEditable = cart.length > 0 && cart.some(item => item.isReturn)
+
     console.log(netPayable, "netPayable", total, total < 0)
 
     console.log({
@@ -110,7 +112,7 @@ const POSSidebar = ({
                                 placeholder="Mobile (10 Digits)"
                                 value={guestMobile}
                                 onChange={(e) => handleCustomerMobileChange(e.target.value)}
-                                disabled={selectedReportSaleId || isReturnMode}
+                                disabled={selectedReportSaleId || isCustomerEditable}
                                 className="w-full pl-16 pr-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800 outline-none focus:bg-white focus:border-indigo-400 focus:shadow-[0_0_15px_rgba(79,70,229,0.05)] transition-all font-mono disabled:opacity-50"
                             />
                         </div>

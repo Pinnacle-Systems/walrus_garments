@@ -434,33 +434,29 @@ const PosReportsNew = ({
                                         <div className="">S No</div>
                                     </th>
 
-                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-48">
-                                        <div>Pos No</div>
+                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-40">
+                                        <div>Bill No</div>
 
                                     </th>
 
                                     <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-36">
-                                        <div>Pos Date</div>
+                                        <div>Bill Date</div>
+                                    </th>
+                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-36">
+                                        <div>Bill Type</div>
+                                    </th>
+                                    <th className="w-44  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                                        <div>Retrun Bill</div>
                                     </th>
 
 
-                                    <th className="w-48  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                                    <th className="w-36  px-3   font-bold text-[13px] text-gray-900  text-center ">
+                                        <div>Mobile Number</div>
+                                    </th>
+
+                                    <th className="w-36  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>Bill Status</div>
                                     </th>
-                                    {reportsTransactionType != "SALE" && (
-                                        <th className="w-48  px-3   font-bold text-[13px] text-gray-900  text-center ">
-                                            <div>Return Bill</div>
-                                        </th>
-                                    )}
-
-                                    <th className="w-64  px-3   font-bold text-[13px] text-gray-900  text-center ">
-                                        <div>Customer</div>
-                                    </th>
-                                    {reportsTransactionType == "SALE" && (
-                                        <th className="w-48  px-3   font-bold text-[13px] text-gray-900  text-center ">
-                                            <div>Return Bill</div>
-                                        </th>
-                                    )}
                                     <th className="w-14   px-3  font-bold text-[13px]  text-gray-900  text-center ">
                                         <div>Actions</div>
                                     </th>
@@ -532,26 +528,24 @@ const PosReportsNew = ({
                                             type="text"
                                             className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                                             placeholder="Search"
-                                            value={billStatus}
+                                            value={returnBill}
                                             onChange={(e) => {
-                                                setBillStatus(e.target.value);
+                                                setReturnBill(e.target.value);
                                             }}
                                         />
                                     </th>
-                                    {reportsTransactionType != "SALE" && (
-                                        <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
-                                            <input
-                                                type="text"
-                                                className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                                                placeholder="Search"
-                                                value={returnBill}
-                                                onChange={(e) => {
-                                                    setReturnBill(e.target.value);
-                                                }}
-                                            />
-                                        </th>
+                                    <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
+                                        <input
+                                            type="text"
+                                            className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                            placeholder="Search"
+                                            value={returnBill}
+                                            onChange={(e) => {
+                                                setReturnBill(e.target.value);
+                                            }}
+                                        />
+                                    </th>
 
-                                    )}
 
                                     <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                                         <input
@@ -564,21 +558,18 @@ const PosReportsNew = ({
                                             }}
                                         />
                                     </th>
-                                    {reportsTransactionType == "SALE" && (
-                                        <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
-                                            <input
-                                                type="text"
-                                                className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
-                                                placeholder="Search"
-                                                value={exchangeBill}
-                                                onChange={(e) => {
-                                                    setExchangeBill(e.target.value);
-                                                }}
-                                            />
-                                        </th>
 
-                                    )}
-
+                                    <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
+                                        <input
+                                            type="text"
+                                            className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                            placeholder="Search"
+                                            value={billStatus}
+                                            onChange={(e) => {
+                                                setBillStatus(e.target.value);
+                                            }}
+                                        />
+                                    </th>
                                     <th className="w-32 px-1 font-bold text-[13px] text-gray-900 text-center"></th>
                                     {/* <th className="w-14  px-1  font-bold text-[13px]  text-gray-900  text-center "></th> */}
 
@@ -623,7 +614,23 @@ const PosReportsNew = ({
                                                 {getDateTimeFromDateTimeToDisplay(dataObj.createdAt)}
                                             </td>
 
-                                            <td className="py-1.5 text-left">
+
+
+
+                                            <td className="py-1.5 text-center">
+                                                {dataObj?.transactionType}
+                                            </td>
+
+                                            <td className="py-1.5 text-center">
+                                                {dataObj?.LinkedReturnBill?.docId}
+                                            </td>
+
+
+                                            <td className="py-1.5 text-center">
+                                                {`${(dataObj?.Party?.contactPersonNumber)}`}
+                                            </td>
+
+                                            <td className="py-1.5 text-center">
                                                 {dataObj.isCancel ? (
                                                     <span className="bg-red-50 text-red-500 border border-red-200 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm">
                                                         🚫 Cancelled
@@ -651,24 +658,6 @@ const PosReportsNew = ({
                                                 )}
                                             </td>
 
-                                            {reportsTransactionType !== "SALE" && (
-
-                                                <td className="py-1.5 text-left">
-                                                    {dataObj?.LinkedReturnBill?.docId}
-                                                </td>
-                                            )}
-
-
-                                            <td className="py-1.5 text-left">
-                                                {`${(dataObj?.Party?.name)?.toUpperCase()}`}
-                                            </td>
-
-                                            {reportsTransactionType == "SALE" && (
-
-                                                <td className="py-1.5 text-left">
-                                                    {dataObj?.LinkedExchangeBill?.docId}
-                                                </td>
-                                            )}
                                             {rowActions && (
                                                 <td className="border-gray-200 px-2 h-8">
                                                     <div className="flex items-center justify-end gap-1">
@@ -758,14 +747,11 @@ const PosReportsNew = ({
                                                             className="text-orange-600 flex items-center px-1 bg-orange-50 rounded hover:bg-orange-100 transition-colors"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                /* console.log removed */
                                                                 const received = dataObj.PosPayments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
                                                                 const total = parseFloat(dataObj.netAmount || 0);
                                                                 const balance = received - total;
 
                                                                 console.log(total / 1.05, "totaltotal")
-
-                                                                // 2. Mapping
                                                                 setPrintData({
                                                                     dataObj,
                                                                     docId: dataObj.docId,
@@ -799,7 +785,7 @@ const PosReportsNew = ({
                                                         >
                                                             <FiPrinter className="h-4 w-4" />
                                                         </button>
-                                                        <button
+                                                        {/* <button
                                                             className="text-emerald-600 flex items-center px-1 bg-emerald-50 rounded hover:bg-emerald-100 transition-colors"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -839,7 +825,7 @@ const PosReportsNew = ({
                                                             title="DOS (Monospace) Print"
                                                         >
                                                             <FiFileText className="h-4 w-4" />
-                                                        </button>
+                                                        </button> */}
                                                     </div>
                                                 </td>
                                             )}
