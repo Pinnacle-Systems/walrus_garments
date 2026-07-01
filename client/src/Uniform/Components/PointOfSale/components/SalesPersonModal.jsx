@@ -41,6 +41,8 @@ const SalesPersonModal = ({
 
     const handleKeyDown = (e) => {
 
+        if (filteredEmployees.length == 0) return
+
         if (e.key === 'ArrowDown') {
             e.preventDefault();
             setActiveIndex((prev) => (prev + 1) % filteredEmployees.length);
@@ -95,7 +97,7 @@ const SalesPersonModal = ({
                     />
                 </div>
 
-                {/* Employee Suggestions Selection */}
+                {/* Employee Suggestions Selection */}{console.log(filteredEmployees, "filteredEmployees")}
                 <AnimatePresence>
                     {salesPersonBarcode.length >= 1 && (
                         <motion.div

@@ -17,34 +17,52 @@ const ReceiptViewerModal = ({
     const PrintComponent = printData.isDeliveryReceipt ? PosDeliveryReceiptPrint : PosMultiCopyPrint;
 
 
+    // const handleDirectPrint = async () => {
+    //     try {
+    //         console.log("=== Direct Print Started ===");
+
+    //         console.log("Generating Document PDF...");
+    //         const blob = await pdf(<PrintComponent {...printData} />).toBlob();
+    //         console.log("Document PDF Generated");
+
+    //         const blobURL = URL.createObjectURL(blob);
+    //         console.log("Blob URL:", blobURL);
+
+    //         printJS({
+    //             printable: blobURL,
+    //             type: "pdf",
+    //             onPrintDialogClose: () => {
+    //                 console.log("Print Dialog Closed");
+    //                 URL.revokeObjectURL(blobURL);
+    //             }
+    //         });
+
+    //     } catch (error) {
+    //         console.error("Direct Print Failed:", error);
+
+    //         Swal.fire({
+    //             title: "Print Error",
+    //             text: error.message || "Failed to print.",
+    //             icon: "error"
+    //         });
+    //     }
+    // };
+
     const handleDirectPrint = async () => {
         try {
-            console.log("=== Direct Print Started ===");
-
-            console.log("Generating Document PDF...");
             const blob = await pdf(<PrintComponent {...printData} />).toBlob();
-            console.log("Document PDF Generated");
-
             const blobURL = URL.createObjectURL(blob);
-            console.log("Blob URL:", blobURL);
 
             printJS({
                 printable: blobURL,
-                type: "pdf",
+                type: 'pdf',
                 onPrintDialogClose: () => {
-                    console.log("Print Dialog Closed");
                     URL.revokeObjectURL(blobURL);
                 }
             });
-
         } catch (error) {
-            console.error("Direct Print Failed:", error);
-
-            Swal.fire({
-                title: "Print Error",
-                text: error.message || "Failed to print.",
-                icon: "error"
-            });
+            console.error('Direct Print Failed:', error);
+            Swal.fire({ title: "Print Error", text: error.message || "Failed to print.", icon: "error" });
         }
     };
 
