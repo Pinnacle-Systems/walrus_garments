@@ -330,8 +330,8 @@ const PosMultiCopyPrint = ({
 
   return (
     <Document title={`POS_RECEIPT_${docId}`}>
-      {/* Render N copies of the bill */}
-      {Array.from({ length: printCopies }).map((_, i) => (
+      {/* Render 1 copy of the bill for each print job */}
+      {Array.from({ length: 1 }).map((_, i) => (
         <BillPage key={`copy-${i}`} />
       ))}
 
