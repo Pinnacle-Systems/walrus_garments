@@ -222,27 +222,37 @@ const PosMultiCopyPrint = ({
           </View>
         )}
 
-
+        {console.log({
+          returnTotal,
+          purchaseTotal
+        }, "purchaseTotal")}
         <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
           <Text style={tw('text-sm font-black')}>
             {/* {dataObj?.availableCredit ? 'Credit Applied :' :
               (dataObj?.isExchange || dataObj?.transactionType === 'RETURN' || isRefund) ?
                 (summary.total > 0 ? 'Amount Payable :' : 'Store Credit Issued :')
                 : 'Grand Total :'
-            } */}{console.log({
-              returnTotal,
-              purchaseTotal
-            }, "purchaseTotal")}
-            {returnTotal > purchaseTotal - totalOfferReversal + totalOfferReapplied ? "Store Credit Issued" :
-              returnTotal < purchaseTotal ?
-                availableCredit ? "Credit Apllied" : "Total Payable" : "Grant Total"
+            } */}
+            {returnTotal > purchaseTotal - totalOfferReversal + totalOfferReapplied
+              ? "Store Credit Issued"
+              : returnTotal < purchaseTotal
+                ? availableCredit ? "Credit Apllied" : "Total Payable"
+                : "Grant Total"
             }
           </Text>
           <Text style={tw('text-sm font-black')}>Rs.
             {summary.total > 0 ? summary.total.toFixed(0) :
-              (((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied) > 0 ? (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied) : ((purchaseTotal - returnTotal))).toFixed(2)}</Text>
+              (
+                ((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied) > 0 ?
+                  (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied) :
+                  ((purchaseTotal - returnTotal))
+              ).toFixed(2)}</Text>
         </View>
-      </View>{console.log(summary, "summary")}
+      </View>{console.log(summary, "summary", (
+        ((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied) > 0 ?
+          (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied) :
+          ((purchaseTotal - returnTotal))
+      ).toFixed(2))}
 
       <View style={styles.dottedLine} />
 

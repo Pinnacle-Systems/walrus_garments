@@ -152,7 +152,7 @@ const PosDeliveryReceiptPrint = ({
 
   return (
     <Document title={`DELIVERY_RECEIPT_${docId}`}>
-      {Array.from({ length: printCopies }).map((_, i) => (
+      {Array.from({ length: 1 }).map((_, i) => (
         <SummarySlip key={`copy-${i}`} />
       ))}
     </Document>
