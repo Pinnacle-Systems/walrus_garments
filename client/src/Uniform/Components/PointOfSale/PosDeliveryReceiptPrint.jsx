@@ -96,9 +96,9 @@ const PosDeliveryReceiptPrint = ({
   docId,
   date,
   items = [],
+  printCopies = 1
 }) => {
 
-  let printCopies = 1
 
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
 

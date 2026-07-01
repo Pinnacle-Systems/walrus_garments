@@ -27,7 +27,7 @@ const SalesPersonModal = ({
     }, [employees, salesPersonBarcode, EMPTY_ARRAY]);
 
     React.useEffect(() => {
-        setActiveIndex(-1);
+        setActiveIndex(filteredEmployees.length > 0 ? 0 : -1);
     }, [filteredEmployees]);
 
     React.useEffect(() => {
@@ -40,12 +40,6 @@ const SalesPersonModal = ({
     }, [activeIndex]);
 
     const handleKeyDown = (e) => {
-        if (filteredEmployees.length === 0) {
-            if (e.key === 'Enter') {
-                handleSalesPersonScan(salesPersonBarcode);
-            }
-            return;
-        }
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();
@@ -117,10 +111,8 @@ const SalesPersonModal = ({
                                     <button
                                         key={emp.id}
                                         onClick={() => handleSalesPersonScan(emp.employeeId)}
-                                        onMouseEnter={() => handleSalesPersonScan(idx)}
-                                        className={`w-full p-4 text-left transition-all flex items-center justify-between group ${
-                                            isHighlighted ? 'bg-indigo-50 font-bold' : 'hover:bg-white'
-                                        }`}
+                                        className={`w-full p-4 text-left transition-all flex items-center justify-between group ${isHighlighted ? 'bg-indigo-50 font-bold' : 'hover:bg-white'
+                                            }`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-[10px] uppercase">
@@ -148,7 +140,7 @@ const SalesPersonModal = ({
                     )}
                 </AnimatePresence>
 
-                <div className="mt-6 flex flex-col gap-3">
+                {/* <div className="mt-6 flex flex-col gap-3">
                     <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg flex items-start gap-3">
                         <Zap size={16} className="text-amber-500 mt-0.5 shrink-0" />
                         <p className="text-[10px] font-bold text-amber-700 leading-relaxed uppercase">
@@ -161,7 +153,7 @@ const SalesPersonModal = ({
                     >
                         Skip for now
                     </button>
-                </div>
+                </div> */}
             </div>
         </Modal>
     );

@@ -12,176 +12,30 @@ const ReceiptViewerModal = ({
 }) => {
     if (!printData) return null;
 
+    console.log(printData, "printData")
+
     const PrintComponent = printData.isDeliveryReceipt ? PosDeliveryReceiptPrint : PosMultiCopyPrint;
 
-    // const handleDirectPrint = async () => {
-    //     try {
-    //         const totalCopies = printData.printCopies || 2;
-    //         const needsSummarySlip = printData.showSummarySlip;
-
-    //         // Generate blob for the BillPage (1 copy, no summary slip)
-    //         const billPrintData = { ...printData, printCopies: 1, showSummarySlip: false };
-    //         const billBlob = await pdf(<PrintComponent {...billPrintData} />).toBlob();
-    //         const billBlobURL = URL.createObjectURL(billBlob);
-
-    //         // Generate blob for the SummarySlip (0 bill copies, yes summary slip)
-    //         let summaryBlobURL = null;
-    //         if (needsSummarySlip) {
-    //             const summaryPrintData = { ...printData, printCopies: 0, showSummarySlip: true };
-    //             const summaryBlob = await pdf(<PrintComponent {...summaryPrintData} />).toBlob();
-    //             summaryBlobURL = URL.createObjectURL(summaryBlob);
-    //         }
-
-    //         let currentCopy = 1;
-
-    //         const printSummarySlip = () => {
-    //             if (summaryBlobURL) {
-    //                 printJS({
-    //                     printable: summaryBlobURL,
-    //                     type: 'pdf',
-    //                     onPrintDialogClose: () => {
-    //                         URL.revokeObjectURL(summaryBlobURL);
-    //                     }
-    //                 });
-    //             }
-    //         };
-
-    //         const printNextBillCopy = () => {
-    //             printJS({
-    //                 printable: billBlobURL,
-    //                 type: 'pdf',
-    //                 onPrintDialogClose: () => {
-    //                     if (currentCopy < totalCopies) {
-    //                         currentCopy++;
-    //                         setTimeout(printNextBillCopy, 500);
-    //                     } else {
-    //                         URL.revokeObjectURL(billBlobURL);
-    //                         if (needsSummarySlip) {
-    //                             setTimeout(printSummarySlip, 500);
-    //                         }
-    //                     }
-    //                 }
-    //             });
-    //         };
-
-    //         if (totalCopies > 0) {
-    //             printNextBillCopy();
-    //         } else if (needsSummarySlip) {
-    //             printSummarySlip();
-    //         }
-    //     } catch (error) {
-    //         console.error('Direct Print Failed:', error);
-    //         Swal.fire({ title: "Print Error", text: error.message || "Failed to print.", icon: "error" });
-    //     }
-    // };
 
     const handleDirectPrint = async () => {
         try {
             console.log("=== Direct Print Started ===");
 
-            const totalCopies = printData.printCopies || 2;
-            const needsSummarySlip = printData.showSummarySlip;
+            console.log("Generating Document PDF...");
+            const blob = await pdf(<PrintComponent {...printData} />).toBlob();
+            console.log("Document PDF Generated");
 
-            console.log("Total Copies:", totalCopies);
-            console.log("Need Summary Slip:", needsSummarySlip);
+            const blobURL = URL.createObjectURL(blob);
+            console.log("Blob URL:", blobURL);
 
-            // Generate Bill PDF
-            const billPrintData = {
-                ...printData,
-                printCopies: 1,
-                showSummarySlip: false
-            };
-
-            console.log("Generating Bill PDF...");
-            const billBlob = await pdf(<PrintComponent {...billPrintData} />).toBlob();
-            console.log("Bill PDF Generated");
-
-            const billBlobURL = URL.createObjectURL(billBlob);
-            console.log("Bill Blob URL:", billBlobURL);
-
-            // Generate Summary PDF
-            let summaryBlobURL = null;
-
-            if (needsSummarySlip) {
-                console.log("Generating Summary Slip PDF...");
-
-                const summaryPrintData = {
-                    ...printData,
-                    printCopies: 0,
-                    showSummarySlip: true
-                };
-
-                const summaryBlob = await pdf(<PrintComponent {...summaryPrintData} />).toBlob();
-
-                console.log("Summary PDF Generated");
-
-                summaryBlobURL = URL.createObjectURL(summaryBlob);
-
-                console.log("Summary Blob URL:", summaryBlobURL);
-            }
-
-            let currentCopy = 1;
-
-            const printSummarySlip = () => {
-                console.log("Printing Summary Slip...");
-
-                if (summaryBlobURL) {
-                    printJS({
-                        printable: summaryBlobURL,
-                        type: "pdf",
-                        onPrintDialogClose: () => {
-                            console.log("Summary Print Dialog Closed");
-                            URL.revokeObjectURL(summaryBlobURL);
-                            console.log("Summary Blob URL Revoked");
-                        }
-                    });
+            printJS({
+                printable: blobURL,
+                type: "pdf",
+                onPrintDialogClose: () => {
+                    console.log("Print Dialog Closed");
+                    URL.revokeObjectURL(blobURL);
                 }
-            };
-
-            const printNextBillCopy = () => {
-
-                console.log(`Printing Bill Copy ${currentCopy} of ${totalCopies}`);
-
-                printJS({
-                    printable: billBlobURL,
-                    type: "pdf",
-                    onPrintDialogClose: () => {
-
-                        console.log(`Bill Copy ${currentCopy} Print Dialog Closed`);
-
-                        if (currentCopy < totalCopies) {
-
-                            currentCopy++;
-
-                            console.log("Preparing Next Copy:", currentCopy);
-
-                            setTimeout(printNextBillCopy, 500);
-
-                        } else {
-
-                            console.log("All Bill Copies Printed");
-
-                            URL.revokeObjectURL(billBlobURL);
-                            console.log("Bill Blob URL Revoked");
-
-                            if (needsSummarySlip) {
-                                console.log("Starting Summary Slip Printing...");
-                                setTimeout(printSummarySlip, 500);
-                            } else {
-                                console.log("Printing Completed");
-                            }
-                        }
-                    }
-                });
-            };
-
-            if (totalCopies > 0) {
-                console.log("Starting Bill Printing...");
-                printNextBillCopy();
-            } else if (needsSummarySlip) {
-                console.log("No Bill Copies. Printing Summary Only...");
-                printSummarySlip();
-            }
+            });
 
         } catch (error) {
             console.error("Direct Print Failed:", error);
