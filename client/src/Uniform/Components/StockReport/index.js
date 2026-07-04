@@ -20,6 +20,7 @@ import Swal from 'sweetalert2';
 import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterService";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
+import { Plus } from 'lucide-react';
 
 const StockReport = () => {
     const [poType, setPoType] = useState("")
@@ -69,6 +70,23 @@ const StockReport = () => {
 
 
 
+    const onNew = () => {
+            setItemId("")
+            setSizeId("")
+            setColorId("")
+            setLocationId("")
+            setBarcode("")
+            setStoreId("")
+            setEndDate(moment(new Date()).format("YYYY-MM-DD"))
+        }
+
+        console.log({
+            itemId,
+            sizeId,
+            colorId
+        })
+            
+
 
     return (
         <>
@@ -87,12 +105,14 @@ const StockReport = () => {
                 <div className='w-full h-full  p-2'>
                     <div className='flex items-center justify-between bg-white py-1 mb-2 font-bold'>
                         <h1 className=''>Stock Report</h1>
-                        {/* <div className='flex gap-5'>
-                            <ParameterButton onClick={() => setParameter(true)} />
-                            <button onClick={refetch}>
-                                Refresh {REFRESH_ICON}
+                        <div className='flex gap-5'>
+                            <button
+                                onClick={onNew}
+                                className="flex items-center gap-2 text-indigo-600 bg-white border border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-black hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm active:scale-95 outline-none"
+                            >
+                                <Plus size={16} /> New
                             </button>
-                        </div> */}
+                        </div>
                     </div>
                     <div className='flex justify-center   flex-col text-center bg-gray-200 rounded-b-md mb-3 sticky top-0 '>
                         <div className='grid grid-cols-8 gap-4 p-2'>
@@ -203,7 +223,7 @@ const StockReport = () => {
 
 
                                 <table className="min-w-[1250px] border-collapse table-fixed">
-                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-50 font-bold shadow-sm">
+                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10 font-bold shadow-sm">
 
                                         <tr>
 

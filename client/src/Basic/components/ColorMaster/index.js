@@ -160,9 +160,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       Swal.fire({
         title: "Please enter 3 digit valid code...",
         icon: "error",
-        didClose: () => {
-          codeRef?.current?.focus();
-        }
+        // didClose: () => {
+        //   codeRef?.current?.focus();
+        // }
       });
       return;
     }
@@ -298,12 +298,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
       className: "font-medium text-gray-900 text-left pl-2 uppercase w-96",
+      enableSearch: true
     },
     {
       header: "Code",
       accessor: (item) => item?.code,
       //   cellClass: () => "font-medium  text-gray-900",
       className: "font-medium text-gray-900 text-left pl-2 uppercase w-48",
+      enableSearch: true
     },
 
     {
@@ -468,6 +470,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         onEdit={handleEdit}
         onDelete={deleteData}
         itemsPerPage={15}
+        enableSearch={true}
       />
 
       <div>

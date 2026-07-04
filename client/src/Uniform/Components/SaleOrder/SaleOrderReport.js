@@ -71,7 +71,7 @@ const SaleOrderReport = ({
       ...searchFields,
       pagination: true,
       dataPerPage,
-      pageNumber: currentPageNumber,
+      currentPageNumber,
     }
   });
 

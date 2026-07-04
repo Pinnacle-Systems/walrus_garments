@@ -183,7 +183,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 }
 
 async function get(req) {
-    const { active } = req.query;
+    const { active, pagination, currentPageNumber, dataPerPage } = req.query;
 
     let data = await prisma.salesReturn.findMany({
         where: {
@@ -218,6 +218,12 @@ async function get(req) {
             id: "desc",
         },
     });
+
+    let totalCount = 0
+    if (pagination) {
+        totalCount = data.length;
+        data = data.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
+    }
 
     return { statusCode: 0, data };
 }

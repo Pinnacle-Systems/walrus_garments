@@ -366,7 +366,7 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 }
 
 async function get(req) {
-    const { companyId, active, serachDocNo, searchQuotation, searchDate, supplier } = req.query
+    const { companyId, active, serachDocNo, searchQuotation, searchDate, supplier, pagination, currentPageNumber, dataPerPage } = req.query
     let data = await prisma.saleorder.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
@@ -487,7 +487,12 @@ async function get(req) {
 
 
     data = manualFilterSearchData(searchDate, "", "", data)
-
+    console.log(data.length, "data", currentPageNumber, "currentPageNumber", dataPerPage, "dataPerPage")
+    let totalCount = 0
+    if (pagination) {
+        totalCount = data.length;
+        data = data.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
+    }
 
     const enrichedData = await Promise.all(data.map(async (saleOrder) => {
 
@@ -578,6 +583,7 @@ async function getOne(id) {
                     taxMethod: true,
                     discountType: true,
                     discountValue: true,
+                    barcodeType: true,
                     SalesDeliveryItems: {
                         include: {
                             SalesReturnItems: true
@@ -785,6 +791,8 @@ async function create(body) {
                                 newItem["discountValue"] = temp["discountValue"] || "";
                                 newItem["taxPercent"] = temp["taxPercent"];
                                 newItem["taxMethod"] = temp["taxMethod"];
+                                newItem["barcodeType"] = temp["barcodeType"];
+
 
                                 return newItem
                             })
@@ -897,6 +905,8 @@ async function update(id, body) {
                             discountValue: item["discountValue"] ? item["discountValue"] : "",
                             taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
                             taxMethod: item["taxMethod"] ? item["taxMethod"] : "",
+                            barcodeType: item["barcodeType"] ? item["barcodeType"] : "",
+
                         }
                     });
                 } else {
@@ -916,6 +926,7 @@ async function update(id, body) {
                             discountValue: item["discountValue"] ? item["discountValue"] : "",
                             taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
                             taxMethod: item["taxMethod"] ? item["taxMethod"] : "",
+                            barcodeType: item["barcodeType"] ? item["barcodeType"] : "",
 
                         }
 

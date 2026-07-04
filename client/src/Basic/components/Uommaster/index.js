@@ -258,6 +258,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       header: "Uom",
       accessor: (item) => item?.name,
       className: "font-medium text-gray-900 text-left uppercase w-48 ",
+      enableSearch: true
     },
 
     {
@@ -424,6 +425,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           onEdit={handleEdit}
           onDelete={deleteData}
           itemsPerPage={15}
+          enableSearch={true}
         />
 
       {form && (

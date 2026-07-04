@@ -218,7 +218,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 
 function manualFilterSearchData(searchDate, data) {
     console.log(getDateFromDateTime(searchDate), "searchDate")
-    console.log(data, "data")
+    // console.log(data, "data")
     return data.filter(item =>
     (searchDate ? (
         String(getDateFromDateTime(item.createdAt)).includes(searchDate) ||
@@ -229,7 +229,7 @@ function manualFilterSearchData(searchDate, data) {
 
 async function get(req) {
 
-    const { companyId, active, serachDocNo, saleOrderNo, supplier, searchDate } = req.query
+    const { companyId, active, serachDocNo, saleOrderNo, supplier, searchDate, pagination, currentPageNumber, dataPerPage } = req.query
 
     // console.log(companyId, active, "companyId, active ")
 
@@ -286,14 +286,22 @@ async function get(req) {
         }
     });
 
-    data = manualFilterSearchData(searchDate, data)
+    if (searchDate) {
+        data = manualFilterSearchData(searchDate, data)
+    }
 
-
+    console.log(data.length, "data", currentPageNumber, "currentPageNumber", dataPerPage, "dataPerPage")
+    let totalCount = 0
+    if (pagination) {
+        totalCount = data.length;
+        data = data.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
+    }
     return {
         statusCode: 0,
         data: data.map((salesDelivery) => ({
             ...salesDelivery,
             ...getSalesDeliveryReturnState(salesDelivery),
+            totalCount
         }))
     };
 }
@@ -476,6 +484,13 @@ async function create(body) {
                 where: { storeName: "RETAIL" }
             });
 
+            const discountSection = await tx.location.findFirst({
+                where: { storeName: "DISCOUNT SECTION" }
+            });
+
+
+            console.log(discountSection?.id, retailStore?.id, "retailStore")
+
             if (retailStore && !isOverDeliveryDetected) {
                 for (const item of (deliveryItems || []).filter(i => i.itemId && parseAmount(i.deliveryQty) > 0)) {
                     const stockRows = await tx.stock.findMany({
@@ -483,15 +498,19 @@ async function create(body) {
                             itemId: parseInt(item.itemId),
                             sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                             colorId: item.colorId ? parseInt(item.colorId) : null,
-                            storeId: retailStore.id,
+                            storeId: { in: [retailStore.id, discountSection?.id].filter(Boolean) },
                             branchId: branchId ? parseInt(branchId) : undefined,
+                            barcode: item?.barcode ? item?.barcode : undefined,
                         }
                     });
 
-                    console.log("stockRows", stockRows)
+                    // console.log("stockRows", stockRows)
 
                     const availableQty = stockRows.reduce((acc, curr) => acc + parseAmount(curr.qty), 0);
                     const requestedQty = parseAmount(item.deliveryQty);
+
+                    console.log(availableQty, "availableQty")
+
 
                     if (requestedQty > availableQty + 0.0001) {
                         const itemData = await tx.item.findUnique({ where: { id: parseInt(item.itemId) }, select: { name: true } });
@@ -536,7 +555,15 @@ async function create(body) {
                 }
 
                 if (!resolvedBarcode) {
-                    const effectiveStoreId = retailStore?.id || (storeId ? parseInt(storeId) : undefined);
+                    let effectiveStoreId;
+                    const isClearance = resolvedBarcodeType && (resolvedBarcodeType.toUpperCase() === "CLEARANCE" || resolvedBarcodeType.toUpperCase() === "CLEARENCE");
+                    if (isClearance) {
+                        effectiveStoreId = discountSection?.id;
+                    } else {
+                        effectiveStoreId = retailStore?.id;
+                    }
+                    effectiveStoreId = effectiveStoreId || (storeId ? parseInt(storeId) : undefined);
+
                     const stockRow = await tx.stock.findFirst({
                         where: {
                             itemId: temp.itemId ? parseInt(temp.itemId) : undefined,
@@ -576,23 +603,29 @@ async function create(body) {
                 persistedDeliveryItems.push({
                     ...savedItem,
                     barcode: resolvedBarcode,
+                    barcodeType: resolvedBarcodeType,
                     fulfillmentAllocations: temp?.fulfillmentAllocations || temp?.allocations || [],
                 });
             }
 
-            const allocations = persistedDeliveryItems.map((item) => ({
-                salesDeliveryId: parseInt(data.id),
-                salesDeliveryItemId: item.id,
-                saleOrderItemId: item.saleOrderItemId,
-                itemId: item.itemId,
-                sizeId: item.sizeId,
-                colorId: item.colorId,
-                uomId: item.uomId,
-                storeId: retailStore?.id || 9,
-                branchId: branchId ? parseInt(branchId) : null,
-                barcode: item.barcode || null,
-                allocatedQty: parseAmount(item.deliveryQty),
-            }));
+            const allocations = persistedDeliveryItems.map((item) => {
+                const isClearance = item.barcodeType && (item.barcodeType.toUpperCase() === "CLEARANCE" || item.barcodeType.toUpperCase() === "CLEARENCE");
+                const targetStoreId = isClearance ? discountSection?.id : retailStore?.id;
+
+                return {
+                    salesDeliveryId: parseInt(data.id),
+                    salesDeliveryItemId: item.id,
+                    saleOrderItemId: item.saleOrderItemId,
+                    itemId: item.itemId,
+                    sizeId: item.sizeId,
+                    colorId: item.colorId,
+                    uomId: item.uomId,
+                    storeId: targetStoreId || 9,
+                    branchId: branchId ? parseInt(branchId) : null,
+                    barcode: item.barcode || null,
+                    allocatedQty: parseAmount(item.deliveryQty),
+                };
+            });
 
             if (allocations.length > 0 && !isOverDeliveryDetected) {
                 await tx.salesDeliveryFulfillmentAllocation.createMany({
@@ -776,6 +809,10 @@ async function update(id, body) {
                 where: { storeName: "RETAIL" }
             });
 
+            const discountSection = await tx.location.findFirst({
+                where: { storeName: "DISCOUNT SECTION" }
+            });
+
             if (retailStore) {
                 for (const item of (deliveryItems || []).filter(i => i.itemId && parseAmount(i.qty) > 0)) {
                     const stockRows = await tx.stock.findMany({
@@ -783,7 +820,7 @@ async function update(id, body) {
                             itemId: parseInt(item.itemId),
                             sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                             colorId: item.colorId ? parseInt(item.colorId) : null,
-                            storeId: retailStore.id,
+                            storeId: { in: [retailStore.id, discountSection?.id].filter(Boolean) },
                             branchId: branchId ? parseInt(branchId) : undefined,
                             courierChargeEnabled: Boolean(courierChargeEnabled),
                             courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
@@ -859,7 +896,14 @@ async function update(id, body) {
                 // so that the stock-out entry carries the same barcode as the stock-in
                 // entry and the stock report nets them correctly.
                 if (!resolvedBarcode) {
-                    const effectiveStoreId = retailStore?.id || (storeId ? parseInt(storeId) : undefined);
+                    let effectiveStoreId;
+                    const isClearance = resolvedBarcodeType && (resolvedBarcodeType.toUpperCase() === "CLEARANCE" || resolvedBarcodeType.toUpperCase() === "CLEARENCE");
+                    if (isClearance) {
+                        effectiveStoreId = discountSection?.id;
+                    } else {
+                        effectiveStoreId = retailStore?.id;
+                    }
+                    effectiveStoreId = effectiveStoreId || (storeId ? parseInt(storeId) : undefined);
                     const stockRow = await tx.stock.findFirst({
                         where: {
                             itemId: item.itemId ? parseInt(item.itemId) : undefined,
@@ -899,6 +943,7 @@ async function update(id, body) {
                     persistedDeliveryItems.push({
                         ...savedItem,
                         barcode: resolvedBarcode,
+                        barcodeType: resolvedBarcodeType,
                         fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
                     });
                 } else {
@@ -923,25 +968,31 @@ async function update(id, body) {
                     persistedDeliveryItems.push({
                         ...savedItem,
                         barcode: resolvedBarcode,
+                        barcodeType: resolvedBarcodeType,
                         fulfillmentAllocations: item?.fulfillmentAllocations || item?.allocations || [],
                     });
                 }
             }
 
-            const allocations = persistedDeliveryItems.map((item) => ({
-                salesDeliveryId: parseInt(id),
-                salesDeliveryItemId: item.id,
-                saleOrderItemId: item.saleOrderItemId,
-                itemId: item.itemId,
-                sizeId: item.sizeId,
-                colorId: item.colorId,
-                uomId: item.uomId,
-                storeId: retailStore?.id || 9,
-                branchId: branchId ? parseInt(branchId) : null,
-                barcode: item.barcode || null,
-                // deliveryQty is the authoritative field; fall back to qty for older records
-                allocatedQty: parseAmount(item.deliveryQty ?? item.qty),
-            }));
+            const allocations = persistedDeliveryItems.map((item) => {
+                const isClearance = item.barcodeType && (item.barcodeType.toUpperCase() === "CLEARANCE" || item.barcodeType.toUpperCase() === "CLEARENCE");
+                const targetStoreId = isClearance ? discountSection?.id : retailStore?.id;
+
+                return {
+                    salesDeliveryId: parseInt(id),
+                    salesDeliveryItemId: item.id,
+                    saleOrderItemId: item.saleOrderItemId,
+                    itemId: item.itemId,
+                    sizeId: item.sizeId,
+                    colorId: item.colorId,
+                    uomId: item.uomId,
+                    storeId: targetStoreId || 9,
+                    branchId: branchId ? parseInt(branchId) : null,
+                    barcode: item.barcode || null,
+                    // deliveryQty is the authoritative field; fall back to qty for older records
+                    allocatedQty: parseAmount(item.deliveryQty ?? item.qty),
+                };
+            });
 
             if (allocations.length > 0) {
                 await tx.salesDeliveryFulfillmentAllocation.createMany({

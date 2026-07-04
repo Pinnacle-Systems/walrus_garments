@@ -200,7 +200,7 @@ function getPurchaseInwardStatus(inward) {
 
 
 async function get(req) {
-    const { branchId, active, poInwardOrDirectInward, pageNumber, dataPerPage, serachDocNo, searchDate, supplier,
+    const { branchId, active, poInwardOrDirectInward, pageNumber, dataPerPage, serachDocNo, searchDate, supplier, currentPageNumber,
         searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId } = req.query
     let data;
     let totalCount;
@@ -271,8 +271,13 @@ async function get(req) {
             }
         });
         data = manualFilterSearchData(searchDate, searchDueDate, searchPoType, data)
+        
         totalCount = data.length
-        // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+        if (pagination) {
+            totalCount = data.length;
+            data = data.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
+        }
+
     } else {
 
         data = await prisma.directInwardOrReturn.findMany({

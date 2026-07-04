@@ -5121,6 +5121,7 @@ model QuotationItems {
   taxType        String?
   priceType      String?
   taxMethod      String?
+  barcodeType    String?
   SaleOrderItems SaleOrderItems[]
 }
 
@@ -5182,6 +5183,7 @@ model SaleOrderItems {
   taxPercent             String?
   taxMethod              String?
   priceType              String?
+  barcodeType            String?
   SalesDeliveryItems     SalesDeliveryItems[]
   FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
 }
@@ -5281,29 +5283,31 @@ model SalesDelivery {
 }
 
 model SalesDeliveryItems {
-  id                     Int                                  @id @default(autoincrement())
-  SalesDelivery          SalesDelivery?                       @relation(fields: [salesDeliveryId], references: [id], onDelete: Cascade)
-  salesDeliveryId        Int?
-  SaleOrderItems         SaleOrderItems?                      @relation(fields: [saleOrderItemId], references: [id])
-  saleOrderItemId        Int?
-  Item                   Item?                                @relation(fields: [itemId], references: [id])
-  itemId                 Int?
-  Size                   Size?                                @relation(fields: [sizeId], references: [id])
-  sizeId                 Int?
-  Color                  Color?                               @relation(fields: [colorId], references: [id])
-  colorId                Int?
-  Uom                    UnitOfMeasurement?                   @relation(fields: [uomId], references: [id])
-  uomId                  Int?
-  Hsn                    Hsn?                                 @relation(fields: [hsnId], references: [id])
-  hsnId                  Int?
-  qty                    String?
-  deliveryQty            String?
-  price                  String?
-  discountType           String?
-  discountValue          String?
-  taxPercent             String?
-  taxMethod              String?
-  priceType              String?
+  id              Int                @id @default(autoincrement())
+  SalesDelivery   SalesDelivery?     @relation(fields: [salesDeliveryId], references: [id], onDelete: Cascade)
+  salesDeliveryId Int?
+  SaleOrderItems  SaleOrderItems?    @relation(fields: [saleOrderItemId], references: [id])
+  saleOrderItemId Int?
+  Item            Item?              @relation(fields: [itemId], references: [id])
+  itemId          Int?
+  Size            Size?              @relation(fields: [sizeId], references: [id])
+  sizeId          Int?
+  Color           Color?             @relation(fields: [colorId], references: [id])
+  colorId         Int?
+  Uom             UnitOfMeasurement? @relation(fields: [uomId], references: [id])
+  uomId           Int?
+  Hsn             Hsn?               @relation(fields: [hsnId], references: [id])
+  hsnId           Int?
+  qty             String?
+  deliveryQty     String?
+  price           String?
+  discountType    String?
+  discountValue   String?
+  taxPercent      String?
+  taxMethod       String?
+  priceType       String?
+  barcodeType     String?
+
   FulfillmentAllocations SalesDeliveryFulfillmentAllocation[]
   SalesReturnItems       SalesReturnItems[]
   SalesExchangeItems     SalesExchangeItems[]
@@ -5446,6 +5450,7 @@ model SalesReturnItems {
   discountValue       String?
   taxMethod           String?
   taxType             String?
+  barcodeType         String?
 }
 
 model SalesExchangeItems {
@@ -5622,6 +5627,7 @@ model PosItems {
   appliedOfferName      String?
   isExchangeItem        Boolean            @default(false)
   isAddedDuringExchange Boolean?           @default(false)
+  sourceStoreId         Int?               @default(0)
 }
 
 model PosPayments {

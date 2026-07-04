@@ -11,7 +11,7 @@ import {
 } from "../../../redux/uniformService/PoServices"
 import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 import ReactPaginate from 'react-paginate';
-import { FaChevronLeft, FaChevronRight, FaEllipsisV } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaEllipsisV, FaStepBackward, FaStepForward } from 'react-icons/fa';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 import { useGetQuotationMasterQuery, useGetQuotationQuery } from '../../../redux/uniformService/quotationServices';
 import { useGetPointOfSalesQuery, useCancelPointOfSalesMutation, useLazyGetPointOfSalesQuery } from '../../../redux/uniformService/PointOfSalesService';
@@ -324,6 +324,17 @@ const PosReportsNew = ({
                 </div>
                 <div className="flex gap-1">
                     <button
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPageNumber === 1}
+                        className={`min-w-8 rounded-md px-2.5 py-1 ${currentPageNumber === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        title="First Page"
+                    >
+                        <FaStepBackward size={12} className="inline" />
+                    </button>
+                    <button
                         onClick={() => handlePageChange(currentPageNumber - 1)}
                         disabled={currentPageNumber === 1}
                         className={`px-3 py-1 rounded-md ${currentPageNumber === 1
@@ -385,6 +396,17 @@ const PosReportsNew = ({
                             }`}
                     >
                         <FaChevronRight className="inline" />
+                    </button>
+                    <button
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPageNumber === totalPages}
+                        className={`min-w-8 rounded-md px-2.5 py-1 ${currentPageNumber === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        title="Last Page"
+                    >
+                        <FaStepForward size={12} className="inline" />
                     </button>
                 </div>
             </div>
@@ -722,7 +744,7 @@ const PosReportsNew = ({
                                                                 )}
 
                                                         </div>
-                                                        <button
+                                                        {/* <button
                                                             className="text-red-600 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -732,7 +754,7 @@ const PosReportsNew = ({
                                                             title="Cancel Bill"
                                                         >
                                                             <FiXCircle className="h-4 w-4" />
-                                                        </button>
+                                                        </button> */}
                                                         <button
                                                             className="text-orange-600 flex items-center px-1 bg-orange-50 rounded hover:bg-orange-100 transition-colors"
                                                             onClick={(e) => {

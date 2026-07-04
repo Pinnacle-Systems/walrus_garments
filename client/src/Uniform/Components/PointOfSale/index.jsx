@@ -192,18 +192,20 @@ const POSMultiTabWrapper = () => {
                         >
                             <RefreshCw size={14} className={isRecentSalesFetching ? 'animate-spin' : ''} /> Refresh
                         </button>
-                        <button
-                            className="hover:bg-green-700 bg-green-600 text-white px-3 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm"
-                            onClick={handleAddTab}
-                        >
-                            <Plus size={14} /> Create New
-                        </button>
+
+
                         <button
                             className="hover:bg-indigo-600 bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm ml-2 font-medium"
                             onClick={() => setCurrentView("SESSION")}
                             title="Go back to open tabs"
                         >
                             View Open Tabs ({tabs.length})
+                        </button>
+                        <button
+                            className="hover:bg-green-700 bg-green-600 text-white px-3 py-0.5 rounded-md flex items-center gap-2 text-sm transition-colors shadow-sm"
+                            onClick={handleAddTab}
+                        >
+                            <Plus size={14} /> Create New
                         </button>
                     </div>
                 </div>

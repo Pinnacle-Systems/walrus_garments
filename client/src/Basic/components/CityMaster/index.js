@@ -318,16 +318,22 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             header: "City Name",
             accessor: (item) => item?._count?.name || item?.name,
             className: "font-medium text-gray-900 text-left uppercase w-64",
+            enableSearch: true
+
         },
         {
             header: "State Name",
             accessor: (item) => item?.state?.name,
             className: "font-medium text-gray-900 text-left uppercase w-64",
+            enableSearch: true
+
         },
         {
             header: "Country Name",
             accessor: (item) => item?.state?.country?.name,
             className: "font-medium text-gray-900 text-left uppercase w-64",
+            enableSearch: true
+
         },
 
         {
@@ -533,16 +539,18 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             }}
             onKeyDown={handleKeyDown}
         >
-                <ReusableTable
-                    columns={columns}
-                    data={allData?.data}
-                    onView={handleView}
-                    onEdit={handleEdit}
-                    onDelete={deleteData}
-                    itemsPerPage={15}
-                    childRecordLabel="Customer/Supplier Master"
+            <ReusableTable
+                columns={columns}
+                data={allData?.data}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={deleteData}
+                itemsPerPage={15}
+                childRecordLabel="Customer/Supplier Master"
+                enableSearch={true}
 
-                />
+
+            />
 
             <div>
                 {form === true && (

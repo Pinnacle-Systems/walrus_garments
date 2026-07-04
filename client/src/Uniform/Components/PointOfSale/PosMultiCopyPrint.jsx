@@ -1,9 +1,10 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Font, Svg, Path } from '@react-pdf/renderer';
 import { createTw } from 'react-pdf-tailwind';
 import moment from 'moment';
 import BarcodeGenerator from '../BarcodeGenerator';
 import { useMemo } from 'react';
+import { qr } from 'mathjs';
 
 const tw = createTw({
   theme: {
@@ -243,10 +244,10 @@ const PosMultiCopyPrint = ({
           <Text style={tw('text-sm font-black')}>Rs.
             {summary.total > 0 ? summary.total.toFixed(0) :
               (
-                ((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied) > 0 ?
-                  (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied) :
-                  ((purchaseTotal - returnTotal))
-              ).toFixed(2)}</Text>
+                ((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied).toFixed(2) > 0 ?
+                  (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied).toFixed(2) :
+                  ((purchaseTotal - returnTotal).toFixed(2))
+              )}</Text>
         </View>
       </View>{console.log(summary, "summary", (
         ((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied) > 0 ?

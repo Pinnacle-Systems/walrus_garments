@@ -45,7 +45,7 @@ async function getNextDocId(branchId, shortCode, startTime, endTime, isReturn) {
 
     const branchObj = await getTableRecordWithId(branchId, "branch")
 
-    console.log(branchObj, 'branchObj')
+    // console.log(branchObj, 'branchObj')
 
     let newDocId = `${branchObj.branchCode}/${shortCode}/${prefix}/1`
     if (lastObject) {
@@ -153,7 +153,7 @@ async function get(req) {
 
     }
     data = manualFilterSearchData(searchDate || filterDate, "", "", data)
-    console.log(approvalStatus, "approvalStatus")
+    // console.log(approvalStatus, "approvalStatus")
 
     if (pagination) {
         totalCount = data.length;
@@ -332,6 +332,7 @@ async function create(body) {
                                 offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
                                 priceType: item.priceType || null,
                                 appliedOfferName: item.appliedOfferName || null,
+                                sourceStoreId: item?.fulfillments?.length > 0 ? parseInt(item?.fulfillments?.[0]?.storeId) : null,
                             }))
                         }
                     },
@@ -387,6 +388,8 @@ async function create(body) {
                 const fulfillments = item.fulfillments && !item.isReturn ? item.fulfillments : [{ storeId: item.sourceStoreId || retailStoreId, qty: item.qty }];
                 const price = parseFloat(item.price || 0);
 
+                console.log(fulfillments, "fulfillments")
+
                 const baseEntry = {
                     itemId,
                     sizeId: item.sizeId ? parseInt(item.sizeId) : null,
@@ -422,15 +425,7 @@ async function create(body) {
                             }
                         });
 
-                        // console.log({
-                        //     itemId,
-                        //     sizeId: baseEntry.sizeId,
-                        //     colorId: baseEntry.colorId,
-                        //     uomId: baseEntry.uomId,
-                        //     storeId: fStoreId,
-                        //     branchId: baseEntry.branchId,
-                        //     barcode: baseEntry?.barcode
-                        // }, "currentStock")
+
 
                         const available = parseFloat(currentStock._sum.qty || 0);
                         if (available < fQty) {
@@ -638,6 +633,8 @@ async function update(id, body) {
                         price: price,
                     };
 
+                    console.log(fulfillments, "fulfillments")
+
                     if (!item.isReturn) {
                         for (const f of fulfillments) {
                             const fQty = parseFloat(f.qty);
@@ -659,6 +656,17 @@ async function update(id, body) {
                                     branchId: baseEntry.branchId
                                 }
                             });
+
+                            console.log({
+                                itemId,
+                                sizeId: baseEntry.sizeId,
+                                colorId: baseEntry.colorId,
+                                uomId: baseEntry.uomId,
+                                storeId: fStoreId,
+                                branchId: baseEntry.branchId,
+                                barcode: baseEntry?.barcode,
+                                currentStock
+                            }, "currentStock")
 
                             const available = parseFloat(currentStock._sum.qty || 0);
                             if (available < fQty) {

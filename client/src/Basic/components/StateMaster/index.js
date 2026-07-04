@@ -295,12 +295,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
       className: "font-medium text-gray-900 text-left uppercase w-64",
+      enableSearch: true
+
     },
     {
       header: "Country Name",
       accessor: (item) => item?.country?.name,
       //   cellClass: () => "font-medium  text-gray-900",
       className: "font-medium text-gray-900 text-left uppercase w-64",
+      enableSearch: true
+
     },
 
     {
@@ -495,15 +499,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       }}
       onKeyDown={handleKeyDown}
     >
-        <ReusableTable
-          columns={columns}
-          data={allData?.data}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={deleteData}
-          itemsPerPage={15}
-          childRecordLabel="City Master"
-        />
+      <ReusableTable
+        columns={columns}
+        data={allData?.data}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={deleteData}
+        itemsPerPage={15}
+        childRecordLabel="City Master"
+        enableSearch
+      />
 
       <div>
         {form === true && (

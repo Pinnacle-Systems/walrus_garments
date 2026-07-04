@@ -126,7 +126,7 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 }
 
 async function get(req) {
-    const { companyId, active, serachDocNo, supplier, searchDate } = req.query;
+    const { companyId, active, serachDocNo, supplier, searchDate ,pagination ,currentPageNumber ,dataPerPage } = req.query;
 
     let data = await prisma.quotation.findMany({
         where: {
@@ -179,7 +179,11 @@ async function get(req) {
 
 
     data = manualFilterSearchData(searchDate, "", "", data)
-
+    let totalCount = 0
+    if (pagination) {
+        totalCount = data.length;
+        data = data.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
+    }
 
 
     const result = await Promise.all(
@@ -346,6 +350,8 @@ async function create(body) {
                             newItem["taxMethod"] = String(temp["taxMethod"]);
                             newItem["taxPercent"] = String(temp["taxPercent"]);
                             newItem["priceType"] = String(temp["priceType"]);
+                            newItem["barcodeType"] = String(temp["barcodeType"]);
+
 
                             return newItem
                         })
@@ -380,6 +386,7 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
                 discountValue: item["discountValue"] ? item["discountValue"] : "",
                 taxPercent: item["taxPercent"] ? item["taxPercent"] : "",
                 priceType: item["priceType"] ? item["priceType"] : "",
+                priceType: item["barcodeType"] ? item["barcodeType"] : "",
 
 
 
@@ -409,6 +416,8 @@ async function updateOrCreate(tx, item, quotationId, poType, poInwardOrDirectInw
                 discountValue: item["discountValue"] ? String(item["discountValue"]) : "",
                 taxPercent: item["taxPercent"] ? String(item["taxPercent"]) : "",
                 priceType: item["priceType"] ? item["priceType"] : "",
+                priceType: item["barcodeType"] ? item["barcodeType"] : "",
+
 
             }
         })
@@ -509,9 +518,10 @@ async function update(id, body) {
                         price: item.price ? item.price.toString() : "0",
                         taxMethod: item?.taxMethod ? item.taxMethod : "",
                         taxPercent: item?.taxPercent ? item.taxPercent : "",
+                        barcodeType: item?.barcodeType ? item.barcodeType : "",
 
 
-                        // barcodeType: item?.barcodeType ? item.barcodeType : "",
+                        // 
                         // priceType: item?.priceType ? item.priceType : "",
                         // discountType: item?.discountType ? item.discountType : "",
                         // discountValue: item?.discountValue ? item.discountValue : "",
@@ -530,6 +540,7 @@ async function update(id, body) {
                         price: item.price ? item.price.toString() : "0",
                         taxMethod: item?.taxMethod ? item.taxMethod : "",
                         taxPercent: item?.taxPercent ? item.taxPercent : "",
+                        barcodeType: item?.barcodeType ? item.barcodeType : "",
 
 
                         // barcodeType: item?.barcodeType ? item.barcodeType : "",

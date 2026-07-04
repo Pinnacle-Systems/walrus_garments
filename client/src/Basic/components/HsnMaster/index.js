@@ -195,8 +195,13 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
     const columns = [
         { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
-        { header: "HSN Code", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-36" },
-        { header: "Tax %", accessor: (item) => item?.tax, className: "font-medium text-gray-900 text-center w-28" },
+        {
+            header: "HSN Code", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-36",
+            enableSearch: true
+        },
+        {
+            header: "Tax %", accessor: (item) => item?.tax, className: "font-medium text-gray-900 text-center w-28", enableSearch: true
+        },
         { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
     ];
 
@@ -354,14 +359,15 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             onAdd={() => { setForm(true); onNew(); }}
             onKeyDown={handleKeyDown}
         >
-                <ReusableTable
-                    columns={columns}
-                    data={allData?.data}
-                    onView={handleView}
-                    onEdit={handleEdit}
-                    onDelete={deleteData}
-                    itemsPerPage={15}
-                />
+            <ReusableTable
+                columns={columns}
+                data={allData?.data}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={deleteData}
+                itemsPerPage={15}
+                enableSearch={true}
+            />
 
             {form && (
                 <Modal isOpen={form} widthClass="w-[40%] h-[40%]" onClose={() => setForm(false)}>

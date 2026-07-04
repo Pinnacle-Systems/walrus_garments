@@ -244,6 +244,7 @@ export default function Form() {
             accessor: (item) => item?.termsAndCondition,
             //   cellClass: () => "font-medium  text-gray-900",
             className: "font-medium text-gray-900 text-left uppercase w-[600px]",
+            enableSearch : true
         },
 
         {
@@ -336,7 +337,8 @@ export default function Form() {
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={deleteData}
-                    itemsPerPage={15}
+                    itemsPerPage={17}
+                    enableSearch={true}
                 />
 
             <div>

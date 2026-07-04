@@ -419,45 +419,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
       // Calculate net amount of the old delivery if editing, to compute the net change in pending order value
       let oldDeliveryNetAmount = 0;
-      // if (id && singleData?.data) {
-      //   const oldItems = singleData.data.SalesDeliveryItems || [];
-      //   const oldItemsValue = oldItems.reduce((sum, item) => {
-      //     const qty = parseFloat(item.deliveryQty || 0);
-      //     const price = parseFloat(item.price || 0);
-      //     const taxPercent = parseFloat(item.taxPercent || 0);
-      //     const taxMethod = item.taxMethod || "Inclusive";
-      //     const discountType = item.discountType;
-      //     const discountValue = parseFloat(item.discountValue || 0);
 
-      //     const gross = price * qty;
-      //     let discountedAmount = gross;
-      //     if (discountType === "Percentage") {
-      //       discountedAmount = gross - (gross * discountValue) / 100;
-      //     } else if (discountType === "Flat") {
-      //       discountedAmount = gross - discountValue;
-      //     }
-      //     discountedAmount = Math.max(0, discountedAmount);
-
-      //     let net = 0;
-      //     if (taxMethod === "Inclusive" && taxPercent > 0) {
-      //       net = discountedAmount;
-      //     } else {
-      //       const subTotal = discountedAmount;
-      //       const taxAmount = subTotal * (taxPercent / 100);
-      //       net = subTotal + taxAmount;
-      //     }
-      //     return sum + net;
-      //   }, 0);
-
-      //   const oldCharges =
-      //     (singleData.data.packingChargeEnabled ? parseFloat(singleData.data.packingCharge || 0) : 0) +
-      //     (singleData.data.shippingChargeEnabled ? parseFloat(singleData.data.shippingCharge || 0) : 0) +
-      //     (singleData.data.courierChargeEnabled ? parseFloat(singleData.data.courierCharge || 0) : 0);
-
-      //   oldDeliveryNetAmount = oldItemsValue + oldCharges;
-      // }
-
-      // Safe balance of the order that is remaining after this delivery completes
       const pendingValueAfter = Math.max(0, totalSaleOrderPendingValue);
       const marginValue = pendingValueAfter * (marginPercent / 100);
       const allowedLimit = Math.max(0, receivedPayment - marginValue);

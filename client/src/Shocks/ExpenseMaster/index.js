@@ -121,6 +121,8 @@ export default function Form() {
 
 
   const validateData = (data) => {
+
+
     if (data.name) {
       return true;
     }
@@ -128,6 +130,8 @@ export default function Form() {
   }
 
   const saveData = () => {
+    const upperName = name?.toUpperCase();
+
     if (!validateData(data)) {
       // toast.error("Please fill all required fields...!", {
       //   position: "top-center",
@@ -154,9 +158,7 @@ export default function Form() {
       Swal.fire({
         text: "The Expense Category Name already exists.",
         icon: "warning",
-        didClose: () => {
-          countryNameRef?.current?.focus();
-        }
+     
       });
       return false;
     }

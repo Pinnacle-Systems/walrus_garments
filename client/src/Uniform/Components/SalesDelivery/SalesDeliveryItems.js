@@ -195,16 +195,27 @@ const SalesDeliveryItems = ({
             newBlend[index]["colorId"] = "";
         }
 
-        // if (field === "deliveryQty") {
-        //     if (parseFloat(item.balanceQty || 0) < parseFloat(value || 0)) {
-        //         Swal.fire({
-        //             icon: "warning",
-        //             title: "Over Delivery Warning",
-        //             text: "Delivery Quantity is greater than balance quantity. This will require Admin approval and no invoice will be generated immediately.",
-        //         });
-        //     }
-        // }
+        if (field === "deliveryQty") {
+            const selectedItemData = catalogItems?.find(i => String(i.id) === String(newBlend[index].itemId));
+            const isLegacy = selectedItemData?.isLegacy;
+            const priceList = selectedItemData?.ItemPriceList || [];
 
+            const currentPriceEntry = isLegacy
+                ? priceList[0]
+                : priceList.find(p => String(p.sizeId) === String(newBlend[index].sizeId) && String(p.colorId) === String(newBlend[index].colorId));
+            const availableBarcodes = currentPriceEntry?.ItemBarcodes || [];
+            const currentBarcodeType = newBlend[index].barcodeType || "REGULAR";
+
+            // barcodeType vachu barcode-a filter panrom
+            const matchedBarcode = availableBarcodes.find(b => b.barcodeType === currentBarcodeType);
+            if (matchedBarcode) {
+                newBlend[index]["barcode"] = matchedBarcode.barcode;
+            } else {
+                newBlend[index]["barcode"] = "";
+            }
+
+            newBlend[index][field] = value;
+        }
         newBlend[index][field] = value;
         setDeliveryItems(newBlend);
     };

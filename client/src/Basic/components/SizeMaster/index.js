@@ -158,9 +158,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             Swal.fire({
                 title: "Please enter 2 digit valid code...",
                 icon: "error",
-                didClose: () => {
-                    codeRef?.current?.focus();
-                }
+                // didClose: () => {
+                //     codeRef?.current?.focus();
+                // }
             });
             return;
         }
@@ -280,11 +280,13 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             header: "Size",
             accessor: (item) => item?.name,
             className: "font-medium text-gray-900 text-left uppercase w-96",
+            enableSearch: true,
         },
         {
             header: "Code",
             accessor: (item) => item?.code,
             className: "font-medium text-gray-900 text-left uppercase w-96",
+            enableSearch: true, 
         },
         {
             header: "Status",
@@ -449,6 +451,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 onEdit={handleEdit}
                 onDelete={deleteData}
                 itemsPerPage={15}
+                enableSearch={true}
             />
 
             {form && (

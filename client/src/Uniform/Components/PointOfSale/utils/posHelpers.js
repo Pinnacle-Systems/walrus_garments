@@ -187,5 +187,43 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
         });
     });
 
+    // Sort matches by relevance based on exact word matching
+    const queryWordsForSort = query.toLowerCase().split(/\s+/).filter(Boolean);
+    const lastQueryWord = queryWordsForSort[queryWordsForSort.length - 1];
+
+    allMatches.sort((a, b) => {
+        const aName = (a.item_name || "").toLowerCase();
+        const bName = (b.item_name || "").toLowerCase();
+        
+        const aWords = aName.split(/\s+/).filter(Boolean);
+        const bWords = bName.split(/\s+/).filter(Boolean);
+
+        let aScore = 0;
+        let bScore = 0;
+
+        // 1. Exact barcode match gets highest priority
+        if (a.barcode?.toLowerCase() === query.toLowerCase().trim()) aScore += 200;
+        if (b.barcode?.toLowerCase() === query.toLowerCase().trim()) bScore += 200;
+
+        // 2. Last Word Bonus (Usually size like L, XL, etc.)
+        if (lastQueryWord) {
+            if (aWords.includes(lastQueryWord)) aScore += 100;
+            if (bWords.includes(lastQueryWord)) bScore += 100;
+        }
+
+        // 3. Count exact word matches
+        queryWordsForSort.forEach(qWord => {
+            if (aWords.includes(qWord)) aScore += 1;
+            if (bWords.includes(qWord)) bScore += 1;
+        });
+
+        // 4. Exact full name match bonus
+        if (aName === query.toLowerCase().trim()) aScore += 50;
+        if (bName === query.toLowerCase().trim()) bScore += 50;
+
+        // Sort descending (highest score first)
+        return bScore - aScore; 
+    });
+
     return allMatches;
 };

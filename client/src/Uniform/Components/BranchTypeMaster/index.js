@@ -290,6 +290,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       accessor: (item) => item?.name,
       //   cellClass: () => "font-medium  text-gray-900",
       className: "font-medium text-gray-900 text-left uppercase w-72",
+      enableSearch: true
+
     },
 
     {
@@ -440,14 +442,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       }}
       onKeyDown={handleKeyDown}
     >
-        <ReusableTable
-          columns={columns}
-          data={allData?.data}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={deleteData}
-          itemsPerPage={10}
-        />
+      <ReusableTable
+        columns={columns}
+        data={allData?.data}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={deleteData}
+        itemsPerPage={17}
+        enableSearch={true}
+
+      />
 
       <div>
         {form === true && (

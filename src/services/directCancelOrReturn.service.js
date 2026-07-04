@@ -117,13 +117,14 @@ async function validateReturnVariantRows(directReturnItems = [], rowLabelPrefix)
 
 async function get(req) {
     const { branchId, active, poInwardOrDirectInward, pageNumber, dataPerPage, serachDocNo, searchDate, supplier,
-        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId } = req.query
+        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId ,currentPageNumber } = req.query
     let data;
     let totalCount;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-    console.log(poInwardOrDirectInward, "poInwardOrDirectInward")
+
     if (pagination) {
+
         data = await prisma.directReturnOrPoReturn.findMany({
             where: {
                 AND: (finYearDate) ? [
@@ -173,9 +174,14 @@ async function get(req) {
                 }
             }
         });
+
         data = manualFilterSearchData(searchDate, searchDueDate, searchPoType, data)
-        // totalCount = data.length
-        // data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
+
+        totalCount = data.length
+        if (pagination) {
+            totalCount = data.length;
+            data = data.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
+        }
     } else {
         data = await prisma.directReturnOrPoReturn.findMany({
             where: {

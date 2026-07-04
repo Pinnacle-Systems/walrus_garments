@@ -242,6 +242,14 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     }, [cart, tabId, onCartUpdate]);
 
     useEffect(() => {
+        if (isActive) {
+            setTimeout(() => {
+                scannerRef.current?.focus();
+            }, 100);
+        }
+    }, [isActive]);
+
+    useEffect(() => {
         if (shouldRedirectOnPrintClose && !printData) {
             setShouldRedirectOnPrintClose(false);
             onGoToReports?.();
@@ -394,7 +402,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 salesPersonId: item.salesPersonId,
                 salesPersonBarcode: item?.Employee?.employeeId,
                 stockQty: 0,
-                sourceStoreId: retailStoreId,
+                // sourceStoreId: retailStoreId,
                 offerReversal: item.offerReversal,
                 offerReapplied: item.offerReapplied,
                 priceType: item.priceType,
@@ -588,12 +596,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     // Auto-complete suggestion queries based on active search Mode
     useEffect(() => {
         const query = searchQuery?.trim().toLowerCase();
-        // if (!query || selectedReportSaleId || searchMode !== 'NAME') {
-        //     setSuggestions([]);
-        //     setShowSuggestions(false);
-        //     return;
-        // }
-        // Only trigger suggestions if query has 3 or more characters
+
+        console.log(searchQuery, "searchQuery")
+
         if (!query || query.length < 2 || selectedReportSaleId || searchMode !== 'NAME') {
             setSuggestions([]);
             setShowSuggestions(false);
@@ -602,6 +607,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         const items = itemsData?.data || [];
         const itemPriceList = ItemPriceListData?.data || [];
         const allMatches = filterSearchSuggestions({ query, items, itemPriceList, retailStoreId, offersData: offersData?.data || offersData });
+        console.log(allMatches, "allMatches")
 
         // Map stock details from the pre-loaded local stockMap
         const updated = allMatches.map(m => {
@@ -1551,7 +1557,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 offerReversal: item.offerReversal,
                 offerReapplied: item.offerReapplied,
                 priceType: item.priceType,
-                appliedOfferName: item.appliedOfferName
+                appliedOfferName: item.appliedOfferName,
+                isExchangeItem: false,
+                isAddedDuringExchange: false
             };
         });
 

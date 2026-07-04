@@ -238,7 +238,7 @@ export default function CollectionsMaster({ onSuccess, onClose, editId, deleteId
 
     const columns = [
         { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
-        { header: "Collection Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72" },
+        { header: "Collection Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72" , enableSearch : true },
         { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
     ];
 
@@ -260,34 +260,7 @@ export default function CollectionsMaster({ onSuccess, onClose, editId, deleteId
                                 readOnly={readOnly}
                                 disabled={childRecord > 0}
                             />
-                            {/* <DropdownInputNew
-                                    name="Items"
-                                    options={dropDownListObject(
-                                        id
-                                            ? itemData?.data
-                                            : itemData?.data?.filter((item) => item?.active),
-                                        "name",
-                                        "id"
-                                    )}
-                                    value={itemCategoryId}
-                                    setValue={setItemCategoryId}
-                                    required={true}
-                                    readOnly={readOnly}
-                                    className={`w-[150px]`}
-                                    // ref={(el) => {
-                                    //     if (childRecord > 0) {
-                                    //         if (nameRef.current === el) nameRef.current = null;
-                                    //     } else {
-                                    //         nameRef.current = el;
-                                    //     }
-                                    // }}
-                                    // openOnFocus={childRecord > 0 ? false : true}
-                                    disabled={childRecord > 0}
-                                    addNewLabel="+ Add New Category"
-                                    childComponent={ItemCategroyMaster}
-
-                                // addNewModalWidth="w-[40%] h-[45%]"
-                                /> */}
+                        
                             <MultiSelectDropdownNew
                                 name="Items"
                                 required={true}
@@ -433,6 +406,7 @@ export default function CollectionsMaster({ onSuccess, onClose, editId, deleteId
                 onEdit={handleEdit}
                 onDelete={deleteData}
                 itemsPerPage={15}
+                enableSearch={true}
             />
 
             {form && (

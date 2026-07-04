@@ -240,7 +240,7 @@ export const getPotentialOffers = (activeOffers, cart) => {
             if (tier) {
                 if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
                 else if (off.discountType === 'Override' || tier.type === 'Override') discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
-                else discountValue = tier.value;
+                else discountValue = tier.value * scopeQty;
             }
         }
         if (discountValue > 0) potential.push({ ...off, calculatedDiscount: discountValue, inScopeItems });
@@ -395,7 +395,7 @@ export const getPotentialExchangeOffers = (activeOffers, cart) => {
             if (tier) {
                 if (tier.type === 'Percentage') discountValue = (scopeValue * tier.value) / 100;
                 else if (off.discountType === 'Override' || tier.type === 'Override') discountValue = Math.max(0, scopeValue - (tier.value * scopeQty));
-                else discountValue = tier.value;
+                else discountValue = tier.value * scopeQty;
             }
         }
         if (discountValue > 0) potential.push({ ...off, calculatedDiscount: discountValue, inScopeItems });
@@ -693,7 +693,7 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
                     console.log(tier, "tier")
                     if (tier.type === 'Fixed') {
                         if (selectedOffer.discountType === 'Volume') {
-                            offerPrice = Math.max(0, basePrice - (parseFloat(tier.value || 0) / Math.max(1, qtyToEvaluate)));
+                            offerPrice = Math.max(0, basePrice - parseFloat(tier.value || 0));
                         } else {
                             offerPrice = tier.value;
                         }
@@ -773,7 +773,7 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
                         if (tier) {
                             if (tier.type === 'Fixed') {
                                 if (offerToUse.discountType === 'Volume') {
-                                    offerPrice = Math.max(0, basePrice - (parseFloat(tier.value || 0) / Math.max(1, qtyToEvaluate)));
+                                    offerPrice = Math.max(0, basePrice - parseFloat(tier.value || 0));
                                 } else {
                                     offerPrice = tier.value;
                                 }
@@ -844,13 +844,24 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
             }
         }
 
+        let finalAppliedOfferName = appliedOfferName;
+        let finalAppliedOfferId = selectedOffer ? selectedOffer.id : null;
+        let finalAppliedOfferSnapshot = selectedOffer ? selectedOffer : null;
+
+        // Cleanup: If the offer didn't reduce the price and wasn't reapplied, remove the ghost offer metadata
+        if (!item.isReturn && currentItemPrice === salesPrice && offerReapplied === 0) {
+            finalAppliedOfferName = null;
+            finalAppliedOfferId = null;
+            finalAppliedOfferSnapshot = null;
+        }
+
         return {
             ...item,
-            priceType: 'offerPrice',
+            priceType: finalAppliedOfferName ? 'offerPrice' : 'SalesPrice',
             price: item.isReturn ? parseFloat(item.originalPrice || item.price || 0) : Math.round(currentItemPrice * 100) / 100,
-            appliedOfferName,
-            appliedOfferId: selectedOffer ? selectedOffer.id : null,
-            appliedOfferSnapshot: selectedOffer ? selectedOffer : null,
+            appliedOfferName: finalAppliedOfferName,
+            appliedOfferId: finalAppliedOfferId,
+            appliedOfferSnapshot: finalAppliedOfferSnapshot,
             offerReversal: Math.round(offerReversal * 100) / 100,
             offerReapplied: Math.round(offerReapplied * 100) / 100
         };
@@ -920,7 +931,7 @@ export const calculateCartWithOffers = (cart, selectedOffersByRow, potentialOffe
             if (tier) {
                 if (tier.type === 'Fixed') {
                     if (selectedOffer.discountType === 'Volume') {
-                        currentItemPrice = Math.max(0, currentItemPrice - (parseFloat(tier.value || 0) / Math.max(1, evalQty)));
+                        currentItemPrice = Math.max(0, currentItemPrice - parseFloat(tier.value || 0));
                     } else {
                         currentItemPrice = tier.value;
                     }

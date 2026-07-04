@@ -998,7 +998,7 @@ export const DropdownInputSearch = ({
     }),
   };
 
-  const selectedOption = options?.find((opt) => String(opt.value) === String(value));
+  const selectedOption = options?.find((opt) => String(opt.value) === String(value)) || null;
 
   return (
     <div className={`block text-xs font-bold text-gray-600 mb-1 ${className}`}>
@@ -1834,7 +1834,8 @@ export const ReusableTable = ({
   width,
   childRecordLabel = "",
   heightClass = "h-[calc(100%-0.75rem)]",
-  printData
+  printData,
+  enableSearch
 }) => {
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -1988,13 +1989,37 @@ export const ReusableTable = ({
                     {column.header}
                   </th>
                 ))}
+
                 {rowActions && (
                   <th className="px-4 py-2 text-center text-[12px] font-medium justify-end">
                     ACTIONS
                   </th>
                 )}
               </tr>
-
+              {enableSearch && (
+                <tr>
+                  {columns?.map((column, index) => (
+                    <th key={`search-${index}`} className={`px-2 py-1 ${column.header !== "" ? "border-r border-white/50" : ""}`}>
+                      {column.enableSearch && (
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          className="w-full text-[12px] font-normal uppercase px-1 py-0.5 border border-gray-300 rounded text-gray-700 outline-none focus:border-blue-500"
+                          value={columnFilters[column.header] || ""}
+                          onChange={(e) => {
+                            e.preventDefault()
+                            setColumnFilters((prev) => ({
+                              ...prev,
+                              [column.header]: e.target.value,
+                            }))
+                          }}
+                        />
+                      )}
+                    </th>
+                  ))}
+                  {rowActions && <th></th>}
+                </tr>
+              )}
 
 
 

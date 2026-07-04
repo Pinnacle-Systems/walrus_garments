@@ -154,9 +154,28 @@ const QuotationItems = ({
                 console.log(foundPrice, "foundPrice")
 
                 if (foundPrice) {
-                    // newBlend[index]["price"] = foundPrice.salesPrice;
-                    newBlend[index]["price"] = foundPrice.salesPrice;
-                    // newBlend[index]["priceType"] = "SalesPrice";
+                    let finalPrice = foundPrice.salesPrice;
+
+                    if (currentBarcodeType === "CLEARANCE") {
+                        const currentBarcodeStr = newBlend[index].barcode;
+                        const existingOffer = (activeOffers || [])?.find(offer =>
+                            offer.scopeMode === 'Item' &&
+                            offer.OfferScope?.some(s => parseInt(s.refId) === parseInt(currentItem)) &&
+                            offer.OfferRule?.some(rule =>
+                                rule.conditions?.rules?.some(r =>
+                                    r.field === 'Specific Barcode' &&
+                                    r.operator === '==' &&
+                                    String(r.value).trim().includes(String(currentBarcodeStr).trim())
+                                )
+                            )
+                        );
+                        
+                        if (existingOffer && existingOffer.discountValue) {
+                            finalPrice = existingOffer.discountValue;
+                        }
+                    }
+
+                    newBlend[index]["price"] = finalPrice;
                 } else {
                     // newBlend[index]["priceType"] = null;
                     newBlend[index]["price"] = 0;

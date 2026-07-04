@@ -1616,12 +1616,12 @@ export default function Form() {
 
   const columns = [
     { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
-    { header: "Doc Id", accessor: (item) => item?.regNo, className: "font-medium text-gray-900 text-left uppercase w-40" },
-    { header: "Employee Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72" },
-    { header: "Employee Id", accessor: (item) => item?.employeeId, className: "font-medium text-gray-900 text-left uppercase w-72" },
+    { header: "Doc Id", accessor: (item) => item?.regNo, className: "font-medium text-gray-900 text-left uppercase w-40" , enableSearch : true },
+    { header: "Employee Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72" , enableSearch : true },
+    { header: "Employee Id", accessor: (item) => item?.employeeId, className: "font-medium text-gray-900 text-left uppercase w-72"  , enableSearch : true },
 
-    { header: "Employee Category", accessor: (item) => item?.EmployeeCategory?.name, className: "font-medium text-gray-900 text-left uppercase w-48" },
-    { header: "Gender", accessor: (item) => item?.gender, className: "font-medium text-gray-900 text-left uppercase w-24" },
+    { header: "Employee Category", accessor: (item) => item?.EmployeeCategory?.name, className: "font-medium text-gray-900 text-left uppercase w-48" , enableSearch : true },
+    { header: "Gender", accessor: (item) => item?.gender, className: "font-medium text-gray-900 text-left uppercase w-24" , enableSearch : true },
     { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
   ];
 
@@ -1674,8 +1674,9 @@ export default function Form() {
             onView={handleView}
             onEdit={handleEdit}
             onDelete={deleteData}
-            itemsPerPage={10}
+            itemsPerPage={17}
             printData={printData}
+            enableSearch={true}
           />
         ) : (
           <div className="h-full overflow-auto bg-gray-100 p-3">

@@ -56,7 +56,7 @@ const SalesDeliveryReport = ({
       }
     }
   };
-  const [dataPerPage, setDataPerPage] = useState("1");
+  const [dataPerPage, setDataPerPage] = useState("16");
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchClientName, setSearchClientName] = useState("");
   const [searchDate, setSearchDate] = useState("");
@@ -100,7 +100,7 @@ const SalesDeliveryReport = ({
       ...searchFields,
       pagination: true,
       dataPerPage,
-      pageNumber: currentPageNumber,
+      currentPageNumber,
     }
   });
 

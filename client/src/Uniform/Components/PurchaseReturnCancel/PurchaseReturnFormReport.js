@@ -11,7 +11,7 @@ import {
 } from "../../../redux/uniformService/PoServices"
 import { pageNumberToReactPaginateIndex, reactPaginateIndexToPageNumber } from '../../../Utils/helper';
 import ReactPaginate from 'react-paginate';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaStepBackward, FaStepForward } from 'react-icons/fa';
 import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/DirectInwardOrReturnServices';
 import { useGetDirectCancelOrReturnQuery } from '../../../redux/uniformService/DirectCancelOrReturnServices';
 import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
@@ -23,7 +23,7 @@ import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
 const PurchaseCancelFormReport = ({
   onClick,
   onView,
-  itemsPerPage = 10,
+  itemsPerPage = 16,
   onEdit,
   onDelete,
   rowActions = true,
@@ -34,7 +34,6 @@ const PurchaseCancelFormReport = ({
   const { hasPermission } = usePermissionForUsers()
 
 
-  const [dataPerPage, setDataPerPage] = useState("1");
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchClientName, setSearchClientName] = useState("");
   const [searchDate, setSearchDate] = useState("");
@@ -43,13 +42,9 @@ const PurchaseCancelFormReport = ({
 
 
   const [totalCount, setTotalCount] = useState(0);
-  const [currentPageNumber, setCurrentPageNumber] = useState(1);
-  const [searchProjectValue, setSearchProjectValue] = useState("");
-  const [searchFollowedBy, setSearchFollowedBy] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const handleOnclick = (e) => {
-    setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
-  };
+
   const searchFields = {
     serachDocNo,
     searchClientName,
@@ -60,7 +55,7 @@ const PurchaseCancelFormReport = ({
   };
 
   useEffect(() => {
-    setCurrentPageNumber(1);
+    setCurrentPage(1);
   }, [
     serachDocNo,
     searchClientName,
@@ -88,8 +83,8 @@ const PurchaseCancelFormReport = ({
       branchId,
       ...searchFields,
       pagination: true,
-      dataPerPage,
-      pageNumber: currentPageNumber,
+      dataPerPage: itemsPerPage,
+      currentPageNumber: currentPage,
     }
   });
 
@@ -110,10 +105,9 @@ const PurchaseCancelFormReport = ({
 
   console.log(allData, "entire");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-  const indexOfLastItem = currentPage * parseInt(10);
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
+  const indexOfFirstItem = 0;
+  const indexOfLastItem = Math.min(currentPage * parseInt(itemsPerPage), allData?.totalCount || 0);
   const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
   console.log(indexOfLastItem, "indexOfLastItem")
@@ -124,7 +118,6 @@ const PurchaseCancelFormReport = ({
     }
   };
   const Pagination = () => {
-    // if (totalPages <= 1) return null;
 
     return (
       <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
@@ -132,6 +125,17 @@ const PurchaseCancelFormReport = ({
           Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.length} entries
         </div>
         <div className="flex gap-1">
+          <button
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            title="First Page"
+          >
+            <FaStepBackward size={12} className="inline" />
+          </button>
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
@@ -194,6 +198,17 @@ const PurchaseCancelFormReport = ({
               }`}
           >
             <FaChevronRight className="inline" />
+          </button>
+          <button
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            title="Last Page"
+          >
+            <FaStepForward size={12} className="inline" />
           </button>
         </div>
       </div>
@@ -311,7 +326,7 @@ const PurchaseCancelFormReport = ({
                 </tbody>
               ) : (
                 <tbody className="border-2">
-                  {(allData?.data ? allData?.data : []).map((dataObj, index) => (
+                  {(currentItems ? currentItems : []).map((dataObj, index) => (
                     <tr
                       // onKeyDown={(e) => {
                       //   if (e.key === "Enter") {

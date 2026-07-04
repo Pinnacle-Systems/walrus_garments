@@ -66,7 +66,7 @@ const SalesReturnReport = ({
       ...searchFields,
       pagination: true,
       dataPerPage,
-      pageNumber: currentPageNumber,
+      currentPageNumber,
     }
   });
 

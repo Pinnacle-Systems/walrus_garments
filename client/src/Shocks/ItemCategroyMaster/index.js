@@ -194,7 +194,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
     const columns = [
         { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
-        { header: "Item Category Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72" },
+        { header: "Item Category Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72", enableSearch: true },
         { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
     ];
 
@@ -351,6 +351,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     onEdit={handleEdit}
                     onDelete={deleteData}
                     itemsPerPage={15}
+                    enableSearch={true}
                 />
 
             {form && (

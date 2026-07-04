@@ -210,7 +210,7 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
 
     const columns = [
         { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
-        { header: "Sub Category Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72" },
+        { header: "Sub Category Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72", enableSearch: true },
         { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
     ];
 
@@ -407,6 +407,7 @@ export default function SubCategoryMaster({ onSuccess, onClose, editId, deleteId
                     onEdit={handleEdit}
                     onDelete={deleteData}
                     itemsPerPage={15}
+                    enableSearch={true}
                 />
 
             {form && (

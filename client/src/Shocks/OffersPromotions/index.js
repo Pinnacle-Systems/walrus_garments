@@ -342,6 +342,25 @@ const OffersPromotions = () => {
             }
         }
 
+        let foundItem;
+        const upperName = name?.toUpperCase();
+
+        if (id) {
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.name.toUpperCase() === upperName);
+        } else {
+            foundItem = allData?.data?.some(item => item?.name.toUpperCase() === upperName);
+        }
+
+
+        if (foundItem) {
+            Swal.fire({
+                text: "The Offer Name already exists.",
+                icon: "warning",
+
+            });
+            return false;
+        }
+
         if (!validateData(finalData)) {
             Swal.fire({
                 title: 'Please fill all required fields...!',
@@ -436,8 +455,10 @@ const OffersPromotions = () => {
 
     const columns = [
         { header: "S.No", accessor: (item, index) => index + 1, className: "w-12 text-center" },
-        { header: "Offer Name", accessor: (item) => item.name, className: "w-64 text-left" },
-        { header: "Type", accessor: (item) => item.discountType, className: "w-24 text-left" },
+        {
+            header: "Offer Name", accessor: (item) => item.name, className: "w-64 text-left", enableSearch: true
+        },
+        { header: "Type", accessor: (item) => item.discountType, className: "w-24 text-left", enableSearch: true },
         { header: "Value", accessor: (item) => (['Volume', 'Override'].includes(item.discountType) ? "Tiered" : (item.discountType === 'Percentage' ? `${item.discountValue}%` : `₹${item.discountValue}`)), className: "w-24 text-right" },
         { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "w-16 text-center" },
         {
@@ -977,7 +998,9 @@ const OffersPromotions = () => {
     return (
         <MasterPageLayout title="Offers & Promotions" onAdd={onNew} addButtonLabel="+ Add New Offer">
             <div className="bg-white rounded-xl shadow-sm overflow-hidden h-full">
-                <ReusableTable columns={columns} data={allData?.data} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={15} isLoading={isLoading || isFetching} />
+                <ReusableTable columns={columns} data={allData?.data} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={15} isLoading={isLoading || isFetching}
+                    enableSearch={true}
+                />
             </div>
 
             {form && (
