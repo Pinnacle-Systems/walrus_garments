@@ -16,10 +16,8 @@ import { useGetDirectInwardOrReturnQuery } from '../../../redux/uniformService/D
 import { useGetQuotationMasterQuery, useGetQuotationQuery } from '../../../redux/uniformService/quotationServices';
 import { useGetPointOfSalesQuery, useCancelPointOfSalesMutation, useLazyGetPointOfSalesQuery } from '../../../redux/uniformService/PointOfSalesService';
 import { FiPrinter, FiXCircle, FiRefreshCw, FiCalendar, FiFileText } from 'react-icons/fi';
-import { PDFViewer } from '@react-pdf/renderer';
 import Modal from '../../../UiComponents/Modal';
-import PosMultiCopyPrint from './PosMultiCopyPrint';
-import PosDeliveryReceiptPrint from './PosDeliveryReceiptPrint';
+import ReceiptViewerModal from './components/ReceiptViewerModal';
 import POsDosPrinter from './POsDosPrinter';
 import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import Swal from 'sweetalert2';
@@ -418,23 +416,16 @@ const PosReportsNew = ({
 
     return (
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
-            <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
-                <PDFViewer style={{ width: "100%", height: "90vh" }}>
-                    {printData?.bilStatus === "UNPAID" ? (
-                        <PosDeliveryReceiptPrint
-                            docId={printData?.docId}
-                            date={printData?.date}
-                            items={printData?.items}
-                        />
-                    ) : (
-                        <PosMultiCopyPrint
-                            {...printData}
-                            branchData={branchList?.data?.find(b => b.id === branchId)}
-                            showSummarySlip={printData?.showSummarySlip}
-                        />
-                    )}
-                </PDFViewer>
-            </Modal>
+            {thermalPrintOpen && printData && (
+                <ReceiptViewerModal
+                    printData={printData}
+                    setPrintData={(data) => {
+                        setPrintData(data);
+                        if (!data) setThermalPrintOpen(false);
+                    }}
+                    Swal={Swal}
+                />
+            )}
 
             {dosPrintOpen && (
                 <Modal isOpen={dosPrintOpen} onClose={() => setDosPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
@@ -763,7 +754,12 @@ const PosReportsNew = ({
                                                                 const total = parseFloat(dataObj.netAmount || 0);
                                                                 const balance = received - total;
 
-                                                                console.log(total / 1.05, "totaltotal")
+                                                                // Reprint: reuses the already-saved invoice record only.
+                                                                // Does not call addPointOfSales/updatePointOfSales again.
+                                                                // Opens a preview first — the actual print job (local agent,
+                                                                // falling back to browser print) only fires when the user
+                                                                // clicks "Send to Thermal Printer" inside that preview.
+                                                                const isSummarySlip = dataObj.bilStatus === "UNPAID";
                                                                 setPrintData({
                                                                     dataObj,
                                                                     docId: dataObj.docId,
@@ -788,7 +784,8 @@ const PosReportsNew = ({
                                                                     branchData: branchList?.data?.find(b => b.id === dataObj.branchId),
                                                                     bilStatus: dataObj.bilStatus,
                                                                     printCopies: 2,
-                                                                    showSummarySlip: false
+                                                                    showSummarySlip: false,
+                                                                    isDeliveryReceipt: isSummarySlip
                                                                 });
 
                                                                 setThermalPrintOpen(true);

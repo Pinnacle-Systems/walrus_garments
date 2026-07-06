@@ -10,6 +10,8 @@ import { useAddSalesInvoiceMutation } from '../../../redux/uniformService/salesI
 import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
 import { useLazyGetUnifiedStockByBarcodeQuery, useGetUnifiedStockQuery } from '../../../redux/services/StockService';
 import { findFromList, getCommonParams } from '../../../Utils/helper';
+import { printReceiptInstructions, mapLocalPrintAgentError } from '../../../Utils/localPrintAgent';
+import { buildReceiptInstructions } from '../../../printing/build-receipt-instructions';
 import Swal from 'sweetalert2';
 import {
     useGetPointOfSalesQuery,
@@ -1475,16 +1477,48 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 };
 
 
-                /* console.log removed */
+                const isSummarySlip = printType === "DELIVERYRECEIPT";
+                const openBrowserFallback = () => {
+                    if (isSummarySlip) {
+                        setPrintData({ ...printPayload, isDeliveryReceipt: true });
+                    } else {
+                        setPrintData(printPayload);
+                    }
+                };
 
+                try {
+                    const instructions = buildReceiptInstructions(printPayload, {
+                        variant: isSummarySlip ? 'summarySlip' : 'full',
+                        openCashDrawer: false
+                    });
 
-                if (printType == "DELIVERYRECEIPT") {
-                    setPrintData({ ...printPayload, isDeliveryReceipt: true });
-                }
-                else if (printType == "RECEIPTWITHBILL") {
-                    setPrintData(printPayload);
-                } else {
-                    setPrintData(printPayload);
+                    const printResult = await printReceiptInstructions({
+                        jobId: printPayload.docId,
+                        copies: isSummarySlip ? 1 : (printPayload.printCopies ?? 2),
+                        instructions
+                    });
+
+                    if (!printResult.ok) {
+                        throw printResult;
+                    }
+                    // Local print agent succeeded — existing success UX (Swal above) already covers this.
+                } catch (localPrintError) {
+                    try {
+                        openBrowserFallback();
+                        Swal.fire({
+                            title: 'Browser print fallback opened.',
+                            text: mapLocalPrintAgentError(localPrintError),
+                            icon: 'warning',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    } catch (fallbackError) {
+                        Swal.fire({
+                            title: "Error",
+                            text: "Invoice saved successfully, but printing failed both on the Local Print Agent and the browser fallback.",
+                            icon: "error"
+                        });
+                    }
                 }
             }
 
