@@ -148,10 +148,12 @@ async function postPrintJob(payload) {
  * @param {string} params.jobId
  * @param {number} params.copies
  * @param {ReceiptInstruction[]} params.instructions
- * @param {number} [params.width=42]
+ * @param {number} [params.width] Column width override. Omit to let the print
+ *   agent pick the width for the printer's configured paper size (see its
+ *   printer-mapping "Receipt Paper Width" setting).
  * @returns {Promise<PrintReceiptResult>}
  */
-export async function printReceiptInstructions({ jobId, copies, instructions, width = 42 }) {
+export async function printReceiptInstructions({ jobId, copies, instructions, width }) {
   return postPrintJob({
     jobId,
     printRole: 'receipt',

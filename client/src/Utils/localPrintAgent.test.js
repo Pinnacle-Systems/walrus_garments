@@ -67,10 +67,20 @@ describe('printReceiptInstructions', () => {
       payloadType: 'PRINT_INSTRUCTIONS',
       copies: 2,
       payload: {
-        width: 42,
         instructions,
       },
     });
+  });
+
+  it('forwards an explicit width override when provided', async () => {
+    mockFetchOnce({});
+
+    const instructions = [{ type: 'text', value: 'hello' }];
+    await printReceiptInstructions({ jobId: 'INV-1002', copies: 1, instructions, width: 32 });
+
+    const [, requestInit] = global.fetch.mock.calls[0];
+    const body = JSON.parse(requestInit.body);
+    expect(body.payload.width).toBe(32);
   });
 });
 
