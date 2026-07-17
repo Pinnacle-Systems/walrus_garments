@@ -166,14 +166,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         }
         let foundItem;
         if (id) {
-            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.name?.trim().toUpperCase() == upperName.trim() && item?.code?.trim() == code.trim());
+            foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.name?.trim().toUpperCase() == upperName.trim());
         } else {
-            foundItem = allData?.data?.some(item => item?.name?.trim().toUpperCase() == upperName.trim() && item?.code?.trim() == code.trim());
+            foundItem = allData?.data?.some(item => item?.name?.trim().toUpperCase() == upperName.trim());
 
         }
         if (foundItem) {
             Swal.fire({
-                text: "The Size Name and Code already exists.",
+                text: "The Size Name already exists.",
                 icon: "warning",
                 didClose: () => {
                     nameRef?.current?.focus();
@@ -182,7 +182,23 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             return false;
         }
 
+        let foundCode;
+        if (id) {
+            foundCode = allData?.data?.filter(i => i.id != id)?.some(item => item?.code?.trim() == code.trim());
+        } else {
+            foundCode = allData?.data?.some(item => item?.code?.trim() == code.trim());
 
+        }
+        if (foundCode) {
+            Swal.fire({
+                text: "The Code already exists.",
+                icon: "warning",
+                didClose: () => {
+                    nameRef?.current?.focus();
+                }
+            });
+            return false;
+        }
 
         if (id) {
             if (!window.confirm("Are you sure update the details ...?")) {
@@ -286,7 +302,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             header: "Code",
             accessor: (item) => item?.code,
             className: "font-medium text-gray-900 text-left uppercase w-96",
-            enableSearch: true, 
+            enableSearch: true,
         },
         {
             header: "Status",
