@@ -17,15 +17,32 @@ const basePrintPayload = {
 describe('buildReceiptInstructions - full variant', () => {
   it('includes item rows, totals, and payment breakdown instructions', () => {
     const instructions = buildReceiptInstructions(basePrintPayload, { variant: 'full' });
-    const values = instructions.map((i) => i.value).filter(Boolean);
 
-    expect(values.some((v) => v.includes('T-Shirt'))).toBe(true);
-    expect(values.some((v) => v.includes('Jeans'))).toBe(true);
+    expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'T-Shirt')).toBe(true);
+    expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'Jeans')).toBe(true);
     expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'Grand Total :')).toBe(true);
     expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'Cash Paid :')).toBe(true);
     expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'UPI / GPay :')).toBe(true);
     expect(instructions.some((i) => i.type === 'feed')).toBe(true);
     expect(instructions.some((i) => i.type === 'cut')).toBe(true);
+  });
+
+  it('puts qty/rate/amount on the same row as the item name, size/color below', () => {
+    const instructions = buildReceiptInstructions(basePrintPayload, { variant: 'full' });
+
+    const shirtIndex = instructions.findIndex((i) => i.type === 'leftRight' && i.left === 'T-Shirt');
+    expect(shirtIndex).toBeGreaterThan(-1);
+    // 3/9/8-wide columns matching the 'Qty     Rate     Amt' header.
+    expect(instructions[shirtIndex].right).toBe('  2      500    1000');
+    expect(instructions[shirtIndex].bold).toBe(true);
+    // Size/color line follows the combined item row.
+    expect(instructions[shirtIndex + 1]).toEqual({ type: 'text', value: 'M | Red' });
+
+    const jeans = instructions.find((i) => i.type === 'leftRight' && i.left === 'Jeans');
+    expect(jeans.right).toBe('  1     1200    1200');
+
+    // No standalone right-aligned qty/rate/amt text rows remain.
+    expect(instructions.some((i) => i.type === 'text' && i.align === 'right' && /^\d+\s{5}\d+\s{5}\d+$/.test(i.value || ''))).toBe(false);
   });
 
   it('does not include openDrawer by default', () => {
