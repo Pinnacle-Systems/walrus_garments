@@ -143,19 +143,20 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     let name = item?.Item?.name || item?.itemName || '';
     if (item?.isReturn) name += ' [RETURN]';
     if (item?.isExchangeItem || item?.isAddedDuringExchange) name += ' [EXCHANGE]';
-    instructions.push({ type: 'text', value: name, bold: true });
+
+    // One row per item: name on the left, qty/rate/amount on the right.
+    // padStart widths (3/9/8 = 20 chars) mirror the 'Qty     Rate     Amt'
+    // header above so each number right-aligns under its column. The agent
+    // truncates the name if it can't fit next to the numbers.
+    const qtyRateAmt =
+      `${qty}`.padStart(3) + rate.toFixed(0).padStart(9) + rowTotal.toFixed(0).padStart(8);
+    instructions.push({ type: 'leftRight', left: name || ' ', right: qtyRateAmt, bold: true });
 
     const hasSize = item?.Size?.name || item?.sizeName;
     const hasColor = item?.Color?.name || item?.colorName;
     if (hasSize || hasColor) {
       instructions.push({ type: 'text', value: [hasSize, hasColor].filter(Boolean).join(' | ') });
     }
-
-    instructions.push({
-      type: 'text',
-      value: `${qty}     ${rate.toFixed(0)}     ${rowTotal.toFixed(0)}`,
-      align: 'right',
-    });
   });
 
   instructions.push({ type: 'line' });
