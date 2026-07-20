@@ -130,11 +130,12 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
   instructions.push({ type: 'text', value: `Date : ${formatDateTime(date)}`, align: 'right', bold: true });
 
   instructions.push({ type: 'line' });
-  instructions.push({ type: 'leftRight', left: 'Item', right: 'Qty     Rate     Amt', bold: true });
+  instructions.push({ type: 'text', value: 'Item', bold: true });
+  instructions.push({ type: 'text', value: 'Qty          Rate          Amount', bold: true });
   instructions.push({ type: 'line' });
 
   let totalQty = 0;
-  items.forEach((item) => {
+  items.forEach((item, index) => {
     const qty = parseFloat(item.qty || 0);
     const rate = parseFloat(item.price || item.rate || 0);
     const rowTotal = qty * rate;
@@ -144,18 +145,37 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     if (item?.isReturn) name += ' [RETURN]';
     if (item?.isExchangeItem || item?.isAddedDuringExchange) name += ' [EXCHANGE]';
 
-    // One row per item: name on the left, qty/rate/amount on the right.
-    // padStart widths (3/9/8 = 20 chars) mirror the 'Qty     Rate     Amt'
-    // header above so each number right-aligns under its column. The agent
-    // truncates the name if it can't fit next to the numbers.
-    const qtyRateAmt =
-      `${qty}`.padStart(3) + rate.toFixed(0).padStart(9) + rowTotal.toFixed(0).padStart(8);
-    instructions.push({ type: 'leftRight', left: name || ' ', right: qtyRateAmt, bold: true });
+    // Two lines per item: the full name (bold, left-aligned, wraps onto
+    // additional lines rather than being truncated), then qty/rate/amount on
+    // the row below. Both use the 'text' instruction type - not 'leftRight'
+    // - so the agent's width-aware word-wrap (wraps at spaces, never inside
+    // a token) is what kicks in when a line doesn't fit, instead of
+    // 'leftRight's left-side truncation. That distinction matters here: an
+    // earlier version put "Qty: X  Rate: Y" on leftRight's `left` side, and
+    // on 58mm/32-col paper with large rate values, formatLeftRight's
+    // truncate-to-fit logic sliced the digits off "Rate:" entirely (e.g.
+    // "Rate: 4999.50" became "Rate:" with no value at all). Word-wrapping
+    // the whole line instead guarantees numbers are always shown in full,
+    // even if that means spilling onto a second line on narrow paper.
+    instructions.push({ type: 'text', value: name || ' ', bold: true });
 
+    // Size/color goes right under the name (before qty/rate/amount) so it
+    // reads as a qualifier of the item, not a trailing footnote after the
+    // numbers.
     const hasSize = item?.Size?.name || item?.sizeName;
     const hasColor = item?.Color?.name || item?.colorName;
     if (hasSize || hasColor) {
-      instructions.push({ type: 'text', value: [hasSize, hasColor].filter(Boolean).join(' | ') });
+      const descriptors = [hasSize && `${hasSize} Size`, hasColor && `${hasColor} Color`].filter(Boolean);
+      instructions.push({ type: 'text', value: descriptors.join(', ') });
+    }
+
+    instructions.push({
+      type: 'text',
+      value: `Qty: ${qty}  Rate: ${rate.toFixed(2)}  Amount: ${rowTotal.toFixed(2)}`,
+    });
+
+    if (index < items.length - 1) {
+      instructions.push({ type: 'blank' });
     }
   });
 

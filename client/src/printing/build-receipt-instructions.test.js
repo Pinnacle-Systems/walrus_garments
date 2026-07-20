@@ -18,8 +18,8 @@ describe('buildReceiptInstructions - full variant', () => {
   it('includes item rows, totals, and payment breakdown instructions', () => {
     const instructions = buildReceiptInstructions(basePrintPayload, { variant: 'full' });
 
-    expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'T-Shirt')).toBe(true);
-    expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'Jeans')).toBe(true);
+    expect(instructions.some((i) => i.type === 'text' && i.value === 'T-Shirt' && i.bold)).toBe(true);
+    expect(instructions.some((i) => i.type === 'text' && i.value === 'Jeans' && i.bold)).toBe(true);
     expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'Grand Total :')).toBe(true);
     expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'Cash Paid :')).toBe(true);
     expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'UPI / GPay :')).toBe(true);
@@ -27,22 +27,63 @@ describe('buildReceiptInstructions - full variant', () => {
     expect(instructions.some((i) => i.type === 'cut')).toBe(true);
   });
 
-  it('puts qty/rate/amount on the same row as the item name, size/color below', () => {
+  it('prints a two-row "Item" / "Qty Rate Amount" header before the item list', () => {
     const instructions = buildReceiptInstructions(basePrintPayload, { variant: 'full' });
 
-    const shirtIndex = instructions.findIndex((i) => i.type === 'leftRight' && i.left === 'T-Shirt');
-    expect(shirtIndex).toBeGreaterThan(-1);
-    // 3/9/8-wide columns matching the 'Qty     Rate     Amt' header.
-    expect(instructions[shirtIndex].right).toBe('  2      500    1000');
-    expect(instructions[shirtIndex].bold).toBe(true);
-    // Size/color line follows the combined item row.
-    expect(instructions[shirtIndex + 1]).toEqual({ type: 'text', value: 'M | Red' });
+    const itemHeaderIndex = instructions.findIndex((i) => i.type === 'text' && i.value === 'Item');
+    expect(itemHeaderIndex).toBeGreaterThan(-1);
+    expect(instructions[itemHeaderIndex].bold).toBe(true);
 
-    const jeans = instructions.find((i) => i.type === 'leftRight' && i.left === 'Jeans');
-    expect(jeans.right).toBe('  1     1200    1200');
+    const columnsHeader = instructions[itemHeaderIndex + 1];
+    expect(columnsHeader.type).toBe('text');
+    expect(columnsHeader.bold).toBe(true);
+    expect(columnsHeader.value).toMatch(/^Qty\s+Rate\s+Amount$/);
+
+    // Header sits between separator lines, ahead of the first item name.
+    expect(instructions[itemHeaderIndex - 1]).toEqual({ type: 'line' });
+    expect(instructions[itemHeaderIndex + 2]).toEqual({ type: 'line' });
+    const shirtIndex = instructions.findIndex((i) => i.type === 'text' && i.value === 'T-Shirt');
+    expect(shirtIndex).toBeGreaterThan(itemHeaderIndex + 2);
+  });
+
+  it('prints the item name on its own bold line, size/color next, then qty/rate/amount', () => {
+    const instructions = buildReceiptInstructions(basePrintPayload, { variant: 'full' });
+
+    const shirtIndex = instructions.findIndex((i) => i.type === 'text' && i.value === 'T-Shirt');
+    expect(shirtIndex).toBeGreaterThan(-1);
+    expect(instructions[shirtIndex].bold).toBe(true);
+
+    // Size/color line immediately follows the name, formatted as
+    // "<size> Size, <color> Color".
+    expect(instructions[shirtIndex + 1]).toEqual({ type: 'text', value: 'M Size, Red Color' });
+
+    // Values row is a plain (non-bold) 'text' line - not 'leftRight' - so
+    // the agent's word-wrap only ever breaks at spaces, meaning the
+    // Qty/Rate/Amount numbers can never be truncated mid-value the way
+    // leftRight's left-side truncation could on narrow paper (see the
+    // comment in build-receipt-instructions.js).
+    const shirtValues = instructions[shirtIndex + 2];
+    expect(shirtValues).toEqual({ type: 'text', value: 'Qty: 2  Rate: 500.00  Amount: 1000.00' });
+    expect(shirtValues.bold).toBeUndefined();
+
+    // Jeans has no size/color, so its values row follows the name directly.
+    const jeansIndex = instructions.findIndex((i) => i.type === 'text' && i.value === 'Jeans');
+    expect(instructions[jeansIndex + 1]).toEqual({ type: 'text', value: 'Qty: 1  Rate: 1200.00  Amount: 1200.00' });
 
     // No standalone right-aligned qty/rate/amt text rows remain.
     expect(instructions.some((i) => i.type === 'text' && i.align === 'right' && /^\d+\s{5}\d+\s{5}\d+$/.test(i.value || ''))).toBe(false);
+  });
+
+  it('separates consecutive items with a blank line, without a blank after the last item', () => {
+    const instructions = buildReceiptInstructions(basePrintPayload, { variant: 'full' });
+
+    const shirtIndex = instructions.findIndex((i) => i.type === 'text' && i.value === 'T-Shirt');
+    // name, size/color, values, blank
+    expect(instructions[shirtIndex + 3]).toEqual({ type: 'blank' });
+
+    const jeansIndex = instructions.findIndex((i) => i.type === 'text' && i.value === 'Jeans');
+    // name, values, then straight into the closing separator line (no size/color, no trailing blank).
+    expect(instructions[jeansIndex + 2]).toEqual({ type: 'line' });
   });
 
   it('does not include openDrawer by default', () => {
