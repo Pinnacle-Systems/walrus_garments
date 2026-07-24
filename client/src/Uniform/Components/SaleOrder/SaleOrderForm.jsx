@@ -31,6 +31,8 @@ import ItemOfferModal from "../PointOfSale/components/ItemOfferModal";
 import { calculateCartWithOffers, getPotentialOffers, getItemApplicableOffers } from "../../../Utils/offerEngine";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 import { useGetcollectionsQuery } from "../../../redux/uniformService/CollectionsService";
+import { buildSalesReceiptInstructions } from "../../../printing/build-sales-receipt-instructions";
+import { printReceiptInstructions, mapLocalPrintAgentError } from "../../../Utils/localPrintAgent";
 
 
 
@@ -851,7 +853,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
                 });
                 return;
               }
-              setThermalPrintOpen(true);
+              handleThermalPrint();
             }}
           >
             <FiPrinter className="w-4 h-4 mr-2" />
@@ -861,6 +863,64 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       }
     />
   );
+
+  const handleThermalPrint = async () => {
+    try {
+      const filteredItems = saleOrderItems?.filter(i => i.itemId) || [];
+      const items = filteredItems.map(item => ({
+        ...item,
+        itemName: itemList?.data?.find(i => String(i.id) === String(item.itemId))?.name || item?.itemName || "",
+        sizeName: sizeList?.data?.find(i => String(i.id) === String(item.sizeId))?.name || item?.sizeName || "",
+        colorName: colorList?.data?.find(i => String(i.id) === String(item.colorId))?.name || item?.colorName || "",
+        hsnCode: hsnList?.data?.find(i => String(i.id) === String(itemList?.data?.find(j => String(j.id) === String(item.itemId))?.hsnId))?.name || item?.hsnCode || "",
+      }));
+
+      const isOutside = isSupplierOutside();
+      const cgst = !isOutside ? (taxAmount / 2) : 0;
+      const sgst = !isOutside ? (taxAmount / 2) : 0;
+      const igst = isOutside ? taxAmount : 0;
+
+      const pCharge = packingChargeEnabled ? parseFloat(packingCharge || 0) : 0;
+      const sCharge = shippingChargeEnabled ? parseFloat(shippingCharge || 0) : 0;
+      const cCharge = courierChargeEnabled ? parseFloat(courierCharge || 0) : 0;
+
+      const printData = {
+        docId,
+        date,
+        branchData: branchList?.data?.find(i => i.id == branchId),
+        customerData: supplierDetails?.data,
+        items,
+        title: "SALE ORDER",
+        summary: {
+          subtotal,
+          tax: taxAmount,
+          cgst,
+          sgst,
+          igst,
+          total: adjustedNetAmount,
+          packingCharge: pCharge,
+          shippingCharge: sCharge,
+          courierCharge: cCharge,
+          netAmount: adjustedNetAmount,
+        }
+      };
+
+      const instructions = buildSalesReceiptInstructions(printData);
+
+      const printResult = await printReceiptInstructions({
+        jobId: docId,
+        instructions
+      });
+
+      if (!printResult.ok) {
+        throw new Error(mapLocalPrintAgentError(printResult));
+      }
+    } catch (error) {
+      console.warn("Direct print failed, falling back to PDF modal", error);
+      toast.error(`Print failed: ${error.message}. Falling back to PDF...`);
+      setThermalPrintOpen(true);
+    }
+  };
 
   return (
     <>

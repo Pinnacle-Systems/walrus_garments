@@ -369,7 +369,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         }
     }, [cart, selectedReportSaleId, editMode]);
 
-    // DB-to-form values mapping handler
+
+    console.log(stockMap, "stockMap")
+
     const syncFormWithDb = useCallback((sale) => {
 
         if (!sale) {
@@ -392,8 +394,21 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             return;
         }
 
+        const isUnpaidBill = sale.bilStatus === "UNPAID";
+
         const mappedCart = (sale.PosItems || []).map(item => {
             const masterItem = itemsData?.data?.find(i => i.id === item.itemId);
+            console.log(item?.barcode, "itembarcode")
+            const stockItems = unifiedStockData?.data?.filter(s =>
+                s.itemId === item.itemId &&
+                (s.sizeId || null) === (item.sizeId || null) &&
+                (s.colorId || null) === (item.colorId || null) &&
+                s.barcode === item?.barcode
+            ) || [];
+
+            const currentLiveStock = stockItems.reduce((sum, s) => sum + (parseFloat(s._sum?.qty) || 0), 0);
+            const effectiveStockQty = isUnpaidBill ? (currentLiveStock + (parseFloat(item.qty) || 0)) : currentLiveStock;
+
             return {
                 ...item,
                 id: item.itemId,
@@ -403,7 +418,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 taxPercent: masterItem?.Hsn?.tax || 5,
                 salesPersonId: item.salesPersonId,
                 salesPersonBarcode: item?.Employee?.employeeId,
-                stockQty: 0,
+                stockQty: effectiveStockQty,
                 // sourceStoreId: retailStoreId,
                 offerReversal: item.offerReversal,
                 offerReapplied: item.offerReapplied,
@@ -463,7 +478,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         setIsCancelBill(sale?.isCancel ? sale?.isCancel : false);
         setAvailableCredit(sale?.availableCredit ? sale?.availableCredit : 0)
 
-    }, [itemsData, retailStoreId]);
+    }, [itemsData, retailStoreId, unifiedStockData]);
 
     // Trigger form synchronization when fetched sale changes
     useEffect(() => {

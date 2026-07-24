@@ -26,6 +26,8 @@ import CommonFormFooter from "../ReusableComponents/CommonFormFooter";
 import { push } from "../../../redux/features/opentabs";
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
+import { buildSalesReceiptInstructions } from "../../../printing/build-sales-receipt-instructions";
+import { printReceiptInstructions, mapLocalPrintAgentError } from "../../../Utils/localPrintAgent";
 
 
 
@@ -589,7 +591,7 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                 toast.warning("Please add some items first");
                 return;
               }
-              setThermalPrintOpen(true);
+              handleThermalPrint();
             }}
           >
             <FiPrinter className="w-4 h-4 mr-2" />
@@ -600,7 +602,53 @@ const SalesInvoiceForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
     />
   );
 
-  return (
+  const handleThermalPrint = async () => {
+    try {
+      const filteredItems = invoiceItems?.filter(i => i.itemId) || [];
+      const items = filteredItems.map(item => ({
+        ...item,
+        itemName: itemList?.data?.find(i => String(i.id) === String(item.itemId))?.name || item?.itemName || "",
+        sizeName: sizeList?.data?.find(i => String(i.id) === String(item.sizeId))?.name || item?.sizeName || "",
+        colorName: colorList?.data?.find(i => String(i.id) === String(item.colorId))?.name || item?.colorName || "",
+        hsnCode: hsnList?.data?.find(i => String(i.id) === String(itemList?.data?.find(j => String(j.id) === String(item.itemId))?.hsnId))?.name || item?.hsnCode || "",
+      }));
+
+      const printData = {
+        docId,
+        date,
+        branchData: findFromList(branchId, branchList?.data, "all"),
+        customerData: supplierDetails?.data,
+        items,
+        summary: {
+          subtotal,
+          tax: taxAmount,
+          total: adjustedNetAmount,
+          packingCharge: packingChargeEnabled ? parseChargeAmount(packingCharge) : 0,
+          shippingCharge: shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0,
+          courierCharge: 0,
+          roundOff: adjustedNetAmount - (netAmount + (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0))
+        }
+      };
+
+      const instructions = buildSalesReceiptInstructions(printData);
+
+      const printResult = await printReceiptInstructions({
+        jobId: docId,
+        copies: 1,
+        instructions
+      });
+
+      if (!printResult.ok) {
+        throw printResult;
+      }
+
+      toast.success('Sent to Local Print Agent');
+    } catch (err) {
+      console.warn("Direct print failed, falling back to PDF modal", err);
+      toast.warning("Falling back to PDF print preview.");
+      setThermalPrintOpen(true);
+    }
+  };  return (
     <>
 
       <Modal isOpen={printOpen} onClose={() => setPrintOpen(false)} widthClass="w-[95%] h-[95%]">
