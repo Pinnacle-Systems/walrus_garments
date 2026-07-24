@@ -130,8 +130,8 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
   instructions.push({ type: 'text', value: `Date : ${formatDateTime(date)}`, align: 'right', bold: true });
 
   instructions.push({ type: 'line' });
-  instructions.push({ type: 'text', value: 'Item', bold: true });
-  instructions.push({ type: 'text', value: 'Qty          Rate          Amount', bold: true });
+  instructions.push({ type: 'text', value: '# Item Name', bold: true });
+  instructions.push({ type: 'leftRight', left: '  Qty             Price', right: 'Amount', bold: true });
   instructions.push({ type: 'line' });
 
   let totalQty = 0;
@@ -157,7 +157,7 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     // "Rate: 4999.50" became "Rate:" with no value at all). Word-wrapping
     // the whole line instead guarantees numbers are always shown in full,
     // even if that means spilling onto a second line on narrow paper.
-    instructions.push({ type: 'text', value: name || ' ', bold: true });
+    instructions.push({ type: 'text', value: `${index + 1} ${name || ' '}`, bold: true });
 
     // Size/color goes right under the name (before qty/rate/amount) so it
     // reads as a qualifier of the item, not a trailing footnote after the
@@ -169,9 +169,15 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
       instructions.push({ type: 'text', value: descriptors.join(', ') });
     }
 
+    // Pad the numbers to visually align with the header "  Qty             Price"
+    // "  Qty" = 5 chars, plus 13 spaces = 18 total chars
+    const qtyStr = `  ${qty}Pcs`.padEnd(18, ' ');
+    const priceStr = rate.toFixed(2);
+
     instructions.push({
-      type: 'text',
-      value: `Qty: ${qty}  Rate: ${rate.toFixed(2)}  Amount: ${rowTotal.toFixed(2)}`,
+      type: 'leftRight',
+      left: `${qtyStr}${priceStr}`,
+      right: rowTotal.toFixed(2),
     });
 
     if (index < items.length - 1) {

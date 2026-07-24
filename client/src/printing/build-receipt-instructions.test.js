@@ -63,12 +63,12 @@ describe('buildReceiptInstructions - full variant', () => {
     // leftRight's left-side truncation could on narrow paper (see the
     // comment in build-receipt-instructions.js).
     const shirtValues = instructions[shirtIndex + 2];
-    expect(shirtValues).toEqual({ type: 'text', value: 'Qty: 2  Rate: 500.00  Amount: 1000.00' });
+    expect(shirtValues).toEqual({ type: 'text', value: '2            500.00        1000.00' });
     expect(shirtValues.bold).toBeUndefined();
 
     // Jeans has no size/color, so its values row follows the name directly.
     const jeansIndex = instructions.findIndex((i) => i.type === 'text' && i.value === 'Jeans');
-    expect(instructions[jeansIndex + 1]).toEqual({ type: 'text', value: 'Qty: 1  Rate: 1200.00  Amount: 1200.00' });
+    expect(instructions[jeansIndex + 1]).toEqual({ type: 'text', value: '1            1200.00       1200.00' });
 
     // No standalone right-aligned qty/rate/amt text rows remain.
     expect(instructions.some((i) => i.type === 'text' && i.align === 'right' && /^\d+\s{5}\d+\s{5}\d+$/.test(i.value || ''))).toBe(false);
