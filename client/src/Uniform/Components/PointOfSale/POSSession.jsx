@@ -407,7 +407,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             ) || [];
 
             const currentLiveStock = stockItems.reduce((sum, s) => sum + (parseFloat(s._sum?.qty) || 0), 0);
-            const effectiveStockQty = isUnpaidBill ? (currentLiveStock + (parseFloat(item.qty) || 0)) : currentLiveStock;
+            const effectiveStockQty = currentLiveStock;
 
             return {
                 ...item,
@@ -616,7 +616,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
         console.log(searchQuery, "searchQuery")
 
-        if (!query || query.length < 2 || selectedReportSaleId || searchMode !== 'NAME') {
+        if (!query || query.length < 2 || searchMode !== 'NAME') {
             setSuggestions([]);
             setShowSuggestions(false);
             return;
@@ -1779,6 +1779,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     searchMode={searchMode}
                     setSearchMode={setSearchMode}
                     cart={cart}
+                    currentBilStatus={currentBilStatus}
                 />
 
                 <div className="flex-1 flex overflow-hidden">
@@ -1838,6 +1839,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                         isCancelBill={isCancelBill}
                         totalOfferReversal={totalOfferReversal}
                         totalOfferReapplied={totalOfferReapplied}
+
                     />
                 </div>
 

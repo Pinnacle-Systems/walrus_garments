@@ -222,6 +222,7 @@ const POSSidebar = ({
                         isUnpaidBill={isUnpaidBill}
                         totalOfferReversal={totalOfferReversal}
                         totalOfferReapplied={totalOfferReapplied}
+                        currentBilStatus={currentBilStatus}
                     />
                 )}
 
