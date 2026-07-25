@@ -97,7 +97,7 @@ const BarCodePrintFormat = ({
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: findFromList(item.itemId, itemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
-      price: resolvedPrice || 0,
+      price: item.manualClearancePrice || 0,
     }));
   });
 

@@ -204,7 +204,7 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                         <tfoot className="sticky bottom-0 z-20 border-t-2 border-gray-300 font-bold shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
                             <tr>
                                 <td
-                                    colSpan={findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" ? 6 + stockDrivenFields.length : 5 + stockDrivenFields.length}
+                                    colSpan={findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" ? 7 + stockDrivenFields.length : 6 + stockDrivenFields.length}
                                     className="bg-gray-300 px-1 py-1 text-right text-[12px]"
                                 >
                                 </td>

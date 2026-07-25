@@ -286,8 +286,21 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                         )}
                     </div>
                 </td>
-                <td className="w-48 border border-gray-300 text-[11px]  px-2">
-                    {parseFloat(item.salesPrice).toFixed(2)}
+                <td className="w-48 border border-gray-300 text-[11px]  text-right px-2">
+                    {(() => {
+
+                        const itemObj = (itemList?.data || itemList || [])?.find(i => parseInt(i.id) === parseInt(item.itemId));
+                        const isLegacy = itemObj?.isLegacy;
+                        const variant = (itemPriceList?.data || itemPriceList || [])?.find(p =>
+                            parseInt(p.itemId) === parseInt(item.itemId) &&
+                            (isLegacy ? true : (
+                                parseInt(p.sizeId) === parseInt(item.sizeId) &&
+                                parseInt(p.colorId) === parseInt(item.colorId)
+                            ))
+                        );
+
+                        return parseFloat(variant?.salesPrice || 0).toFixed(2);
+                    })()}
                 </td>
                 {isDiscountSection && (
                     <td className="w-20 border border-gray-300 text-[11px] text-right p-0 focus-within:border-amber-600 focus-within:bg-amber-100">
@@ -345,9 +358,6 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                                 });
                             }
                         }}
-
-
-                    // placeHolder="0.000"
                     />
                 </td>
 
