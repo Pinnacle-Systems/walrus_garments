@@ -459,7 +459,7 @@ const PosReportsNew = ({
                                         <div>Bill Type</div>
                                     </th>
                                     <th className="w-44  px-3   font-bold text-[13px] text-gray-900  text-center ">
-                                        <div>Retrun Bill</div>
+                                        <div>Return Bill</div>
                                     </th>
 
 

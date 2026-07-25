@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getCommonParams, isGridDatasValid, ModeChip } from "../../../Utils/helper";
+import { getCommonParams, ModeChip } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import {
   childRecordCount,
@@ -142,7 +142,7 @@ const PurchaseInwardForm = ({
     if (inwardTyperef.current && !id) inwardTyperef.current.focus();
   }, []);
 
-  console.log(readOnly, "readOnly")
+  console.log(directInwardReturnItems, "directInwardReturnItems")
 
   const syncFormWithDb = useCallback(
     (data) => {
@@ -258,9 +258,7 @@ const PurchaseInwardForm = ({
     );
   }
 
-  const branchName =
-    branchList?.data?.find((item) => String(item.id) === String(branchId))
-      ?.branchName || "";
+
   const locationName =
     storeOptions?.find((item) => String(item.id) === String(storeId))
       ?.storeName || "";
@@ -294,6 +292,35 @@ const PurchaseInwardForm = ({
     }
 
 
+
+
+    function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = []) {
+      console.log(datas, "isGridDatasValid");
+
+      const isInvalidValue = (value) =>
+        value === "" ||
+        value === null ||
+        value === undefined ||
+        value === "NaN" ||
+        (typeof value === "number" && isNaN(value)) ||   // catches NaN (number)
+        (typeof value === "string" && value.trim() !== "" && isNaN(Number(value)) && value !== "NaN") || // catches unparseable strings
+        value === 0 ||
+        value === "0" ||
+        parseFloat(value) === 0;
+
+      if (isRequiredAllData) {
+        return datas.every(obj => Object.values(obj).every(value => !isInvalidValue(value)));
+      } else {
+        return datas.every(obj =>
+          mandatoryFields.every(field => {
+            const value = obj[field];
+            return value !==  !isInvalidValue(value);
+          })
+        );
+      }
+    }
+
+
     const hasDuplicate = (arr) =>
       new Set(arr.map(i => i.barcode)).size !== arr.length;
 
@@ -304,6 +331,8 @@ const PurchaseInwardForm = ({
       });
       return;
     }
+
+    console.log(mandatoryFields, "mandatoryFields")
 
     if (
       !isGridDatasValid(

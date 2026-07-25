@@ -309,13 +309,9 @@ export default function Form() {
                 <legend className='sub-heading'>Product Info</legend>
                 <div className='grid grid-cols-3 my-2'>
                   <DisabledInput name="Trans.No" value={docId} required={true} readOnly={readOnly} />
-                  <DisabledInput name="Trans. 
-                           Date" value={date} type={"Date"} required={true} readOnly={readOnly} />
+                  <DisabledInput name="Trans.Date" value={date} type={"Date"} required={true} readOnly={readOnly} />
                   <DropdownInput name="Supplier" options={dropDownListObject(id ? supplierList.data : supplierList.data.filter(value => value.isSupplier).filter(item => item.active), "name", "id")} value={supplierId} setValue={setSupplierId} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
-                  {/* <LongDisabledInput name="Address" value={address} required={true} readOnly={readOnly} />
-                  <DisabledInput name="Place" value={place} required={true} readOnly={readOnly} />
-                  <DateInput name="Due Date" value={dueDate} setValue={setDueDate} required={true} readOnly={readOnly} /> */}
-                  {/* <DisabledInput name={"Purchase Order"} value={purchaseOrderDetails ? purchaseOrderDetails.data.docId : ""} /> */}
+           
                   <DropdownInput name="Purchase Order" options={dropDownListObject(id ? purchaseBillData.data : purchaseBillData.data, "docId", "id")} value={purchaseOrderId} setValue={setPurchaseOrderId} required={true} readOnly={readOnly} disabled={(childRecord.current > 0)} />
 
                   <button className="w-24 ml-16 text-xs bg-green-400 rounded hover:bg-lime-600 font-semibold transition hover:text-white"

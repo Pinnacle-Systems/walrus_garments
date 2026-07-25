@@ -21,10 +21,14 @@ Font.register({
   src: '/fonts/times new roman bold.ttf',
 })
 
+
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <>
+  
     <Provider store={store}>
+      
       <Routing />
     </Provider>
 

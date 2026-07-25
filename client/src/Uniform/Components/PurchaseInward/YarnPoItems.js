@@ -120,6 +120,7 @@ const YarnPoItems = ({
                     standardPrice.ItemBarcodes?.[0]?.barcode ||
                     standardPrice.barcode || "";
 
+
                 if (resolvedBarcode) {
                     newBlend[index]["barcode"] = resolvedBarcode;
                 }
@@ -159,11 +160,13 @@ const YarnPoItems = ({
             if (currentItem && (!showSize || currentSize)) {
                 const foundPrice = getBarcodeFromList(currentItem, currentSize, currentColor);
 
+                console.log(foundPrice, "foundPrice")
+
                 if (foundPrice) {
                     newBlend[index]["barcode"] = foundPrice.barcode;
-                    if (!newBlend[index]["price"] || newBlend[index]["price"] === "0.00") {
-                        // newBlend[index]["price"] = foundPrice.salesPrice;
-                    }
+                    newBlend[index]["price"] = foundPrice.salesPrice;
+
+                   
                 }
             }
         }
@@ -173,11 +176,11 @@ const YarnPoItems = ({
             newBlend[index]["sectionId"] = sectionId;
         }
 
-
         newBlend[index][field] = value;
-
         setPoItems(newBlend);
     };
+
+
 
 
     useEffect(() => {
@@ -543,35 +546,20 @@ const YarnPoItems = ({
                                             type="number"
                                             className="h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right shadow-none outline-none focus:bg-transparent focus:outline-none tx-table-input"
                                             onFocus={(e) => e.target.select()}
-                                            // value={sumArray(row?.lotDetails ? row?.lotDetails : [], "qty")}
                                             value={(row?.qty)}
                                             disabled={readOnly || !row.uomId || (id ? (Number(row.stockQty) < Number(row?.qty)) || row?.alreadyReturnedQty : false)}
                                             onChange={(e) => {
-
                                                 handleInputChange(e.target.value, index, "qty")
-                                                // if (id) {
-                                                //     if (parseFloat(item?.stockQty) < parseFloat(e.target.value)) {
-                                                //         Swal.fire({
-                                                //             title: "cannot enter below the Stock Qty",
-                                                //             icon: "warning",
-                                                //         });
-                                                //         return
-                                                //     }
-                                                //     else {
-                                                //         handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty");
-                                                //     }
-                                                // } else {
-                                                //     handleInputChange(e.target.value, index, "qty");
-
-                                                // }
-
-
 
                                             }}
+
                                             onBlur={(e) => {
                                                 handleInputChange(parseFloat(e.target.value).toFixed(2), index, "qty");
+
                                             }
                                             }
+
+
                                         />
                                     </td>
 
@@ -586,7 +574,7 @@ const YarnPoItems = ({
                                             className="h-full w-full rounded-none border-0 bg-transparent  text-right shadow-none outline-none focus:bg-transparent focus:outline-none table-data-input"
                                             onFocus={(e) => e.target.select()}
                                             value={(row?.price)}
-                                            disabled={readOnly || !row.qty || (id ? (Number(row.stockQty) < Number(row?.qty)) : false)}
+                                            disabled={true}
                                             onChange={(e) =>
                                                 handleInputChange(e.target.value, index, "price")
                                             }

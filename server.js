@@ -281,6 +281,13 @@ app.set('socketio', io);
 
 const PORT = process.env.PORT || 9999;
 
+setInterval(() => {
+  const m = process.memoryUsage();
+  console.log(new Date().toISOString(),
+    'rss', (m.rss / 1048576).toFixed(1),
+    'heap', (m.heapUsed / 1048576).toFixed(1),
+    'ext', (m.external / 1048576).toFixed(1));
+}, 30000);
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);

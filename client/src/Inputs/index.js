@@ -3752,3 +3752,29 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
 );
 
 
+
+
+export function useMemoryLogger(intervalMs = 30000) {
+  useEffect(() => {
+    if (!performance.memory) {
+      console.warn('performance.memory unavailable (Chrome/Edge only)');
+      return;
+    }
+    const log = () => {
+      const m = performance.memory;
+      console.log(
+        new Date().toISOString(),
+        'used', (m.usedJSHeapSize / 1048576).toFixed(1),
+        'total', (m.totalJSHeapSize / 1048576).toFixed(1),
+        'limit', (m.jsHeapSizeLimit / 1048576).toFixed(1)
+      );
+    };
+    log();
+    const id = setInterval(log, intervalMs);
+    return () => clearInterval(id);   // cleanup — this matters
+  }, [intervalMs]);
+}
+
+
+
+

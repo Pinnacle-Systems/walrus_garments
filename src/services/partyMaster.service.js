@@ -90,10 +90,16 @@ async function get(req) {
 
     });
     if (Boolean(isAddressCombined)) {
+        // data = await data?.map(i => ({
+        //     ...i,
+        //     name: `${i.name}${i?.BranchType?.name ? ` / ${i.BranchType.name}` : ""
+        //         }${i?.City?.name ? ` / ${i.City.name}` : ""} `
+
+        // }))
         data = await data?.map(i => ({
             ...i,
             name: `${i.name}${i?.BranchType?.name ? ` / ${i.BranchType.name}` : ""
-                }${i?.City?.name ? ` / ${i.City.name}` : ""}`
+                }${i?.contactPersonNumber ? ` / ${i.contactPersonNumber}` : ""} `
 
         }))
     }

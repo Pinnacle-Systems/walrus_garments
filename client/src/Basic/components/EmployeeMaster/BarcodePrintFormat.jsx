@@ -1,7 +1,7 @@
-import React from "react";
-import { Document, Page, View, Text, PDFViewer } from "@react-pdf/renderer";
+import React, { useEffect, useState } from "react";
+import { Document, Page, View, Text, PDFViewer, Image } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
-import BarcodeGenerator from "../../../Uniform/Components/BarcodeGenerator";
+import QRCode from "qrcode";
 
 const mmToPt = (mm) => (mm / 25.4) * 72; // mm → pt
 const chunkArray = (arr, size) => {
@@ -10,6 +10,45 @@ const chunkArray = (arr, size) => {
     result.push(arr.slice(i, i + size));
   }
   return result;
+};
+
+const QRCodeImage = ({ value, width, height }) => {
+  const [src, setSrc] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!value) {
+      setSrc("");
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    QRCode.toDataURL(value, {
+      margin: 1,
+      width: 320,
+      color: { dark: "#000000", light: "#FFFFFF" },
+    })
+      .then((dataUrl) => {
+        if (isMounted) {
+          setSrc(dataUrl);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setSrc("");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [value]);
+
+  if (!src) return null;
+
+  return <Image src={src} style={{ width, height }} />;
 };
 
 const BarCodePrintFormat = ({
@@ -21,6 +60,7 @@ const BarCodePrintFormat = ({
     stickersPerRow: 2,
     horizontalGap: 1,
     verticalGap: 1,
+    qrCount: 3,
   },
 }) => {
 
@@ -37,7 +77,7 @@ const BarCodePrintFormat = ({
     labelHeight,
     stickersPerRow,
     horizontalGap,
-    verticalGap,
+    qrCount = 3,
   } = labelConfig;
 
   const labelWidthPt = mmToPt(labelWidth);
@@ -84,11 +124,28 @@ const BarCodePrintFormat = ({
                   WALRUS
                 </Text>
 
-                <BarcodeGenerator
-                  value={`${code.barCode}`}
-                  width={labelWidthPt * 0.85}
-                  height={labelHeightPt * 0.45}
-                />
+                <View
+                  style={{
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 3,
+                    width: "100%",
+                  }}
+                >
+                  {Array.from({ length: qrCount }).map((_, qrIndex) => (
+                    <View
+                      key={`${code.barCode}-${qrIndex}`}
+                      style={{ alignItems: "center", justifyContent: "center" }}
+                    >
+                      <QRCodeImage
+                        value={`${code.barCode}`}
+                        width={Math.min(labelWidthPt * 0.2, 24)}
+                        height={Math.min(labelHeightPt * 0.16, 24)}
+                      />
+                    </View>
+                  ))}
+                </View>
 
                 <Text style={{ fontSize: 7, textAlign: "center" }}>
                   {code.barCode}
