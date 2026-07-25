@@ -271,7 +271,7 @@ async function get(req) {
             }
         });
         data = manualFilterSearchData(searchDate, searchDueDate, searchPoType, data)
-        
+
         totalCount = data.length
         if (pagination) {
             totalCount = data.length;
@@ -1605,6 +1605,32 @@ async function update(id, body) {
 
 
 
+async function addStockForRemoverItems(tx, poType, poInwardOrDirectInward, branchId, storeId, item, directReturnOrPoReturnId, supplierId) {
+
+    await tx.stock.create({
+        data: {
+            itemType: poType,
+            inOrOut: poInwardOrDirectInward,
+            transactionId: directReturnOrPoReturnId ? parseInt(directReturnOrPoReturnId) : undefined,
+            itemId: item["itemId"] ? parseInt(item["itemId"]) : undefined,
+            sizeId: item["sizeId"] ? parseInt(item["sizeId"]) : undefined,
+
+            colorId: item["colorId"] ? parseInt(item["colorId"]) : undefined,
+            uomId: item["uomId"] ? parseInt(item["uomId"]) : undefined,
+            supplierId: supplierId ? parseInt(supplierId) : undefined,
+            qty: item["qty"] ? parseFloat(0 - item["qty"]) : undefined,
+            price: item["price"] ? parseFloat(item["price"]) : undefined,
+            branchId: branchId ? parseFloat(branchId) : undefined,
+            storeId: storeId ? parseFloat(storeId) : undefined,
+            barcode: item["barcode"] ? item["barcode"] : "",
+
+
+
+
+        }
+    })
+
+}
 
 
 
@@ -1616,13 +1642,55 @@ async function update(id, body) {
 
 async function remove(id) {
 
+    let data
 
-
-    const data = await prisma.directInwardOrReturn.delete({
+    let inwardData = await prisma.directInwardOrReturn.findUnique({
         where: {
             id: parseInt(id)
         },
+        include: {
+            DirectItems: {
+                select: {
+
+                    itemId: true,
+                    sizeId: true,
+                    colorId: true,
+                    uomId: true,
+                    qty: true,
+                    price: true,
+                    sectionId: true,
+                    barcode: true,
+                }
+            }
+        }
     })
+
+    console.log(inwardData, "data")
+
+    await prisma.$transaction(async (tx) => {
+
+        for (const item of inwardData?.DirectItems) {
+
+            await addStockForRemoverItems(
+                tx,
+                inwardData.poType,                // or set constant if needed
+                inwardData.poInwardOrDirectInward,
+                inwardData?.branchId,
+                inwardData?.storeId,
+                item,
+                item?.id,
+                inwardData?.supplierId
+            );
+
+        }
+
+        data = await tx.directInwardOrReturn.delete({
+            where: {
+                id: parseInt(id)
+            },
+        });
+
+    });
     return { statusCode: 0, data };
 }
 

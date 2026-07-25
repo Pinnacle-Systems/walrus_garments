@@ -117,7 +117,7 @@ async function validateReturnVariantRows(directReturnItems = [], rowLabelPrefix)
 
 async function get(req) {
     const { branchId, active, poInwardOrDirectInward, pageNumber, dataPerPage, serachDocNo, searchDate, supplier,
-        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId ,currentPageNumber } = req.query
+        searchDocId, searchPoDate, searchSupplierAliasName, searchPoType, searchDueDate, pagination, finYearId, currentPageNumber } = req.query
     let data;
     let totalCount;
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -994,6 +994,7 @@ async function addStockForRemoverItems(tx, poType, poInwardOrDirectInward, branc
             price: item["price"] ? parseFloat(item["price"]) : undefined,
             branchId: branchId ? parseFloat(branchId) : undefined,
             storeId: storeId ? parseFloat(storeId) : undefined,
+            barcode: item["barcode"] ? item["barcode"] : "",
 
 
 

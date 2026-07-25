@@ -395,7 +395,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       return data?.parentId && data?.branchTypeId;
     }
 
-    const baseFields = (data?.isClient || data?.isSupplier) && data.name && data?.address && data?.cityId && data?.pincode;
+    const baseFields = (data?.isClient || data?.isSupplier) && data.name
 
     if (!baseFields) return false;
 
@@ -917,7 +917,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       accessor: (item) => item.name,
       cellClass: () => 'font-medium text-gray-900',
       className: 'text-gray-800 uppercase w-96',
-      enableSearch : true
+      enableSearch: true
 
     },
 
@@ -925,14 +925,14 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       header: "Branch Type",
       accessor: (item) => item?.BranchType?.name || "-",
       className: "font-medium text-gray-900 text-left uppercase w-40 pl-2",
-      enableSearch : true
+      enableSearch: true
     },
     {
       header: 'Customer/Supplier',
       accessor: (item) => item.isClient && item.isSupplier ? "Customer/Supplier" : item.isClient ? "Customer" : item.isSupplier ? "Supplier" : "",
       cellClass: () => 'font-medium text-gray-900',
       className: 'text-gray-800 uppercase w-40',
-      
+
 
     },
     {
@@ -940,7 +940,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       accessor: (item) => item.address,
       cellClass: () => 'font-medium text-gray-900',
       className: 'text-gray-800 uppercase w-96',
-      enableSearch : true
+      enableSearch: true
     },
     {
       header: "Status",
@@ -1241,7 +1241,8 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
 
                         <TextArea name="Address"
                           inputClass="h-10" value={address}
-                          setValue={setAddress} required={true}
+                          setValue={setAddress}
+                          //  required={true}
                           readOnly={readOnly}
                         // disabled={(childRecord.current > 0)}
                         />
@@ -1283,7 +1284,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                               // lastTab={activeTab}
                               value={city}
                               setValue={setCity}
-                              required={true}
+                              // required={true}
                               readOnly={readOnly}
                               className="focus:ring-2 focus:ring-blue-100"
                               addNewLabel="+ Add New City"
@@ -1295,7 +1296,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                             name="Pincode"
                             type="number"
                             value={pincode}
-                            required={true}
+                            // required={true}
 
                             setValue={setPincode}
                             readOnly={readOnly}
@@ -2066,7 +2067,8 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
 
                           <TextArea name="Address"
                             inputClass="h-10" value={address}
-                            setValue={setAddress} required={true}
+                            setValue={setAddress}
+                            // required={true}
                             readOnly={readOnly}
                           // disabled={(childRecord.current > 0)}
                           />
@@ -2108,7 +2110,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                                 // lastTab={activeTab}
                                 value={city}
                                 setValue={setCity}
-                                required={true}
+                                // required={true}
                                 readOnly={readOnly}
                                 className="focus:ring-2 focus:ring-blue-100"
                                 addNewLabel="+ Add New City"
@@ -2120,7 +2122,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                               name="Pincode"
                               type="number"
                               value={pincode}
-                              required={true}
+                              // required={true}
 
                               setValue={setPincode}
                               readOnly={readOnly}

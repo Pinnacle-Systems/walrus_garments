@@ -176,6 +176,8 @@ const FormItems = ({ setOrderItems, orderItems, readOnly, colorList, transferTyp
                                     <th key={field.key} className="w-32 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">{field.label}</th>
                                 ))}
                                 <th className="w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Stock Qty (Pcs)</th>
+                                <th className="w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Sales Price</th>
+
                                 {findFromList(toLocationId, locationData?.data, "storeName") == "DISCOUNT SECTION" && (
 
                                     <th className="w-20 bg-gray-300 px-1 py-1 text-center font-medium text-[12px]">Discount Price</th>

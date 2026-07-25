@@ -295,18 +295,28 @@ const PurchaseInwardForm = ({
 
 
     function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = []) {
-      console.log(datas, "isGridDatasValid");
+      console.log(datas, "datas");
+      console.log(isRequiredAllData, "isRequiredAllData");
+      console.log(mandatoryFields, "mandatoryFields")
 
-      const isInvalidValue = (value) =>
-        value === "" ||
-        value === null ||
-        value === undefined ||
-        value === "NaN" ||
-        (typeof value === "number" && isNaN(value)) ||   // catches NaN (number)
-        (typeof value === "string" && value.trim() !== "" && isNaN(Number(value)) && value !== "NaN") || // catches unparseable strings
-        value === 0 ||
-        value === "0" ||
-        parseFloat(value) === 0;
+      // If the array is empty, we consider it invalid because there must be at least one row.
+      if (!datas || datas.length === 0) {
+        return false;
+      }
+
+      const isInvalidValue = (value) => {
+        if (value === "" || value === null || value === undefined || value === "NaN") return true;
+        if (typeof value === "number" && isNaN(value)) return true;
+        
+        // Treat strictly numeric zero values (like 0, "0", "0.00") as invalid.
+        // Number(value) evaluates to NaN for strings like "WRNWITRED05" or "0ABC", 
+        // so this safely allows alphanumeric barcodes to pass validation.
+        if (String(value).trim() !== "" && !isNaN(Number(value)) && Number(value) === 0) {
+            return true;
+        }
+        
+        return false;
+      };
 
       if (isRequiredAllData) {
         return datas.every(obj => Object.values(obj).every(value => !isInvalidValue(value)));
@@ -314,7 +324,7 @@ const PurchaseInwardForm = ({
         return datas.every(obj =>
           mandatoryFields.every(field => {
             const value = obj[field];
-            return value !==  !isInvalidValue(value);
+            return value !== undefined && !isInvalidValue(value);
           })
         );
       }

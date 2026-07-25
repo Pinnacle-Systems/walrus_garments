@@ -286,7 +286,9 @@ export default function TransferItems({ item, index, handleRightClickFromOrder, 
                         )}
                     </div>
                 </td>
-
+                <td className="w-48 border border-gray-300 text-[11px]  px-2">
+                    {parseFloat(item.salesPrice).toFixed(2)}
+                </td>
                 {isDiscountSection && (
                     <td className="w-20 border border-gray-300 text-[11px] text-right p-0 focus-within:border-amber-600 focus-within:bg-amber-100">
                         {item.hasExistingOffer ? (

@@ -91,6 +91,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [barcode, setBarcode] = useState("");
   const [childRecord, setChildRecord] = useState("")
   const [isSameAsBarcode, setIsSameAsBarcode] = useState(false);
+  const [isSameSalesPrice, setIsSameSalesPrice] = useState(false);
+  const [commonSalesPrice, setCommonSalesPrice] = useState("");
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [printId, setPrintId] = useState("");
   const syncedIdRef = useRef(null);
@@ -337,6 +339,25 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       }
     }
   }, [isSameAsBarcode, itemPriceList, effectivePricingMode, sku]);
+
+  // Sync all sales prices when 'isSameSalesPrice' is enabled
+  useEffect(() => {
+    if (isSameSalesPrice && commonSalesPrice !== "") {
+      if (itemPriceList.length > 0) {
+        let changed = false;
+        const nextList = itemPriceList.map(item => {
+          if (item.salesPrice !== commonSalesPrice) {
+            changed = true;
+            return { ...item, salesPrice: commonSalesPrice };
+          }
+          return item;
+        });
+        if (changed) {
+          setItemPriceList(nextList);
+        }
+      }
+    }
+  }, [isSameSalesPrice, commonSalesPrice, itemPriceList]);
 
   const data = {
     id,
@@ -1435,8 +1456,30 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                     </label>
                                   </div>
                                 </th>
-                                <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Sales Price
-                                  <span className="text-red-500">*</span>
+                                <th className={`w-28 px-2 py-1 text-center font-medium text-[12px] `}>
+                                  <div className="flex flex-col items-center leading-tight">
+                                    <span>Sales Price <span className="text-red-500">*</span></span>
+                                    <label className="flex items-center gap-1 text-[9px] font-normal cursor-pointer text-gray-600 mt-1">
+                                      <input
+                                        type="checkbox"
+                                        checked={isSameSalesPrice}
+                                        onChange={(e) => setIsSameSalesPrice(e.target.checked)}
+                                        className="w-2.5 h-2.5"
+                                      />
+                                      <span>Same for All</span>
+                                    </label>
+                                    {isSameSalesPrice && (
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        className="w-full mt-1 px-1 py-0.5 text-xs border rounded text-right font-normal focus:ring-1 focus:ring-blue-500"
+                                        placeholder="Price"
+                                        value={commonSalesPrice}
+                                        onChange={(e) => setCommonSalesPrice(e.target.value)}
+                                        disabled={readOnly}
+                                      />
+                                    )}
+                                  </div>
                                 </th>
                                 {/* <th className={`w-16 px-2 py-2 text-center font-medium text-[12px] `}>Offer Price</th> */}
                                 {/* <th className={`w-24 px-2 py-2 text-center font-medium text-[12px] `}>Stock Alerts</th> */}
@@ -1510,7 +1553,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                       onFocus={e => e.target.select()}
                                       className="text-right rounded w-full px-1 py-1 text-xs"
                                       value={item.salesPrice}
-                                      disabled={readOnly || isLegacyItem}
+                                      disabled={readOnly || isLegacyItem || isSameSalesPrice}
                                       onChange={e => handleInputChange(e.target.value, index, "salesPrice")}
                                       onBlur={e => handleInputChange(e.target.value, index, "salesPrice")}
                                     />

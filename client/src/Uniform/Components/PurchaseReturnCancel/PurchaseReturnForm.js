@@ -17,7 +17,7 @@ import {
     useGetDirectCancelOrReturnByIdQuery, useUpdateDirectCancelOrReturnMutation
 }
     from "../../../redux/uniformService/DirectCancelOrReturnServices";
-import { getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { getCommonParams, sumArray } from "../../../Utils/helper";
 import { useGetStockReportControlQuery } from "../../../redux/uniformService/StockReportControl.Services";
 import { directOrPoreturn } from "../../../Utils/DropdownData";
 import InwardItemsSelection from "./InwardItemsSelection";
@@ -236,6 +236,42 @@ const PurchaseReturnForm = ({ onClose, isLoading, isFetching, poInwardOrDirectIn
             console.log("handle", error);
         }
     };
+
+    function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = []) {
+        console.log(datas, "datas");
+        console.log(isRequiredAllData, "isRequiredAllData");
+        console.log(mandatoryFields, "mandatoryFields")
+
+        // If the array is empty, we consider it invalid because there must be at least one row.
+        if (!datas || datas.length === 0) {
+            return false;
+        }
+
+        const isInvalidValue = (value) => {
+            if (value === "" || value === null || value === undefined || value === "NaN") return true;
+            if (typeof value === "number" && isNaN(value)) return true;
+
+            // Treat strictly numeric zero values (like 0, "0", "0.00") as invalid.
+            // Number(value) evaluates to NaN for strings like "WRNWITRED05" or "0ABC", 
+            // so this safely allows alphanumeric barcodes to pass validation.
+            if (String(value).trim() !== "" && !isNaN(Number(value)) && Number(value) === 0) {
+                return true;
+            }
+
+            return false;
+        };
+
+        if (isRequiredAllData) {
+            return datas.every(obj => Object.values(obj).every(value => !isInvalidValue(value)));
+        } else {
+            return datas.every(obj =>
+                mandatoryFields.every(field => {
+                    const value = obj[field];
+                    return value !== undefined && !isInvalidValue(value);
+                })
+            );
+        }
+    }
 
 
 

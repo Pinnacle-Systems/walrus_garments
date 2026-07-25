@@ -52,6 +52,7 @@ const BarCodePrintFormat = ({
           : parseInt(p.sizeId) === parseInt(item.sizeId) &&
           parseInt(p.colorId) === parseInt(item.colorId))
     );
+    console.log(priceObj, "priceObj")
     const isDiscountSection = findFromList(toLocationId, locationData?.data, "storeName") === "DISCOUNT SECTION";
     const getOfferPrice = () => {
       if (!isDiscountSection) return priceObj?.salesPrice || 0;
