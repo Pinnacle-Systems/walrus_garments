@@ -576,7 +576,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             onChange={(event) => setPackingCharge(event.target.value)}
             onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
             readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            className={`h-5 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
         ),
       }]
@@ -593,7 +593,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             onChange={(event) => setShippingCharge(event.target.value)}
             onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
             readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            className={`h-5 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
         ),
       }]
@@ -610,7 +610,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             onChange={(event) => setCourierCharge(event.target.value)}
             onBlur={() => setCourierCharge(formatChargeValue(courierCharge))}
             readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            className={`h-5 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
         ),
       }]
@@ -664,6 +664,42 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   const handleTermTemplateChange = (value) => {
     setTerm(value);
   };
+
+
+  const advaceColumns = [
+    ...(singleData?.data?.totalReceivedAmount
+      ?
+      [{
+        key: "Advance Amount",
+        label: "Advance Amount",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={parseFloat(singleData?.data?.totalReceivedAmount).toFixed(2)}
+            readOnly={true}
+            className={` w-24 rounded  text-right text-[11px]  `}
+          />
+        ),
+      }]
+      : []),
+    ...(singleData?.data?.totalReceivedAmount
+      ?
+      [{
+        key: "Balance Amount",
+        label: "Balance Amount",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={parseFloat(adjustedNetAmount - parseFloat(singleData?.data?.totalReceivedAmount || 0)).toFixed(2)}
+            readOnly={true}
+            className={` w-24 rounded  text-right text-[11px]  `}
+          />
+        ),
+      }]
+      : []),
+  ]
 
   const footerContent = (
     <CommonFormFooter
@@ -791,16 +827,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
           summaryColumn: "right",
           emphasized: true,
         },
-        ...(shouldShowAdvanceReceived
-          ? [
-            {
-              key: "advanceReceived",
-              label: "Advance Received",
-              value: `Rs.${parseFloat(advanceReceivedAmount || 0).toFixed(2)}`,
-              summaryColumn: "left",
-            },
-          ]
-          : []),
+        ...advaceColumns
+
       ]}
       leftActions={
         <>
@@ -891,6 +919,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         customerData: supplierDetails?.data,
         items,
         title: "SALE ORDER",
+        advanceAmount: advanceReceivedAmount,
         summary: {
           subtotal,
           tax: taxAmount,
@@ -902,6 +931,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
           shippingCharge: sCharge,
           courierCharge: cCharge,
           netAmount: adjustedNetAmount,
+          advanceAmount: advanceReceivedAmount,
         }
       };
 

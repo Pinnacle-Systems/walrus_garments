@@ -516,7 +516,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             onChange={(event) => setPackingCharge(event.target.value)}
             onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
             readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            className={`h-5 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
         ),
       }]
@@ -533,7 +533,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             onChange={(event) => setShippingCharge(event.target.value)}
             onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
             readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            className={`h-5 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
         ),
       }]
@@ -550,12 +550,47 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             onChange={(event) => setCourierCharge(event.target.value)}
             onBlur={() => setCourierCharge(formatChargeValue(courierCharge))}
             readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            className={`h-5 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
         ),
       }]
       : []),
   ];
+
+  const advaceColumns = [
+    ...(singleData?.data?.totalReceivedAmount
+      ?
+      [{
+        key: "Advance Amount",
+        label: "Advance Amount",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={parseFloat(singleData?.data?.totalReceivedAmount).toFixed(2)}
+            readOnly={true}
+            className={` w-24 rounded  text-right text-[11px]  `}
+          />
+        ),
+      }]
+      : []),
+    ...(singleData?.data?.totalReceivedAmount
+      ?
+      [{
+        key: "Balance Amount",
+        label: "Balance Amount",
+        summaryColumn: "right",
+        renderValue: () => (
+          <input
+            type="number"
+            value={parseFloat(adjustedNetAmount - parseFloat(singleData?.data?.totalReceivedAmount || 0)).toFixed(2)}
+            readOnly={true}
+            className={` w-24 rounded  text-right text-[11px]  `}
+          />
+        ),
+      }]
+      : []),
+  ]
 
   const summaryItems = [
     { label: "No", value: docId },
@@ -671,6 +706,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           emphasized: true,
           summaryColumn: "right",
         },
+        ...advaceColumns
       ]}
       extraTotalsContent={
         <div className="flex items-center justify-between gap-2 py-0.5 text-[12px]">
@@ -788,6 +824,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
       const sCharge = shippingChargeEnabled ? parseFloat(shippingCharge || 0) : 0;
       const cCharge = courierChargeEnabled ? parseFloat(courierCharge || 0) : 0;
 
+      const advanceAmountVal = singleData?.data?.totalReceivedAmount ? singleData?.data?.totalReceivedAmount : 0;
       const printData = {
         docId,
         date,
@@ -795,6 +832,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
         customerData: supplierDetails?.data,
         items,
         title: "QUOTATION",
+        advanceAmount: advanceAmountVal,
         summary: {
           subtotal,
           tax: taxAmount,
@@ -805,7 +843,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           packingCharge: pCharge,
           shippingCharge: sCharge,
           courierCharge: cCharge,
-          roundOff: adjustedNetAmount - (netAmount + pCharge + sCharge + cCharge)
+          roundOff: adjustedNetAmount - (netAmount + pCharge + sCharge + cCharge),
+          advanceAmount: advanceAmountVal
         }
       };
 

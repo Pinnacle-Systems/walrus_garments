@@ -32,6 +32,8 @@ export function buildSalesReceiptInstructions(printPayload) {
       courierCharge: 0,
       roundOff: 0
     },
+    advanceAmount,
+    advanceReceivedAmount,
     branchData,
     title = 'SALES INVOICE'
   } = printPayload || {};
@@ -116,13 +118,13 @@ export function buildSalesReceiptInstructions(printPayload) {
 
   if (summary.igst > 0) {
     instructions.push({ type: 'leftRight', left: 'IGST :', right: summary.igst.toFixed(2) });
-  } else {
-    if (summary.cgst > 0) {
-      instructions.push({ type: 'leftRight', left: 'CGST :', right: summary.cgst.toFixed(2) });
-    }
-    if (summary.sgst > 0) {
-      instructions.push({ type: 'leftRight', left: 'SGST :', right: summary.sgst.toFixed(2) });
-    }
+    // } else {
+    //   if (summary.cgst > 0) {
+    //     instructions.push({ type: 'leftRight', left: 'CGST :', right: summary.cgst.toFixed(2) });
+    //   }
+    //   if (summary.sgst > 0) {
+    //     instructions.push({ type: 'leftRight', left: 'SGST :', right: summary.sgst.toFixed(2) });
+    //   }
   }
 
   if (summary.tax > 0) {
@@ -150,6 +152,23 @@ export function buildSalesReceiptInstructions(printPayload) {
     right: `Rs. ${summary.total.toFixed(2)}`,
     bold: true,
   });
+
+  const advAmt = parseFloat(advanceAmount || summary?.advanceAmount || advanceReceivedAmount || 0);
+  if (advAmt && advAmt > 0) {
+    const netAmt = parseFloat(summary.total || summary.netAmount || 0);
+    instructions.push({
+      type: 'leftRight',
+      left: 'Advance Amount :',
+      right: `Rs. ${advAmt.toFixed(2)}`,
+      bold: true,
+    });
+    instructions.push({
+      type: 'leftRight',
+      left: 'Balance Amount :',
+      right: `Rs. ${(netAmt - advAmt).toFixed(2)}`,
+      bold: true,
+    });
+  }
 
   instructions.push({ type: 'line' });
 
