@@ -3382,7 +3382,8 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
       isBillable = false,
       supplierId,
       isRetunBillable,
-      paymentFlow
+      paymentFlow,
+      isB2B = false
     },
     ref
   ) => {
@@ -3430,7 +3431,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
 
 
 
-
+    console.log(partyList, "paymentFlow")
 
 
 

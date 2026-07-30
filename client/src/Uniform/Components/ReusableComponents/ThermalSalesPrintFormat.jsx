@@ -52,7 +52,8 @@ const ThermalSalesPrintFormat = ({
   packingCharge = 0,
   shippingCharge = 0,
   courierCharge = 0,
-  terms = ""
+  terms = "",
+  advanceAmount = 0,
 }) => {
 
   console.log(branchData, "branchData")
@@ -263,14 +264,23 @@ const ThermalSalesPrintFormat = ({
             <Text style={tw('text-xs font-bold')}>NET TOTAL :</Text>
             <Text style={tw('text-xs font-bold')}>Rs. {netAmount.toFixed(2)}</Text>
           </View>
+          {advanceAmount && (
+            <View style={tw('flex flex-row w-full justify-between')}>
+              <Text style={tw('text-xs font-bold')}>Advance Amount :</Text>
+              <Text style={tw('text-xs font-bold')}>Rs. {parseFloat(advanceAmount).toFixed(2)}</Text>
+            </View>
+          )}
+          {advanceAmount && (
+            <View style={tw('flex flex-row w-full justify-between')}>
+              <Text style={tw('text-xs font-bold')}>Balance Amount :</Text>
+              <Text style={tw('text-xs font-bold')}>Rs. {parseFloat(netAmount - (advanceAmount ? advanceAmount : 0)).toFixed(2)}</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.dottedLine} />
 
-        {/* Payment & Footer */}
-        {/* <View style={tw('flex flex-col mb-4')}>
-          <Text style={tw('text-xxs font-bold')}>ADV {taxDetails.advance || "0"} GPAY {moment(date).format('DD/MM/YY')}</Text>
-        </View> */}
+
 
         <View style={tw('flex flex-col items-center')}>
           {terms && (

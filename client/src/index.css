@@ -405,6 +405,10 @@ label {
   font-family: inherit !important;
 }
 
+.swal2-popup.margin-checkpoint-popup {
+  width: 550px !important;
+}
+
 .swal2-title {
   font-size: 1rem !important;
   font-weight: 700 !important;

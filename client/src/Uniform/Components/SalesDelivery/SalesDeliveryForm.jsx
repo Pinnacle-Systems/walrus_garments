@@ -445,8 +445,11 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       if (adjustedNetAmount > allowedLimit) {
         Swal.fire({
           title: "Sale Order Margin Checkpoint",
+          customClass: {
+            popup: "margin-checkpoint-popup"
+          },
           html: `
-            <div class="text-left text-xs space-y-2">
+            <div class="text-left text-xs space-y-2 w-full">
               <p>This Sale Order has a delivery margin constraint of <b>${marginPercent}%</b>.</p>
               <hr class="my-1"/>
               <p>• <b>Pending Sale Order Value (Remaining)</b>: <span class="float-right font-semibold">₹${pendingValueAfter.toFixed(2)}</span></p>

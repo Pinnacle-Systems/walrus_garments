@@ -662,13 +662,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           value: `Rs.${parseFloat(taxAmount || 0).toFixed(2)}`,
           summaryColumn: "right",
         },
-        // {
-        //   key: "promoDiscount",
-        //   label: "Promo Discount",
-        //   value: `Rs.${parseFloat(totalOfferDiscount || 0).toFixed(2)}`,
-        //   summaryColumn: "right",
-        //   className: "text-emerald-600 font-bold"
-        // },
+
         ...chargeRows,
         {
           key: "netAmount",
@@ -912,6 +906,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
             courierCharge={courierChargeEnabled ? courierCharge : 0}
             terms={terms}
             isSupplierOutside={isSupplierOutside()}
+            advanceAmount={singleData?.data?.totalReceivedAmount ? singleData?.data?.totalReceivedAmount : 0}
 
           />
         </PDFViewer>
@@ -949,6 +944,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
                   disabled={id}
                   ref={firstInputRef}
                   nextRef={secondInputRef}
+                  isB2B={true}
                 />
               </div>
               <TextInput

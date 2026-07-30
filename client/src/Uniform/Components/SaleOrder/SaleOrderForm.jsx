@@ -966,7 +966,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
             shippingCharge={shippingChargeEnabled ? shippingCharge : 0}
             courierCharge={courierChargeEnabled ? courierCharge : 0}
             isSupplierOutside={isSupplierOutside()}
-
+            advanceAmount={advanceReceivedAmount}
             terms={terms}
           />
         </PDFViewer>
