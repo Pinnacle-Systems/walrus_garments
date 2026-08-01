@@ -15,16 +15,16 @@ const SalesPersonModal = ({
     const [activeIndex, setActiveIndex] = React.useState(-1);
     const containerRef = React.useRef(null);
 
-    const EMPTY_ARRAY = React.useMemo(() => [], []);
-
     const filteredEmployees = React.useMemo(() => {
-        if (salesPersonBarcode.length < 1) return EMPTY_ARRAY;
-        return employees.filter(emp =>
-            emp.active &&
-            (emp.name?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
-                emp.employeeId?.toLowerCase().includes(salesPersonBarcode.toLowerCase()))
+        const activeEmps = (employees || []).filter(emp => emp.active !== false);
+        if (!salesPersonBarcode || salesPersonBarcode.trim() === '') return activeEmps;
+        const query = salesPersonBarcode.toLowerCase().trim();
+        return activeEmps.filter(emp =>
+            emp.name?.toLowerCase().includes(query) ||
+            emp.employeeId?.toLowerCase().includes(query) ||
+            emp.regNo?.toLowerCase().includes(query)
         );
-    }, [employees, salesPersonBarcode, EMPTY_ARRAY]);
+    }, [employees, salesPersonBarcode]);
 
     React.useEffect(() => {
         setActiveIndex(filteredEmployees.length > 0 ? 0 : -1);
@@ -40,8 +40,7 @@ const SalesPersonModal = ({
     }, [activeIndex]);
 
     const handleKeyDown = (e) => {
-
-        if (filteredEmployees.length == 0) return
+        if (filteredEmployees.length === 0) return;
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();
@@ -52,7 +51,9 @@ const SalesPersonModal = ({
         } else if (e.key === 'Enter') {
             e.preventDefault();
             if (activeIndex >= 0 && activeIndex < filteredEmployees.length) {
-                handleSalesPersonScan(filteredEmployees[activeIndex].employeeId);
+                handleSalesPersonScan(filteredEmployees[activeIndex].employeeId || filteredEmployees[activeIndex].regNo);
+            } else if (filteredEmployees.length > 0) {
+                handleSalesPersonScan(filteredEmployees[0].employeeId || filteredEmployees[0].regNo);
             } else {
                 handleSalesPersonScan(salesPersonBarcode);
             }
@@ -61,8 +62,6 @@ const SalesPersonModal = ({
             onClose();
         }
     };
-
-    /* console.log removed */
 
     return (
         <Modal
@@ -97,49 +96,43 @@ const SalesPersonModal = ({
                     />
                 </div>
 
-                {/* Employee Suggestions Selection */}{console.log(filteredEmployees, "filteredEmployees")}
+                {/* Employee Suggestions Selection */}
                 <AnimatePresence>
-                    {salesPersonBarcode.length >= 1 && (
-                        <motion.div
-                            ref={containerRef}
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="mt-4 max-h-[240px] overflow-auto border-2 border-slate-50 rounded-2xl divide-y divide-slate-50 shadow-inner bg-slate-50/30"
-                        >
-                            {filteredEmployees.map((emp, idx) => {
-                                const isHighlighted = idx === activeIndex;
-                                return (
-                                    <button
-                                        key={emp.id}
-                                        onClick={() => handleSalesPersonScan(emp.employeeId)}
-                                        className={`w-full p-4 text-left transition-all flex items-center justify-between group ${isHighlighted ? 'bg-indigo-50 font-bold' : 'hover:bg-white'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-[10px] uppercase">
-                                                {emp.name?.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <div className="text-xs font-black text-slate-800 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">{emp.name}</div>
-                                                <div className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">{emp.employeeId}</div>
-                                            </div>
+                    <motion.div
+                        ref={containerRef}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-4 max-h-[240px] overflow-auto border-2 border-slate-50 rounded-2xl divide-y divide-slate-50 shadow-inner bg-slate-50/30"
+                    >
+                        {filteredEmployees.map((emp, idx) => {
+                            const isHighlighted = idx === activeIndex;
+                            return (
+                                <button
+                                    key={emp.id || idx}
+                                    onClick={() => handleSalesPersonScan(emp.employeeId || emp.regNo)}
+                                    className={`w-full p-4 text-left transition-all flex items-center justify-between group ${isHighlighted ? 'bg-indigo-50 font-bold' : 'hover:bg-white'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-[10px] uppercase">
+                                            {emp.name?.charAt(0)}
                                         </div>
-                                        <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-500 transition-all transform group-hover:translate-x-1" />
-                                    </button>
-                                );
-                            })}
-                            {employees.filter(emp =>
-                                emp.name?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
-                                emp.employeeId?.toLowerCase().includes(salesPersonBarcode.toLowerCase()) ||
-                                emp.regNo?.toLowerCase().includes(salesPersonBarcode.toLowerCase())
-                            ).length === 0 && (
-                                    <div className="p-6 text-center text-slate-400">
-                                        <p className="text-[10px] font-black uppercase tracking-widest">No matching employee found</p>
+                                        <div>
+                                            <div className="text-xs font-black text-slate-800 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">{emp.name}</div>
+                                            <div className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">{emp.employeeId || emp.regNo}</div>
+                                        </div>
                                     </div>
-                                )}
-                        </motion.div>
-                    )}
+                                    <ChevronRight size={16} className="text-slate-300 group-hover:text-indigo-500 transition-all transform group-hover:translate-x-1" />
+                                </button>
+                            );
+                        })}
+                        {filteredEmployees.length === 0 && (
+                            <div className="p-6 text-center text-slate-400">
+                                <p className="text-[10px] font-black uppercase tracking-widest">No matching employee found</p>
+                            </div>
+                        )}
+                    </motion.div>
                 </AnimatePresence>
 
                 {/* <div className="mt-6 flex flex-col gap-3">

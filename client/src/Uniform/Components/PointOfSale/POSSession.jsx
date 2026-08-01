@@ -544,6 +544,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     const totalOfferDiscount = cartWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.price || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
 
+
+
     const handleShowItemOffers = (item) => {
         setSelectedItemForOffers(item);
         setShowItemOfferModal(true);
@@ -876,7 +878,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
             const initialFulfillments = allocateStock(1, stockDetails, retailStoreId);
 
-            return [...prev, {
+            return [{
                 ...product,
                 itemId,
                 Item: masterItem,
@@ -893,10 +895,10 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 sourceStoreId: retailStoreId,
                 barcodeType: barcodeDetails?.barcodeType,
                 isExchangeItem: forceNewItem,
-            }];
+            }, ...prev];
         });
 
-        const existingItem = cart.find(item => {
+        const existingItemIndex = cart.findIndex(item => {
             const isIdMatch = (item.itemId === itemId) || (item.id === itemId);
             const isSizeMatch = (item.sizeId || 0) === (sizeId || 0);
             const isColorMatch = (item.colorId || 0) === (colorId || 0);
@@ -905,6 +907,14 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             const isReturnMatch = !!item.isReturn === !!product.isReturn;
             return isIdMatch && isSizeMatch && isColorMatch && isUomMatch && isBarcodeMatch && isReturnMatch;
         });
+
+        const existingItem = existingItemIndex > -1 ? cart[existingItemIndex] : null;
+
+        if (existingItemIndex > -1) {
+            setActiveRowIndex(existingItemIndex);
+        } else {
+            setActiveRowIndex(0);
+        }
 
         if (!existingItem || !existingItem.salesPersonId) {
             setShowSalesPersonModal(true);
@@ -1614,7 +1624,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
         setCart(prev => {
             const filteredCart = prev.filter(item => !(item.isReturn && item.retunBillId === bill.id));
-            return [...filteredCart, ...returnItems];
+            return [...returnItems, ...filteredCart];
         });
 
         Swal.fire({

@@ -53,6 +53,7 @@ const SalesDelivery = () => {
     const [courierCharge, setCourierCharge] = useState("");
     const [receivedAmount, setReceivedAmount] = useState("");
     const [remainingPaymentCapacity, setRemainingPaymentCapacity] = useState("");
+    const [linkedSaleOrderId, setLinkedSaleOrderId] = useState();
 
     const { branchId, userId, companyId, finYearId } = getCommonParams();
 
@@ -83,6 +84,7 @@ const SalesDelivery = () => {
     useEffect(() => {
         if (saleOrderToConvertData?.data && convertSaleOrderId) {
             const saleOrderData = saleOrderToConvertData?.data;
+            setLinkedSaleOrderId(convertSaleOrderId)
             setId("");
             setCustomerId(saleOrderData.customerId);
             setDeliveryItems(saleOrderData.remaingSaleOrderItems || []);
@@ -182,6 +184,7 @@ const SalesDelivery = () => {
         setPartyId('')
         dispatch(push({ name: "SALES DELIVERY", projectId: null }));
         setDeliveryItems([])
+        setLinkedSaleOrderId("")
     }
 
     return (
@@ -189,7 +192,7 @@ const SalesDelivery = () => {
             {showManufacturer ? (
                 <div className="h-[calc(100vh-5rem)] min-h-0 overflow-hidden">
                     <SalesDeliveryForm
-                        onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev) }} id={id} setId={setId}
+                        onClose={() => { setShowManufacturer(false); setReadOnly(prev => !prev); onNew(); setLinkedSaleOrderId("") }} id={id} setId={setId}
                         docId={docId} setDocId={setDocId} date={date} setDate={setDate} readOnly={readOnly} setReadOnly={setReadOnly}
                         transType={transType} setTransType={setTransType} dcNo={dcNo} setDcNo={setDcNo} dcDate={dcDate} setDcDate={setDcDate}
                         customerId={customerId} setCustomerId={setCustomerId} payTermId={payTermId} setPayTermId={setPayTermId}
@@ -220,6 +223,8 @@ const SalesDelivery = () => {
                         receivedAmount={receivedAmount}
                         setReceivedAmount={setReceivedAmount}
 
+                        linkedSaleOrderId={linkedSaleOrderId}
+                        setLinkedSaleOrderId={setLinkedSaleOrderId}
 
                     />
 

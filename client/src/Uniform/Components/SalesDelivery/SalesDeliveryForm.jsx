@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, ReusableSearchableInput, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInput } from "../../../Inputs";
@@ -45,7 +45,9 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   shippingChargeEnabled, setShippingChargeEnabled,
   shippingCharge, setShippingCharge,
   courierChargeEnabled, setCourierChargeEnabled,
-  courierCharge, setCourierCharge, receivedAmount, setReceivedAmount
+  courierCharge, setCourierCharge, receivedAmount, setReceivedAmount,
+  linkedSaleOrderId,
+  setLinkedSaleOrderId,
 
 
 
@@ -79,7 +81,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
   const [taxMethod, setTaxMethod] = useState("WithoutTax")
   const [isHeaderOpen, setIsHeaderOpen] = useState(true);
-  const [linkedSaleOrderId, setLinkedSaleOrderId] = useState(convertSaleOrderId || "");
+  // const [linkedSaleOrderId, setLinkedSaleOrderId] = useState(convertSaleOrderId || "");
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
 
 
@@ -217,11 +219,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     }
   }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
-  // useEffect(() => {
-  //   if (!id && selectedSaleOrderData?.data?.deliveryMarginPercent !== undefined && selectedSaleOrderData?.data?.deliveryMarginPercent !== null) {
-  //     setDeliveryMarginPercent(String(selectedSaleOrderData.data.deliveryMarginPercent));
-  //   }
-  // }, [selectedSaleOrderData, id]);
+
 
   const data = {
     docId,
@@ -333,7 +331,81 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
 
 
-  console.log(deliveryItems, "deliveryItems")
+  // Global calculation for Sale Order pending value, margin value, and allowed limit
+  const {
+    itemsPendingValue,
+    totalSaleOrderPendingValue,
+    receivedPayment,
+    marginPercent,
+    pendingValueAfter,
+    marginValue,
+    allowedLimit,
+  } = useMemo(() => {
+    if (!linkedSaleOrderId || !selectedSaleOrderData?.data) {
+      return {
+        itemsPendingValue: 0,
+        totalSaleOrderPendingValue: 0,
+        receivedPayment: 0,
+        marginPercent: 50.0,
+        pendingValueAfter: 0,
+        marginValue: 0,
+        allowedLimit: 0,
+      };
+    }
+
+    const saleOrderItems = selectedSaleOrderData.data.remaingSaleOrderItems || [];
+
+    const itemsPending = saleOrderItems.reduce((sum, item) => {
+      const qty = parseFloat(item.balanceQty || 0);
+      const price = parseFloat(item.price || 0);
+      const taxPercent = parseFloat(item.taxPercent || 0);
+      const taxMethod = item.taxMethod || "Inclusive";
+      const discountType = item.discountType;
+      const discountValue = parseFloat(item.discountValue || 0);
+
+      const gross = price * qty;
+      let discountedAmount = gross;
+      if (discountType === "Percentage") {
+        discountedAmount = gross - (gross * discountValue) / 100;
+      } else if (discountType === "Flat") {
+        discountedAmount = gross - discountValue;
+      }
+      discountedAmount = Math.max(0, discountedAmount);
+
+      let net = 0;
+      if (taxMethod === "Inclusive" && taxPercent > 0) {
+        net = discountedAmount;
+      } else {
+        const subTotal = discountedAmount;
+        const taxAmount = subTotal * (taxPercent / 100);
+        net = subTotal + taxAmount;
+      }
+      return sum + net;
+    }, 0);
+
+    const otherCharges =
+      (selectedSaleOrderData.data.packingChargeEnabled ? parseFloat(selectedSaleOrderData.data.packingCharge || 0) : 0) +
+      (selectedSaleOrderData.data.shippingChargeEnabled ? parseFloat(selectedSaleOrderData.data.shippingCharge || 0) : 0) +
+      (selectedSaleOrderData.data.courierChargeEnabled ? parseFloat(selectedSaleOrderData.data.courierCharge || 0) : 0);
+
+    const totalPending = itemsPending + otherCharges;
+    const payment = parseFloat(selectedSaleOrderData.data.totalReceivedAmount || receivedAmount || 0);
+    const margin = deliveryMarginPercent ? parseFloat(deliveryMarginPercent) : 50.0;
+
+    const pendingAfter = Math.max(0, totalPending);
+    const mValue = pendingAfter * (margin / 100);
+    const limit = Math.max(0, payment - mValue);
+
+    return {
+      itemsPendingValue: itemsPending,
+      totalSaleOrderPendingValue: totalPending,
+      receivedPayment: payment,
+      marginPercent: margin,
+      pendingValueAfter: pendingAfter,
+      marginValue: mValue,
+      allowedLimit: limit,
+    };
+  }, [linkedSaleOrderId, selectedSaleOrderData, deliveryMarginPercent, receivedAmount]);
 
 
 
@@ -380,67 +452,11 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     }
 
     if (linkedSaleOrderId && selectedSaleOrderData?.data) {
-      const saleOrderItems = selectedSaleOrderData.data.remaingSaleOrderItems || [];
-
-      const itemsPendingValue = saleOrderItems.reduce((sum, item) => {
-        const qty = parseFloat(item.balanceQty || 0);
+      const adjustedNetAmount = (data?.deliveryItems || []).reduce((sum, item) => {
+        const qty = parseFloat(item.deliveryQty || 0);
         const price = parseFloat(item.price || 0);
-        const taxPercent = parseFloat(item.taxPercent || 0);
-        const taxMethod = item.taxMethod || "Inclusive";
-        const discountType = item.discountType;
-        const discountValue = parseFloat(item.discountValue || 0);
-
-        const gross = price * qty;
-        let discountedAmount = gross;
-        if (discountType === "Percentage") {
-          discountedAmount = gross - (gross * discountValue) / 100;
-        } else if (discountType === "Flat") {
-          discountedAmount = gross - discountValue;
-        }
-        discountedAmount = Math.max(0, discountedAmount);
-
-        let net = 0;
-        if (taxMethod === "Inclusive" && taxPercent > 0) {
-          net = discountedAmount;
-        } else {
-          const subTotal = discountedAmount;
-          const taxAmount = subTotal * (taxPercent / 100);
-          net = subTotal + taxAmount;
-        }
-        return sum + net;
+        return sum + (qty * price);
       }, 0);
-
-      const otherCharges =
-        (selectedSaleOrderData.data.packingChargeEnabled ? parseFloat(selectedSaleOrderData.data.packingCharge || 0) : 0) +
-        (selectedSaleOrderData.data.shippingChargeEnabled ? parseFloat(selectedSaleOrderData.data.shippingCharge || 0) : 0) +
-        (selectedSaleOrderData.data.courierChargeEnabled ? parseFloat(selectedSaleOrderData.data.courierCharge || 0) : 0);
-
-      const totalSaleOrderPendingValue = itemsPendingValue + otherCharges;
-      const receivedPayment = parseFloat(selectedSaleOrderData.data.totalReceivedAmount || receivedAmount || 0);
-      const marginPercent = deliveryMarginPercent ? parseFloat(deliveryMarginPercent) : 50.0;
-
-      // Calculate net amount of the old delivery if editing, to compute the net change in pending order value
-      let oldDeliveryNetAmount = 0;
-
-      const pendingValueAfter = Math.max(0, totalSaleOrderPendingValue);
-      const marginValue = pendingValueAfter * (marginPercent / 100);
-      const allowedLimit = Math.max(0, receivedPayment - marginValue);
-
-      console.log(
-        {
-          itemsPendingValue,
-          totalSaleOrderPendingValue,
-          oldDeliveryNetAmount,
-          adjustedNetAmount,
-          pendingValueAfter,
-          marginValue,
-          allowedLimit
-        }
-      )
-
-      console.log(totalSaleOrderPendingValue, oldDeliveryNetAmount, adjustedNetAmount, "totalSaleOrderPendingValue, oldDeliveryNetAmount, adjustedNetAmount", totalSaleOrderPendingValue + (oldDeliveryNetAmount - adjustedNetAmount), pendingValueAfter)
-
-
 
       if (adjustedNetAmount > allowedLimit) {
         Swal.fire({
@@ -523,7 +539,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
 
 
   function getTotalQty() {
-    let qty = deliveryItems?.reduce((acc, curr) => { return acc + parseFloat(curr?.qty ? curr?.qty : 0) }, 0)
+    let qty = deliveryItems?.reduce((acc, curr) => { return acc + parseFloat(curr?.deliveryQty ? curr?.deliveryQty : 0) }, 0)
     return parseFloat(qty || 0).toFixed(3)
   }
   const calculateTotals = () => {
@@ -598,7 +614,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
             onChange={(event) => setPackingCharge(event.target.value)}
             onBlur={() => setPackingCharge(formatChargeValue(packingCharge))}
             readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            className={`h-5 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
         ),
       }]
@@ -615,7 +631,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
             onChange={(event) => setShippingCharge(event.target.value)}
             onBlur={() => setShippingCharge(formatChargeValue(shippingCharge))}
             readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            className={`h-5 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
         ),
       }]
@@ -632,7 +648,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
             onChange={(event) => setCourierCharge(event.target.value)}
             onBlur={() => setCourierCharge(formatChargeValue(courierCharge))}
             readOnly={readOnly}
-            className={`h-7 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
+            className={`h-5 w-24 rounded border border-slate-300 px-1.5 py-0 text-right text-[11px] focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-200 ${readOnly ? "cursor-not-allowed bg-slate-100 text-slate-500" : "bg-white"}`}
           />
         ),
       }]
@@ -659,40 +675,6 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
     setContextMenu(null);
   };
 
-  // const summaryItems = [
-  //   { label: "No", value: docId },
-  //   { label: "Date", value: date },
-  //   { label: "Sale Order", value: linkedSaleOrderDocId || "" },
-  //   {
-  //     label: "Customer",
-  //     value:
-  //       supplierDetails?.data?.name ||
-  //       findFromList(customerId, supplierList?.data, "name") ||
-  //       findFromList(customerId, supplierList?.data, "aliasName"),
-  //   },
-  //   {
-  //     label: "Phone",
-  //     value:
-  //       supplierDetails?.data?.contactPersonNumber ||
-  //       findFromList(customerId, supplierList?.data, "contactPersonNumber"),
-  //   },
-  //   {
-  //     label: "Address",
-  //     value:
-  //       supplierDetails?.data?.address ||
-  //       findFromList(customerId, supplierList?.data, "address"),
-  //   },
-  //   ...(linkedSaleOrderId ? [
-  //     {
-  //       label: "Received Payment",
-  //       value: `Rs.${parseFloat(effectiveTotalReceivedAmount || 0).toFixed(2)}`,
-  //     },
-  //     {
-  //       label: "Remaining Capacity",
-  //       value: `Rs.${parseFloat(effectiveRemainingPaymentCapacity || 0).toFixed(2)}`,
-  //     },
-  //   ] : []),
-  // ];
 
   const handleTermTemplateChange = (value) => {
     setTerm(value);
@@ -713,47 +695,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
         label: blend?.name,
         templateText: blend?.termsAndCondition || blend?.description || "",
       }))}
-      // chargeOptions={[
-      //   {
-      //     key: "packingChargeToggle",
-      //     label: "Packing",
-      //     checked: packingChargeEnabled,
-      //     onToggle: (checked) => {
-      //       setPackingChargeEnabled(checked);
-      //       if (!checked) {
-      //         setPackingCharge("");
-      //       } else if (!packingCharge) {
-      //         setPackingCharge("0.00");
-      //       }
-      //     },
-      //   },
-      //   {
-      //     key: "shippingChargeToggle",
-      //     label: "Shipping",
-      //     checked: shippingChargeEnabled,
-      //     onToggle: (checked) => {
-      //       setShippingChargeEnabled(checked);
-      //       if (!checked) {
-      //         setShippingCharge("");
-      //       } else if (!shippingCharge) {
-      //         setShippingCharge("0.00");
-      //       }
-      //     },
-      //   },
-      //   {
-      //     key: "courierChargeToggle",
-      //     label: "Courier",
-      //     checked: courierChargeEnabled,
-      //     onToggle: (checked) => {
-      //       setCourierChargeEnabled(checked);
-      //       if (!checked) {
-      //         setCourierCharge("");
-      //       } else if (!courierCharge) {
-      //         setCourierCharge("0.00");
-      //       }
-      //     },
-      //   },
-      // ]}
+
       chargeOptions={[
         {
           key: "packingChargeToggle",
@@ -861,14 +803,15 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       ]}
       leftActions={
         <>
-          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-            <FiSave className="w-4 h-4 mr-2" />
-            Save & New
-          </button>
           <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
             <HiOutlineRefresh className="w-4 h-4 mr-2" />
             Save & Close
           </button>
+          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <FiSave className="w-4 h-4 mr-2" />
+            Save & New
+          </button>
+
         </>
       }
       rightActions={
@@ -1087,7 +1030,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                 disabled
                 required
               />
-              <div className="col-span-3">
+              {/* <div className="col-span-3">
                 <TextAreaNew
                   name="Address"
                   rows={1}
@@ -1098,8 +1041,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                   }
                   disabled
                 />
-              </div>
-              <div className="col-span-4 flex flex-row gap-2">
+              </div> */}
+              <div className="col-span-6 flex flex-row gap-2">
                 <div className="flex-1 min-w-[80px]">
                   <DropdownInput
                     name="Linked Sale Order"
@@ -1161,6 +1104,15 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                     min="0"
                     max="100"
                     readOnly={readOnly}
+                  />
+                </div>
+                <div className="w-32">
+                  <TextInput
+                    name="Allowed Limit Value"
+                    className={"text-right"}
+                    value={allowedLimit ? allowedLimit.toFixed(2) : "0.00"}
+                    disabled
+                    required
                   />
                 </div>
               </div>

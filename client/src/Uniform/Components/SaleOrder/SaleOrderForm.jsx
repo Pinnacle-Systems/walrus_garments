@@ -832,18 +832,19 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       ]}
       leftActions={
         <>
-          <button onClick={() => saveData("new")}
-            disabled={readOnly}
-            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-            <FiSave className="w-4 h-4 mr-2" />
-            Save & New
-          </button>
           <button onClick={() => saveData("close")}
             disabled={readOnly}
             className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
             <HiOutlineRefresh className="w-4 h-4 mr-2" />
             Save & Close
           </button>
+          <button onClick={() => saveData("new")}
+            disabled={readOnly}
+            className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <FiSave className="w-4 h-4 mr-2" />
+            Save & New
+          </button>
+
         </>
       }
       rightActions={

@@ -15,14 +15,19 @@ import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 
 
 
+import { usePermissionForUsers } from "../../../Basic/components/HasPermission";
+
 const PaymentFormReport = ({
     onClick,
     onView,
     itemsPerPage = 10,
     onEdit,
     onDelete,
+    hasPermission: propHasPermission,
     rowActions = true,
 }) => {
+    const { hasPermission: hookHasPermission } = usePermissionForUsers();
+    const hasPermission = propHasPermission || hookHasPermission;
 
 
     const { branchId, finYearId, userId, companyId } = getCommonParams();
@@ -333,7 +338,7 @@ const PaymentFormReport = ({
                                                         {onView && (
                                                             <button
                                                                 className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
-                                                                onClick={() => onView(dataObj.id)}
+                                                                onClick={() => hasPermission(() => onView(dataObj.id), "read")}
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -344,7 +349,7 @@ const PaymentFormReport = ({
                                                         {onEdit && (
                                                             <button
                                                                 className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                                                onClick={() => onEdit(dataObj.id)}
+                                                                onClick={() => hasPermission(() => onEdit(dataObj.id), "edit")}
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -357,7 +362,7 @@ const PaymentFormReport = ({
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     if (dataObj.isDeletable !== false) {
-                                                                        onDelete(dataObj.id);
+                                                                        hasPermission(() => onDelete(dataObj.id), "delete");
                                                                     }
                                                                 }}
                                                                 disabled={dataObj.isDeletable === false}

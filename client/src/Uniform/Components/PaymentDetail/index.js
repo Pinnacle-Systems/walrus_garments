@@ -27,10 +27,12 @@ import PaymentForm from './PayementForm.js';
 import Swal from 'sweetalert2';
 import PaymentFormReport from './PaymentDetailsReport.js';
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
 
 const MODEL = "Payments";
 
 export default function Form() {
+  const { hasPermission } = usePermissionForUsers();
   const today = new Date().toISOString().split('T')[0];
 
 
@@ -129,6 +131,8 @@ export default function Form() {
     setBillAmount("");
     setPaymentHistory([])
     setOutStandingAmount(0)
+    setTransactionId("")
+    setTransactionType("")
   }
 
 
@@ -187,6 +191,7 @@ export default function Form() {
       }
     }
   };
+
   return (
 
 
@@ -196,7 +201,7 @@ export default function Form() {
         <PaymentForm
           id={id}
           setId={setId}
-          onClose={() => setPurchaseOrderForm(false)}
+          onClose={() => { setPurchaseOrderForm(false); setTransactionId(""); setTransactionType(""); setSupplierId("") }}
           initialReadOnly={formReadOnly}
           initialTransactionType={currentTab?.transactionType}
           initialTransactionId={currentTab?.id}
@@ -261,7 +266,7 @@ export default function Form() {
 
             <button
               className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-xs"
-              onClick={() => { setPurchaseOrderForm(true); onNew() }}
+              onClick={() => hasPermission(() => { setPurchaseOrderForm(true); onNew(); }, "create")}
             >
               <FaPlus /> Create New
             </button>
@@ -271,6 +276,7 @@ export default function Form() {
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              hasPermission={hasPermission}
               itemsPerPage={10}
             />
           </div>

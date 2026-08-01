@@ -1139,6 +1139,7 @@ const PaymentForm = ({
                                     onChange={handleChange}
                                     readOnly={readOnly}
                                     disabled={readOnly}
+                                    onFocus={(e) => e.target.select()}
                                     className={`w-full px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-emerald-500 ${readOnly ? "bg-slate-100 text-slate-500 cursor-not-allowed" : ""
                                         }`}
                                     placeholder="0"

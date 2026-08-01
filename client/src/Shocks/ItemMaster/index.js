@@ -1935,28 +1935,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                           searchable={true}
                         />
                       </div>
-                      {/* <div className="col-span-2">
-                      <DropdownInput
-                        name="Sub Category"
-                        options={dropDownListObject(
-                          id ? itemCategoryData?.data?.filter(item => item.id != mainCategory) : itemCategoryData?.data?.filter(item => item.active && item.id != mainCategory),
-                          "name",
-                          "id"
-                        )}
-                        value={subCategory}
-                        setValue={setSubCategory}
-                        required
-                        readOnly={readOnly || !mainCategory}
-                        disabled={childRecord > 0}
-                      />
-                    </div> */}
-
-
-
-                      {/* <div className="col-span-2">
-
-                    </div> */}
-
                       {Object.keys(fields).map((key) => (
                         <div
                           key={key}
@@ -2022,15 +2000,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                     required={true}
                                   />
                                 </div>
-                                {/* <div className="col-span-2">
-                                  <TextInputNew1
-                                    name="Offer Price"
-                                    value={offerPrice}
-                                    setValue={setOfferPrice}
-                                    readOnly={readOnly}
-                                    disabled={childRecord > 0}
-                                  />
-                                </div> */}
+
                                 <div className="col-span-3 mt-5">
                                   <button
                                     type="button"

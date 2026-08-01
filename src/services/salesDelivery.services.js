@@ -480,6 +480,9 @@ async function create(body) {
                 }
             });
 
+            const warehouse = await tx.location.findFirst({
+                where: { storeName: "WAREHOUSE" }
+            });
             const retailStore = await tx.location.findFirst({
                 where: { storeName: "RETAIL" }
             });
@@ -498,7 +501,7 @@ async function create(body) {
                             itemId: parseInt(item.itemId),
                             sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                             colorId: item.colorId ? parseInt(item.colorId) : null,
-                            storeId: { in: [retailStore.id, discountSection?.id].filter(Boolean) },
+                            storeId: { in: [warehouse.id].filter(Boolean) },
                             branchId: branchId ? parseInt(branchId) : undefined,
                             barcode: item?.barcode ? item?.barcode : undefined,
                         }
@@ -521,7 +524,7 @@ async function create(body) {
                         const colorName = colorData?.name || "";
                         const sizeName = sizeData?.name || "";
 
-                        throw new Error(`Item "${itemName}" ---- "${colorName}" ----- "${sizeName}" has only ${availableQty.toFixed(2)}  available in stock.`);
+                        throw new Error(`Item "${itemName}" ----  "${sizeName}" ---- "${colorName}" - has only ${availableQty.toFixed(2)}  available in stock.`);
                     }
                 }
             }
@@ -609,8 +612,7 @@ async function create(body) {
             }
 
             const allocations = persistedDeliveryItems.map((item) => {
-                const isClearance = item.barcodeType && (item.barcodeType.toUpperCase() === "CLEARANCE" || item.barcodeType.toUpperCase() === "CLEARENCE");
-                const targetStoreId = isClearance ? discountSection?.id : retailStore?.id;
+
 
                 return {
                     salesDeliveryId: parseInt(data.id),
@@ -620,7 +622,7 @@ async function create(body) {
                     sizeId: item.sizeId,
                     colorId: item.colorId,
                     uomId: item.uomId,
-                    storeId: targetStoreId || 9,
+                    storeId: warehouse.id || 9,
                     branchId: branchId ? parseInt(branchId) : null,
                     barcode: item.barcode || null,
                     allocatedQty: parseAmount(item.deliveryQty),
@@ -820,7 +822,7 @@ async function update(id, body) {
                             itemId: parseInt(item.itemId),
                             sizeId: item.sizeId ? parseInt(item.sizeId) : null,
                             colorId: item.colorId ? parseInt(item.colorId) : null,
-                            storeId: { in: [retailStore.id, discountSection?.id].filter(Boolean) },
+                            // storeId: { in: [retailStore.id, discountSection?.id].filter(Boolean) },
                             branchId: branchId ? parseInt(branchId) : undefined,
                             courierChargeEnabled: Boolean(courierChargeEnabled),
                             courierCharge: courierChargeEnabled ? String(courierCharge || 0) : null,
