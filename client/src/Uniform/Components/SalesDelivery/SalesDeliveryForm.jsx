@@ -859,6 +859,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       const filteredItems = deliveryItems?.filter(i => i.itemId) || [];
       const items = filteredItems.map(item => ({
         ...item,
+        qty: item.deliveryQty,
         itemName: itemList?.data?.find(i => String(i.id) === String(item.itemId))?.name || item?.itemName || "",
         sizeName: sizeList?.data?.find(i => String(i.id) === String(item.sizeId))?.name || item?.sizeName || "",
         colorName: colorList?.data?.find(i => String(i.id) === String(item.colorId))?.name || item?.colorName || "",
@@ -946,7 +947,10 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
             date={date}
             branchData={findFromList(branchId, branchList?.data, "all")}
             customerData={supplierDetails?.data}
-            items={deliveryItems?.filter(i => i.itemId)}
+            items={deliveryItems?.filter(i => i.itemId)?.map((i) => ({
+              ...i,
+              qty: i.deliveryQty,
+            }))}
             remarks={remarks}
             itemList={itemList?.data}
             sizeList={sizeList?.data}

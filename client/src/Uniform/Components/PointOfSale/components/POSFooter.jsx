@@ -64,9 +64,13 @@ const POSFooter = ({
                     </button>
                 ))}
             </div>
-            <div className="text-xs font-black text-slate-700 flex gap-4 uppercase tracking-[0.2em] border-r border-slate-100 pr-6 shrink-0">
-                <span>Rows: {cart.length}</span>
-                <span>Total Pcs: {cart.reduce((s, i) => s + (Number(i.qty) || 0), 0)}</span>
+            <div className="text-xs font-black text-slate-700 flex items-center gap-3 uppercase tracking-[0.15em] pr-4 shrink-0">
+                <span className="bg-slate-100 px-2.5 py-1 rounded-lg text-slate-700 font-bold flex items-center">
+                    Rows: <strong className="font-black text-slate-900 text-sm ml-1.5">{cart.length}</strong>
+                </span>
+                <span className="bg-indigo-50 text-indigo-950 px-3 py-1 rounded-lg border border-indigo-200 font-bold flex items-center shadow-xs">
+                    Total Qty: <strong className="text-indigo-700 text-base font-extrabold ml-1.5">{cart.reduce((s, i) => s + (Number(i.qty) || 0), 0)}</strong>
+                </span>
             </div>
         </footer>
     );
