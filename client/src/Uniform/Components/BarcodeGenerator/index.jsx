@@ -10,10 +10,10 @@ const BarcodeGenerator = ({ value, isUi = false, width = 100, height = 30 }) => 
     const canvas = document.createElement("canvas");
     JsBarcode(canvas, value, {
       format: "CODE128",
-      width: 1.5,
-      height: 40,
+      width: 2,
+      height: 50,
       displayValue: false,
-      margin: 10,
+      margin: 0,
     });
     setBarcode(canvas.toDataURL("image/png"));
   }, [value]);
