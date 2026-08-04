@@ -70,7 +70,7 @@ export function buildSalesReceiptInstructions(printPayload) {
   instructions.push({ type: 'text', value: `Date : ${formatDateTime(date)}`, align: 'right', bold: true });
 
   instructions.push({ type: 'line' });
-  instructions.push({ type: 'text', value: '# S.No Name', bold: true });
+  instructions.push({ type: 'text', value: `# ${'    '} Name`, bold: true });
   instructions.push({ type: 'leftRight', left: '  Qty             Price', right: 'Amount', bold: true });
   instructions.push({ type: 'line' });
 
@@ -89,7 +89,7 @@ export function buildSalesReceiptInstructions(printPayload) {
     if (sizeName) name += ` ${sizeName}`;
     if (colorName) name += ` ${colorName}`;
 
-    instructions.push({ type: 'text', value: `${index + 1} ${name || ' '}`, bold: true });
+    instructions.push({ type: 'text', value: `${index + 1} ${'    '}   ${name || ' '}`, bold: true });
 
     // if (item.hsnCode) {
     //   instructions.push({ type: 'text', value: `HSN: ${item.hsnCode}` });
