@@ -395,7 +395,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       return data?.parentId && data?.branchTypeId;
     }
 
-    const baseFields = (data?.isClient || data?.isSupplier) && data.name
+    const baseFields = (data?.isClient || data?.isSupplier) && data.name && data?.cityId
 
     if (!baseFields) return false;
 
@@ -1284,7 +1284,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                               // lastTab={activeTab}
                               value={city}
                               setValue={setCity}
-                              // required={true}
+                              required={true}
                               readOnly={readOnly}
                               className="focus:ring-2 focus:ring-blue-100"
                               addNewLabel="+ Add New City"
@@ -2110,7 +2110,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                                 // lastTab={activeTab}
                                 value={city}
                                 setValue={setCity}
-                                // required={true}
+                                required={true}
                                 readOnly={readOnly}
                                 className="focus:ring-2 focus:ring-blue-100"
                                 addNewLabel="+ Add New City"

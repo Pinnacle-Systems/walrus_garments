@@ -91,9 +91,9 @@ export function buildSalesReceiptInstructions(printPayload) {
 
     instructions.push({ type: 'text', value: `${index + 1} ${name || ' '}`, bold: true });
 
-    if (item.hsnCode) {
-      instructions.push({ type: 'text', value: `HSN: ${item.hsnCode}` });
-    }
+    // if (item.hsnCode) {
+    //   instructions.push({ type: 'text', value: `HSN: ${item.hsnCode}` });
+    // }
 
     const qtyStr = `  ${qty}Pcs`.padEnd(18, ' ');
     const priceStr = rate.toFixed(2);
@@ -110,7 +110,7 @@ export function buildSalesReceiptInstructions(printPayload) {
   });
 
   instructions.push({ type: 'line' });
-  instructions.push({ type: 'leftRight', left: 'Total Items:', right: `${items.length} (Qty: ${totalQty})` });
+  instructions.push({ type: 'leftRight', left: 'Total Qty:', right: `${totalQty}` });
 
   if (summary.subtotal > 0) {
     instructions.push({ type: 'leftRight', left: 'Taxable Amount :', right: summary.subtotal.toFixed(2) });
@@ -118,18 +118,18 @@ export function buildSalesReceiptInstructions(printPayload) {
 
   if (summary.igst > 0) {
     instructions.push({ type: 'leftRight', left: 'IGST :', right: summary.igst.toFixed(2) });
-    // } else {
-    //   if (summary.cgst > 0) {
-    //     instructions.push({ type: 'leftRight', left: 'CGST :', right: summary.cgst.toFixed(2) });
-    //   }
-    //   if (summary.sgst > 0) {
-    //     instructions.push({ type: 'leftRight', left: 'SGST :', right: summary.sgst.toFixed(2) });
-    //   }
+  } else {
+    if (summary.cgst > 0) {
+      instructions.push({ type: 'leftRight', left: 'CGST :', right: summary.cgst.toFixed(2) });
+    }
+    if (summary.sgst > 0) {
+      instructions.push({ type: 'leftRight', left: 'SGST :', right: summary.sgst.toFixed(2) });
+    }
   }
 
-  if (summary.tax > 0) {
-    instructions.push({ type: 'leftRight', left: 'Tax Amount :', right: summary.tax.toFixed(2) });
-  }
+  // if (summary.tax > 0) {
+  //   instructions.push({ type: 'leftRight', left: 'Tax Amount :', right: summary.tax.toFixed(2) });
+  // }
 
   if (summary.packingCharge > 0) {
     instructions.push({ type: 'leftRight', left: 'Packing Charge :', right: summary.packingCharge.toFixed(2) });
