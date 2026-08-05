@@ -35,10 +35,11 @@ export function buildSalesReceiptInstructions(printPayload) {
     advanceAmount,
     advanceReceivedAmount,
     branchData,
-    title = 'SALES INVOICE'
+    title = 'SALES INVOICE',
+    isOutside = false
   } = printPayload || {};
 
-  console.log(items, "items")
+  console.log(summary, "summary", isOutside)
   console.log(customerData, "customerData")
 
   const instructions = [];
@@ -116,7 +117,7 @@ export function buildSalesReceiptInstructions(printPayload) {
     instructions.push({ type: 'leftRight', left: 'Taxable Amount :', right: summary.subtotal.toFixed(2) });
   }
 
-  if (summary.igst > 0) {
+  if (summary.igst > 0 && isOutside) {
     instructions.push({ type: 'leftRight', left: 'IGST :', right: summary.igst.toFixed(2) });
   } else {
     if (summary.cgst > 0) {

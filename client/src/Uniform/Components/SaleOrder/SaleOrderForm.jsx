@@ -933,7 +933,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
           courierCharge: cCharge,
           netAmount: adjustedNetAmount,
           advanceAmount: advanceReceivedAmount,
-        }
+        },
+        isOutside
       };
 
       const instructions = buildSalesReceiptInstructions(printData);

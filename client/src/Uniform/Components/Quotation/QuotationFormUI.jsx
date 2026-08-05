@@ -845,7 +845,8 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           courierCharge: cCharge,
           roundOff: adjustedNetAmount - (netAmount + pCharge + sCharge + cCharge),
           advanceAmount: advanceAmountVal
-        }
+        },
+        isOutside
       };
 
       const instructions = buildSalesReceiptInstructions(printData);
