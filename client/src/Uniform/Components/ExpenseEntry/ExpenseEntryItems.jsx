@@ -14,7 +14,7 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
     const compactNumberInputClassName = "h-full w-full rounded-none border-0 bg-transparent px-1 py-0 text-right outline-none focus:outline-none text-[10px]";
 
     const handleInputChange = (value, index, field) => {
-        const newItems = [...expenseItems];
+        const newItems = structuredClone(expenseItems)
         newItems[index][field] = value;
         setExpenseItems(newItems);
     };

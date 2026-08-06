@@ -39,14 +39,15 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 }
 
 async function get(req) {
-    const { companyId, active } = req.query
+    const { branchId } = req.query
 
     let data = await prisma.Expense.findMany({
         where: {
-            // companyId: companyId ? parseInt(companyId) : undefined,
-            // active: active ? Boolean(active) : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
         },
-
+        orderBy: {
+            id: 'desc'
+        }
     });
 
 

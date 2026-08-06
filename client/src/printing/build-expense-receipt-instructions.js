@@ -59,16 +59,30 @@ export function buildExpenseReceiptInstructions(printPayload) {
 
   // 3. Expense Items Table
   let totalAmount = 0;
-  expenseItems.forEach((item, index) => {
+  const filteredItems = expenseItems.filter(i => i && (i.expenseCategoryId || i.amount));
+
+  filteredItems.forEach((item, index) => {
     const amt = parseFloat(item.amount || 0);
     totalAmount += amt;
 
     const catName = item.expenseCategoryName || item.categoryName || findFromList(item.expenseCategoryId, expenseTypeList, 'name') || 'General Expense';
-    const desc = item.description ? ` (${item.description})` : '';
-    const lineLabel = `${index + 1}. ${catName}${desc}`;
-    const priceStr = `₹${amt.toFixed(2)}`;
+    const priceStr = `Rs. ${amt.toFixed(2)}`;
 
-    instructions.push({ type: 'leftRight', left: lineLabel, right: priceStr });
+    // Category Name & Amount on main line
+    instructions.push({
+      type: 'leftRight',
+      left: `${index + 1}. ${catName}`,
+      right: priceStr,
+      bold: true
+    });
+
+    // Indented description on sub-line for clean text wrapping
+    if (item.description && item.description.trim()) {
+      instructions.push({
+        type: 'text',
+        value: `   (${item.description.trim()})`
+      });
+    }
   });
 
   instructions.push({ type: 'line' });
@@ -77,7 +91,7 @@ export function buildExpenseReceiptInstructions(printPayload) {
   instructions.push({
     type: 'leftRight',
     left: 'TOTAL EXPENSE:',
-    right: `₹${totalAmount.toFixed(2)}`,
+    right: `Rs. ${totalAmount.toFixed(2)}`,
     bold: true
   });
 

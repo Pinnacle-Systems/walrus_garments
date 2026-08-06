@@ -147,7 +147,12 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
         setDate(data?.date ? moment.utc(data.date).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
         setExpenseItems(data?.ExpenseEntryItems ? data.ExpenseEntryItems : []);
         setDocId(data?.docId ? data?.docId : "New");
-        setIsBlocked((moment.utc(data?.date || today).format("YYYY-MM-DD") !== moment.utc(today).format("YYYY-MM-DD")) && !isAdmin)
+        setIsBlocked(
+            !isAdmin &&
+            !moment.utc(data?.date ?? today).isSame(moment.utc(today), "day")
+        );
+
+
 
     }, []);
 
