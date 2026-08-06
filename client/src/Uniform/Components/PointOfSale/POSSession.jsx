@@ -1800,6 +1800,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                         setActiveRowIndex={setActiveRowIndex}
                         updateQuantity={updateQuantity}
                         handleShowItemOffers={handleShowItemOffers}
+                        getItemApplicableOffers={getItemApplicableOffers}
                         onViewStock={onViewStock}
                         employees={employees}
                         handleRowSalesPersonChange={handleRowSalesPersonChange}

@@ -9,6 +9,7 @@ const POSCartTable = ({
     setActiveRowIndex,
     updateQuantity,
     handleShowItemOffers,
+    getItemApplicableOffers,
     employees,
     handleRowSalesPersonChange,
     updateRate,
@@ -74,17 +75,14 @@ const POSCartTable = ({
                             const isActiveRow = index === activeRowIndex;
                             const isComboApplied = item.appliedOfferName && cart.filter(cit => cit.appliedOfferName && cit.appliedOfferName === item.appliedOfferName).length > 1;
                             const isHoveredCombo = hoveredOfferName && item.appliedOfferName === hoveredOfferName;
+                            const applicableOffers = getItemApplicableOffers ? getItemApplicableOffers(item) : (item.availableOffers || []);
+                            const offerCount = applicableOffers ? applicableOffers.length : 0;
 
                             return (
                                 <tr
                                     key={cartKey}
                                     onClick={() => setActiveRowIndex(index)}
-                                    // onMouseEnter={() => {
-                                    //     if (item.priceType === 'offerPrice' && isComboApplied) {
-                                    //         setHoveredOfferName(item.appliedOfferName);
-                                    //     }
-                                    // }}
-                                    // onMouseLeave={() => setHoveredOfferName(null)}
+
                                     className={`group transition-colors border-b border-slate-50 cursor-pointer ${isHoveredCombo ? 'bg-emerald-55/75 ring-2 ring-emerald-300 ring-inset shadow-sm' : (isActiveRow ? 'bg-indigo-50/60 ring-1 ring-inset ring-indigo-200' : (item.priceType === 'offerPrice' ? 'bg-emerald-50/40' : 'hover:bg-indigo-50/30'))}`}
                                 >
                                     <td className="px-2 py-1 text-center text-[10px] font-bold text-slate-400 border-r border-slate-200">{index + 1}</td>
@@ -154,10 +152,15 @@ const POSCartTable = ({
                                             <button
                                                 disabled={isReportOnly}
                                                 onClick={(e) => { e.stopPropagation(); handleShowItemOffers(item); }}
-                                                title="View Item Offers"
-                                                className="p-1 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded transition-all flex items-center justify-center border border-indigo-100 hover:border-indigo-600 shrink-0"
+                                                title={offerCount > 0 ? `${offerCount} Offer${offerCount > 1 ? 's' : ''} Available` : "View Item Offers"}
+                                                className="relative p-1 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded transition-all flex items-center justify-center border border-indigo-100 hover:border-indigo-600 shrink-0"
                                             >
                                                 <Gift size={13} fill="currentColor" />
+                                                {offerCount > 1 && (
+                                                    <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[9px] font-black rounded-full min-w-[14px] h-[14px] px-1 flex items-center justify-center border border-white shadow-xs leading-none">
+                                                        {offerCount}
+                                                    </span>
+                                                )}
                                             </button>
                                         </div>
                                     </td>

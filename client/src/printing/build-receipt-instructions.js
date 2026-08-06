@@ -186,7 +186,7 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
   });
 
   instructions.push({ type: 'line' });
-  instructions.push({ type: 'leftRight', left: 'Total Items:', right: `${items.length} (Qty: ${totalQty})` });
+  instructions.push({ type: 'leftRight', left: `Total Qty ${totalQty}` });
 
   if (summary.subtotal > 0) {
     instructions.push({ type: 'leftRight', left: 'Subtotal (Excl. Tax) :', right: summary.subtotal.toFixed(2) });
