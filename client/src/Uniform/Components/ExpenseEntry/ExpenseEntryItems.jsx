@@ -5,7 +5,7 @@ import { dropDownListObject } from "../../../Utils/contructObject";
 import SearchableTableCellSelect from "../ReusableComponents/SearchableTableCellSelect";
 
 const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, readOnly, handlers, firstInputRef,
-    movedToNextSaveNewRef }) => {
+    movedToNextSaveNewRef, isBlocked }) => {
 
     const compactHeaderCellClassName = "bg-gray-300 px-1 py-1.5 text-center font-bold text-[10px] text-slate-700 border-r border-b border-gray-300";
     const compactCellClassName = "border-r border-b border-gray-300 p-0 text-[10px]";
@@ -94,7 +94,7 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
                                             <SearchableTableCellSelect
                                                 value={row.expenseCategoryId}
                                                 options={selectableExpenses}
-                                                disabled={readOnly}
+                                                disabled={readOnly || isBlocked}
                                                 onChange={(nextValue) => handleInputChange(nextValue, index, "expenseCategoryId")}
                                                 addNewModalWidth="w-[90%] h-[95%]"
                                                 // childComponent={ExpenseMaster}
@@ -111,7 +111,7 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
                                                 className={compactSelectClassName}
                                                 value={row.description || ""}
                                                 onChange={e => handleInputChange(e.target.value, index, "description")}
-                                                readOnly={readOnly}
+                                                disabled={readOnly || isBlocked}
                                                 placeholder="Description"
                                             />
                                         </td>
@@ -123,7 +123,7 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
                                                 onFocus={e => e.target.select()}
                                                 value={row.amount || ""}
                                                 onChange={e => handleInputChange(e.target.value, index, "amount")}
-                                                readOnly={readOnly}
+                                                disabled={readOnly || isBlocked}
                                                 placeholder="0.00"
                                             />
                                         </td>
@@ -131,7 +131,7 @@ const ExpenseEntryItems = ({ expenseItems, setExpenseItems, expenseTypeList, rea
                                         <td className={`${compactCellClassName} text-center`}>
                                             <button
                                                 onClick={addNewRow}
-                                                disabled={readOnly}
+                                                disabled={readOnly || isBlocked}
                                                 className="w-full h-full text-blue-600 font-bold hover:bg-blue-50 py-1"
                                                 title="Add Row"
                                             >

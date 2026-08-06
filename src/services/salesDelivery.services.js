@@ -664,7 +664,7 @@ async function create(body) {
                         LedgerType: "Customer",
                         creditOrDebit: "Debit",
                         partyId: parseInt(customerId),
-                        amount: totalAmount,
+                        amount: Math.round(totalAmount),
                         partyBillNo: docId,
                         partyBillDate: new Date(),
                         salesDeliveryId: data.id
@@ -1036,7 +1036,7 @@ async function update(id, body) {
                 await tx.ledger.update({
                     where: { id: existingLedger.id },
                     data: {
-                        amount: totalAmount,
+                        amount: Math.round(totalAmount),
                         partyId: parseInt(customerId),
                         partyBillNo: salesDeliveryData.docId,
                     },
@@ -1048,7 +1048,7 @@ async function update(id, body) {
                         LedgerType: "Customer",
                         creditOrDebit: "Debit",
                         partyId: parseInt(customerId),
-                        amount: totalAmount,
+                        amount: Math.round(totalAmount),
                         partyBillNo: salesDeliveryData.docId,
                         partyBillDate: new Date(),
                         salesDeliveryId: parseInt(id),
@@ -1129,7 +1129,7 @@ async function approve(id, finYearId) {
                     LedgerType: "Customer",
                     creditOrDebit: "Debit",
                     partyId: parseInt(dataFound.customerId),
-                    amount: totalAmount,
+                    amount: Math.round(totalAmount),
                     partyBillNo: docId,
                     partyBillDate: new Date(),
                     salesDeliveryId: dataFound.id

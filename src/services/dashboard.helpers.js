@@ -4,7 +4,26 @@
 
 export const getBulkAmount = (delivery) => {
     const itemsSum = (delivery.SalesDeliveryItems || []).reduce((acc, item) => {
-        return acc + (parseFloat(item.deliveryQty || 0) * parseFloat(item.price || 0));
+        const price = parseFloat(item.price || 0);
+        const qty = parseFloat(item.deliveryQty ?? item.qty ?? 0);
+        const taxPercent = parseFloat(item.taxPercent || 0);
+        const taxMethod = item.taxMethod || "Inclusive";
+        const discountType = item.discountType;
+        const discountValue = parseFloat(item.discountValue || 0);
+
+        let discountedAmount = price * qty;
+        if (discountType === "Percentage") {
+            discountedAmount -= (discountedAmount * discountValue) / 100;
+        } else if (discountType === "Flat") {
+            discountedAmount -= discountValue;
+        }
+        discountedAmount = Math.max(0, discountedAmount);
+
+        if (taxMethod === "Exclusive" && taxPercent > 0) {
+            discountedAmount += (discountedAmount * taxPercent) / 100;
+        }
+
+        return acc + discountedAmount;
     }, 0);
     const packing = delivery.packingChargeEnabled ? parseFloat(delivery.packingCharge || 0) : 0;
     const shipping = delivery.shippingChargeEnabled ? parseFloat(delivery.shippingCharge || 0) : 0;

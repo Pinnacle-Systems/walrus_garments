@@ -304,6 +304,18 @@ export const getCommonParams = () => ({
   ),
 })
 
+
+
+export const isAdminAccess = () => {
+  const userRole = getCommonParams().userRole
+  return userRole === "DEFAULT ADMIN" || userRole === "ADMIN"
+}
+
+export const isManagerAccess = () => {
+  const userRole = getCommonParams().userRole
+  return userRole === "MANAGER"
+}
+
 export function convertSpaceToUnderScore(str) {
 
   return str.toLowerCase().trim().split(' ').join('_');

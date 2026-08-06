@@ -489,7 +489,9 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
   const { subtotal, taxAmount, netAmount } = calculateTotals();
   const extraCharges = (packingChargeEnabled ? parseChargeAmount(packingCharge) : 0) + (shippingChargeEnabled ? parseChargeAmount(shippingCharge) : 0) + (courierChargeEnabled ? parseChargeAmount(courierCharge) : 0);
-  const adjustedNetAmount = netAmount + extraCharges;
+  const rawTotal = netAmount + extraCharges;
+  const adjustedNetAmount = Math.round(rawTotal);
+  const roundOff = parseFloat((adjustedNetAmount - rawTotal).toFixed(2));
 
   const defaultMinimumAdvancePayment = (parseFloat(adjustedNetAmount || 0) * 0.25).toFixed(2);
 
@@ -700,6 +702,12 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
 
         ...chargeRows,
         {
+          key: "roundOff",
+          label: "Round Off",
+          value: `Rs.${roundOff.toFixed(2)}`,
+          summaryColumn: "right",
+        },
+        {
           key: "netAmount",
           label: "Net Amount",
           value: `Rs.${parseFloat(adjustedNetAmount || 0).toFixed(2)}`,
@@ -843,7 +851,7 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
           packingCharge: pCharge,
           shippingCharge: sCharge,
           courierCharge: cCharge,
-          roundOff: adjustedNetAmount - (netAmount + pCharge + sCharge + cCharge),
+          roundOff: roundOff,
           advanceAmount: advanceAmountVal
         },
         isOutside

@@ -3,7 +3,7 @@ import { useDeletePartyMaterialMutation, useGetPartyMaterialByIdQuery, useUpdate
 import { useAddMaterialMasterMutation, useDeleteMaterialMasterMutation, useGetMaterialMasterByIdQuery, useGetMaterialMasterQuery, useUpdateMaterialMasterMutation } from "../../redux/uniformService/MaterialMasterServices";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
-import { ReusableTable, TextInput, ToggleButton } from "../../Inputs";
+import { ReusableTable, TextInput, TextInputNew1, ToggleButton } from "../../Inputs";
 import { Check, Eye, Power } from "lucide-react";
 import { statusDropdown } from "../../Utils/DropdownData";
 import { FaPlus } from "react-icons/fa6";
@@ -158,7 +158,7 @@ export default function Form() {
       Swal.fire({
         text: "The Expense Category Name already exists.",
         icon: "warning",
-     
+
       });
       return false;
     }
@@ -330,7 +330,7 @@ export default function Form() {
                         <fieldset className=' rounded mt-2'>
                           <div className=''>
                             <div className='mb-3 w-[48%]'>
-                              <TextInput name="Expense Type Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
+                              <TextInputNew1 name="Expense Type Name" type="text" value={name} setValue={setName} required={true} readOnly={readOnly} />
                             </div>
 
                             <div className='mb-5'>

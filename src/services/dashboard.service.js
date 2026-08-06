@@ -83,7 +83,16 @@ async function getSalesData(where, from, to) {
         where: { ...where, createdAt: { gte: from, lte: to }, isDeleted: false },
         include: {
             Party: { select: { name: true } },
-            SalesDeliveryItems: { select: { deliveryQty: true, price: true } }
+            SalesDeliveryItems: {
+                select: {
+                    deliveryQty: true,
+                    price: true,
+                    taxMethod: true,
+                    taxPercent: true,
+                    discountType: true,
+                    discountValue: true
+                }
+            }
         }
     });
 
@@ -96,12 +105,10 @@ async function getSalesData(where, from, to) {
     });
 
     const bulkSalesBreakup = bulkSales.map(s => {
-        const itemsSum = s.SalesDeliveryItems.reduce((acc, item) => acc + (parseFloat(item.deliveryQty || 0) * parseFloat(item.price || 0)), 0);
-        const packing = s.packingChargeEnabled ? parseFloat(s.packingCharge || 0) : 0;
-        const shipping = s.shippingChargeEnabled ? parseFloat(s.shippingCharge || 0) : 0;
-        const courier = s.courierChargeEnabled ? parseFloat(s.courierCharge || 0) : 0;
-        const amount = Math.round((itemsSum + packing + shipping + courier) * 100) / 100;
-        return { id: s.docId || s.id, party: s.Party?.name || 'N/A', amount, type: 'Bulk' };
+        const rawAmount = calculateNetAmount(s.SalesDeliveryItems, s);
+        const amount = Math.round(rawAmount);
+        const roundOff = Math.round((amount - rawAmount) * 100) / 100;
+        return { id: s.docId || s.id, party: s.Party?.name || 'N/A', amount, roundOff, type: 'Bulk' };
     });
 
     const bulkReturnsBreakup = bulkReturns.map(s => {
@@ -115,8 +122,10 @@ async function getSalesData(where, from, to) {
                 returnChargeAmount = rawCharge;
             }
         }
-        const amount = Math.round((itemsSum - returnChargeAmount) * 100) / 100;
-        return { id: s.docId || s.id, party: s.Party?.name || 'N/A', amount, type: 'Bulk' };
+        const rawAmount = Math.round((itemsSum - returnChargeAmount) * 100) / 100;
+        const amount = Math.round(rawAmount);
+        const roundOff = Math.round((amount - rawAmount) * 100) / 100;
+        return { id: s.docId || s.id, party: s.Party?.name || 'N/A', amount, roundOff, type: 'Bulk' };
     });
 
 
@@ -204,7 +213,7 @@ function calculateNetAmount(items = [], parent = {}) {
 
     const lineNetAmount = (items || []).reduce((acc, curr) => {
         const price = parseVal(curr?.price);
-        const qty = parseVal(curr?.qty);
+        const qty = parseVal(curr?.deliveryQty ?? curr?.qty);
         const taxPercent = parseVal(curr?.taxPercent);
         const taxMethod = curr?.taxMethod || "Inclusive";
         const discountType = curr?.discountType;

@@ -81,7 +81,7 @@ const PaymentForm = ({
             return acc + discountedAmount + (discountedAmount * taxPercent) / 100;
         }, 0);
 
-        return itemsTotal + packingCharge + shippingCharge + courierCharge;
+        return Math.round(itemsTotal + packingCharge + shippingCharge + courierCharge);
     };
 
 

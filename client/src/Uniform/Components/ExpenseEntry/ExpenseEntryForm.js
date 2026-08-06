@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findFromList, getCommonParams, isGridDatasValid, sumArray } from "../../../Utils/helper";
+import { findFromList, getCommonParams, isAdminAccess, isGridDatasValid, isManagerAccess, sumArray } from "../../../Utils/helper";
 import { ReusableInput } from "../Order/CommonInput";
 import { DateInput, DropdownInput, DropdownInputNew, ReusableSearchableInput, TextAreaNew, TextInput } from "../../../Inputs";
 import { challanTypeList, directOrPo, platformList } from "../../../Utils/DropdownData";
@@ -28,6 +28,9 @@ import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSec
 import { useAddExpenseEntryMutation, useGetExpenseEntryByIdQuery, useGetExpenseEntryQuery, useUpdateExpenseEntryMutation } from "../../../redux/uniformService/ExpenseEntryServices";
 import { useGetExpenseMasterQuery } from "../../../redux/uniformService/ExpenseMasterServices";
 import ExpenseEntryItems from "./ExpenseEntryItems";
+import ExpenseThermalPrint from "./ExpenseThermalPrint";
+import { printReceiptInstructions } from "../../../Utils/localPrintAgent";
+import { buildExpenseReceiptInstructions } from "../../../printing/build-expense-receipt-instructions";
 
 
 
@@ -76,16 +79,23 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
         "Supplier Two",
         "Supplier Three",
     ]);
-    const [expenseType, setExpenseType] = useState("")
+    const [isBlocked, setIsBlocked] = useState(false)
 
     const childRecord = useRef(0);
-    const { branchId, companyId, userId, finYearId } = getCommonParams()
+    const { branchId, companyId, userId, finYearId, userRole } = getCommonParams()
+
+
+    const isAdmin = isAdminAccess()
+    const isManager = isManagerAccess()
 
     const branchIdFromApi = useRef(branchId);
 
     const params = {
-        branchId, companyId, userId, finYearId
+        branchId, companyId, userId, finYearId, userRole
     };
+
+    console.log(isAdmin, "isAdminAccess", isManager)
+
     const parseChargeAmount = (value) => {
         const parsedValue = parseFloat(value);
         return Number.isFinite(parsedValue) ? parsedValue : 0;
@@ -137,7 +147,11 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
         setDate(data?.date ? moment.utc(data.date).format("YYYY-MM-DD") : moment.utc(today).format("YYYY-MM-DD"));
         setExpenseItems(data?.ExpenseEntryItems ? data.ExpenseEntryItems : []);
         setDocId(data?.docId ? data?.docId : "New");
+        setIsBlocked((moment.utc(data?.date || today).format("YYYY-MM-DD") !== moment.utc(today).format("YYYY-MM-DD")) && !isAdmin)
+
     }, []);
+
+
 
     useEffect(() => {
         if (id && singleData?.data) {
@@ -423,19 +437,13 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
 
             <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
                 <PDFViewer style={{ width: "100%", height: "90vh" }}>
-                    <ThermalSalesPrintFormat
-                        title="DELIVERY CHALLAN"
+                    <ExpenseThermalPrint
                         docId={docId}
                         date={date}
                         branchData={findFromList(branchId, branchList?.data, "all")}
-                        customerData={supplierDetails?.data}
-                        items={invoiceItems?.filter(i => i.itemId)}
+                        expenseItems={expenseItems}
+                        expenseTypeList={ExpenseEntryList?.data || ExpenseEntryList}
                         remarks={remarks}
-                        itemList={itemList?.data}
-                        sizeList={sizeList?.data}
-                        colorList={colorList?.data}
-                        uomList={uomList?.data}
-                        hsnList={hsnList?.data}
                     />
                 </PDFViewer>
             </Modal>
@@ -457,7 +465,7 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                                 <ReusableInput label="Expense Entry No" readOnly value={docId} />
                             </div>
                             <div className={saleOrderDocId ? "col-span-4" : ""}>
-                                <ReusableInput label="Expense Entry Date" value={date} setValue={setDate} type="date" required readOnly={readOnly} />
+                                <ReusableInput label="Expense Entry Date" value={date} setValue={setDate} type="date" required readOnly={isAdmin ? false : true} />
                             </div>
 
                         </TransactionHeaderSection>
@@ -497,6 +505,8 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                             secondInputRef={secondInputRef}
                             saveNewButtonRef={saveNewButtonRef}
                             saveCloseButtonRef={saveCloseButtonRef}
+                            isBlocked={isBlocked}
+                            isAdmin={isAdmin}
                         />
                     </fieldset>
                 </div>
@@ -526,6 +536,40 @@ const ExpenseEntryForm = ({ onClose, id, setId, docId, setDocId, date, setDate, 
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            className="bg-gray-700 text-white px-4 py-1 rounded-md hover:bg-gray-800 flex items-center text-sm"
+                            onClick={async () => {
+                                try {
+                                    const currentBranch = findFromList(branchId, branchList?.data, "all");
+                                    const instructions = buildExpenseReceiptInstructions({
+                                        docId,
+                                        date,
+                                        branchData: currentBranch,
+                                        expenseItems: expenseItems?.filter((i) => i.expenseCategoryId),
+                                        expenseTypeList: ExpenseEntryList?.data || ExpenseEntryList,
+                                        remarks
+                                    });
+
+                                    const printResult = await printReceiptInstructions({
+                                        jobId: docId || "EXPENSE",
+                                        copies: 1,
+                                        instructions
+                                    });
+
+                                    if (!printResult.ok) {
+                                        throw printResult;
+                                    }
+
+                                    Swal.fire({ title: 'Sent to Local Print Agent', icon: 'success', timer: 1500, showConfirmButton: false });
+                                } catch (localPrintError) {
+                                    setThermalPrintOpen(true);
+                                }
+                            }}
+                        >
+                            <FiPrinter className="w-4 h-4 mr-2" />
+                            Thermal Print
+                        </button>
                         <button
                             className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
                             onClick={() => setReadOnly(false)}

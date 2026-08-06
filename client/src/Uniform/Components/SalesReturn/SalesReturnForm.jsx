@@ -324,7 +324,9 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
       : parseChargeAmount(returnCharge)
   );
 
-  const adjustedNetAmount = netAmount - extraCharges;
+  const rawTotal = netAmount - extraCharges;
+  const adjustedNetAmount = Math.round(rawTotal);
+  const roundOff = parseFloat((adjustedNetAmount - rawTotal).toFixed(2));
 
   const data = {
     docId,
@@ -647,7 +649,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
           sgst,
           igst,
           total: adjustedNetAmount,
-
+          roundOff: roundOff,
           netAmount: adjustedNetAmount,
         },
         isOutside
@@ -721,6 +723,12 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
           summaryColumn: "right",
         },
         ...chargeRows,
+        {
+          key: "roundOff",
+          label: "Round Off",
+          value: `₹${roundOff.toFixed(2)}`,
+          summaryColumn: "right",
+        },
         {
           key: "netAmount",
           label: "Net Amount",

@@ -435,7 +435,7 @@ async function create(body) {
                         EntryType: "Credit_Note",
                         creditOrDebit: "Credit",
                         partyBillNo: newSRDocId,
-                        amount: totalNetAmount,
+                        amount: Math.round(totalNetAmount),
                         partyId: parseInt(customerId),
                         salesReturnId: salesReturn.id
                     }
@@ -556,7 +556,7 @@ async function update(id, body) {
                         EntryType: "Credit_Note",
                         creditOrDebit: "Credit",
                         partyBillNo: salesReturn.docId,
-                        amount: totalNetAmount,
+                        amount: Math.round(totalNetAmount),
                         partyId: parseInt(customerId),
                         salesReturnId: salesReturn.id
                     }
