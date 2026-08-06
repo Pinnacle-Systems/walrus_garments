@@ -399,7 +399,8 @@ async function get(req) {
                         select: {
                             name: true
                         }
-                    }
+                    },
+                    contactPersonNumber: true
                 },
             },
             SaleOrderItems: {

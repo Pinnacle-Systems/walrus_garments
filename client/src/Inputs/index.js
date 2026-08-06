@@ -3452,20 +3452,26 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     useEffect(() => {
       if (!partyList?.data) return;
 
-      if (!search.trim()) {
-        setFilteredPages(partyList?.data?.filter(i => show !== "both" ? i[show] : true && paymentFlow == "Payout" ? true : !i.isB2C));
-        return;
+      let filtered = partyList.data.filter((item) => {
+        const matchesShow = show && show !== "both" ? Boolean(item[show]) : true;
+        const matchesFlowOrB2B =
+          paymentFlow === "Payout"
+            ? true
+            : isB2B
+              ? Boolean(item?.isB2B || !item?.isB2C)
+              : true;
+
+        return matchesShow && matchesFlowOrB2B;
+      });
+
+      if (search.trim()) {
+        filtered = filtered.filter((item) =>
+          item?.name?.toLowerCase().includes(search.toLowerCase())
+        );
       }
 
-      let filtered = partyList?.data
-
-      filtered = filtered?.filter((item) =>
-
-        item?.name?.toLowerCase().includes(search.toLowerCase())
-      );
-
       setFilteredPages(filtered);
-    }, [search, partyList, id, supplierId, isRetunBillable, isBillable, paymentFlow]);
+    }, [search, partyList, id, supplierId, isRetunBillable, isBillable, paymentFlow, show, isB2B]);
 
 
     console.log(filteredPages, "filterPages")

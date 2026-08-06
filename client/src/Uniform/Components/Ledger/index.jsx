@@ -119,7 +119,7 @@ const Ledger = () => {
                         </div> */}
 
                         <div className="col-span-2">
-                            <DropdownInputNew
+                            {/* <DropdownInputNew
                                 name="Customer"
                                 options={dropDownListObject(
                                     customerList?.data?.filter(item => item.active),
@@ -129,6 +129,16 @@ const Ledger = () => {
                                 value={partyId}
                                 setValue={setPartyId}
 
+                            /> */}
+                            <ReusableSearchableInputNewCustomerwithBranches
+                                label="Customer Name"
+                                component="PartyMaster"
+                                placeholder="Search Customer Name..."
+                                setSearchTerm={(value) => { setPartyId(value) }}
+                                searchTerm={partyId}
+                                show={"both"}
+                                required={true}
+                                isB2B={false}
                             />
                         </div>
 

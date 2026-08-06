@@ -130,7 +130,7 @@ const QuotationPrintFormat = ({
       ...searchFields,
       pagination: true,
       dataPerPage,
-       currentPageNumber,
+      currentPageNumber,
     }
   });
 
@@ -386,7 +386,8 @@ const QuotationPrintFormat = ({
                         {`${dataObj?.Party?.name}${dataObj?.Party?.BranchType?.name
                           ? ` / ${dataObj?.Party?.BranchType?.name}`
                           : ""
-                          }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`}                         </td>
+                          }${dataObj?.Party?.City?.name ? ` / ${dataObj?.Party?.City?.name}` : ""}`}
+                      </td>
                       <td className="py-1.5 text-center  text-green-500 font-bold">
                         <span style={{ color: "#F97316", fontWeight: 600 }}>
                           {parseFloat(dataObj?.minimumAdvancePayment).toFixed(2)}                        </span>

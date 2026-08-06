@@ -656,7 +656,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   ];
   function isSupplierOutside() {
     if (supplierDetails) {
-      return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
+      return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU" && supplierDetails?.data?.City?.state?.name !== "TAMILNADU"
     }
     return false
   }
@@ -1035,18 +1035,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                 disabled
                 required
               />
-              {/* <div className="col-span-3">
-                <TextAreaNew
-                  name="Address"
-                  rows={1}
-                  placeholder="Address"
-                  value={
-                    supplierDetails?.data?.address ||
-                    findFromList(customerId, supplierList?.data, "address")
-                  }
-                  disabled
-                />
-              </div> */}
+
               <div className="col-span-6 flex flex-row gap-2">
                 <div className="flex-1 min-w-[80px]">
                   <DropdownInput
@@ -1068,13 +1057,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                   />
                 </div>
                 <div className="flex-initial">
-                  {/* <button
-                    className="px-2 py-0.5 mt-6 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition"
-                    onClick={() => setIsSelectionModalOpen(true)}
-                    disabled={id}
-                  >
-                    Fill Sale Order
-                  </button> */}
+
                   <button
                     className="w-8 h-8 mt-4 flex items-center justify-center bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
                     onClick={() => setIsSelectionModalOpen(true)}

@@ -563,7 +563,7 @@ const SalesReturnForm = ({ onClose, id, setId, docId, setDocId, date, setDate, r
   ];
   function isSupplierOutside() {
     if (supplierDetails) {
-      return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU"
+      return supplierDetails?.data?.City?.state?.name !== "TAMIL NADU" && supplierDetails?.data?.City?.state?.name !== "TAMILNADU"
     }
     return false
   }

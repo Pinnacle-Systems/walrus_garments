@@ -69,7 +69,7 @@ const POSFooter = ({
                     Rows: <strong className="font-black text-slate-900 text-sm ml-1.5">{cart.length}</strong>
                 </span>
                 <span className="bg-indigo-50 text-indigo-950 px-3 py-1 rounded-lg border border-indigo-200 font-bold flex items-center shadow-xs">
-                    Total Qty: <strong className="text-indigo-700 text-base font-extrabold ml-1.5">{cart.reduce((s, i) => s + (Number(i.qty) || 0), 0)}</strong>
+                    Total Qty: <strong className="text-indigo-700 text-base font-extrabold ml-1.5">{cart?.filter((i) => !(i.isReturn))?.reduce((s, i) => s + (Number(i.qty) || 0), 0)}</strong>
                 </span>
             </div>
         </footer>

@@ -277,13 +277,19 @@ async function create(body) {
             .filter(i => !i.isReturn)
             .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
 
-        const billAmount = grossPurchaseAmount - manualDiscount
+        const billAmount = Math.round((grossPurchaseAmount || 0)) - Math.round((manualDiscount || 0))
 
 
 
         const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount : netAmount
 
 
+        console.log({
+            grossPurchaseAmount,
+            manualDiscount,
+            billAmount,
+            finalNetAmount
+        }, "finalNetAmount")
 
 
 
@@ -297,7 +303,7 @@ async function create(body) {
                     docId: finalDocId,
                     branchId: branchId ? parseInt(branchId) : undefined,
                     createdById: body.userId ? parseInt(body.userId) : undefined,
-                    netAmount: finalNetAmount > 0 ? String(parseFloat(finalNetAmount || 0)) : undefined,
+                    netAmount: finalNetAmount > 0 ? String(parseInt(finalNetAmount || 0)) : undefined,
                     approvalStatus: approvalStatus || "NONE",
                     bilStatus: body.bilStatus ? body?.bilStatus : "NA",
                     transactionType: transactionType ? transactionType : "NA",
@@ -359,7 +365,7 @@ async function create(body) {
                 }
             }
 
-            if (billAmount > 0) {
+            if (parseInt(billAmount || 0) > 0) {
                 await tx.ledger.create({
                     data: {
                         EntryType: "Sales",
@@ -458,7 +464,7 @@ async function create(body) {
                         LedgerType: "Customer",
                         creditOrDebit: "Credit",
                         partyId: parseInt(customerId),
-                        amount: grossReturnAmount,
+                        amount: Math.round(grossReturnAmount),
                         partyBillNo: posRecord.docId,
                         partyBillDate: new Date(),
                         posId: posRecord.id
@@ -480,7 +486,7 @@ async function create(body) {
                             LedgerType: "Customer",
                             creditOrDebit: "Credit",
                             partyId: parseInt(customerId),
-                            amount: Math.abs(actualPaymentAmount),
+                            amount: Math.abs(parseInt(actualPaymentAmount)),
                             partyBillNo: posRecord.docId,
                             partyBillDate: new Date(),
                             posId: posRecord.id
@@ -524,6 +530,10 @@ async function update(id, body) {
         let finalDocId = dataFound.docId;
         const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE" && parseFloat(netAmount || 0) < 0);
 
+        const grossReturnAmount = (posItems || [])
+            .filter(i => i.isReturn)
+            .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
+
         const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount : netAmount
 
 
@@ -563,7 +573,7 @@ async function update(id, body) {
                     approvalStatus: (body.bilStatus === 'PAID' || body.bilStatus === 'UNPAID') ? "COMPLETED" : (body.approvalStatus || dataFound.approvalStatus),
                     bilStatus: body.bilStatus || dataFound.bilStatus || "PAID",
                     discountValue: discountValue ? String(discountValue) : undefined,
-                    netAmount: finalNetAmount ? String(Math.abs(parseFloat(finalNetAmount || 0))) : undefined,
+                    netAmount: finalNetAmount ? String(Math.abs(parseInt(finalNetAmount || 0))) : undefined,
                     transactionType: transactionType ? transactionType : "DEFAULT",
                     isReturn: isReturn,
                     isRetrunBillId: body.isRetrunBillId ? parseInt(body.isRetrunBillId) : undefined,
@@ -715,7 +725,7 @@ async function update(id, body) {
                         LedgerType: "Customer",
                         creditOrDebit: "Credit",
                         partyId: parseInt(customerId || updatedPos.customerId),
-                        amount: grossReturnAmount,
+                        amount: Math.round(grossReturnAmount),
                         partyBillNo: updatedPos.docId,
                         partyBillDate: new Date(),
                         posId: parseInt(id)
@@ -730,7 +740,7 @@ async function update(id, body) {
                         LedgerType: "Customer",
                         creditOrDebit: "Debit",
                         partyId: parseInt(customerId || updatedPos.customerId),
-                        amount: billAmount,
+                        amount: Math.round(billAmount),
                         partyBillNo: updatedPos.docId,
                         partyBillDate: new Date(),
                         posId: parseInt(id)
@@ -750,7 +760,7 @@ async function update(id, body) {
                             LedgerType: "Customer",
                             creditOrDebit: "Credit",
                             partyId: parseInt(customerId || updatedPos.customerId),
-                            amount: Math.abs(actualPaymentAmount),
+                            amount: Math.abs(parseInt(actualPaymentAmount)),
                             partyBillNo: updatedPos.docId,
                             partyBillDate: new Date(),
                             posId: updatedPos.id,

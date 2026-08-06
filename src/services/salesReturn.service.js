@@ -205,6 +205,8 @@ async function get(req) {
                             name: true,
                         },
                     },
+                    contactPersonNumber: true
+
                 },
             },
             SalesDelivery: {

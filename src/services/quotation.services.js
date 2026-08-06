@@ -126,7 +126,7 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 }
 
 async function get(req) {
-    const { companyId, active, serachDocNo, supplier, searchDate ,pagination ,currentPageNumber ,dataPerPage } = req.query;
+    const { companyId, active, serachDocNo, supplier, searchDate, pagination, currentPageNumber, dataPerPage } = req.query;
 
     let data = await prisma.quotation.findMany({
         where: {
@@ -155,7 +155,8 @@ async function get(req) {
                         select: {
                             name: true
                         }
-                    }
+                    },
+                    contactPersonNumber: true
                 },
             },
             QuotationItems: true,
