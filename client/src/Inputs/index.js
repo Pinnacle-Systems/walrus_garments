@@ -3431,7 +3431,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
 
 
 
-    console.log(partyList, "paymentFlow")
+    console.log(partyList, "partyList")
 
 
 

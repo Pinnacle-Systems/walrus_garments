@@ -11,10 +11,12 @@ import {
     FaUsers,
     FaMars,
     FaVenus,
+    FaFilePdf,
 } from "react-icons/fa";
 import { IoMaleFemale } from "react-icons/io5";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
 
 
 const TodaySalesBreakup = ({ data, onClose }) => {
@@ -163,6 +165,204 @@ const TodaySalesBreakup = ({ data, onClose }) => {
             }),
             "Today_Sales_Breakup.xlsx"
         );
+    };
+
+    const downloadPDF = () => {
+        if (!filteredData || !filteredData.length) {
+            alert("No data to download");
+            return;
+        }
+
+        const doc = new jsPDF({
+            orientation: "landscape",
+            unit: "pt",
+            format: "a4",
+        });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 30;
+
+        // Title Header
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(33, 37, 41);
+        doc.text("Today Sales Breakup", pageWidth / 2, 40, { align: "center" });
+
+        // Metadata Subheader
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 100, 100);
+        const dateStr = new Date().toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+        const filterStr = `Sales Type: ${selectedState} | Total Records: ${filteredData.length} | Generated: ${dateStr}`;
+        doc.text(filterStr, pageWidth / 2, 56, { align: "center" });
+
+        // Table Definition
+        const columns = [
+            { header: "S.No", width: 40, align: "center" },
+            { header: "Doc ID", width: 100, align: "left" },
+            { header: "Customer Name", width: 180, align: "left" },
+            { header: "Bill Amount", width: 80, align: "right" },
+            { header: "Sales Type", width: 70, align: "center" },
+            { header: "Cash", width: 60, align: "right" },
+            { header: "Gpay", width: 60, align: "right" },
+            { header: "Card", width: 60, align: "right" },
+            { header: "Online", width: 60, align: "right" },
+            { header: "Store Credit", width: 70, align: "right" },
+        ];
+
+        let startX = margin;
+        let startY = 75;
+        const rowHeight = 20;
+        const headerHeight = 24;
+
+        // Function to draw Header
+        const drawTableHeader = (y) => {
+            doc.setFillColor(230, 235, 245);
+            doc.rect(startX, y, pageWidth - (margin * 2), headerHeight, "F");
+
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(40, 50, 75);
+
+            let currentX = startX;
+            columns.forEach((col) => {
+                let textX = currentX + 5;
+                if (col.align === "right") textX = currentX + col.width - 5;
+                if (col.align === "center") textX = currentX + (col.width / 2);
+                doc.text(col.header, textX, y + 15, { align: col.align });
+                currentX += col.width;
+            });
+
+            doc.setDrawColor(200, 200, 200);
+            doc.line(startX, y + headerHeight, startX + pageWidth - (margin * 2), y + headerHeight);
+            return y + headerHeight;
+        };
+
+        let currentY = drawTableHeader(startY);
+
+        // Function to format INR
+        const formatMoney = (val) => {
+            const num = Number(val || 0);
+            return num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        doc.setFontSize(8.5);
+        doc.setFont("helvetica", "normal");
+
+        filteredData.forEach((row, index) => {
+            if (currentY + rowHeight > pageHeight - 40) {
+                doc.addPage();
+                currentY = drawTableHeader(30);
+            }
+
+            if (index % 2 === 1) {
+                doc.setFillColor(248, 249, 250);
+                doc.rect(startX, currentY, pageWidth - (margin * 2), rowHeight, "F");
+            }
+
+            doc.setTextColor(33, 37, 41);
+            let currentX = startX;
+
+            const rowData = [
+                { text: (index + 1).toString(), align: "center", width: columns[0].width },
+                { text: (row?.id || "").toString(), align: "left", width: columns[1].width },
+                { text: (row?.party || "").toString(), align: "left", width: columns[2].width },
+                { text: formatMoney(row?.amount), align: "right", width: columns[3].width },
+                { text: (row?.type || "").toString(), align: "center", width: columns[4].width },
+                { text: formatMoney(row?.paymentBreakup?.cash), align: "right", width: columns[5].width },
+                { text: formatMoney(row?.paymentBreakup?.gpay), align: "right", width: columns[6].width },
+                { text: formatMoney(row?.paymentBreakup?.card), align: "right", width: columns[7].width },
+                { text: formatMoney(row?.paymentBreakup?.online), align: "right", width: columns[8].width },
+                { text: formatMoney(row?.paymentBreakup?.storeCredit), align: "right", width: columns[9].width },
+            ];
+
+            rowData.forEach((cell) => {
+                let textX = currentX + 5;
+                if (cell.align === "right") textX = currentX + cell.width - 5;
+                if (cell.align === "center") textX = currentX + (cell.width / 2);
+
+                let cellText = cell.text;
+                if (cell.align === "left" && doc.getTextWidth(cellText) > cell.width - 10) {
+                    while (cellText.length > 3 && doc.getTextWidth(cellText + "...") > cell.width - 10) {
+                        cellText = cellText.slice(0, -1);
+                    }
+                    cellText += "...";
+                }
+
+                doc.text(cellText, textX, currentY + 13, { align: cell.align });
+                currentX += cell.width;
+            });
+
+            doc.setDrawColor(230, 230, 230);
+            doc.line(startX, currentY + rowHeight, startX + pageWidth - (margin * 2), currentY + rowHeight);
+
+            currentY += rowHeight;
+        });
+
+        // Totals Row
+        if (currentY + 25 > pageHeight - 40) {
+            doc.addPage();
+            currentY = 30;
+        }
+
+        const totalAmount = filteredData.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+        const totalCash = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.cash || 0), 0);
+        const totalGpay = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.gpay || 0), 0);
+        const totalCard = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.card || 0), 0);
+        const totalOnline = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.online || 0), 0);
+        const totalStoreCredit = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.storeCredit || 0), 0);
+
+        doc.setFillColor(235, 240, 245);
+        doc.rect(startX, currentY, pageWidth - (margin * 2), 24, "F");
+
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0, 0, 0);
+
+        const totalsData = [
+            { text: "", align: "center", width: columns[0].width },
+            { text: "", align: "left", width: columns[1].width },
+            { text: "Total:", align: "left", width: columns[2].width },
+            { text: formatMoney(totalAmount), align: "right", width: columns[3].width },
+            { text: "", align: "center", width: columns[4].width },
+            { text: formatMoney(totalCash), align: "right", width: columns[5].width },
+            { text: formatMoney(totalGpay), align: "right", width: columns[6].width },
+            { text: formatMoney(totalCard), align: "right", width: columns[7].width },
+            { text: formatMoney(totalOnline), align: "right", width: columns[8].width },
+            { text: formatMoney(totalStoreCredit), align: "right", width: columns[9].width },
+        ];
+
+        let totalX = startX;
+        totalsData.forEach((cell) => {
+            let textX = totalX + 5;
+            if (cell.align === "right") textX = totalX + cell.width - 5;
+            if (cell.align === "center") textX = totalX + (cell.width / 2);
+            doc.text(cell.text, textX, currentY + 15, { align: cell.align });
+            totalX += cell.width;
+        });
+
+        doc.setDrawColor(100, 100, 100);
+        doc.line(startX, currentY, startX + pageWidth - (margin * 2), currentY);
+        doc.line(startX, currentY + 24, startX + pageWidth - (margin * 2), currentY + 24);
+
+        // Page Numbers Footer
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(150, 150, 150);
+            doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 15, { align: "right" });
+        }
+
+        doc.save("Today_Sales_Breakup.pdf");
     };
 
     const handleFilterClick = (type) => {
@@ -316,10 +516,10 @@ const TodaySalesBreakup = ({ data, onClose }) => {
 
 
                         </div>
-                        <div className="right-0">
+                        <div className="flex items-center gap-2">
                             <button
                                 onClick={downloadExcel}
-                                className="p-0 rounded-full shadow-md hover:brightness-110 transition-all duration-300"
+                                className="p-1 rounded-full shadow-md hover:brightness-110 transition-all duration-300"
                                 title="Download Excel"
                             >
                                 <img
@@ -327,6 +527,13 @@ const TodaySalesBreakup = ({ data, onClose }) => {
                                     alt="Download Excel"
                                     className="w-7 h-7 rounded-lg"
                                 />
+                            </button>
+                            <button
+                                onClick={downloadPDF}
+                                className="p-1 rounded-lg shadow-md bg-red-600 hover:bg-red-700 text-white transition-all duration-300 flex items-center justify-center h-7 w-7"
+                                title="Download PDF"
+                            >
+                                <FaFilePdf size={18} />
                             </button>
                         </div>
                     </div>

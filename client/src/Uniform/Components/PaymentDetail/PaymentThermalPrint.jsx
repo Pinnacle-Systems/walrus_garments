@@ -53,6 +53,8 @@ const PaymentThermalPrint = ({
 
 
   const title = paymentFlow === "Receipt" ? "PAYMENT RECEIPT" : "PAYMENT VOUCHER";
+  const partyLabel = paymentFlow === "Receipt" ? "Received From:" : "Paid To:";
+  const amountLabel = paymentFlow === "Receipt" ? "AMOUNT RECEIVED:" : "AMOUNT PAID:";
 
   return (
     <Document title={`${paymentFlow}_${docId}`}>
@@ -83,7 +85,7 @@ const PaymentThermalPrint = ({
 
         <View style={tw('flex flex-col gap-2 py-2')}>
           <View style={tw('flex flex-row')}>
-            <Text style={tw('text-xxs w-1/3')}>Received From:</Text>
+            <Text style={tw('text-xxs w-1/3')}>{partyLabel}</Text>
             <Text style={tw('text-xxs font-bold flex-1')}>{Party?.name || "N/A"}</Text>
           </View>
 
@@ -108,7 +110,7 @@ const PaymentThermalPrint = ({
         <View style={styles.dottedLine} />
 
         <View style={tw('flex flex-row justify-between py-2')}>
-          <Text style={tw('text-sm font-black')}>AMOUNT RECEIVED:</Text>
+          <Text style={tw('text-sm font-black')}>{amountLabel}</Text>
           <Text style={tw('text-sm font-black')}>Rs. {parseFloat(paidAmount || 0).toFixed(2)}</Text>
         </View>
 

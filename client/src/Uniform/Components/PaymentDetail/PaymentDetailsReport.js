@@ -12,6 +12,9 @@ import { PDFViewer } from "@react-pdf/renderer";
 import Modal from "../../../UiComponents/Modal";
 import PaymentThermalPrint from "./PaymentThermalPrint";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
+import Swal from "sweetalert2";
+import { printReceiptInstructions, mapLocalPrintAgentError } from "../../../Utils/localPrintAgent";
+import { buildPaymentReceiptInstructions } from "../../../printing/build-payment-receipt-instructions";
 
 
 
@@ -50,6 +53,38 @@ const PaymentFormReport = ({
 
     const { data: singlePaymentData } = useGetPaymentByIdQuery(selectedPaymentId, { skip: !selectedPaymentId });
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
+
+    const handleDirectThermalPrint = async () => {
+        const paymentObj = singlePaymentData?.data;
+        if (!paymentObj) return;
+
+        const branchDataObj = branchList?.data?.find(b => b.id === branchId);
+
+        try {
+            const instructions = buildPaymentReceiptInstructions(paymentObj, branchDataObj);
+
+            const printResult = await printReceiptInstructions({
+                jobId: paymentObj.docId,
+                copies: 1,
+                instructions
+            });
+
+            if (!printResult.ok) {
+                throw printResult;
+            }
+
+            Swal.fire({ title: 'Sent to Thermal Printer', icon: 'success', timer: 1500, showConfirmButton: false });
+        } catch (error) {
+            console.error('Thermal Print Error:', error);
+            Swal.fire({
+                title: 'Thermal Print Error',
+                text: mapLocalPrintAgentError(error),
+                icon: 'warning',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+    };
 
 
 
@@ -201,13 +236,35 @@ const PaymentFormReport = ({
             <Modal isOpen={thermalPrintOpen} onClose={() => {
                 setThermalPrintOpen(false);
                 setSelectedPaymentId(null);
-            }} widthClass="w-[300pt] h-[95%]">
-                <PDFViewer style={{ width: "100%", height: "90vh" }}>
-                    <PaymentThermalPrint
-                        paymentData={singlePaymentData?.data}
-                        branchData={branchList?.data?.find(b => b.id === branchId)}
-                    />
-                </PDFViewer>
+            }} widthClass="w-[320pt] h-[95%]">
+                <div className="flex flex-col h-[90vh]">
+                    <div className="flex-1 overflow-hidden">
+                        <PDFViewer style={{ width: "100%", height: "80vh" }}>
+                            <PaymentThermalPrint
+                                paymentData={singlePaymentData?.data}
+                                branchData={branchList?.data?.find(b => b.id === branchId)}
+                            />
+                        </PDFViewer>
+                    </div>
+                    <div className="p-2 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
+                        <button
+                            onClick={() => {
+                                setThermalPrintOpen(false);
+                                setSelectedPaymentId(null);
+                            }}
+                            className="px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-gray-700 uppercase"
+                        >
+                            Close
+                        </button>
+                        <button
+                            onClick={handleDirectThermalPrint}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold uppercase shadow flex items-center gap-1.5"
+                        >
+                            <FiPrinter className="h-4 w-4" />
+                            Send to Thermal Printer
+                        </button>
+                    </div>
+                </div>
             </Modal>
 
             <>
@@ -228,6 +285,10 @@ const PaymentFormReport = ({
                                         <div>Payment Date</div>
                                     </th>
 
+
+                                    <th className=" px-3  font-medium text-[13px]  text-gray-900  text-center w-32">
+                                        <div>Payment Flow</div>
+                                    </th>
 
 
 
@@ -288,7 +349,9 @@ const PaymentFormReport = ({
                                         />
                                     </th>
 
+                                    <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
 
+                                    </th>
                                     <th className="w-14  px-1  font-medium text-[13px]  text-gray-900  text-center ">
 
                                     </th>
@@ -329,6 +392,9 @@ const PaymentFormReport = ({
                                                 {getDateFromDateTimeToDisplay(dataObj.cvv)}
                                             </td>
 
+                                            <td className="py-1.5 text-left">
+                                                {dataObj?.paymentFlow}
+                                            </td>
 
                                             <td className="py-1.5 text-left">{dataObj?.refDocId || "-"}</td>
                                             <td className="py-1.5 text-left"> {dataObj?.Party?.name}</td>

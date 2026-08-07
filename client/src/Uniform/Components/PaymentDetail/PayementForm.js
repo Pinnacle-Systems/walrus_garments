@@ -24,6 +24,8 @@ import Modal from "../../../UiComponents/Modal";
 import PaymentThermalPrint from "./PaymentThermalPrint";
 import { useGetBranchQuery } from "../../../redux/services/BranchMasterService";
 import { useGetSalesDeliveryQuery } from "../../../redux/uniformService/salesDeliveryServices";
+import { printReceiptInstructions, mapLocalPrintAgentError } from "../../../Utils/localPrintAgent";
+import { buildPaymentReceiptInstructions } from "../../../printing/build-payment-receipt-instructions";
 
 const PaymentForm = ({
     id, setId, onClose, initialReadOnly = false, initialTransactionType, initialTransactionId,
@@ -278,6 +280,38 @@ const PaymentForm = ({
     const { data: allData, isLoading, isFetching } = useGetPaymentQuery({ params: { branchId, } });
 
     const { data: singleData } = useGetPaymentByIdQuery(id, { skip: !id });
+
+    const handleDirectThermalPrint = async () => {
+        const paymentObj = singleData?.data;
+        if (!paymentObj) return;
+
+        const branchDataObj = branchList?.data?.find(b => b.id === branchId);
+
+        try {
+            const instructions = buildPaymentReceiptInstructions(paymentObj, branchDataObj);
+
+            const printResult = await printReceiptInstructions({
+                jobId: paymentObj.docId,
+                copies: 1,
+                instructions
+            });
+
+            if (!printResult.ok) {
+                throw printResult;
+            }
+
+            Swal.fire({ title: 'Sent to Thermal Printer', icon: 'success', timer: 1500, showConfirmButton: false });
+        } catch (error) {
+            console.error('Thermal Print Error:', error);
+            Swal.fire({
+                title: 'Thermal Print Error',
+                text: mapLocalPrintAgentError(error),
+                icon: 'warning',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+    };
 
 
     const { data: outstandingData } = useGetPartyOutstandingBalanceQuery(supplierId, {
@@ -1324,6 +1358,34 @@ const PaymentForm = ({
                 </div>
 
             </div>
+
+            <Modal isOpen={thermalPrintOpen} onClose={() => setThermalPrintOpen(false)} widthClass="w-[320pt] h-[95%]">
+                <div className="flex flex-col h-[90vh]">
+                    <div className="flex-1 overflow-hidden">
+                        <PDFViewer style={{ width: "100%", height: "80vh" }}>
+                            <PaymentThermalPrint
+                                paymentData={singleData?.data}
+                                branchData={branchList?.data?.find(b => b.id === branchId)}
+                            />
+                        </PDFViewer>
+                    </div>
+                    <div className="p-2 bg-white border-t border-slate-200 flex items-center justify-between gap-2">
+                        <button
+                            onClick={() => setThermalPrintOpen(false)}
+                            className="px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-gray-700 uppercase"
+                        >
+                            Close
+                        </button>
+                        <button
+                            onClick={handleDirectThermalPrint}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold uppercase shadow flex items-center gap-1.5"
+                        >
+                            <FiPrinter className="h-4 w-4" />
+                            Send to Thermal Printer
+                        </button>
+                    </div>
+                </div>
+            </Modal>
 
         </>
     )
