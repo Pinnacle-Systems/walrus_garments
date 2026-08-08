@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import secureLocalStorage from "react-secure-storage";
-import { getCommonParams, getDateFromDateTimeToDisplay, reactPaginateIndexToPageNumber } from "../../../Utils/helper";
+import { ExperiyDateCalc, getCommonParams, getDateFromDateTimeToDisplay, reactPaginateIndexToPageNumber } from "../../../Utils/helper";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Loader } from "lucide-react";
 import { useGetPaymentByIdQuery, useGetPaymentQuery } from "../../../redux/services/PaymentService";
@@ -111,17 +111,10 @@ const PaymentFormReport = ({
 
 
 
-    // const { data: allData, isFetching, isLoading } = useGetDeliveryInvoiceQuery({
-    //   params: {
-    //     branchId,
-    //     ...searchFields,
-    //     pagination: true,
-    //     dataPerPage,
-    //     pageNumber: currentPageNumber,
-    //   }
-    // });
 
-    const { data: allData, isLoading, isFetching } = useGetPaymentQuery({ params: { branchId, ...searchFields, pagination: true, dataPerPage, pageNumber: currentPageNumber } });
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const { data: allData, isLoading, isFetching } = useGetPaymentQuery({ params: { branchId, ...searchFields, pagination: true, dataPerPage: itemsPerPage, pageNumber: currentPage } });
 
 
 
@@ -138,13 +131,12 @@ const PaymentFormReport = ({
 
     console.log(allData, "entire");
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-    const indexOfLastItem = currentPage * parseInt(10);
+    const totalPages = Math?.ceil(totalCount / itemsPerPage);
+    const indexOfLastItem = 1 * parseInt(15);
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
-    console.log(indexOfLastItem, "indexOfLastItem")
+    console.log(indexOfFirstItem, "indexOfFirstItem", indexOfLastItem)
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -336,7 +328,9 @@ const PaymentFormReport = ({
                                     <th className="w-40 px-1 font-medium text-[13px] text-gray-900 text-center">
 
                                     </th>
+                                    <th className="w-40 px-1 font-medium text-[13px] text-gray-900 text-center">
 
+                                    </th>
                                     <th className="w-96  px-1 font-medium text-[13px]  text-gray-900  text-center ">
                                         <input
                                             type="text"
@@ -368,7 +362,7 @@ const PaymentFormReport = ({
                                 </tbody>
                             ) : (
                                 <tbody className="border-2">
-                                    {(allData?.data ? allData?.data : []).map((dataObj, index) => (
+                                    {(currentItems ? currentItems : []).map((dataObj, index) => (
                                         <tr
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
@@ -431,7 +425,7 @@ const PaymentFormReport = ({
                                                                         hasPermission(() => onDelete(dataObj.id), "delete");
                                                                     }
                                                                 }}
-                                                                disabled={dataObj.isDeletable === false}
+                                                                disabled={dataObj.isDeletable === false || ExperiyDateCalc(dataObj.cvv)}
                                                                 title={dataObj.isDeletable === false ? "Cannot delete: Linked Sale Order has active deliveries" : "Delete Payment"}
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

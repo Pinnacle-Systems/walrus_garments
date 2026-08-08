@@ -5535,6 +5535,7 @@ model Payment {
   transaction       String?
   transactionId     Int?
   outstandingAmount Float?
+  description       String?
   Ledger            Ledger[]
 }
 

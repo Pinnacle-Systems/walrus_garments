@@ -75,7 +75,7 @@ const POSCartTable = ({
                             const isActiveRow = index === activeRowIndex;
                             const isComboApplied = item.appliedOfferName && cart.filter(cit => cit.appliedOfferName && cit.appliedOfferName === item.appliedOfferName).length > 1;
                             const isHoveredCombo = hoveredOfferName && item.appliedOfferName === hoveredOfferName;
-                            const applicableOffers = getItemApplicableOffers ? getItemApplicableOffers(item) : (item.availableOffers || []);
+                            const applicableOffers = getItemApplicableOffers ? getItemApplicableOffers(!item?.isReturn && !item?.isExchangeItem ? item : false) : (item.availableOffers || []);
                             const offerCount = applicableOffers ? applicableOffers.length : 0;
 
                             return (
@@ -150,7 +150,7 @@ const POSCartTable = ({
                                                 disabled={isReportOnly}
                                                 onClick={() => updateQuantity(item.id, 1, item.sizeId, item.colorId, false, item.isReturn, item.isExchangeItem)} className="w-5 h-5 flex items-center justify-center bg-slate-100 rounded text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">+</button>
                                             <button
-                                                disabled={isReportOnly}
+                                                disabled={isReportOnly || item.isReturn || item.isExchangeItem}
                                                 onClick={(e) => { e.stopPropagation(); handleShowItemOffers(item); }}
                                                 title={offerCount > 0 ? `${offerCount} Offer${offerCount > 1 ? 's' : ''} Available` : "View Item Offers"}
                                                 className="relative p-1 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded transition-all flex items-center justify-center border border-indigo-100 hover:border-indigo-600 shrink-0"

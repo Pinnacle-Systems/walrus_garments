@@ -42,22 +42,21 @@ const PosMultiCopyPrint = ({
   payments = { cash: 0, upi: 0, card: 0 },
   summary = { subtotal: 0, tax: 0, discount: 0, total: 0, received: 0, balance: 0 },
   returnReferences = [],
-  bilStatus = "PAID",
-  printCopies = 2,
   showSummarySlip,
-  isExchange = false,
-  isRefund = false,
-  availableCredit
 }) => {
 
-  console.log(summary, "summary", dataObj)
 
 
-  const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
+  const totalQty = items.filter((i) => !i.isReturn)?.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
   const returnTotal = items.reduce((acc, item) => item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
   const purchaseTotal = items.reduce((acc, item) => !item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
   const totalOfferReversal = items.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
   const totalOfferReapplied = items.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
+
+  const overallPurchaseTotal = purchaseTotal - totalOfferReversal + totalOfferReapplied
+
+  console.log(summary, "summary", dataObj, purchaseTotal - totalOfferReversal + totalOfferReapplied)
+
 
   const qrCodePath = useMemo(() => {
     try {
@@ -159,9 +158,23 @@ const PosMultiCopyPrint = ({
 
       {/* Summary Table */}
       <View style={tw('flex flex-col py-1 gap-1')}>
+
+
+        <View style={tw('flex flex-row justify-between py-1')}>
+
+          <Text style={tw('text-xs font-bold')}>
+
+            {dataObj?.availableCredit && returnTotal < purchaseTotal - totalOfferReversal + totalOfferReapplied ? "Credit Apllied" : ""}
+          </Text>
+
+
+          <Text style={tw('text-sm font-black')}>Rs.
+
+            {dataObj?.availableCredit && returnTotal < purchaseTotal - totalOfferReversal + totalOfferReapplied ? Math.min(Math.max(0, overallPurchaseTotal), dataObj?.availableCredit) : 0}
+          </Text>
+        </View>
         <View style={tw('flex flex-row justify-between')}>
-          <Text style={tw('text-xxs font-bold')}>Total Items:</Text>
-          <Text style={tw('text-xxs')}>{items.length} (Qty: {totalQty})</Text>
+          <Text style={tw('text-xxs font-bold')}>Qty {totalQty} </Text>
         </View>
         {summary.subtotal > 0 && (
           <View style={tw('flex flex-row justify-between')}>
@@ -223,21 +236,16 @@ const PosMultiCopyPrint = ({
           </View>
         )}
 
-        {console.log({
-          returnTotal,
-          purchaseTotal
-        }, "purchaseTotal")}
+        {console.log({ returnTotal, purchaseTotal }, "purchaseTotal")}
+
+
         <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
-          <Text style={tw('text-sm font-black')}>
-            {/* {dataObj?.availableCredit ? 'Credit Applied :' :
-              (dataObj?.isExchange || dataObj?.transactionType === 'RETURN' || isRefund) ?
-                (summary.total > 0 ? 'Amount Payable :' : 'Store Credit Issued :')
-                : 'Grand Total :'
-            } */}
+          {/* <Text style={tw('text-sm font-black')}>
+
             {returnTotal > purchaseTotal - totalOfferReversal + totalOfferReapplied
               ? "Store Credit Issued"
               : returnTotal < purchaseTotal
-                ? availableCredit ? "Credit Apllied" : "Total Payable"
+                ? dataObj?.availableCredit ? "Credit Apllied" : "Total Payable"
                 : "Grant Total"
             }
           </Text>
@@ -247,13 +255,32 @@ const PosMultiCopyPrint = ({
                 ((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied).toFixed(2) > 0 ?
                   (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied).toFixed(2) :
                   ((purchaseTotal - returnTotal).toFixed(2))
-              )}</Text>
+              )}
+          </Text> */}
+          <Text style={tw('text-sm font-black')}>
+
+            {returnTotal > purchaseTotal - totalOfferReversal + totalOfferReapplied
+              ? "Store Credit Issued"
+              : returnTotal < purchaseTotal
+                ? dataObj?.availableCredit && dataObj?.availableCredit < overallPurchaseTotal ? "Total Payable" : "Grant Total"
+                : ""
+            }
+          </Text>
+
+
+          <Text style={tw('text-sm font-black')}>Rs.
+
+            {summary.total > 0 ? summary.total.toFixed(0) :
+              (
+                ((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied).toFixed(2) > 0 ?
+                  (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied).toFixed(2) :
+                  ((purchaseTotal - returnTotal).toFixed(2))
+              )}
+          </Text>
         </View>
-      </View>{console.log(summary, "summary", (
-        ((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied) > 0 ?
-          (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied) :
-          ((purchaseTotal - returnTotal))
-      ).toFixed(2))}
+
+      </View>
+
 
       <View style={styles.dottedLine} />
 

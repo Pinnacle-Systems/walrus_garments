@@ -1061,6 +1061,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
                   disabled={id}
                   ref={firstInputRef}
                   nextRef={secondInputRef}
+                  isB2B={true}
+
                 />
               </div>
               <TextInput name="Phone Number" value={customerPhone} disabled required />

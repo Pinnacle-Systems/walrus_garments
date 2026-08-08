@@ -139,29 +139,16 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     const qty = parseFloat(item.qty || 0);
     const rate = parseFloat(item.price || item.rate || 0);
     const rowTotal = qty * rate;
-    totalQty += qty;
+    totalQty += !item.isReturn ? qty : 0;
 
     let name = item?.Item?.name || item?.itemName || '';
     if (item?.isReturn) name += ' [RETURN]';
     if (item?.isExchangeItem || item?.isAddedDuringExchange) name += ' [EXCHANGE]';
 
-    // Two lines per item: the full name (bold, left-aligned, wraps onto
-    // additional lines rather than being truncated), then qty/rate/amount on
-    // the row below. Both use the 'text' instruction type - not 'leftRight'
-    // - so the agent's width-aware word-wrap (wraps at spaces, never inside
-    // a token) is what kicks in when a line doesn't fit, instead of
-    // 'leftRight's left-side truncation. That distinction matters here: an
-    // earlier version put "Qty: X  Rate: Y" on leftRight's `left` side, and
-    // on 58mm/32-col paper with large rate values, formatLeftRight's
-    // truncate-to-fit logic sliced the digits off "Rate:" entirely (e.g.
-    // "Rate: 4999.50" became "Rate:" with no value at all). Word-wrapping
-    // the whole line instead guarantees numbers are always shown in full,
-    // even if that means spilling onto a second line on narrow paper.
+
     instructions.push({ type: 'text', value: `${index + 1} ${name || ' '}`, bold: true });
 
-    // Size/color goes right under the name (before qty/rate/amount) so it
-    // reads as a qualifier of the item, not a trailing footnote after the
-    // numbers.
+
     const hasSize = item?.Size?.name || item?.sizeName;
     const hasColor = item?.Color?.name || item?.colorName;
     if (hasSize || hasColor) {
@@ -169,8 +156,6 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
       instructions.push({ type: 'text', value: descriptors.join(', ') });
     }
 
-    // Pad the numbers to visually align with the header "  Qty             Price"
-    // "  Qty" = 5 chars, plus 13 spaces = 18 total chars
     const qtyStr = `  ${qty}Pcs`.padEnd(18, ' ');
     const priceStr = rate.toFixed(2);
 

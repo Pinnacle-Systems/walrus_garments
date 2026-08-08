@@ -62,7 +62,10 @@ async function get(req) {
                 }
             },
             Quotation: {
-                where: { isDeleted: false }
+                where: { isDeleted: false },
+                include: {
+                    Saleorder: { where: { isDeleted: false } }
+                }
             },
             Saleorder: {
                 where: { isDeleted: false },

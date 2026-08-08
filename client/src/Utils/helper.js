@@ -659,3 +659,10 @@ export const getExcelQtyFormatByUOM = (uom) => {
 
   return `#,##,##0.${"0".repeat(decimals)}`;
 };
+
+
+export const ExperiyDateCalc = (date) => {
+  const today = new Date();
+
+  return (moment.utc(date || today).format("YYYY-MM-DD") !== moment.utc(today).format("YYYY-MM-DD"))
+};

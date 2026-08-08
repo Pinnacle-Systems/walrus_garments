@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import { useGetPartyByIdQuery, useGetPartyQuery, useGetPartyOutstandingBalanceQuery, useGetPartyCreditBalanceQuery } from "../../../redux/services/PartyMasterService";
 import moment from "moment";
 import { toast } from "react-toastify";
-import { DropdownInputNew, ReusableSearchableInputNewCustomerwithBranches, TextInputNew } from "../../../Inputs";
+import { DropdownInputNew, ReusableSearchableInputNewCustomerwithBranches, TextAreaNew, TextInputNew } from "../../../Inputs";
 import { dropDownListObject } from "../../../Utils/contructObject";
 import { toWords } from "number-to-words";
 import { HiOutlineRefresh } from "react-icons/hi";
@@ -45,7 +45,7 @@ const PaymentForm = ({
     readOnly, setReadOnly, childRecord,
     onNew, paymentHistory, setPaymentHistory, invalidateTagsDispatch,
     outstandingAmount, setOutStandingAmount,
-    setAvailableCredit
+    setAvailableCredit, description, setDescription
 }) => {
 
     const calculateQuotationNetAmount = (quotationItems = [], quotation) => {
@@ -392,6 +392,7 @@ const PaymentForm = ({
             setLockPrefilledTransactionFields(Boolean(data?.transactionType && data?.transactionId));
 
             setOutStandingAmount(data?.outstandingAmount ? data?.outstandingAmount : 0)
+            setDescription(data?.description ? data?.description : '')
 
 
         }, [id])
@@ -475,7 +476,8 @@ const PaymentForm = ({
         paymentFlow,
         transactionId,
         billAmount,
-        outstandingAmount
+        outstandingAmount,
+        description
 
     }
     const validateData = (data) => {
@@ -1194,6 +1196,15 @@ const PaymentForm = ({
                                     />
                                 </div>
                             )}
+                            <div className="col-span-2">
+                                <TextAreaNew
+                                    rows={3}
+                                    name="Description"
+                                    placeholder="Description"
+                                    value={description}
+                                    setValue={setDescription}
+                                />
+                            </div>
                         </div>
 
                         <div className="mt-5 justify-center items-center">

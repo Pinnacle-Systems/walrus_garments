@@ -1033,6 +1033,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                   disabled={id || linkedSaleOrderId}
                   ref={firstInputRef}
                   nextRef={secondInputRef}
+                  isB2B={true}
+
                 />
               </div>
               <TextInput

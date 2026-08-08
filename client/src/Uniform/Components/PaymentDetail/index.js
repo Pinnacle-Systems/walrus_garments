@@ -70,6 +70,7 @@ export default function Form() {
   const [paymentHistory, setPaymentHistory] = useState([])
   const [outstandingAmount, setOutStandingAmount] = useState(0)
   const [availableCredit, setAvailableCredit] = useState(0)
+  const [description, setDescription] = useState('')
 
 
 
@@ -257,6 +258,9 @@ export default function Form() {
           setOutStandingAmount={setOutStandingAmount}
           setAvailableCredit={setAvailableCredit}
           availableCredit={availableCredit}
+
+          description={description}
+          setDescription={setDescription}
         />
       ) : (
         <div className="bg-[#F1F1F0]">
@@ -277,7 +281,7 @@ export default function Form() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               hasPermission={hasPermission}
-              itemsPerPage={10}
+              itemsPerPage={15}
             />
           </div>
 

@@ -1490,7 +1490,14 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     customerData: selectedCustomer || { name: guestName, contactPersonNumber: guestMobile },
                     items: cartWithOffers,
                     payments: { cash: paidCash, upi: paidUPI, card: paidCard },
-                    summary: { subtotal, tax, discount, total, received: Math.abs(receivedAmount), balance: Math.abs(balanceReturn), roundOff },
+                    summary: {
+                        subtotal: apiResponse?.data?.netAmount / 1.05,
+                        tax: apiResponse?.data?.netAmount - (apiResponse?.data?.netAmount / 1.05),
+                        discount,
+                        total: apiResponse?.data?.netAmount,
+                        received: Math.abs(receivedAmount),
+                        balance: Math.abs(balanceReturn), roundOff
+                    },
                     branchData: locations.find(l => l.id === retailStoreId),
                     returnReferences: selectedReturnBills ? [selectedReturnBills.label] : (returnBillId ? [returnBillId] : []),
                     bilStatus: transactionType == "RETURN" ? "RETURNED" : saleType,
@@ -1498,7 +1505,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     showSummarySlip: editMode ? false : true,
                     isExchange: isExchangeFlag,
                     isRefund: isRefundMode,
-                    availableCredit
+                    availableCredit,
+                    dataObj: apiResponse?.data
+
                 };
 
 

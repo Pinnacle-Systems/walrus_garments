@@ -24,16 +24,16 @@ export const filterInwardReturnParties = (data) => {
 };
 
 export const filterBillableParties = (data) => {
-    console.log("data", data);
 
     return data.filter(party => {
         const hasSaleOrder = (party.Saleorder && party.Saleorder.length > 0) ||
             (party._count && party._count.Saleorder > 0);
 
-        const hasQuotation = (party.Quotation && party.Quotation.length > 0) ||
-            (party._count && party._count.Quotation > 0);
+        // A quotation is pending if it has NOT been converted to a Sale Order
+        const hasPendingQuotation = party.Quotation && party.Quotation.some(q =>
+            !q.Saleorder || q.Saleorder.length === 0
+        );
 
-        // Calculate if customer has credit value
         const creditValue = (party.Ledger || []).filter(l =>
             (l.EntryType === 'Credit_Note' && l.creditOrDebit === 'Credit') ||
             (l.EntryType === 'Debit_Note')
@@ -41,15 +41,14 @@ export const filterBillableParties = (data) => {
 
         const hasCredit = creditValue > 0;
 
-        // If party has credit, immediately allow it to be shown
+        console.log(party.name, party.Quotation?.length, party.Saleorder?.length, "party.Quotation");
+
         if (hasCredit) return true;
 
-        // If party has sale orders (quotation was converted)
-
+        let hasPendingSaleOrder = false;
         if (hasSaleOrder && party.Saleorder && party.Saleorder.length > 0) {
-
             // Only show if at least one sale order is NOT fully delivered
-            return party.Saleorder.some(so => {
+            hasPendingSaleOrder = party.Saleorder.some(so => {
                 const totalOrdered = (so.SaleOrderItems || []).reduce(
                     (acc, item) => acc + parseFloat(item.qty || 0), 0
                 );
@@ -62,62 +61,14 @@ export const filterBillableParties = (data) => {
             });
         }
 
-        // If only quotation exists (not converted to SO), show the party
-        if (hasQuotation && !hasSaleOrder) return true;
+        if (hasPendingSaleOrder) return true;
+
+        if (hasPendingQuotation) return true;
 
         return false;
     });
 };
 
-// export const filterReturnBillableParties = (data) => {
-//     return data.reduce((acc, party) => {
-//         const ledgerDebit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Debit').reduce((sum, l) => sum + (l.amount || 0), 0);
-//         const ledgerCredit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Credit').reduce((sum, l) => sum + (l.amount || 0), 0);
-
-//         const totalDeliveryValue = ledgerDebit - ledgerCredit;
-
-//         const totalReceiptAmount = (party.Payment || []).filter(pay => pay.paymentFlow !== "Payout").reduce((sum, pay) => sum + parseFloat(pay.paidAmount || 0), 0);
-//         const totalPayoutAmount = (party.Payment || []).filter(pay => pay.paymentFlow === "Payout").reduce((sum, pay) => sum + parseFloat(pay.paidAmount || 0), 0);
-//         const totalPayments = totalReceiptAmount - totalPayoutAmount;
-
-//         const outstandingBalance = Math.round((totalDeliveryValue - totalPayments) * 100) / 100;
-
-
-//         if (outstandingBalance < 0) {
-//             acc.push({
-//                 ...party,
-//                 totalDeliveryValue: Math.round(totalDeliveryValue * 100) / 100,
-//                 totalReceiptAmount: Math.round(totalReceiptAmount * 100) / 100,
-//                 totalPayoutAmount: Math.round(totalPayoutAmount * 100) / 100,
-//                 totalPayments: Math.round(totalPayments * 100) / 100,
-//                 outstandingBalance: Math.abs(outstandingBalance)
-//             });
-//         }
-//         return acc;
-//     }, []);
-// };
-
-// export const mapPaymentOutstandingParties = (data) => {
-//     return data.map(party => {
-//         const ledgerDebit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Debit').reduce((acc, l) => acc + (l.amount || 0), 0);
-//         const ledgerCredit = (party.Ledger || []).filter(l => l.creditOrDebit === 'Credit').reduce((acc, l) => acc + (l.amount || 0), 0);
-
-//         const totalDeliveryValue = ledgerDebit - ledgerCredit;
-
-//         const totalReceiptAmount = (party.Payment || []).filter(pay => pay.paymentFlow !== "Payout").reduce((acc, pay) => acc + parseFloat(pay.paidAmount || 0), 0);
-//         const totalPayoutAmount = (party.Payment || []).filter(pay => pay.paymentFlow === "Payout").reduce((acc, pay) => acc + parseFloat(pay.paidAmount || 0), 0);
-//         const totalPayments = totalReceiptAmount - totalPayoutAmount;
-
-//         return {
-//             ...party,
-//             totalDeliveryValue: Math.round(totalDeliveryValue * 100) / 100,
-//             totalReceiptAmount: Math.round(totalReceiptAmount * 100) / 100,
-//             totalPayoutAmount: Math.round(totalPayoutAmount * 100) / 100,
-//             totalPayments: Math.round(totalPayments * 100) / 100,
-//             outstandingBalance: Math.round((totalDeliveryValue - totalPayments) * 100) / 100
-//         };
-//     });
-// };
 
 
 export const filterReturnBillableParties = (data) => {

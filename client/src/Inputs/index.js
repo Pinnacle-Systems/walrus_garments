@@ -3452,7 +3452,7 @@ export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
     useEffect(() => {
       if (!partyList?.data) return;
 
-      let filtered = partyList.data.filter((item) => {
+      let filtered = partyList?.data?.filter((item) => {
         const matchesShow = show && show !== "both" ? Boolean(item[show]) : true;
         const matchesFlowOrB2B =
           paymentFlow === "Payout"

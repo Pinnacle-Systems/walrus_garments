@@ -1011,9 +1011,10 @@ export const getItemApplicableOffers = (item, cartItems, activeOffers, collectio
             return null;
         }
 
-        /* console.log removed */
-        /* console.log removed */
+
         const inScopeItems = cartItems.filter(cit => {
+            if (cit.isReturn || cit.isExchangeItem) return false;
+
             if (!passesTypeCheck(cit, off)) return false;
             const citQty = parseFloat(cit.qty);
             if (!citQty || citQty <= 0) return false;

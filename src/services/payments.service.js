@@ -137,7 +137,17 @@ async function get(req) {
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
     let newDocId = finYearDate ? (await getNextDocId(branchId, shortCode, finYearDate?.startTime, finYearDate?.endTime)) : "";
-    return { statusCode: 0, nextDocId: newDocId, data: enrichedData, totalCount };
+
+
+    // Pagination
+    let paginatedData = enrichedData;
+    if (pagination) {
+        const start = (parseInt(pageNumber) - 1) * parseInt(dataPerPage);
+        const end = start + parseInt(dataPerPage);
+        paginatedData = paginatedData.slice(start, end);
+    }
+
+    return { statusCode: 0, nextDocId: newDocId, data: paginatedData, totalCount };
 }
 async function getOne(id) {
     const childRecord = 0;
@@ -202,7 +212,7 @@ async function getSearch(req) {
 async function create(body) {
     let data;
     try {
-        const { branchId, id, paymentMode, cvv, paymentType, paidAmount, discount, paymentRefNo, supplierId, userId, finYearId, totalBillAmount, totalAmount, paymentFlow, transactionType, refId, refDocId, transaction, transactionId, outstandingAmount, adjustedCreditAmount } = body;
+        const { branchId, id, paymentMode, cvv, paymentType, paidAmount, discount, paymentRefNo, supplierId, userId, finYearId, totalBillAmount, totalAmount, paymentFlow, transactionType, refId, refDocId, transaction, transactionId, outstandingAmount, description } = body;
 
         let finYearDate = await getFinYearStartTimeEndTime(finYearId);
         const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
@@ -234,6 +244,7 @@ async function create(body) {
                     transactionId: transactionId ? parseInt(transactionId) : undefined,
                     date: dateOnly ? new Date(dateOnly) : null,
                     outstandingAmount: outstandingAmount ? parseFloat(outstandingAmount) : undefined,
+                    description: description ? String(description) : ""
                 }
             });
             // Ledger entry creation
@@ -270,7 +281,7 @@ async function update(id, body) {
     let data
     const {
         branchId, paymentMode, cvv, paymentType, paidAmount, discount, supplierId, userId, paymentRefNo, partyId, finYearId, totalAmount,
-        paymentFlow, transactionType, refId, refDocId, transaction, transactionId, outstandingAmount, totalBillAmount
+        paymentFlow, transactionType, refId, refDocId, transaction, transactionId, outstandingAmount, totalBillAmount, description
     } = await body
 
 
@@ -306,6 +317,7 @@ async function update(id, body) {
                 transactionId: transactionId ? parseInt(transactionId) : undefined,
                 outstandingAmount: outstandingAmount ? parseFloat(outstandingAmount) : undefined,
                 totalBillAmount: totalBillAmount ? parseInt(totalBillAmount) : undefined,
+                description: description ? String(description) : ""
 
 
             }

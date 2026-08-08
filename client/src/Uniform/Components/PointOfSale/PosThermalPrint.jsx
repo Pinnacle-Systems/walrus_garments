@@ -122,8 +122,8 @@ const PosThermalPrint = ({
         {/* Summary Table */}
         <View style={tw('flex flex-col py-1 gap-1')}>
           <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs font-bold')}>Total Items:</Text>
-            <Text style={tw('text-xxs')}>{items.length} (Qty: {totalQty})</Text>
+            <Text style={tw('text-xxs font-bold')}>Qty {totalQty}</Text>
+            {/* <Text style={tw('text-xxs')}>{items.length} (Qty: )</Text> */}
           </View>
           <View style={tw('flex flex-row justify-between')}>
             <Text style={tw('text-xxs')}>Subtotal (Excl. Tax) :</Text>

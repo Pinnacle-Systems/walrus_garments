@@ -414,6 +414,7 @@ const PosReportsNew = ({
 
 
 
+
     return (
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
             {thermalPrintOpen && printData && (
@@ -794,47 +795,7 @@ const PosReportsNew = ({
                                                         >
                                                             <FiPrinter className="h-4 w-4" />
                                                         </button>
-                                                        {/* <button
-                                                            className="text-emerald-600 flex items-center px-1 bg-emerald-50 rounded hover:bg-emerald-100 transition-colors"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                const received = dataObj.PosPayments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
-                                                                const total = parseFloat(dataObj.netAmount || 0);
-                                                                const balance = received - total;
 
-                                                                setPrintData({
-                                                                    dataObj,
-                                                                    docId: dataObj.docId,
-                                                                    date: dataObj.createdAt,
-                                                                    customerData: dataObj.Party || { name: "Walk-in Customer" },
-                                                                    items: dataObj.PosItems || [],
-                                                                    payments: {
-                                                                        cash: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Cash")?.amount || 0),
-                                                                        upi: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "UPI")?.amount || 0),
-                                                                        card: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Card")?.amount || 0),
-                                                                        online: parseFloat(dataObj.PosPayments?.find(p => p.paymentMode === "Online")?.amount || 0)
-                                                                    },
-                                                                    summary: {
-                                                                        subtotal: total / 1.05,
-                                                                        tax: total - (total / 1.05),
-                                                                        discount: parseFloat(dataObj.discountValue || 0),
-                                                                        total: total,
-                                                                        received: received,
-                                                                        balance: balance,
-                                                                        roundOff: parseFloat(dataObj.roundOff || 0)
-                                                                    },
-                                                                    branchData: branchList?.data?.find(b => b.id === dataObj.branchId),
-                                                                    bilStatus: dataObj.bilStatus,
-                                                                    printCopies: 2,
-                                                                    showSummarySlip: false
-                                                                });
-
-                                                                setDosPrintOpen(true);
-                                                            }}
-                                                            title="DOS (Monospace) Print"
-                                                        >
-                                                            <FiFileText className="h-4 w-4" />
-                                                        </button> */}
                                                     </div>
                                                 </td>
                                             )}
