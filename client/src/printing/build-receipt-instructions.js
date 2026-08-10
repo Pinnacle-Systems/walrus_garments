@@ -91,6 +91,7 @@ export function shouldOpenCashDrawer(printPayload, options = {}) {
 
 function buildFullReceiptInstructions(printPayload, options = {}) {
   const {
+    dataObj,
     docId,
     date,
     customerData,
@@ -134,6 +135,12 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
   instructions.push({ type: 'leftRight', left: '  Qty             Price', right: 'Amount', bold: true });
   instructions.push({ type: 'line' });
 
+  const returnTotal = items.reduce((acc, item) => item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
+  const purchaseTotal = items.reduce((acc, item) => !item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
+  const totalOfferReversal = items.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
+  const totalOfferReapplied = items.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
+  const overallPurchaseTotal = purchaseTotal - totalOfferReversal + totalOfferReapplied;
+
   let totalQty = 0;
   items.forEach((item, index) => {
     const qty = parseFloat(item.qty || 0);
@@ -171,6 +178,17 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
   });
 
   instructions.push({ type: 'line' });
+
+  if (dataObj?.availableCredit && returnTotal < overallPurchaseTotal) {
+    const creditAppliedVal = Math.min(Math.max(0, overallPurchaseTotal), dataObj.availableCredit);
+    instructions.push({
+      type: 'leftRight',
+      left: 'Credit Applied :',
+      right: `Rs. ${creditAppliedVal}`,
+      bold: true,
+    });
+  }
+
   instructions.push({
     type: 'text',
     value: `Total Qty: ${totalQty}`
@@ -189,12 +207,43 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     instructions.push({ type: 'leftRight', left: 'Discount :', right: `-${summary.discount.toFixed(2)}` });
   }
 
-  instructions.push({
-    type: 'leftRight',
-    left: 'Grand Total :',
-    right: `Rs. ${summary.total.toFixed(0)}`,
-    bold: true,
-  });
+  if (returnTotal > 0) {
+    instructions.push({ type: 'leftRight', left: 'Return Amount :', right: returnTotal.toFixed(2) });
+  }
+
+  if (totalOfferReversal !== totalOfferReapplied) {
+    instructions.push({ type: 'leftRight', left: 'Offer Reversal :', right: totalOfferReversal.toFixed(2) });
+    instructions.push({ type: 'leftRight', left: 'Offer Restored :', right: `-${totalOfferReapplied.toFixed(2)}` });
+  }
+
+  if (returnTotal > 0 && purchaseTotal > 0) {
+    instructions.push({ type: 'leftRight', left: 'New Purchase :', right: purchaseTotal.toFixed(2) });
+  }
+
+  let totalLabel = 'Grand Total :';
+  if (returnTotal > overallPurchaseTotal) {
+    totalLabel = 'Store Credit Issued :';
+  } else if (returnTotal < purchaseTotal) {
+    if (dataObj?.availableCredit && dataObj?.availableCredit < overallPurchaseTotal) {
+      totalLabel = 'Total Payable :';
+    } else {
+      totalLabel = 'Grand Total :';
+    }
+  } else if (returnTotal === overallPurchaseTotal && returnTotal > 0) {
+    totalLabel = '';
+  }
+
+  const netDiff = (returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied;
+  let totalAmountVal = summary.total > 0 ? summary.total.toFixed(0) : (netDiff > 0 ? netDiff.toFixed(2) : Math.abs(purchaseTotal - returnTotal).toFixed(2));
+
+  if (totalLabel) {
+    instructions.push({
+      type: 'leftRight',
+      left: totalLabel,
+      right: `Rs. ${totalAmountVal}`,
+      bold: true,
+    });
+  }
 
   instructions.push({ type: 'line' });
   instructions.push({ type: 'text', value: 'PAYMENT BREAKDOWN', bold: true, underline: true });
@@ -229,7 +278,7 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
 function buildSummarySlipInstructions(printPayload) {
   const { docId, date, items = [] } = printPayload || {};
 
-  const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
+  const totalQty = items.filter((i) => !i.isReturn).reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
 
   /** @type {ReceiptInstruction[]} */
   const instructions = [

@@ -168,9 +168,9 @@ const PosMultiCopyPrint = ({
           </Text>
 
 
-          <Text style={tw('text-sm font-black')}>Rs.
+          <Text style={tw('text-sm font-black')}>
 
-            {dataObj?.availableCredit && returnTotal < purchaseTotal - totalOfferReversal + totalOfferReapplied ? Math.min(Math.max(0, overallPurchaseTotal), dataObj?.availableCredit) : 0}
+            {dataObj?.availableCredit && returnTotal < purchaseTotal - totalOfferReversal + totalOfferReapplied ? `Rs.${Math.min(Math.max(0, overallPurchaseTotal), dataObj?.availableCredit)}` : ""}
           </Text>
         </View>
         <View style={tw('flex flex-row justify-between')}>
