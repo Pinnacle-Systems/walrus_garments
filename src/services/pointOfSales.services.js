@@ -267,21 +267,26 @@ async function create(body) {
         let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
 
 
+        const totalOfferReversal = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
+        const totalOfferReapplied = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
 
         const grossReturnAmount = (posItems || [])
             .filter(i => i.isReturn)
             .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
+
+        const finalReturnAmount = grossReturnAmount - totalOfferReversal
 
 
         const grossPurchaseAmount = (posItems || [])
             .filter(i => !i.isReturn)
             .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
 
+
         const billAmount = Math.round((grossPurchaseAmount || 0)) - Math.round((manualDiscount || 0))
 
+        const finalNetAmount = transactionType == "RETURN" ? (grossReturnAmount - totalOfferReversal) : netAmount
 
 
-        const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount : netAmount
 
 
         console.log({
@@ -314,6 +319,7 @@ async function create(body) {
                     isExchangeBillId: body.isExchangeBillId ? parseInt(body.isExchangeBillId) : undefined,
                     offerPenalty: body.offerPenalty ? String(body.offerPenalty) : null,
                     offerRestored: body.offerRestored ? String(body.offerRestored) : null,
+                    manualDiscount: manualDiscount ? String(manualDiscount) : null,
                     PosItems: {
                         createMany: {
                             data: (posItems || []).map((item) => ({
@@ -457,14 +463,14 @@ async function create(body) {
             });
 
 
-            if (grossReturnAmount > 0) {
+            if (finalReturnAmount > 0) {
                 await tx.ledger.create({
                     data: {
                         EntryType: "Credit_Note",
                         LedgerType: "Customer",
                         creditOrDebit: "Credit",
                         partyId: parseInt(customerId),
-                        amount: Math.round(grossReturnAmount),
+                        amount: Math.round(finalReturnAmount),
                         partyBillNo: posRecord.docId,
                         partyBillDate: new Date(),
                         posId: posRecord.id
@@ -534,7 +540,10 @@ async function update(id, body) {
             .filter(i => i.isReturn)
             .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
 
-        const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount : netAmount
+        const totalOfferReversal = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
+        const totalOfferReapplied = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
+
+        const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount - totalOfferReversal : netAmount
 
 
         if ((dataFound.docId === 'DRAFT')) {
@@ -580,6 +589,8 @@ async function update(id, body) {
                     availableCredit: body.availableCredit ? parseInt(body.availableCredit) : undefined,
                     offerPenalty: body.offerPenalty ? String(body.offerPenalty) : null,
                     offerRestored: body.offerRestored ? String(body.offerRestored) : null,
+                    manualDiscount: manualDiscount ? String(manualDiscount) : null,
+
                 }
             });
 

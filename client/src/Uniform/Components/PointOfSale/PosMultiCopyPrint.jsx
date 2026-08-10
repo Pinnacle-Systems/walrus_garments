@@ -55,8 +55,12 @@ const PosMultiCopyPrint = ({
 
   const overallPurchaseTotal = purchaseTotal - totalOfferReversal + totalOfferReapplied
 
-  console.log(summary, "summary", dataObj, purchaseTotal - totalOfferReversal + totalOfferReapplied)
+  const overallPurchaseTotalNew = (purchaseTotal + totalOfferReversal) - (totalOfferReapplied + returnTotal)
 
+
+  console.log(summary, "summary", dataObj, purchaseTotal)
+
+  console.log(totalOfferReversal, "totalOfferReversal", totalOfferReapplied, "totalOfferReapplied", overallPurchaseTotalNew)
 
   const qrCodePath = useMemo(() => {
     try {
@@ -205,7 +209,7 @@ const PosMultiCopyPrint = ({
             <Text style={tw('text-xxs text-red-500')}>{returnTotal.toFixed(2)}</Text>
           </View>
         )}
-        {totalOfferReversal !== totalOfferReapplied ?
+        {(totalOfferReversal && totalOfferReapplied) && totalOfferReversal !== totalOfferReapplied ?
           <>
             <View style={tw('flex flex-row justify-between')}>
               <Text style={tw('text-xxs')}>Offer Reversal :</Text>
@@ -217,18 +221,22 @@ const PosMultiCopyPrint = ({
             </View>
           </>
           : <></>}
-        {/* {totalOfferReversal > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Offer Reversal :</Text>
-            <Text style={tw('text-xxs')}>{totalOfferReversal.toFixed(2)}</Text>
-          </View>
-        )}
-        {totalOfferReapplied > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Offer Restored :</Text>
-            <Text style={tw('text-xxs text-green-600')}>-{totalOfferReapplied.toFixed(2)}</Text>
-          </View>
-        )} */}
+        {totalOfferReversal && !totalOfferReapplied ?
+          <>
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>Offer Reversal :</Text>
+              <Text style={tw('text-xxs')}>{totalOfferReversal.toFixed(2)}</Text>
+            </View>
+          </>
+          : <></>}
+        {totalOfferReapplied && !totalOfferReversal ?
+          <>
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>Offer Restored :</Text>
+              <Text style={tw('text-xxs text-green-600')}>-{totalOfferReapplied.toFixed(2)}</Text>
+            </View>
+          </>
+          : <></>}
         {returnTotal > 0 && purchaseTotal > 0 && (
           <View style={tw('flex flex-row justify-between')}>
             <Text style={tw('text-xxs')}>New Purchase :</Text>
@@ -259,10 +267,10 @@ const PosMultiCopyPrint = ({
           </Text> */}
           <Text style={tw('text-sm font-black')}>
 
-            {returnTotal > purchaseTotal - totalOfferReversal + totalOfferReapplied
+            {returnTotal > overallPurchaseTotal
               ? "Store Credit Issued"
-              : returnTotal < purchaseTotal
-                ? dataObj?.availableCredit && dataObj?.availableCredit < overallPurchaseTotal ? "Total Payable" : "Grant Total"
+              : returnTotal <= overallPurchaseTotal
+                ? dataObj?.availableCredit < overallPurchaseTotal ? "Total Payable" : "Grant Total"
                 : ""
             }
           </Text>
@@ -270,10 +278,10 @@ const PosMultiCopyPrint = ({
 
           <Text style={tw('text-sm font-black')}>Rs.
 
-            {summary.total > 0 ? summary.total.toFixed(0) :
+            {parseFloat(summary.total) > 0 ? parseFloat(summary.total).toFixed(0) :
               (
-                ((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied).toFixed(2) > 0 ?
-                  (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied).toFixed(2) :
+                (overallPurchaseTotalNew).toFixed(2) > 0 ?
+                  (overallPurchaseTotalNew).toFixed(2) :
                   ((purchaseTotal - returnTotal).toFixed(2))
               )}
           </Text>

@@ -27,7 +27,7 @@ describe('checkLocalPrintAgentHealth', () => {
 
     expect(result.connected).toBe(true);
     expect(result.health.version).toBe('1.0.0');
-    expect(global.fetch).toHaveBeenCalledWith(`${LOCAL_PRINT_AGENT_BASE_URL}/health`, expect.any(Object));
+    expect(global.fetch).toHaveBeenCalledWith(`${LOCAL_PRINT_AGENT_BASE_URL}`, expect.any(Object));
   });
 
   it('handles a connection failure (agent not running)', async () => {

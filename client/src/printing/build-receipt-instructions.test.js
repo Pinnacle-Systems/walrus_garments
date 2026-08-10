@@ -110,7 +110,7 @@ describe('buildReceiptInstructions - full variant', () => {
   it('includes Return Amount, New Purchase, Offer Reversal/Restored, and Store Credit Issued for return/exchange payloads', () => {
     const exchangePayload = {
       ...basePrintPayload,
-      dataObj: { availableCredit: 500 },
+      dataObj: { availableCredit: 100 },
       items: [
         { itemName: 'Returned Shirt', qty: 1, price: 1000, isReturn: true, offerReversal: 100 },
         { itemName: 'New Shirt', qty: 1, price: 1200, isExchangeItem: true, offerReapplied: 50 },
@@ -124,7 +124,7 @@ describe('buildReceiptInstructions - full variant', () => {
     expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'New Purchase :' && i.right === '1200.00')).toBe(true);
     expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'Offer Reversal :' && i.right === '100.00')).toBe(true);
     expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'Offer Restored :' && i.right === '-50.00')).toBe(true);
-    expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'Credit Applied :' && i.right === 'Rs. 500')).toBe(true);
+    expect(instructions.some((i) => i.type === 'leftRight' && i.left === 'Credit Applied :' && i.right === 'Rs. 100')).toBe(true);
   });
 });
 

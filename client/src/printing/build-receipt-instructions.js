@@ -140,6 +140,7 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
   const totalOfferReversal = items.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
   const totalOfferReapplied = items.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
   const overallPurchaseTotal = purchaseTotal - totalOfferReversal + totalOfferReapplied;
+  const overallPurchaseTotalNew = (purchaseTotal + totalOfferReversal) - (totalOfferReapplied + returnTotal);
 
   let totalQty = 0;
   items.forEach((item, index) => {
@@ -211,8 +212,12 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     instructions.push({ type: 'leftRight', left: 'Return Amount :', right: returnTotal.toFixed(2) });
   }
 
-  if (totalOfferReversal !== totalOfferReapplied) {
+  if (totalOfferReversal && totalOfferReapplied && totalOfferReversal !== totalOfferReapplied) {
     instructions.push({ type: 'leftRight', left: 'Offer Reversal :', right: totalOfferReversal.toFixed(2) });
+    instructions.push({ type: 'leftRight', left: 'Offer Restored :', right: `-${totalOfferReapplied.toFixed(2)}` });
+  } else if (totalOfferReversal && !totalOfferReapplied) {
+    instructions.push({ type: 'leftRight', left: 'Offer Reversal :', right: totalOfferReversal.toFixed(2) });
+  } else if (totalOfferReapplied && !totalOfferReversal) {
     instructions.push({ type: 'leftRight', left: 'Offer Restored :', right: `-${totalOfferReapplied.toFixed(2)}` });
   }
 
@@ -220,21 +225,26 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     instructions.push({ type: 'leftRight', left: 'New Purchase :', right: purchaseTotal.toFixed(2) });
   }
 
-  let totalLabel = 'Grand Total :';
+  let totalLabel = '';
   if (returnTotal > overallPurchaseTotal) {
     totalLabel = 'Store Credit Issued :';
-  } else if (returnTotal < purchaseTotal) {
-    if (dataObj?.availableCredit && dataObj?.availableCredit < overallPurchaseTotal) {
+  } else if (returnTotal <= overallPurchaseTotal) {
+    if (dataObj?.availableCredit < overallPurchaseTotal) {
       totalLabel = 'Total Payable :';
     } else {
       totalLabel = 'Grand Total :';
     }
-  } else if (returnTotal === overallPurchaseTotal && returnTotal > 0) {
-    totalLabel = '';
   }
 
-  const netDiff = (returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied;
-  let totalAmountVal = summary.total > 0 ? summary.total.toFixed(0) : (netDiff > 0 ? netDiff.toFixed(2) : Math.abs(purchaseTotal - returnTotal).toFixed(2));
+  const numericTotal = parseFloat(summary.total || 0);
+  let totalAmountVal = '';
+  if (numericTotal > 0) {
+    totalAmountVal = numericTotal.toFixed(0);
+  } else if (overallPurchaseTotalNew > 0) {
+    totalAmountVal = overallPurchaseTotalNew.toFixed(2);
+  } else {
+    totalAmountVal = Math.abs(purchaseTotal - returnTotal).toFixed(2);
+  }
 
   if (totalLabel) {
     instructions.push({

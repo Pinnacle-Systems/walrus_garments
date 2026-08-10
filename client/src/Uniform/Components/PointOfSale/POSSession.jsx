@@ -451,7 +451,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             else if (mode.includes('online')) online += amt;
         });
 
-        setDiscount(parseFloat(sale.discountValue || 0));
+        setDiscount(parseFloat(sale.manualDiscount || 0));
         setPaymentMethod(sale.paymentMethod || 'Cash');
         setDocId(sale.docId || "");
         setTransactionType(sale.transactionType || "SALE");

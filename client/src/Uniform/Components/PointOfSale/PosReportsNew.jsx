@@ -736,17 +736,7 @@ const PosReportsNew = ({
                                                                 )}
 
                                                         </div>
-                                                        {/* <button
-                                                            className="text-red-600 flex items-center px-1 bg-red-50 rounded hover:bg-red-100 transition-colors"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleCancel(dataObj.id);
-                                                            }}
-                                                            disabled={dataObj.bilStatus !== "UNPAID"}
-                                                            title="Cancel Bill"
-                                                        >
-                                                            <FiXCircle className="h-4 w-4" />
-                                                        </button> */}
+
                                                         <button
                                                             className="text-orange-600 flex items-center px-1 bg-orange-50 rounded hover:bg-orange-100 transition-colors"
                                                             onClick={(e) => {
@@ -776,7 +766,7 @@ const PosReportsNew = ({
                                                                     summary: {
                                                                         subtotal: total / 1.05,
                                                                         tax: total - (total / 1.05),
-                                                                        discount: parseFloat(dataObj.discountValue || 0),
+                                                                        discount: parseFloat(dataObj.manualDiscount || 0),
                                                                         total: total,
                                                                         received: received,
                                                                         balance: balance,
