@@ -1,11 +1,26 @@
 import React, { useEffect } from "react";
-import { Document, Page, View, Text, PDFViewer } from "@react-pdf/renderer";
+import { Document, Page, View, Text, PDFViewer, Font } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 import BarcodeGenerator from "../BarcodeGenerator";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { findFromList } from "../../../Utils/helper";
 import secureLocalStorage from "react-secure-storage";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+
+// Register Arial Narrow / Narrow Condensed Font for Barcode Print
+Font.register({
+  family: "Arial Narrow",
+  fonts: [
+    {
+      src: "https://cdn.jsdelivr.net/npm/@fontsource/pt-sans-narrow/files/pt-sans-narrow-latin-400-normal.woff",
+      fontWeight: "normal",
+    },
+    {
+      src: "https://cdn.jsdelivr.net/npm/@fontsource/pt-sans-narrow/files/pt-sans-narrow-latin-700-normal.woff",
+      fontWeight: "bold",
+    },
+  ],
+});
 
 const mmToPt = (mm) => (mm / 25.4) * 72; // mm → pt
 const chunkArray = (arr, size) => {
@@ -108,6 +123,7 @@ const BarCodePrintFormat = ({
                   paddingLeft: 4,
                   paddingRight: 12, // Space for right pre-printed WALRUS logo
                   paddingVertical: 2,
+                  fontFamily: "Arial Narrow",
                 }}
               >
                 <Text style={{ fontSize: 7, textAlign: "center", fontWeight: "bold" }}>

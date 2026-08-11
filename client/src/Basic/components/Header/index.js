@@ -74,9 +74,10 @@ const Header = ({ profile, setIsGlobalOpen }) => {
         isLoading: isSingleLoading,
     } = useGetUserByIdQuery(id);
 
-
-    const printAgentContainerRef = React.useRef(null);
     const [showPrintAgentDetails, setShowPrintAgentDetails] = React.useState(false);
+    const printAgentContainerRef = useOutsideClick(() => {
+        setShowPrintAgentDetails(false);
+    });
 
     const { connected: printAgentConnected, loading: printAgentLoading, health: printAgentHealth, retry: retryPrintAgent } = useLocalPrintAgentStatus();
 
@@ -260,7 +261,7 @@ const Header = ({ profile, setIsGlobalOpen }) => {
                                                 {PRINT_ROLES.find((role) => getRoleStatusLabel(printAgentConnected, printAgentHealth, role.key) === 'Not Configured')?.label || 'A'} printer is not configured for this counter.
                                             </p>
                                             <button
-                                                onClick={popenLocalPrintAgentSetup}
+                                                onClick={openLocalPrintAgentSetup}
                                                 className="flex items-center gap-1 text-[11px] font-black uppercase text-slate-600 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md hover:bg-slate-100 w-fit"
                                             >
                                                 <Printer size={12} /> Open Local Printer Setup
