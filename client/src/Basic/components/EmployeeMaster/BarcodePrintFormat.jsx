@@ -115,46 +115,41 @@ const BarCodePrintFormat = ({
                 style={{
                   width: labelWidthPt,
                   height: labelHeightPt,
-                  justifyContent: "center",
+                  flexDirection: "row",
+                  justifyContent: "space-around",
                   alignItems: "center",
+                  paddingHorizontal: 2,
                   border: "1px solid #ccc", // debug
                 }}
               >
-                <Text style={{ fontSize: 7, textAlign: "center" }}>
-                  WALRUS
-                </Text>
+                {Array.from({ length: qrCount }).map((_, qrIndex) => (
+                  <View
+                    key={`${code.barCode}-${qrIndex}`}
+                    style={{
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text style={{ fontSize: 5.5, textAlign: "center" }}>
+                      WALRUS
+                    </Text>
 
-                <View
-                  style={{
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 3,
-                    width: "100%",
-                  }}
-                >
-                  {Array.from({ length: qrCount }).map((_, qrIndex) => (
-                    <View
-                      key={`${code.barCode}-${qrIndex}`}
-                      style={{ alignItems: "center", justifyContent: "center" }}
-                    >
-                      <QRCodeImage
-                        value={`${code.barCode}`}
-                        width={Math.min(labelWidthPt * 0.2, 24)}
-                        height={Math.min(labelHeightPt * 0.16, 24)}
-                      />
-                    </View>
-                  ))}
-                </View>
+                    <QRCodeImage
+                      value={`${code.barCode}`}
+                      width={Math.min((labelWidthPt / qrCount) * 0.7, 26)}
+                      height={Math.min(labelHeightPt * 0.45, 26)}
+                    />
 
-                <Text style={{ fontSize: 7, textAlign: "center" }}>
-                  {code.barCode}
-                </Text>
+                    <Text style={{ fontSize: 5.5, textAlign: "center" }}>
+                      {code.barCode}
+                    </Text>
 
-                <Text style={{ fontSize: 7 }}>
-                  {code.itemName}
-                </Text>
-
+                    <Text style={{ fontSize: 5.5, textAlign: "center" }}>
+                      {code.itemName}
+                    </Text>
+                  </View>
+                ))}
               </View>
             ))}
           </Page>

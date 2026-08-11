@@ -933,7 +933,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const updateQuantity = (id, value, sizeId, colorId, isDirect = false, isReturn = false, isExchangeItem = false) => {
         setCart(prev => {
             let nextCart = [...prev];
-            const itemIndex = nextCart.findIndex(item =>
+            let itemIndex = nextCart.findIndex(item =>
                 (item.itemId === id || item.id === id) &&
                 item.sizeId === sizeId &&
                 item.colorId === colorId &&
@@ -994,7 +994,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                             const newItemRow = { ...item, isExchangeItem: false, qty: excessQty };
                             const updatedNewFulfillments = allocateStock(excessQty, newItemRow.stockDetails, retailStoreId);
                             newItemRow.fulfillments = updatedNewFulfillments;
-                            nextCart.push(newItemRow);
+                            nextCart.unshift(newItemRow);
+                            itemIndex++;
                         }
                     }
                 }

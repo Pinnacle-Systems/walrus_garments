@@ -142,7 +142,7 @@ const PosMultiCopyPrint = ({
                 <Text style={tw('text-xxs font-bold')}>
                   {item?.Item?.name || item?.itemName}
                   {item?.isReturn && <Text style={tw('text-red-600')}> [RETURN]</Text>}
-                  {(item?.isExchangeItem || item?.isAddedDuringExchange) && <Text style={tw('text-blue-600')}> [EXCHANGE]</Text>}
+                  {(item?.isExchangeItem) && <Text style={tw('text-blue-600')}> [EXCHANGE]</Text>}
                 </Text>
                 {(hasSize || hasColor) && (
                   <Text style={tw('text-[7.5pt] text-gray-600')}>

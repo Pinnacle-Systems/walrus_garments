@@ -151,7 +151,7 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
 
     let name = item?.Item?.name || item?.itemName || '';
     if (item?.isReturn) name += ' [RETURN]';
-    if (item?.isExchangeItem || item?.isAddedDuringExchange) name += ' [EXCHANGE]';
+    if (item?.isExchangeItem) name += ' [EXCHANGE]';
 
 
     instructions.push({ type: 'text', value: `${index + 1} ${name || ' '}`, bold: true });
