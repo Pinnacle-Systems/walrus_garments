@@ -976,7 +976,11 @@ export const DropdownInputSearch = ({
     }),
     menu: (base) => ({
       ...base,
-      zIndex: 9999,
+      zIndex: 99999,
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 99999,
     }),
     valueContainer: (base) => ({
       ...base,
@@ -1021,6 +1025,7 @@ export const DropdownInputSearch = ({
             return words.every(word => label.includes(word));
           }}
           styles={customStyles}
+          menuPortalTarget={typeof document !== "undefined" ? document.body : null}
           isDisabled={readOnly || disabled}
         />
       </div>

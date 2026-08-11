@@ -1,7 +1,7 @@
 
 import "./Header.css"
 import dp from "../../../assets/default-dp.png"
-import { AlertTriangle, Bell, Loader2, Printer, RefreshCw, Search } from "lucide-react"
+import { AlertTriangle, Bell, CheckCircle2, Loader2, Printer, RefreshCw, Search } from "lucide-react"
 import Profile from "./Profile";
 import logo from "../../../../src/assets/walrusNew.png"
 // import { useState } from "react"

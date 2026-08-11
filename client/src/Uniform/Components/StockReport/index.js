@@ -71,21 +71,21 @@ const StockReport = () => {
 
 
     const onNew = () => {
-            setItemId("")
-            setSizeId("")
-            setColorId("")
-            setLocationId("")
-            setBarcode("")
-            setStoreId("")
-            setEndDate(moment(new Date()).format("YYYY-MM-DD"))
-        }
+        setItemId("")
+        setSizeId("")
+        setColorId("")
+        setLocationId("")
+        setBarcode("")
+        setStoreId("")
+        setEndDate(moment(new Date()).format("YYYY-MM-DD"))
+    }
 
-        console.log({
-            itemId,
-            sizeId,
-            colorId
-        })
-            
+    console.log({
+        itemId,
+        sizeId,
+        colorId
+    })
+
 
 
     return (
