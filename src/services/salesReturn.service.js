@@ -183,12 +183,13 @@ async function getNextDocId(branchId, shortCode, startTime, endTime) {
 }
 
 async function get(req) {
-    const { active, pagination, currentPageNumber, dataPerPage } = req.query;
+    const { active, pagination, currentPageNumber, dataPerPage, branchId } = req.query;
 
     let data = await prisma.salesReturn.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
-            isDeleted: false
+            isDeleted: false,
+            branchId: branchId ? parseInt(branchId) : undefined,
 
         },
         include: {
@@ -227,7 +228,7 @@ async function get(req) {
         data = data.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
     }
 
-    return { statusCode: 0, data };
+    return { statusCode: 0, data, totalCount };
 }
 
 async function getOne(id) {

@@ -102,9 +102,9 @@ const POSCartTable = ({
                                                     EXCHANGE
                                                 </span>
                                             )}
-                                            {parseFloat(item.originalSalesPrice) > parseFloat(item.price) && (
+                                            {/* {parseFloat(item.originalSalesPrice) > parseFloat(item.price) && (
                                                 <span className="text-[10px] font-bold text-slate-300 line-through">₹{parseFloat(item.originalSalesPrice).toLocaleString()}</span>
-                                            )}
+                                            )} */}
                                             {parseFloat(item.offerReversal) > 0 && (
                                                 <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-sm flex items-center gap-1.5 border border-orange-200">
                                                     Offer Reversal -₹{parseFloat(item.offerReversal).toFixed(2)}

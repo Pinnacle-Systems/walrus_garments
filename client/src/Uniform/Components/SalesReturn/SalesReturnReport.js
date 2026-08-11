@@ -15,7 +15,7 @@ import { Tooltip } from "@mui/material";
 const SalesReturnReport = ({
   onClick,
   onView,
-  itemsPerPage = 10,
+  itemsPerPage = 16,
   onEdit,
   onDelete,
   rowActions = true,
@@ -31,6 +31,7 @@ const SalesReturnReport = ({
   const [searchDate, setSearchDate] = useState("");
   const [supplier, setSupplier] = useState("");
   const [searchMaterial, setSearchMaterial] = useState("")
+  const [currentPage, setCurrentPage] = useState(1);
 
 
   const [totalCount, setTotalCount] = useState(0);
@@ -65,8 +66,8 @@ const SalesReturnReport = ({
       branchId,
       ...searchFields,
       pagination: true,
-      dataPerPage,
-      currentPageNumber,
+      dataPerPage: itemsPerPage,
+      currentPageNumber: currentPage,
     }
   });
 
@@ -86,9 +87,8 @@ const SalesReturnReport = ({
 
   console.log(allData, "entire");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-  const indexOfLastItem = currentPage * parseInt(10);
+  const totalPages = Math?.ceil(totalCount / itemsPerPage);
+  const indexOfLastItem = currentPage * parseInt(itemsPerPage);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
   console.log(indexOfLastItem, "indexOfLastItem")
@@ -104,7 +104,7 @@ const SalesReturnReport = ({
     return (
       <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
         <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.length} entries
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, totalCount)} of {totalCount} entries
         </div>
         <div className="flex gap-1">
           <button

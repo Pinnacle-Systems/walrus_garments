@@ -14,7 +14,7 @@ import { Tooltip } from '@mui/material';
 const SalesDeliveryReport = ({
   onClick,
   onView,
-  itemsPerPage = 10,
+  itemsPerPage = 16,
   onEdit,
   onDelete,
   onConvertToReturn,
@@ -56,13 +56,13 @@ const SalesDeliveryReport = ({
       }
     }
   };
-  const [dataPerPage, setDataPerPage] = useState("16");
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchClientName, setSearchClientName] = useState("");
   const [searchDate, setSearchDate] = useState("");
   const [supplier, setSupplier] = useState("");
   const [searchMaterial, setSearchMaterial] = useState("")
   const [saleOrderNo, setSaleOrderNo] = useState("")
+  const [currentPage, setCurrentPage] = useState(1);
 
 
   const [totalCount, setTotalCount] = useState(0);
@@ -99,8 +99,8 @@ const SalesDeliveryReport = ({
       branchId,
       ...searchFields,
       pagination: true,
-      dataPerPage,
-      currentPageNumber,
+      dataPerPage: itemsPerPage,
+      currentPageNumber: currentPage,
     }
   });
 
@@ -120,9 +120,8 @@ const SalesDeliveryReport = ({
 
   console.log(allData, "entire");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-  const indexOfLastItem = currentPage * parseInt(10);
+  const totalPages = Math?.ceil(totalCount / itemsPerPage);
+  const indexOfLastItem = currentPage * parseInt(itemsPerPage);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
   console.log(indexOfLastItem, "indexOfLastItem")
@@ -138,7 +137,7 @@ const SalesDeliveryReport = ({
     return (
       <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
         <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.length} entries
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, totalCount)} of {totalCount} entries
         </div>
         <div className="flex gap-1">
           <button

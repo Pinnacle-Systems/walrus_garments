@@ -229,13 +229,12 @@ function manualFilterSearchData(searchDate, data) {
 
 async function get(req) {
 
-    const { companyId, active, serachDocNo, saleOrderNo, supplier, searchDate, pagination, currentPageNumber, dataPerPage } = req.query
-
-    // console.log(companyId, active, "companyId, active ")
+    const { companyId, active, serachDocNo, saleOrderNo, supplier, searchDate, pagination, currentPageNumber, dataPerPage, branchId } = req.query
 
     let data = await prisma.salesDelivery.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
             isDeleted: false,
             docId: serachDocNo ? {
                 contains: serachDocNo,
@@ -302,8 +301,9 @@ async function get(req) {
         data: data.map((salesDelivery) => ({
             ...salesDelivery,
             ...getSalesDeliveryReturnState(salesDelivery),
-            totalCount
-        }))
+        })),
+        totalCount
+
     };
 }
 

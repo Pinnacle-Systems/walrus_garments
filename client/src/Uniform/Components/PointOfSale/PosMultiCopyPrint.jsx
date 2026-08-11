@@ -110,9 +110,9 @@ const PosMultiCopyPrint = ({
 
         <View style={tw('flex flex-col items-end w-1/2')}>
           <Text style={tw('text-xxs')}># {docId}</Text>
-          {returnReferences?.length > 0 && (
+          {/* {returnReferences?.length > 0 && (
             <Text style={tw('text-xxs font-bold italic')}>Against: {returnReferences.join(', ')}</Text>
-          )}
+          )} */}
           {/* <Text style={tw('text-xxs')}>Date: {moment(date).format('DD/MM/YYYY')}</Text> */}
           <Text style={tw('text-xxs font-bold italic text-center')}>Date : {moment(date).format('DD/MM/YYYY HH:mm')}</Text>
 

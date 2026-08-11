@@ -1,7 +1,7 @@
 
 import "./Header.css"
 import dp from "../../../assets/default-dp.png"
-import { Bell, Search } from "lucide-react"
+import { AlertTriangle, Bell, Loader2, Printer, RefreshCw, Search } from "lucide-react"
 import Profile from "./Profile";
 import logo from "../../../../src/assets/walrusNew.png"
 // import { useState } from "react"
@@ -27,6 +27,8 @@ import Swal from "sweetalert2";
 import NotificationBell from "../Notification";
 import PageSearch from "./PageSearch";
 import { GLOBE_ICON } from "../../../icons";
+import useLocalPrintAgentStatus from "../../../hooks/useLocalPrintAgentStatus";
+import { openLocalPrintAgentSetup } from "../../../Utils/localPrintAgent";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -68,6 +70,19 @@ const Header = ({ profile, setIsGlobalOpen }) => {
         isLoading: isSingleLoading,
     } = useGetUserByIdQuery(id);
 
+
+    const printAgentContainerRef = React.useRef(null);
+    const [showPrintAgentDetails, setShowPrintAgentDetails] = React.useState(false);
+
+    const { connected: printAgentConnected, loading: printAgentLoading, health: printAgentHealth, retry: retryPrintAgent } = useLocalPrintAgentStatus();
+
+    function getRoleStatusLabel(connected, health, roleKey) {
+        if (!connected) return 'Not Configured';
+        const role = health?.roles?.[roleKey];
+        if (!role || !role.configured) return 'Not Configured';
+        if (role.configured && role.printerFound === false) return 'Printer Missing';
+        return 'Ready';
+    }
 
     const retrieveAllowedPages = useCallback(() => {
         const defaultAdminRaw = secureLocalStorage.getItem(
@@ -181,6 +196,79 @@ const Header = ({ profile, setIsGlobalOpen }) => {
                         <Search size={15} />
                     </div>
                 </div> */}
+                <div ref={printAgentContainerRef} className="relative">
+                    <button
+                        onClick={() => setShowPrintAgentDetails((v) => !v)}
+                        title="Local Print Agent Status"
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm transition-all ${printAgentConnected
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                            : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                            }`}
+                    >
+                        {printAgentLoading ? (
+                            <Loader2 size={12} className="animate-spin" />
+                        ) : printAgentConnected ? (
+                            <CheckCircle2 size={12} />
+                        ) : (
+                            <AlertTriangle size={12} />
+                        )}
+                        Print Agent: {printAgentConnected ? 'Connected' : 'Not Connected'}
+                    </button>
+
+                    {showPrintAgentDetails && (
+                        <div className="absolute top-full right-0 mt-1 w-72 bg-white border border-slate-200 rounded-lg shadow-xl z-50 p-3 text-left">
+                            {!printAgentConnected ? (
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-xs font-bold text-rose-600">Local Print Agent is not running on this machine.</p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={retryPrintAgent}
+                                            className="flex items-center gap-1 text-[11px] font-black uppercase text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-1 rounded-md hover:bg-indigo-100"
+                                        >
+                                            <RefreshCw size={12} /> Retry
+                                        </button>
+                                        <button
+                                            onClick={openLocalPrintAgentSetup}
+                                            className="flex items-center gap-1 text-[11px] font-black uppercase text-slate-600 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md hover:bg-slate-100"
+                                        >
+                                            <Printer size={12} /> Open Local Printer Setup
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    {printAgentHealth?.printerName && (
+                                        <p className="text-[10px] text-slate-400">Printer (support info): {printAgentHealth.printerName}</p>
+                                    )}
+                                    {PRINT_ROLES.map((role) => {
+                                        const statusLabel = getRoleStatusLabel(printAgentConnected, printAgentHealth, role.key);
+                                        const isReady = statusLabel === 'Ready';
+                                        return (
+                                            <div key={role.key} className="flex items-center justify-between text-xs">
+                                                <span className="font-bold text-slate-600">{role.label}:</span>
+                                                <span className={`font-black ${isReady ? 'text-emerald-600' : 'text-amber-600'}`}>{statusLabel}</span>
+                                            </div>
+                                        );
+                                    })}
+                                    {PRINT_ROLES.some((role) => getRoleStatusLabel(printAgentConnected, printAgentHealth, role.key) !== 'Ready') && (
+                                        <div className="flex flex-col gap-1 pt-1 border-t border-slate-100">
+                                            <p className="text-[10px] text-slate-500">
+                                                {PRINT_ROLES.find((role) => getRoleStatusLabel(printAgentConnected, printAgentHealth, role.key) === 'Not Configured')?.label || 'A'} printer is not configured for this counter.
+                                            </p>
+                                            <button
+                                                onClick={popenLocalPrintAgentSetup}
+                                                className="flex items-center gap-1 text-[11px] font-black uppercase text-slate-600 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md hover:bg-slate-100 w-fit"
+                                            >
+                                                <Printer size={12} /> Open Local Printer Setup
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                // <></>
+                            )}
+                        </div>
+                    )}
+                </div>
                 <PageSearch pageList={allowedPages} />
                 <div
                     className="text-lg cursor-pointer"

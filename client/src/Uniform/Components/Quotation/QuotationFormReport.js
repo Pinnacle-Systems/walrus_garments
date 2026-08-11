@@ -93,12 +93,13 @@ const QuotationPrintFormat = ({
   const branchId = secureLocalStorage.getItem(
     sessionStorage.getItem("sessionId") + "currentBranchId"
   );
-  const [dataPerPage, setDataPerPage] = useState("16");
+  // const [dataPerPage, setDataPerPage] = useState("16");
   const [serachDocNo, setSerachDocNo] = useState("");
   const [searchClientName, setSearchClientName] = useState("");
   const [searchDate, setSearchDate] = useState("");
   const [supplier, setSupplier] = useState("");
   const [searchMaterial, setSearchMaterial] = useState("")
+  const [currentPage, setCurrentPage] = useState(1);
 
 
   const [totalCount, setTotalCount] = useState(0);
@@ -129,8 +130,8 @@ const QuotationPrintFormat = ({
       branchId,
       ...searchFields,
       pagination: true,
-      dataPerPage,
-      currentPageNumber,
+      dataPerPage: itemsPerPage,
+      currentPageNumber: currentPage,
     }
   });
 
@@ -148,11 +149,10 @@ const QuotationPrintFormat = ({
 
 
 
-  console.log(allData, "entire");
+  console.log(allData?.totalCount, "entire");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-  const indexOfLastItem = currentPage * parseInt(10);
+  const totalPages = Math?.ceil(allData?.totalCount / itemsPerPage);
+  const indexOfLastItem = currentPage * parseInt(itemsPerPage);
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
   console.log(indexOfLastItem, "indexOfLastItem")
@@ -168,8 +168,7 @@ const QuotationPrintFormat = ({
     return (
       <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
         <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.length} entries
-        </div>
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.totalCount)} of {allData?.totalCount} entries        </div>
         <div className="flex gap-1">
           <button
             onClick={() => handlePageChange(currentPage - 1)}

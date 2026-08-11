@@ -199,6 +199,7 @@ const Quotation = () => {
                             onConvertToSaleOrder={handleConvertToSaleOrder}
                             onConvertToInvoice={handleConvertToInvoice}
                             onMakePayment={handleMakePayment}
+                            itemsPerPage={16}
                         />
                     </div>
                 </div>

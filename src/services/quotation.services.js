@@ -126,11 +126,13 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 }
 
 async function get(req) {
-    const { companyId, active, serachDocNo, supplier, searchDate, pagination, currentPageNumber, dataPerPage } = req.query;
+    const { companyId, active, serachDocNo, supplier, searchDate, pagination, currentPageNumber, dataPerPage, branchId } = req.query;
 
     let data = await prisma.quotation.findMany({
         where: {
             active: active ? Boolean(active) : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
+
             isDeleted: false,
             docId: serachDocNo ? {
                 contains: serachDocNo,
@@ -238,7 +240,7 @@ async function get(req) {
             ]);
         })
     );
-    return { statusCode: 0, data: result };
+    return { statusCode: 0, data: result, totalCount };
 }
 
 
