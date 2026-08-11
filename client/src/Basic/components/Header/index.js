@@ -34,7 +34,11 @@ const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const Header = ({ profile, setIsGlobalOpen }) => {
 
-
+    const PRINT_ROLES = [
+        { key: 'receipt', label: 'Receipt' },
+        { key: 'barcode-label', label: 'Barcode Label' },
+        { key: 'a4-invoice', label: 'A4 Invoice' },
+    ];
 
     const [logout, setLogout] = useState(false);
     const [hideNavBar, sethideNavBar] = useState(true);

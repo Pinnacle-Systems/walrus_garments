@@ -154,13 +154,9 @@ const POSHeader = ({
         }
     };
 
-    /* console.log removed */
     return (
         <header className="hidden md:flex h-10 bg-white border-b border-slate-200 px-4 items-center shrink-0 z-30 justify-between shadow-sm">
             <div className="flex items-center gap-4 flex-1">
-                {/* Search Mode Toggle */}
-
-
 
                 <div className="flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200 shadow-sm shrink-0">
                     <button

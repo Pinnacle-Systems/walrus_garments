@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { checkLocalPrintAgentHealth } from '../Utils/localPrintAgent';
 
-const POLL_INTERVAL_MS = 30000;
+const POLL_INTERVAL_MS = 300000;
 
 /**
  * Polls the local print agent's /health endpoint so POS UI (e.g. POSHeader)

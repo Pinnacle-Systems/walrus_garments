@@ -56,7 +56,7 @@ const BarCodePrintFormat = ({
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: findFromList(item.itemId, itemList?.data, "name"),
       sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
-      price: item?.salesPrice
+      price: Math.trunc(item?.salesPrice) || Math.trunc(item.price)
     }));
   });
 
@@ -81,7 +81,7 @@ const BarCodePrintFormat = ({
   // ✅ 2 stickers per page
   const pages = chunkArray(allBarcodes, stickersPerRow);
 
-  console.log(pages, "pages")
+  console.log(data, "datadata")
 
   return (
     <PDFViewer style={tw("w-full h-full")}>
@@ -116,19 +116,19 @@ const BarCodePrintFormat = ({
 
                 <BarcodeGenerator
                   value={`${code.barCode}`}
-                  width={labelWidthPt * 0.75}
-                  height={labelHeightPt * 0.40}
+                  width={labelWidthPt * 0.50}
+                  height={labelHeightPt * 0.30}
                 />
 
-                <Text style={{ fontSize: 6.5, textAlign: "center", marginTop: 1 }}>
+                <Text style={{ fontSize: 7.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
                   {code.barCode}
                 </Text>
 
-                <Text style={{ fontSize: 6.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis" }}>
+                <Text style={{ fontSize: 7.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
                   {code.itemName}
                 </Text>
 
-                <Text style={{ fontSize: 6.5, textAlign: "center", fontWeight: "bold" }}>
+                <Text style={{ fontSize: 7.5, textAlign: "center", fontWeight: "bold" }}>
                   Sale Price {code.price}
                 </Text>
               </View>
