@@ -43,11 +43,11 @@ function calculateHeaderTotal(items = [], header = {}, isReturn = false) {
     let returnChargeAmount = 0;
 
     if (!isReturn) {
-        packing = header.packingChargeEnabled ? parseAmount(header.packingCharge) : 0;
-        shipping = header.shippingChargeEnabled ? parseAmount(header.shippingCharge) : 0;
-        courier = header.courierChargeEnabled ? parseAmount(header.courierCharge) : 0;
+        packing = header.packingChargeEnabled !== false ? parseAmount(header.packingCharge) : 0;
+        shipping = header.shippingChargeEnabled !== false ? parseAmount(header.shippingCharge) : 0;
+        courier = header.courierChargeEnabled !== false ? parseAmount(header.courierCharge) : 0;
     } else {
-        if (header.returnChargeEnabled) {
+        if (header.returnChargeEnabled !== false && header.returnCharge) {
             const rawCharge = parseAmount(header.returnCharge);
             if (header.returnChargeType === "Percentage") {
                 returnChargeAmount = (lineTotal * rawCharge) / 100;
@@ -57,8 +57,10 @@ function calculateHeaderTotal(items = [], header = {}, isReturn = false) {
         }
     }
 
+    console.log(header?.docId, returnChargeAmount, "returnChargeAmount", lineTotal)
+
     const netTotal = isReturn ? (lineTotal - returnChargeAmount) : (lineTotal + packing + shipping + courier);
-    return Math.round(netTotal * 100) / 100;
+    return Math.round(netTotal);
 }
 
 function calculateItemsWithDistributedCharges(items = [], header = {}, isReturn = false) {
@@ -83,7 +85,7 @@ function calculateItemsWithDistributedCharges(items = [], header = {}, isReturn 
         if (taxMethod === "Exclusive") {
             rowTotal += (rowTotal * taxPercent) / 100;
         }
-        
+
         return {
             itemRef: curr,
             price,
@@ -97,12 +99,12 @@ function calculateItemsWithDistributedCharges(items = [], header = {}, isReturn 
     // 2. Determine header-level adjustment
     let headerCharges = 0;
     if (!isReturn) {
-        const packing = header.packingChargeEnabled ? parseAmount(header.packingCharge) : 0;
-        const shipping = header.shippingChargeEnabled ? parseAmount(header.shippingCharge) : 0;
-        const courier = header.courierChargeEnabled ? parseAmount(header.courierCharge) : 0;
+        const packing = header.packingChargeEnabled !== false ? parseAmount(header.packingCharge) : 0;
+        const shipping = header.shippingChargeEnabled !== false ? parseAmount(header.shippingCharge) : 0;
+        const courier = header.courierChargeEnabled !== false ? parseAmount(header.courierCharge) : 0;
         headerCharges = packing + shipping + courier;
     } else {
-        if (header.returnChargeEnabled) {
+        if (header.returnChargeEnabled !== false && header.returnCharge) {
             const rawCharge = parseAmount(header.returnCharge);
             const returnChargeAmount = header.returnChargeType === "Percentage"
                 ? (lineTotalSum * rawCharge) / 100
@@ -269,11 +271,11 @@ async function getTotalSales(req) {
                 year: getYearShortCode(fy.from, fy.to),
                 finYearId: fy.id,
                 company: fy.Company?.name || 'N/A',
-                totalSales: Math.round(finalTotal * 100) / 100,
-                salesTotal: Math.round(salesTotal * 100) / 100,
-                returnTotal: Math.round(returnTotal * 100) / 100,
-                b2bSales: Math.round(b2bTotal * 100) / 100,
-                b2cSales: Math.round(b2cTotal * 100) / 100
+                totalSales: Math.round(finalTotal),
+                salesTotal: Math.round(salesTotal),
+                returnTotal: Math.round(returnTotal),
+                b2bSales: Math.round(b2bTotal),
+                b2cSales: Math.round(b2cTotal)
             });
         }
 
@@ -1139,39 +1141,33 @@ async function fetchAndFlattenSalesTableData(commonWhere, finYearString, type = 
 
     deliveries.forEach(del => {
         const customer = del.Party?.name || 'Unknown';
-        const calculatedItems = calculateItemsWithDistributedCharges(del.SalesDeliveryItems, del, false);
-        
-        calculatedItems.forEach(calc => {
-            const item = calc.itemRef;
-            flatArray.push({
-                finYear: finYearString,
-                docId: del.docId,
-                docDate: del.date || del.createdAt,
-                salesType: "B2B Sales",
-                customer,
-                itemName: item.Item?.name || 'Unknown',
-                amount: calc.adjustedTotal,
-                isReturn: false
-            });
+        // Header total calculation for overall delivery amount
+        const totalAmount = calculateHeaderTotal(del.SalesDeliveryItems, del, false);
+        flatArray.push({
+            finYear: finYearString,
+            docId: del.docId,
+            docDate: del.date || del.createdAt,
+            salesType: "B2B Sales",
+            customer,
+            amount: totalAmount,
+            isReturn: false
         });
     });
 
+    console.log(deliveries, "deliveries")
+
     salesReturns.forEach(ret => {
         const customer = ret.Party?.name || 'Unknown';
-        const calculatedItems = calculateItemsWithDistributedCharges(ret.SalesReturnItems, ret, true);
-        
-        calculatedItems.forEach(calc => {
-            const item = calc.itemRef;
-            flatArray.push({
-                finYear: finYearString,
-                docId: ret.docId,
-                docDate: ret.date || ret.createdAt,
-                salesType: "B2B Return",
-                customer,
-                itemName: item.Item?.name || 'Unknown',
-                amount: calc.adjustedTotal,
-                isReturn: true
-            });
+        // Header total calculation for overall return amount
+        const totalAmount = calculateHeaderTotal(ret.SalesReturnItems, ret, true);
+        flatArray.push({
+            finYear: finYearString,
+            docId: ret.docId,
+            docDate: ret.date || ret.createdAt,
+            salesType: "B2B Return",
+            customer,
+            amount: totalAmount,
+            isReturn: true
         });
     });
 
@@ -1223,7 +1219,7 @@ async function resolveTableCommonWhere(year, company, month, startDateOverride, 
         const targetFinYear = targetFinYears[0];
         const startYear = new Date(targetFinYear.from).getFullYear();
         let startMonth, endMonth; // 0-indexed (Jan = 0)
-        
+
         if (quarter === "Q1") {
             startMonth = 3; // April
             endMonth = 5;   // June
@@ -1241,11 +1237,11 @@ async function resolveTableCommonWhere(year, company, month, startDateOverride, 
         if (startMonth !== undefined) {
             const startYearNum = startMonth >= 3 ? startYear : startYear + 1;
             const endYearNum = endMonth >= 3 ? startYear : startYear + 1;
-            
+
             const startDate = new Date(startYearNum, startMonth, 1);
             startDate.setHours(0, 0, 0, 0);
             const endDate = new Date(endYearNum, endMonth + 1, 0, 23, 59, 59, 999);
-            
+
             orConditions.push({ date: { gte: startDate, lte: endDate } });
             orConditions.push({ date: null, createdAt: { gte: startDate, lte: endDate } });
         }
@@ -1347,30 +1343,30 @@ async function getWeeklySalesTable(req) {
             if (match) {
                 const startStr = match[1]; // "01 Apr"
                 const endStr = match[2];   // "07 Apr"
-                
+
                 const finYears = await prisma.finYear.findMany();
                 const targetFinYear = finYears.find(fy => getYearShortCode(fy.from, fy.to) === finYear);
                 if (targetFinYear) {
                     const startYear = new Date(targetFinYear.from).getFullYear();
-                    
+
                     const MONTH_MAP = {
                         jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
                         jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
                     };
-                    
+
                     const [startDay, startMonthName] = startStr.split(/\s+/);
                     const [endDay, endMonthName] = endStr.split(/\s+/);
-                    
+
                     const startMonthIdx = MONTH_MAP[startMonthName.toLowerCase().slice(0, 3)];
                     const endMonthIdx = MONTH_MAP[endMonthName.toLowerCase().slice(0, 3)];
-                    
+
                     if (startMonthIdx !== undefined && endMonthIdx !== undefined) {
                         const startYearNum = startMonthIdx >= 3 ? startYear : startYear + 1;
                         const endYearNum = endMonthIdx >= 3 ? startYear : startYear + 1;
-                        
+
                         sDate = new Date(startYearNum, startMonthIdx, parseInt(startDay));
                         sDate.setHours(0, 0, 0, 0);
-                        
+
                         eDate = new Date(endYearNum, endMonthIdx, parseInt(endDay));
                         eDate.setHours(23, 59, 59, 999);
                     }

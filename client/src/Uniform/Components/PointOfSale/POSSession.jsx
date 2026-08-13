@@ -1326,6 +1326,15 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             Swal.fire({ title: "Error", text: "Customer mobile is required for credit sales!", icon: "error" });
             return;
         }
+        const currentPhone = selectedCustomer ? selectedCustomer.contactPersonNumber : guestMobile;
+
+        const phoneRegex = /^[0-9]{10}$/;
+        const cleanPhone = currentPhone?.toString().replace(/\D/g, '') || '';
+
+        if (!phoneRegex.test(cleanPhone)) {
+            Swal.fire({ title: "Error", text: "A valid 10-digit mobile number is required!", icon: "error" });
+            return;
+        }
 
         const result = await Swal.fire({
             title: 'Save as Unpaid?',
