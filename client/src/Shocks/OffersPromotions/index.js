@@ -19,6 +19,7 @@ import Modal from "../../UiComponents/Modal";
 import MasterPageLayout from "../../Basic/components/MasterPageLayout";
 import { useFormKeyboardNavigation } from '../../CustomHooks/useFormKeyboardNavigation';
 import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
+import { getCommonParams } from '../../Utils/helper';
 
 
 
@@ -105,10 +106,10 @@ const OffersPromotions = () => {
 
     const [dispatchInvalidate] = useInvalidateTags();
 
+    const { userRole, branchId, companyId } = getCommonParams();
 
     const params = {
-        companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
-        branchId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "branchId") || 1,
+        userRole, branchId, companyId
     };
 
     // --- Queries & Mutations ---
@@ -998,7 +999,14 @@ const OffersPromotions = () => {
     return (
         <MasterPageLayout title="Offers & Promotions" onAdd={onNew} addButtonLabel="+ Add New Offer">
             <div className="bg-white rounded-xl shadow-sm overflow-hidden h-full">
-                <ReusableTable columns={columns} data={allData?.data} onView={handleView} onEdit={handleEdit} onDelete={handleDelete} itemsPerPage={15} isLoading={isLoading || isFetching}
+                <ReusableTable
+                    columns={columns}
+                    data={allData?.data}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    itemsPerPage={15}
+                    isLoading={isLoading || isFetching}
                     enableSearch={true}
                 />
             </div>

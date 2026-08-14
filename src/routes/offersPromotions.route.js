@@ -4,6 +4,7 @@ import { get, getOne, getSearch, create, update, remove, createClearance } from 
 
 
 router.post('/', create);
+
 router.post('/create-clearance', createClearance);
 
 router.get('/', get);

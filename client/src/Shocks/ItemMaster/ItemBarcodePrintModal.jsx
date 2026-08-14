@@ -110,7 +110,8 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
                 sizeId: bc.sizeId,
                 colorId: bc.colorId,
                 qty: printQuantities[bc.barcode],
-                barcode: bc.barcode
+                barcode: bc.barcode,
+                isLegacy: item?.isLegacy
             }));
     }, [variantBarcodes, printQuantities, item]);
 

@@ -96,6 +96,7 @@ const PosDeliveryReceiptPrint = ({
   docId,
   date,
   items = [],
+  summary,
   printCopies = 1
 }) => {
 
@@ -121,6 +122,19 @@ const PosDeliveryReceiptPrint = ({
     }
   }, [docId]);
 
+  function formatDateTime(date) {
+    const d = date ? new Date(date) : new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+
+    const hours = d.getHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12;
+
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(formattedHours)}:${pad(d.getMinutes())} ${ampm}`;
+  }
+  const time = formatDateTime(date)
+
+
   const SummarySlip = () => (
     <Page size={[226, 1200]} style={tw('p-2 bg-white flex flex-col')}>
       <View style={tw('border-2 border-black p-3 items-center w-full')}>
@@ -140,12 +154,22 @@ const PosDeliveryReceiptPrint = ({
             </View>
           )}
         </View>
+        <View style={tw('w-full flex-row justify-between items-center mb-2 ')}>
+          <View style={tw('flex-col items-start')}>
 
-        <Text style={tw('text-[8pt] font-bold uppercase')}>Total Quantity</Text>
-        <Text style={tw('text-xl font-black')}>{totalQty}</Text>
+            <Text style={tw('text-[8pt] font-bold uppercase')}>Total Quantity</Text>
+            <Text style={tw('text-xl font-black')}>{totalQty}</Text>
+          </View>
+          <View style={tw('flex-col items-end justify-center mr-1')}>
+
+            <Text style={tw('text-[8pt] font-bold uppercase')}>Bill Value</Text>
+            <Text style={tw('text-xl font-black')}>{parseFloat(summary?.total > 0 ? summary?.total : 0).toFixed(2)}</Text>
+          </View>
+
+        </View>
 
         <View style={tw('h-2')} />
-        <Text style={tw('text-[7pt] italic')}>{moment(date).format('DD/MM/YYYY HH:mm')}</Text>
+        <Text style={tw('text-[7pt] italic')}>{time}</Text>
       </View>
     </Page>
   );

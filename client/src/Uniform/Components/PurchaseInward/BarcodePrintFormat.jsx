@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
-import { Document, Page, View, Text, PDFViewer, Font } from "@react-pdf/renderer";
+import React, { useEffect, useState } from "react";
+import { Document, Page, View, Text, PDFViewer, Font, Image } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 import BarcodeGenerator from "../BarcodeGenerator";
+import QRCode from "qrcode";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { findFromList } from "../../../Utils/helper";
 import secureLocalStorage from "react-secure-storage";
@@ -29,6 +30,44 @@ const chunkArray = (arr, size) => {
     result.push(arr.slice(i, i + size));
   }
   return result;
+};
+
+const QRCodeImage = ({ value, width = 40, height = 40 }) => {
+  const [src, setSrc] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!value) {
+      setSrc("");
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    QRCode.toDataURL(String(value), {
+      margin: 1,
+      width: 200,
+      color: { dark: "#000000", light: "#FFFFFF" },
+    })
+      .then((dataUrl) => {
+        if (isMounted) {
+          setSrc(dataUrl);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setSrc("");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [value]);
+
+  if (!src) return null;
+
+  return <Image src={src} style={{ width, height }} />;
 };
 
 const BarCodePrintFormat = ({
@@ -67,11 +106,12 @@ const BarCodePrintFormat = ({
   const allBarcodes = data?.flatMap((item) => {
     const priceRow = getBarcodeFromList(item.itemId, item.sizeId, item.colorId);
     return Array.from({ length: parseInt(item?.qty || 0) }, () => ({
-      barCode: priceRow?.barcode,
+      barCode: priceRow?.barcode || item?.barcode || item?.barCode || "",
       code: findFromList(item.itemId, itemList?.data, "code"),
-      itemName: findFromList(item.itemId, itemList?.data, "name"),
-      sizeName: findFromList(item.sizeId, sizeList?.data, "name"),
-      price: Math.trunc(item?.salesPrice) || Math.trunc(item.price)
+      itemName: item?.itemName || findFromList(item.itemId, itemList?.data, "name") || "",
+      sizeName: item?.sizeName || findFromList(item.sizeId, sizeList?.data, "name") || "",
+      price: Math.trunc(item?.salesPrice) || Math.trunc(item?.price || 0),
+      isLegacy: item?.isLegacy
     }));
   });
 
@@ -96,7 +136,8 @@ const BarCodePrintFormat = ({
   // ✅ 2 stickers per page
   const pages = chunkArray(allBarcodes, stickersPerRow);
 
-  console.log(data, "datadata")
+  console.log(pages, "pages")
+  console.log(data, "data")
 
   return (
     <PDFViewer style={tw("w-full h-full")}>
@@ -130,23 +171,49 @@ const BarCodePrintFormat = ({
                   WALRUS
                 </Text>
 
-                <BarcodeGenerator
-                  value={`${code.barCode}`}
-                  width={labelWidthPt * 0.50}
-                  height={labelHeightPt * 0.30}
-                />
+                {code.isLegacy ? (
+                  <>
+                    <BarcodeGenerator
+                      value={`${code.barCode}`}
+                      width={labelWidthPt * 0.50}
+                      height={labelHeightPt * 0.30}
+                    />
 
-                <Text style={{ fontSize: 7.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
-                  {code.barCode}
-                </Text>
+                    <Text style={{ fontSize: 7.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
+                      {code.barCode}
+                    </Text>
 
-                <Text style={{ fontSize: 7.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
-                  {code.itemName}
-                </Text>
+                    <Text style={{ fontSize: 7.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
+                      {code.itemName}
+                    </Text>
 
-                <Text style={{ fontSize: 7.5, textAlign: "center", fontWeight: "bold" }}>
-                  Sale Price {code.price}
-                </Text>
+                    <Text style={{ fontSize: 7.5, textAlign: "center", fontWeight: "bold" }}>
+                      Sale Price {code.price}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <QRCodeImage
+                      value={`${code.barCode}`}
+                      width={labelHeightPt * 0.40}
+                      height={labelHeightPt * 0.30}
+                    />
+
+                    <Text style={{ fontSize: 7.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
+                      {code.barCode}
+                    </Text>
+
+                    <Text style={{ fontSize: 7.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
+                      {code.itemName} {" "} {code.sizeName ? ` ${code.sizeName}` : ''}
+                    </Text>
+
+
+
+                    <Text style={{ fontSize: 7.5, textAlign: "center", fontWeight: "bold" }}>
+                      Sale Price {code.price}
+                    </Text>
+                  </>
+                )}
               </View>
             ))}
           </Page>
@@ -157,3 +224,4 @@ const BarCodePrintFormat = ({
 };
 
 export default BarCodePrintFormat;
+

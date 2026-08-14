@@ -102,6 +102,18 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     returnReferences = [],
   } = printPayload || {};
 
+  function formatDateTime(date) {
+    const d = date ? new Date(date) : new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+
+    const hours = d.getHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12;
+
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(formattedHours)}:${pad(d.getMinutes())} ${ampm}`;
+  }
+
+
   /** @type {ReceiptInstruction[]} */
   const instructions = [];
 
@@ -285,10 +297,15 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
   return instructions;
 }
 
+
+
 function buildSummarySlipInstructions(printPayload) {
-  const { docId, date, items = [] } = printPayload || {};
+  const { docId, date, items = [], summary } = printPayload || {};
 
   const totalQty = items.filter((i) => !i.isReturn).reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
+  const billValue = parseFloat(summary?.total > 0 ? summary?.total : 0).toFixed(2);
+
+  const time = formatDateTime(date);
 
   /** @type {ReceiptInstruction[]} */
   const instructions = [
@@ -296,10 +313,10 @@ function buildSummarySlipInstructions(printPayload) {
     { type: 'line' },
     { type: 'text', value: docId, align: 'center', bold: true, size: 'double' },
     { type: 'qr', value: docId, align: 'center' },
-    { type: 'text', value: 'Total Quantity', align: 'center' },
-    { type: 'text', value: `${totalQty}`, align: 'center', bold: true, size: 'double' },
+    { type: 'leftRight', left: 'Total Quantity', right: 'Bill Value', bold: true },
+    { type: 'leftRight', left: `${totalQty}`, right: `${billValue}`, bold: true },
     { type: 'blank' },
-    { type: 'text', value: formatDateTime(date), align: 'center' },
+    { type: 'text', value: `Time : ${time}`, align: 'center' },
     { type: 'feed', lines: 3 },
     { type: 'cut' },
   ];
@@ -307,11 +324,23 @@ function buildSummarySlipInstructions(printPayload) {
   return instructions;
 }
 
+// function formatDateTime(date) {
+//   const d = date ? new Date(date) : new Date();
+//   const pad = (n) => String(n).padStart(2, '0');
+//   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+// }
+
 function formatDateTime(date) {
   const d = date ? new Date(date) : new Date();
   const pad = (n) => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+  const hours = d.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const formattedHours = hours % 12 || 12;
+
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(formattedHours)}:${pad(d.getMinutes())} ${ampm}`;
 }
+
 
 /**
  * Builds generic receipt print instructions from a POS printPayload.

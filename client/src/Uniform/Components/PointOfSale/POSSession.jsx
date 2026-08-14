@@ -370,7 +370,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     }, [cart, selectedReportSaleId, editMode]);
 
 
-    console.log(stockMap, "stockMap")
+    console.log(selectedReturnBills, "selectedReturnBills", returnBillId)
 
     const syncFormWithDb = useCallback((sale) => {
 
@@ -391,6 +391,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setApprovalStatus("NONE");
             setCurrentBilStatus("PAID");
             setIsCancelBill(false);
+            setReturnBillId("")
             return;
         }
 
@@ -1583,7 +1584,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setGuestMobile("");
             setIsGuestCustomer(true);
             setSearchMode('NAME');
-
+            setReturnBillId("")
             if (transactionType === 'RETURN') {
                 onGoToReports?.();
             } else {
@@ -1671,6 +1672,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         setSearchQuery("");
         setCurrentBilStatus("PAID");
         setAvailableCredit(0);
+        setReturnBillId("");
     };
 
     // Triggers stock viewer popup

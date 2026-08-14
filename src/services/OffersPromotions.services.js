@@ -2,12 +2,12 @@ import { NoRecordFound } from '../configs/Responses.js';
 import { prisma } from '../lib/prisma.js';
 
 async function get(req) {
-    const { branchId, active } = req.query
+    const { branchId, active, userRole } = req.query
 
     const data = await prisma.offer.findMany({
         where: {
-            // branchId: branchId ? parseInt(branchId) : undefined,
-            // active: active ? Boolean(active === 'true') : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
+            active: active ? Boolean(active === 'true') : undefined,
         },
         include: {
             OfferScope: true,
@@ -19,13 +19,14 @@ async function get(req) {
         // }
     });
 
-    // const mappedData = data.map(item => ({
-    //     ...item,
-    //     validFrom: item.startTime || (item.OfferRule?.[0]?.conditions?.metadata?.validFrom || null),
-    //     validTo: item.endTime || (item.OfferRule?.[0]?.conditions?.metadata?.validTo || null)
-    // }));
+    const mappedData = data.map(item => ({
+        ...item,
+        _count: {
+            pos: userRole == "DEFAULT ADMIN" || userRole == "ADMIN" ? 0 : 1
+        }
+    }));
 
-    return { statusCode: 0, data: data };
+    return { statusCode: 0, data: mappedData };
 }
 
 async function getOne(id) {
@@ -114,7 +115,7 @@ async function create(body) {
             maxDiscountValue: maxDiscountValue ? parseFloat(maxDiscountValue) : 0,
             freeItemId: freeItemId ? parseInt(freeItemId) : undefined,
             freeItemQty: freeItemQty ? parseFloat(freeItemQty) : 1,
-            // branchId: branchId ? parseInt(branchId) : undefined,
+            branchId: branchId ? parseInt(branchId) : undefined,
             OfferScope: {
                 create: parsedSelection.map(s => ({
                     type: scope,

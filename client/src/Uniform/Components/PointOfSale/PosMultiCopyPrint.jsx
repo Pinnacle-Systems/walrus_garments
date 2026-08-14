@@ -47,6 +47,7 @@ const PosMultiCopyPrint = ({
 
 
 
+
   const totalQty = items.filter((i) => !i.isReturn)?.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
   const returnTotal = items.reduce((acc, item) => item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
   const purchaseTotal = items.reduce((acc, item) => !item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
@@ -81,6 +82,19 @@ const PosMultiCopyPrint = ({
     }
   }, [docId]);
 
+
+  function formatDateTime(date) {
+    const d = date ? new Date(date) : new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+
+    const hours = d.getHours();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12;
+
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(formattedHours)}:${pad(d.getMinutes())} ${ampm}`;
+  }
+
+
   const BillPage = () => (
     <Page size={[226, 1200]} style={tw('p-1 bg-white flex flex-col')}>
 
@@ -114,7 +128,7 @@ const PosMultiCopyPrint = ({
             <Text style={tw('text-xxs font-bold italic')}>Against: {returnReferences.join(', ')}</Text>
           )} */}
           {/* <Text style={tw('text-xxs')}>Date: {moment(date).format('DD/MM/YYYY')}</Text> */}
-          <Text style={tw('text-xxs font-bold italic text-center')}>Date : {moment(date).format('DD/MM/YYYY HH:mm')}</Text>
+          <Text style={tw('text-xxs font-bold italic text-center')}>Date : {formatDateTime(date)}</Text>
 
         </View>
       </View>
