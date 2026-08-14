@@ -167,9 +167,9 @@ const BarCodePrintFormat = ({
                   fontFamily: "Arial Narrow",
                 }}
               >
-                <Text style={{ fontSize: 7, textAlign: "center", fontWeight: "bold" }}>
+                {/* <Text style={{ fontSize: 7, textAlign: "center", fontWeight: "bold" }}>
                   WALRUS
-                </Text>
+                </Text> */}
 
                 {code.isLegacy ? (
                   <>
@@ -179,38 +179,38 @@ const BarCodePrintFormat = ({
                       height={labelHeightPt * 0.30}
                     />
 
-                    <Text style={{ fontSize: 7.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
+                    <Text style={{ fontSize: 9.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
                       {code.barCode}
                     </Text>
 
-                    <Text style={{ fontSize: 7.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
+                    <Text style={{ fontSize: 9.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
                       {code.itemName}
                     </Text>
 
-                    <Text style={{ fontSize: 7.5, textAlign: "center", fontWeight: "bold" }}>
-                      Sale Price {code.price}
+                    <Text style={{ fontSize: 9.5, textAlign: "center", fontWeight: "bold" }}>
+                      Rs.{code.price} /-
                     </Text>
                   </>
                 ) : (
                   <>
                     <QRCodeImage
                       value={`${code.barCode}`}
-                      width={labelHeightPt * 0.40}
-                      height={labelHeightPt * 0.30}
+                      width={labelHeightPt * 0.30}
+                      height={labelHeightPt * 0.45}
                     />
 
-                    <Text style={{ fontSize: 7.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
+                    <Text style={{ fontSize: 9.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
                       {code.barCode}
                     </Text>
 
-                    <Text style={{ fontSize: 7.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
+                    <Text style={{ fontSize: 9.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
                       {code.itemName} {" "} {code.sizeName ? ` ${code.sizeName}` : ''}
                     </Text>
 
 
 
-                    <Text style={{ fontSize: 7.5, textAlign: "center", fontWeight: "bold" }}>
-                      Sale Price {code.price}
+                    <Text style={{ fontSize: 9.5, textAlign: "center", fontWeight: "bold" }}>
+                      Rs.{code.price} /-
                     </Text>
                   </>
                 )}
