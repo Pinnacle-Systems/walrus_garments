@@ -128,6 +128,26 @@ export default function OverallSalesReports() {
         [colOrder, groupKeys],
     );
 
+    const transactionsTotals = useMemo(() => {
+        return filtered.reduce((acc, row) => {
+            acc.cash = (acc.cash || 0) + (Number(row.cash) || 0);
+            acc.upi = (acc.upi || 0) + (Number(row.upi) || 0);
+            acc.card = (acc.card || 0) + (Number(row.card) || 0);
+            acc.online = (acc.online || 0) + (Number(row.online) || 0);
+            acc.totalAmount = (acc.totalAmount || 0) + (Number(row.totalAmount) || 0);
+            return acc;
+        }, { cash: 0, upi: 0, card: 0, online: 0, totalAmount: 0 });
+    }, [filtered]);
+
+    const salesmanTotals = useMemo(() => {
+        return (apiData.salesmanSummary || []).reduce((acc, row) => {
+            acc.billCount = (acc.billCount || 0) + (Number(row.billCount) || 0);
+            acc.posSales = (acc.posSales || 0) + (Number(row.posSales) || 0);
+            acc.totalSales = (acc.totalSales || 0) + (Number(row.totalSales) || 0);
+            return acc;
+        }, { billCount: 0, posSales: 0, totalSales: 0 });
+    }, [apiData.salesmanSummary]);
+
     // ─── handlers ──────────────────────────────────────────────────────────────
     function handleSort(k, dir) {
         setSortKey(k);
@@ -518,6 +538,19 @@ export default function OverallSalesReports() {
             });
         }
 
+        // ── Footer row ───────────────────────────────────────────────────────────
+        const footerRow = allKeys.map((k, i) => {
+            if (i === 0) return cell("Total", { bold: true, align: "center", fgColor: "F3F4F6", fontColor: "000000" });
+            
+            const totalsData = isSalesman ? salesmanTotals : transactionsTotals;
+            
+            if (NUMBER_KEYS.has(k) || k === 'billCount') {
+                return numberCell(k, totalsData, "F3F4F6", true);
+            }
+            return cell("", { fgColor: "F3F4F6" });
+        });
+        allSheetRows.push({ cells: footerRow, isGroup: false });
+
         // ── Header row ───────────────────────────────────────────────────────────
         const headerRow = allLabels.map((label, i) =>
             cell(label, {
@@ -585,7 +618,7 @@ export default function OverallSalesReports() {
     }
 
     return (
-        <div className="flex flex-col h-full bg-gray-50 p-2 font-sans text-gray-900 overflow-hidden">
+        <div className="flex flex-col bg-gray-50 p-2 font-sans text-gray-900 overflow-hidden h-[85vh]">
 
             <div className="flex items-center justify-between mb-2">
                 <div>
@@ -739,6 +772,19 @@ export default function OverallSalesReports() {
                                         tree.map((node, i) => renderNode(node, visibleCols, i, i))
                                     )}
                                 </tbody>
+                                <tfoot>
+                                    <tr className="bg-gray-200 text-black font-extrabold sticky bottom-0 z-10 shadow-sm border-t border-gray-300">
+                                        <td className="px-2 py-3 text-[11px] uppercase text-center border-r border-gray-300">Total</td>
+                                        {visibleCols.map(col => {
+                                            const isNumeric = ['cash', 'upi', 'card', 'online', 'totalAmount'].includes(col.key);
+                                            return (
+                                                <td key={`footer-${col.key}`} className={`px-3 py-3 text-xs border-r border-gray-300 ${isNumeric ? 'text-right' : ''}`}>
+                                                    {isNumeric ? fmtCurrency(transactionsTotals[col.key]) : ''}
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
 
@@ -802,6 +848,14 @@ export default function OverallSalesReports() {
                                         ))
                                     )}
                                 </tbody>
+                                <tfoot>
+                                    <tr className="bg-gray-200 text-black font-extrabold sticky bottom-0 z-10 shadow-sm border-t border-gray-300">
+                                        <td colSpan="3" className="px-2 py-3 text-[11px] uppercase text-center border-r border-gray-300">Total</td>
+                                        <td className="px-3 py-3 text-xs border-r border-gray-300">{salesmanTotals.billCount} Bills</td>
+                                        <td className="px-3 py-3 text-xs border-r border-gray-300 text-right">{fmtCurrency(salesmanTotals.posSales)}</td>
+                                        <td className="px-3 py-3 text-xs border-r border-gray-300 text-right">{fmtCurrency(salesmanTotals.totalSales)}</td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>

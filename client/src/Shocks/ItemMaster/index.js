@@ -803,7 +803,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
   const generateBarcodeValue = (code, sizeName, item) => {
     const colorCode = (findFromList(item?.colorId, colorData?.data, "code") ?? "000").slice(0, 3);
-    const sizeCode = (findFromList(item?.sizeId, sizeData?.data, "code") ?? "00").slice(0, 2);
+    const sizeCode = (findFromList(item?.sizeId, sizeData?.data, "code") ?? "00").slice(0, 3);
     const shortName = code
       ?.replace(/\s+/g, "")   // remove spaces
       ?.toUpperCase()

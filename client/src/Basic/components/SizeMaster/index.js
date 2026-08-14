@@ -154,9 +154,9 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             return;
         }
 
-        if (code.length < 2) {
+        if (code.length < 1) {
             Swal.fire({
-                title: "Please enter 2 digit valid code...",
+                title: "Please enter 1 digit valid code...",
                 icon: "error",
                 // didClose: () => {
                 //     codeRef?.current?.focus();
