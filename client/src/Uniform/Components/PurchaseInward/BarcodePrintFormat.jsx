@@ -196,7 +196,7 @@ const BarCodePrintFormat = ({
                     <QRCodeImage
                       value={`${code.barCode}`}
                       width={labelHeightPt * 0.30}
-                      height={labelHeightPt * 0.45}
+                      height={labelHeightPt * 0.35}
                     />
 
                     <Text style={{ fontSize: 9.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
