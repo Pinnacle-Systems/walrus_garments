@@ -626,7 +626,9 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
             };
         }
 
-        const selectedOffer = item.appliedOfferSnapshot || activeOffers.find(o => String(o.id) === String(rowOfferId));
+        const selectedOffer = item.isReturn 
+            ? item.appliedOfferSnapshot 
+            : (item.appliedOfferSnapshot || activeOffers.find(o => String(o.id) === String(rowOfferId)));
 
 
         console.log(selectedOffer, "selectedOffer")

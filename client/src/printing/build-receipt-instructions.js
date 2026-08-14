@@ -314,7 +314,7 @@ function buildSummarySlipInstructions(printPayload) {
     { type: 'text', value: docId, align: 'center', bold: true, size: 'double' },
     { type: 'qr', value: docId, align: 'center' },
     { type: 'leftRight', left: 'Total Quantity', right: 'Bill Value', bold: true },
-    { type: 'leftRight', left: `${totalQty}`, right: `${billValue}`, bold: true },
+    { type: 'leftRight', left: `${totalQty}`, right: `${billValue}`, bold: true, size: 'double' },
     { type: 'blank' },
     { type: 'text', value: `Time : ${time}`, align: 'center' },
     { type: 'feed', lines: 3 },

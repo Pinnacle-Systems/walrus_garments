@@ -262,23 +262,7 @@ const PosMultiCopyPrint = ({
 
 
         <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
-          {/* <Text style={tw('text-sm font-black')}>
 
-            {returnTotal > purchaseTotal - totalOfferReversal + totalOfferReapplied
-              ? "Store Credit Issued"
-              : returnTotal < purchaseTotal
-                ? dataObj?.availableCredit ? "Credit Apllied" : "Total Payable"
-                : "Grant Total"
-            }
-          </Text>
-          <Text style={tw('text-sm font-black')}>Rs.
-            {summary.total > 0 ? summary.total.toFixed(0) :
-              (
-                ((returnTotal - purchaseTotal) - totalOfferReversal + totalOfferReapplied).toFixed(2) > 0 ?
-                  (returnTotal - purchaseTotal - totalOfferReversal + totalOfferReapplied).toFixed(2) :
-                  ((purchaseTotal - returnTotal).toFixed(2))
-              )}
-          </Text> */}
           <Text style={tw('text-sm font-black')}>
 
             {returnTotal > overallPurchaseTotal
@@ -296,11 +280,27 @@ const PosMultiCopyPrint = ({
               (
                 (overallPurchaseTotalNew).toFixed(2) > 0 ?
                   (overallPurchaseTotalNew).toFixed(2) :
-                  ((purchaseTotal - returnTotal).toFixed(2))
+                  (Math.abs(purchaseTotal - returnTotal).toFixed(2))
               )}
           </Text>
         </View>
+        <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
 
+          {returnTotal > overallPurchaseTotal && (
+            <Text style={tw('text-sm font-black')}>
+
+              Total Payable
+            </Text>
+          )}
+          {returnTotal > overallPurchaseTotal && (
+            <Text style={tw('text-sm font-black')}>
+              0.00
+            </Text>
+          )}
+
+
+
+        </View>
       </View>
 
 

@@ -763,7 +763,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 const returnMatchItem = prev.find(item => isMatch(item, true, undefined));
                 const returnQty = returnMatchItem ? parseFloat(returnMatchItem.qty) : 0;
 
-                if (returnQty > 0) {
+                if (returnQty > 0 && (returnMatchItem.originalOfferId || returnMatchItem.appliedOfferSnapshot)) {
                     const exchangeIndex = prev.findIndex(item => isMatch(item, false, true));
                     const exchangeQty = exchangeIndex > -1 ? parseFloat(prev[exchangeIndex].qty) : 0;
 
@@ -978,7 +978,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     const returnItem = nextCart.find(i => isMatch(i, true, undefined));
                     const returnQty = returnItem ? parseFloat(returnItem.qty) : 0;
 
-                    if (returnQty > 0 && newQty > returnQty) {
+                    if (returnQty > 0 && newQty > returnQty && (returnItem.originalOfferId || returnItem.appliedOfferSnapshot)) {
                         const excessQty = newQty - returnQty;
                         newQty = returnQty;
 

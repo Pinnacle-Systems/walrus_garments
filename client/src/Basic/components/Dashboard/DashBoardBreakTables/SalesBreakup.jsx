@@ -418,6 +418,13 @@ const TodaySalesBreakup = ({ data, onClose }) => {
     );
     console.log(currentRecords, "currentRecords")
 
+    const totalAmount = filteredData.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+    const totalCash = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.cash || 0), 0);
+    const totalGpay = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.gpay || 0), 0);
+    const totalCard = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.card || 0), 0);
+    const totalOnline = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.online || 0), 0);
+    const totalStoreCredit = filteredData.reduce((sum, row) => sum + Number(row?.paymentBreakup?.storeCredit || 0), 0);
+
     return (
         <>
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[9999]">
@@ -577,29 +584,41 @@ const TodaySalesBreakup = ({ data, onClose }) => {
                                                 <td className="border p-1 text-[10px] ">
                                                     {row.party}
                                                 </td>
-                                                <td className="border p-1 text-[10px]">
-                                                    {row.amount}
+                                                <td className="border p-1 text-[10px] text-right">
+                                                    {parseFloat(row.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </td>
                                                 <td className="border p-1 text-sky-700  text-[10px] w-[25px]">
                                                     {row.type}
                                                 </td>
-                                                <td className="border p-1 text-[10px]">
-                                                    {row.paymentBreakup?.cash}
-                                                </td><td className="border p-1 text-[10px]">
-                                                    {row.paymentBreakup?.gpay}
-                                                </td><td className="border p-1 text-[10px]">
-                                                    {row.paymentBreakup?.card}
+                                                <td className="border p-1 text-[10px] text-right">
+                                                    {parseFloat(row.paymentBreakup?.cash).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </td><td className="border p-1 text-[10px] text-right">
+                                                    {parseFloat(row.paymentBreakup?.gpay).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </td><td className="border p-1 text-[10px] text-right">
+                                                    {parseFloat(row.paymentBreakup?.card).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </td>
-                                                <td className="border p-1 text-[10px]">
-                                                    {row.paymentBreakup?.online}
+                                                <td className="border p-1 text-[10px] text-right">
+                                                    {parseFloat(row.paymentBreakup?.online).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </td>
-                                                <td className="border p-1 text-[10px]">
-                                                    {row.paymentBreakup?.storeCredit}
+                                                <td className="border p-1 text-[10px] text-right">
+                                                    {parseFloat(row.paymentBreakup?.storeCredit).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </td>
                                             </tr>
                                         );
                                     })}
                                 </tbody>
+                                <tfoot>
+                                    <tr className="bg-gray-300 text-black font-extrabold sticky bottom-0">
+                                        <td className="border p-2 text-center text-[12px]" colSpan="3">Total</td>
+                                        <td className="border p-2 text-[12px] text-right">{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td className="border p-2"></td>
+                                        <td className="border p-2 text-[12px] text-right">{totalCash.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td className="border p-2 text-[12px] text-right">{totalGpay.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td className="border p-2 text-[12px] text-right">{totalCard.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td className="border p-2 text-[12px] text-right">{totalOnline.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                        <td className="border p-2 text-[12px] text-right">{totalStoreCredit.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
 
