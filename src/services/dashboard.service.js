@@ -184,7 +184,7 @@ async function getSalesData(where, from, to) {
                     party: p.party || 'Bulk_Sale',
                     amount: parseFloat(p.amount || 0),
                     roundOff: parseFloat(p.roundOff || 0),
-                    type: 'Bulk',
+                    type: 'BULK',
                     paymentBreakup: { cash, gpay, card, online, storeCredit }
                 };
             })
