@@ -100,11 +100,11 @@ async function getSalesData(where, from, to) {
     });
 
     const bulkSalesBreakup = bulkPayments.map(p => ({
-        id: p.docId || p.id,
+        id: p.refDocId || p.docId,
         party: p.Party?.name || 'N/A',
         amount: p.paidAmount || p.totalAmount || 0,
         roundOff: 0,
-        type: 'Bulk',
+        type: 'BULK',
         paymentMode: p.paymentMode,
         paidAmount: p.paidAmount
     }));
