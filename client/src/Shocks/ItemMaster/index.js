@@ -399,7 +399,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const validateData = (data) => {
 
 
-    if (!data.name || !data?.code || !data?.saleType || !data?.hsnId || !data?.mainCategory || !data?.subCategory) {
+    if (!data.name || !data?.code || !data?.hsnId || !data?.mainCategory || !data?.subCategory) {
       return false;
     }
 
