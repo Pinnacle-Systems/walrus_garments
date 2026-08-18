@@ -58,6 +58,16 @@ const ItemMasterApi = createApi({
             },
             providesTags: ["ItemMaster"],
         }),
+        getNextItemCode: builder.query({
+            query: ({ saleType }) => ({
+                url: `${ITEM_API}/next-code`,
+                method: "GET",
+                params: { saleType },
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                },
+            }),
+        }),
 
         addItemMaster: builder.mutation({
             query: (payload) => ({
@@ -98,6 +108,7 @@ export const {
     useAddItemMasterMutation,
     useUpdateItemMasterMutation,
     useDeleteItemMasterMutation,
+    useLazyGetNextItemCodeQuery,
 } = ItemMasterApi;
 
 export default ItemMasterApi;

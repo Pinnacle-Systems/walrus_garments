@@ -1,6 +1,6 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch, create, update, remove, getItemPriceList } from '../controllers/item.controller.js';
+import { get, getOne, getSearch, create, update, remove, getItemPriceList, getNextItemCode } from '../controllers/item.controller.js';
 
 
 router.post('/', create);
@@ -8,6 +8,8 @@ router.post('/', create);
 router.get('/', get);
 
 router.get('/getItemPriceList', getItemPriceList);
+
+router.get('/next-code', getNextItemCode);
 
 router.get('/:id', getOne);
 

@@ -36,6 +36,7 @@ import { useGetStockReportControlQuery } from "../../../redux/uniformService/Sto
 import TransactionEntryShell from "../ReusableComponents/TransactionEntryShell";
 import TransactionHeaderSection from "../ReusableComponents/TransactionHeaderSection";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 
 const PurchaseInwardForm = ({
   hasPermission,
@@ -76,7 +77,7 @@ const PurchaseInwardForm = ({
   locationData,
   supplierList,
   yarnList,
-  colorList,
+  // colorList,
   uomList,
   invalidateTagsDispatch,
   stockReportControlData
@@ -126,6 +127,7 @@ const PurchaseInwardForm = ({
   });
   const { data: itemList } = useGetItemMasterQuery({ params: activeItemParams });
   const { data: sizeList } = useGetSizeMasterQuery({ params });
+  const { data: colorList } = useGetColorMasterQuery({ params });
 
   const {
     data: singleData,
@@ -307,14 +309,14 @@ const PurchaseInwardForm = ({
       const isInvalidValue = (value) => {
         if (value === "" || value === null || value === undefined || value === "NaN") return true;
         if (typeof value === "number" && isNaN(value)) return true;
-        
+
         // Treat strictly numeric zero values (like 0, "0", "0.00") as invalid.
         // Number(value) evaluates to NaN for strings like "WRNWITRED05" or "0ABC", 
         // so this safely allows alphanumeric barcodes to pass validation.
         if (String(value).trim() !== "" && !isNaN(Number(value)) && Number(value) === 0) {
-            return true;
+          return true;
         }
-        
+
         return false;
       };
 
@@ -493,6 +495,7 @@ const PurchaseInwardForm = ({
           sizeList={sizeList}
           itemList={itemList}
           itemPriceList={itemPriceList}
+          colorList={colorList}
         />
       </Modal>
 

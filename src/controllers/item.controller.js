@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, getItemPriceList as _getItemPriceList } from '../services/item.service.js';
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, getItemPriceList as _getItemPriceList, getNextItemCode as _getNextItemCode } from '../services/item.service.js';
 
 async function get(req, res, next) {
     try {
@@ -26,6 +26,16 @@ async function getOne(req, res, next) {
 export async function getItemPriceList(req, res, next) {
     try {
         res.json(await _getItemPriceList(req));
+        console.log(res.statusCode);
+    } catch (err) {
+        console.error(`Error`, err.message);
+        res.status(500).json({ statusCode: 1, message: err.message });
+    }
+}
+
+async function getNextItemCode(req, res, next) {
+    try {
+        res.json(await _getNextItemCode(req));
         console.log(res.statusCode);
     } catch (err) {
         console.error(`Error`, err.message);
@@ -114,5 +124,6 @@ export {
     getSearch,
     create,
     update,
-    remove
+    remove,
+    getNextItemCode
 };

@@ -220,7 +220,7 @@ const SaleOrderReport = ({
                     <div>Customer</div>
                   </th>
                   <th className="w-16  px-3   font-bold text-[13px] text-gray-900  text-center ">
-                    <div>Received Amount</div>
+                    <div>Amount</div>
                   </th>
 
                   <th className="w-36   px-3  font-bold text-[13px]  text-gray-900  text-center ">

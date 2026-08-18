@@ -74,6 +74,7 @@ const BarCodePrintFormat = ({
   data,
   sizeList,
   itemList,
+  colorList,
   itemPriceList,
   labelConfig = {
     labelWidth: 50,
@@ -110,6 +111,7 @@ const BarCodePrintFormat = ({
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: item?.itemName || findFromList(item.itemId, itemList?.data, "name") || "",
       sizeName: item?.sizeName || findFromList(item.sizeId, sizeList?.data, "name") || "",
+      colorName: item?.colorName || findFromList(item.colorId, colorList?.data, "name") || "",
       price: Math.trunc(item?.salesPrice) || Math.trunc(item?.price || 0),
       isLegacy: item?.isLegacy
     }));
@@ -175,7 +177,7 @@ const BarCodePrintFormat = ({
                   <>
                     <BarcodeGenerator
                       value={`${code.barCode}`}
-                      width={labelWidthPt * 0.50}
+                      width={labelWidthPt * 0.40}
                       height={labelHeightPt * 0.30}
                     />
 
@@ -192,27 +194,32 @@ const BarCodePrintFormat = ({
                     </Text>
                   </>
                 ) : (
-                  <>
-                    <QRCodeImage
-                      value={`${code.barCode}`}
-                      width={labelHeightPt * 0.30}
-                      height={labelHeightPt * 0.30}
-                    />
+                  <View style={{ flexDirection: "row", alignItems: "center", width: "100%", gap: 4 }}>
+                    <View style={{ flexShrink: 0 }}>
+                      <QRCodeImage
+                        value={`${code.barCode}`}
+                        width={labelHeightPt * 0.70}
+                        height={labelHeightPt * 0.70}
+                      />
+                    </View>
+                    <View style={{ flex: 1, flexDirection: "column", justifyContent: "center" }}>
+                      <Text style={{ fontSize: 8.5, textAlign: "left", fontWeight: "bold" }}>
+                        {code.barCode}
+                      </Text>
 
-                    <Text style={{ fontSize: 9.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
-                      {code.barCode}
-                    </Text>
+                      <Text style={{ fontSize: 8.5, textAlign: "left", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold", marginTop: 1 }}>
+                        {code.itemName}
+                      </Text>
 
-                    <Text style={{ fontSize: 9.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
-                      {code.itemName} {" "} {code.sizeName ? ` ${code.sizeName}` : ''}
-                    </Text>
+                      <Text style={{ fontSize: 8.5, textAlign: "left", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold", marginTop: 1 }}>
+                        {code.sizeName ? `${code.sizeName} ` : ''} {code.colorName ? ` | ${code.colorName}  ` : ''}
+                      </Text>
 
-
-
-                    <Text style={{ fontSize: 9.5, textAlign: "center", fontWeight: "bold" }}>
-                      Rs.{code.price} /-
-                    </Text>
-                  </>
+                      <Text style={{ fontSize: 8.5, textAlign: "left", fontWeight: "bold", marginTop: 1 }}>
+                        Rs.{code.price} /-
+                      </Text>
+                    </View>
+                  </View>
                 )}
               </View>
             ))}

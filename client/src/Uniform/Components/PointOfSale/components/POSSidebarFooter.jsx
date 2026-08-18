@@ -15,7 +15,8 @@ const POSSidebarFooter = ({
     setPrintData,
     handleSaveUnpaid,
     handlePayNow,
-    handleSaveAndPrint
+    handleSaveAndPrint,
+    currentBilStatus
 }) => {
     // Resolve Dynamic Button Labels with better business names
     const getButtonLabel = () => {
@@ -30,6 +31,8 @@ const POSSidebarFooter = ({
         return "Pay [F8]";
     };
 
+    console.log(isUnpaidBill, "isUnpaidBill", isReturnMode)
+
 
     // Resolve Dynamic Button Styles & Icons
     const buttonIcon = isRefund ? <CreditCard size={16} /> : (isReturnMode ? <ShoppingCart size={16} /> : <CreditCard size={16} />);
@@ -40,23 +43,29 @@ const POSSidebarFooter = ({
     return (
         <div className="px-1 py-2 bg-white border-t border-slate-100 space-y-2">
             <div className={`grid ${isUnpaidBill || isReturnMode ? 'grid-cols-1' : 'grid-cols-2'} gap-1.5`}>
-                {!isUnpaidBill && !isReturnMode && (
+                {/* {!isUnpaidBill && !isReturnMode && (
                     <>
                         <button
                             disabled={isProcessing || cart.length === 0 || isReportOnly}
                             onClick={() => handleSaveUnpaid()}
                             className={`py-2 rounded-xl flex items-center justify-center gap-1 font-black text-[9px] uppercase tracking-widest transition-all shadow-lg ${(cart.length === 0 || isProcessing || isReportOnly) ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98] shadow-emerald-100'}`}
                         >
-                            {/* <Printer size={14} /> */}
                             <span>UnPaid Invoice [F9]</span>
                         </button>
-                        {/* <button
+
+
+                    </>
+                )} */}
+                {currentBilStatus != "PAID" && !isReturnMode && (
+                    <>
+                        <button
                             disabled={isProcessing || cart.length === 0 || isReportOnly}
                             onClick={() => handleSaveUnpaid()}
-                            className={`py-2 rounded-xl flex items-center justify-center gap-1 font-black text-[9px] uppercase tracking-widest transition-all shadow-lg ${(cart.length === 0 || isProcessing || isReportOnly) ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-amber-500 text-white hover:bg-amber-600 active:scale-[0.98] shadow-amber-100'}`}
+                            className={`py-2 rounded-xl flex items-center justify-center gap-1 font-black text-[9px] uppercase tracking-widest transition-all shadow-lg ${(cart.length === 0 || isProcessing || isReportOnly) ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-[0.98] shadow-emerald-100'}`}
                         >
                             <span>UnPaid Invoice [F9]</span>
-                        </button> */}
+                        </button>
+
 
                     </>
                 )}

@@ -1,13 +1,13 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation } from "../../redux/uniformService/ItemMasterService";
+import { useAddItemMasterMutation, useDeleteItemMasterMutation, useGetItemMasterByIdQuery, useGetItemMasterQuery, useUpdateItemMasterMutation, useLazyGetNextItemCodeQuery } from "../../redux/uniformService/ItemMasterService";
 import secureLocalStorage from "react-secure-storage";
 import Swal from "sweetalert2";
 import useInvalidateTags from '../../CustomHooks/useInvalidateTags';
 import { Check, Power, Plus } from "lucide-react";
 import { DropdownInput, PriceInputWithTax, ReusableTable, TextInputNew1, ToggleButton, MultiSelectDropdownNew, childRecordCount, DropdownInputNew, childRecordCountTotal } from "../../Inputs";
 import Modal from "../../UiComponents/Modal";
-import { ItemTypes, statusDropdown } from "../../Utils/DropdownData";
+import { ItemTypes, statusDropdown, saleTypeList } from "../../Utils/DropdownData";
 import { dropDownListObject, multiSelectOption } from "../../Utils/contructObject";
 import { useGetStyleMasterQuery } from "../../redux/uniformService/StyleMasterService";
 import { useGetSizeMasterQuery } from "../../redux/uniformService/SizeMasterService";
@@ -74,6 +74,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [salesTaxType, setSalesTaxType] = useState("")
   const [purchaseTaxType, setPurchaseTaxType] = useState("")
   const [itemType, setItemType] = useState('')
+  const [saleType, setSaleType] = useState("")
   const [searchValue, setSearchValue] = useState("");
   const [sizeList, setSizeList] = useState([])
   const [colorList, setColorList] = useState([])
@@ -135,6 +136,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [updateData] = useUpdateItemMasterMutation();
   const [removeData] = useDeleteItemMasterMutation();
   const [dispatchInvalidate] = useInvalidateTags();
+  const [getNextItemCode] = useLazyGetNextItemCodeQuery();
 
 
   const {
@@ -197,6 +199,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         setSizeId(data?.sizeId ? data?.sizeId : "")
         setName(data?.name ? data?.name : "")
         setCode(data?.code ? data?.code : "")
+        setSaleType(data?.saleType ? data?.saleType : "")
         setItemType(data?.itemType ? data?.itemType : "")
         setHsnId(data?.hsnId ? data?.hsnId : "")
         setPurchasePrice(data?.purchasePrice ? data?.purchasePrice : "")
@@ -218,6 +221,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
         setName(data?.name ? data?.name : "")
         setCode(data?.code ? data?.code : "")
+        setSaleType(data?.saleType ? data?.saleType : "")
         setItemType(data?.itemType ? data?.itemType : "")
         setHsnId(data?.hsnId ? data?.hsnId : "")
         setSizeId(data?.sizeId ? data?.sizeId : "")
@@ -365,6 +369,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     sizeId,
     name,
     code,
+    saleType,
     itemType,
     hsnId,
     active,
@@ -394,7 +399,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const validateData = (data) => {
 
 
-    if (!data.name || !data?.code || !data?.hsnId || !data?.mainCategory || !data?.subCategory) {
+    if (!data.name || !data?.code || !data?.saleType || !data?.hsnId || !data?.mainCategory || !data?.subCategory) {
       return false;
     }
 
@@ -560,15 +565,15 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         });
         return;
       }
-      if (code.trim().length !== 4) {
-        Swal.fire({
-          text: "The Item Code should be must be 4 digits.",
-          icon: "warning",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        return false;
-      }
+      // if (code.trim().length !== 4) {
+      //   Swal.fire({
+      //     text: "The Item Code should be must be 4 digits.",
+      //     icon: "warning",
+      //     timer: 1500,
+      //     showConfirmButton: false,
+      //   });
+      //   return false;
+      // }
 
     }
 
@@ -807,7 +812,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const shortName = code
       ?.replace(/\s+/g, "")   // remove spaces
       ?.toUpperCase()
-      ?.slice(0, 4) || "";
+      ?.slice(0, 8) || "";
 
     return `WR${shortName}${colorCode?.toUpperCase() || ""}${sizeCode?.toUpperCase() || ""}`;
   };
@@ -1095,16 +1100,41 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 />
               </div>
               <div className="col-span-2">
+                <DropdownInputNew
+                  name="Sale Type"
+                  options={saleTypeList}
+                  value={saleType}
+                  setValue={(val) => {
+                    setSaleType(val);
+                    if (!id && val) {
+                      getNextItemCode({ saleType: val }).unwrap().then(res => {
+                        if (res?.statusCode === 0) {
+                          setCode(res?.data);
+                        }
+                      }).catch(err => {
+                        console.error("Error fetching next item code", err);
+                      });
+                    } else if (!id && !val) {
+                      setCode("");
+                    }
+                  }}
+                  required
+                  readOnly={readOnly || !!id}
+                  disabled={disableLinkedRecordField}
+                />{console.log(code, "code")}
+              </div>
+              <div className="col-span-2">
                 <TextInputNew1
                   name="Item Code"
                   value={code}
                   setValue={handleCodeChange}
                   // setValue={setCode}
 
-                  readOnly={readOnly}
+                  readOnly={true}
                   disabled={disableLinkedRecordField}
                   required={true}
                   max={4}
+                  placeholder="Auto Generated"
                 />
               </div>
               <div className="col-span-2">
@@ -1396,13 +1426,13 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                 return
                               }
 
-                              if (code?.length !== 4) {
-                                Swal.fire({
-                                  icon: "error",
-                                  text: "Please enter 4 digit item code",
-                                })
-                                return
-                              }
+                              // if (code?.length !== 4) {
+                              //   Swal.fire({
+                              //     icon: "error",
+                              //     text: "Please enter 4 digit item code",
+                              //   })
+                              //   return
+                              // }
                               if (sizeList.length === 0) {
                                 // toast.error("Please select at least one size")
                                 Swal.fire({

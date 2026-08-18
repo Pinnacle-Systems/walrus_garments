@@ -139,6 +139,7 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
                             sizeList={sizeData}
                             itemList={{ data: [item] }}
                             itemPriceList={{ data: item?.ItemPriceList }}
+                            colorList={colorData}
                         />
                     </div>
                 </div>

@@ -4946,6 +4946,13 @@ model AccessoryTemplateItems {
   active              Boolean?           @default(false)
 }
 
+model ItemSequence {
+  id       Int     @id @default(autoincrement())
+  saleType String? @unique()
+  prefix   String?
+  sequence Int?    @default(1000)
+}
+
 model Item {
   id                                 Int                                  @id @default(autoincrement())
   Style                              Style?                               @relation(fields: [styleId], references: [id])
@@ -4977,6 +4984,7 @@ model Item {
   SubCategory                        SubCategory?                         @relation(fields: [subCategoryId], references: [id])
   subCategoryId                      Int?
   isSameAsBarcode                    Boolean                              @default(false)
+  saleType                           String?
   DirectItems                        DirectItems[]
   Stock                              Stock[]
   ItemPriceList                      ItemPriceList[]

@@ -57,7 +57,7 @@ export function usePermissionForUsers() {
   };
 
 
-  // console.log("currentPagePermissions", currentPagePermissions)
+  console.log("currentPagePermissions", currentPagePermissions)
 
   const hasPermission = (callback, type, childRecord = 0) => {
 

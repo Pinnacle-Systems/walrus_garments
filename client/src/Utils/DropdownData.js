@@ -393,3 +393,7 @@ export const TransactionType = [
     { show: "RETURN", value: "RETURN" },
 ]
 
+export const saleTypeList = [
+    { show: "POS SALE", value: "POS" },
+    { show: "BULK SALE", value: "BULK" },
+]

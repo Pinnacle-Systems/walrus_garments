@@ -73,6 +73,26 @@ async function ensureUniqueItemName(name, excludeItemId) {
     }
 }
 
+async function ensureUniqueItemCode(code, excludeItemId) {
+    if (!code) {
+        return;
+    }
+
+    const existingItem = await prisma.item.findFirst({
+        where: {
+            code,
+            id: excludeItemId ? { not: parseInt(excludeItemId) } : undefined,
+        },
+        select: {
+            id: true,
+        }
+    });
+
+    if (existingItem) {
+        throw Error("The Item Code already exists. Please refresh to get the latest code.");
+    }
+}
+
 async function validateLegacyItemPayload({
     itemId,
     itemName,
@@ -442,8 +462,26 @@ async function getSearch(req) {
         })),
     };
 }
+
+async function getNextItemCode(req) {
+    const saleType = req.query.saleType;
+    if (!saleType) {
+        throw new Error("saleType is required to generate Item Code");
+    }
+
+    const prefix = saleType === "POS" ? "PS" : saleType === "BULK" ? "BS" : "IT";
+
+    let itemSequence = await prisma.itemSequence.findUnique({
+        where: { saleType: saleType }
+    });
+
+    const nextSeq = itemSequence ? itemSequence.sequence + 1 : 1000;
+    const code = `${prefix}${nextSeq}`;
+
+    return { statusCode: 0, data: code };
+}
 async function create(body) {
-    const { styleId, sizeId, name, hsnId, code, itemType, salesPrice, purchasePrice, aliasName, itemPriceList, active,
+    const { styleId, sizeId, name, hsnId, code, saleType, itemType, salesPrice, purchasePrice, aliasName, itemPriceList, active,
         sectionId, sectionType, subCategory, mainCategory, isLegacy, creationSource, isSameAsBarcode
     } = body
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
@@ -456,6 +494,7 @@ async function create(body) {
         creationSource,
     });
     await ensureUniqueItemName(normalizedName);
+    await ensureUniqueItemCode(code);
     await validateLegacyItemPayload({
         itemName: normalizedName,
         isLegacy: normalizedIsLegacy,
@@ -489,6 +528,7 @@ async function create(body) {
             isLegacy: normalizedIsLegacy,
             isSameAsBarcode: parseOptionalBoolean(isSameAsBarcode),
             active: parseOptionalBoolean(active),
+            saleType: saleType ? saleType : null,
 
             ItemPriceList: itemPriceList?.length > 0
                 ? {
@@ -532,6 +572,32 @@ async function create(body) {
 
         }
     });
+
+    if (saleType && code) {
+        const prefix = saleType === "POS" ? "PS" : saleType === "BULK" ? "BS" : "IT";
+        if (code.startsWith(prefix)) {
+            const numPart = parseInt(code.substring(prefix.length), 10);
+            if (!isNaN(numPart)) {
+                const currentSeq = await prisma.itemSequence.findUnique({
+                    where: { saleType: saleType }
+                });
+                if (!currentSeq || numPart > currentSeq.sequence) {
+                    await prisma.itemSequence.upsert({
+                        where: { saleType: saleType },
+                        update: {
+                            sequence: numPart
+                        },
+                        create: {
+                            saleType,
+                            prefix,
+                            sequence: numPart
+                        }
+                    });
+                }
+            }
+        }
+    }
+
     return { statusCode: 0, data: { data } };
 }
 
@@ -722,7 +788,7 @@ async function updateItemPriceList(tx, itemPriceList, item) {
 
 
 async function update(id, body) {
-    const { styleId, sizeId, name, hsnId, code, active, itemPriceList, sectionId, fields, mainCategory, subCategory, aliasName, isLegacy, isSameAsBarcode } = body
+    const { styleId, sizeId, name, hsnId, code, saleType, active, itemPriceList, sectionId, fields, mainCategory, subCategory, aliasName, isLegacy, isSameAsBarcode } = body
 
     const barcodeGenerationMethod = await getBarcodeGenerationMethod();
 
@@ -740,6 +806,7 @@ async function update(id, body) {
     const normalizedName = normalizeItemName(name);
     const normalizedIsLegacy = parseOptionalBoolean(isLegacy) ?? dataFound.isLegacy ?? false;
     await ensureUniqueItemName(normalizedName, id);
+    await ensureUniqueItemCode(code, id);
     await validateLegacyItemPayload({
         itemId: id,
         itemName: normalizedName,
@@ -786,6 +853,7 @@ async function update(id, body) {
                 mainCategoryId: parseIntOrUndefined(mainCategory),
                 subCategoryId: parseIntOrUndefined(subCategory),
                 aliasName: aliasName ? aliasName : undefined,
+                saleType: saleType ? saleType : null,
                 isSameAsBarcode: parseOptionalBoolean(isSameAsBarcode),
                 field1: fields?.[0] ?? "",
                 field2: fields?.[1] ?? "",
@@ -886,5 +954,6 @@ export {
     getSearch,
     create,
     update,
-    remove
+    remove,
+    getNextItemCode
 }
