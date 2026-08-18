@@ -603,7 +603,7 @@ const StockTransferForm = ({
                     <div className="flex flex-col md:flex-row gap-2 justify-between flex-none bg-white p-2 rounded-md border border-slate-200 shadow-sm">
                         <div className="flex gap-2 flex-wrap">
                             <button
-                                onClick={() => hasPermission(() => saveData("close"), "save")}
+                                onClick={() => hasPermission(() => saveData("close"), "create")}
                                 disabled={readOnly || id}
 
                                 className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
@@ -612,7 +612,7 @@ const StockTransferForm = ({
 
                             </button>
                             <button
-                                onClick={() => hasPermission(() => saveData("new"), "save")}
+                                onClick={() => hasPermission(() => saveData("new"), "create")}
                                 disabled={readOnly || id}
                                 className="bg-indigo-500 text-white px-4 py-1.5 rounded-md hover:bg-indigo-600 flex items-center text-sm shadow-sm transition-all active:scale-95">
                                 <FiSave className="w-4 h-4 mr-2" />

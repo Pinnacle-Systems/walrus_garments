@@ -79,20 +79,15 @@ async function getSalesData(where, from, to) {
         include: { Party: { select: { name: true } } }
     });
 
-    const bulkSales = await prisma.salesDelivery.findMany({
-        where: { ...where, createdAt: { gte: from, lte: to }, isDeleted: false },
+    const bulkPayments = await prisma.payment.findMany({
+        where: {
+            ...where,
+            date: { gte: from, lte: to },
+            isDeleted: false,
+            transactionType: { in: ['QUOTATION', 'SALESORDER'] }
+        },
         include: {
-            Party: { select: { name: true } },
-            SalesDeliveryItems: {
-                select: {
-                    deliveryQty: true,
-                    price: true,
-                    taxMethod: true,
-                    taxPercent: true,
-                    discountType: true,
-                    discountValue: true
-                }
-            }
+            Party: { select: { name: true } }
         }
     });
 
@@ -104,12 +99,15 @@ async function getSalesData(where, from, to) {
         }
     });
 
-    const bulkSalesBreakup = bulkSales.map(s => {
-        const rawAmount = calculateNetAmount(s.SalesDeliveryItems, s);
-        const amount = Math.round(rawAmount);
-        const roundOff = Math.round((amount - rawAmount) * 100) / 100;
-        return { id: s.docId || s.id, party: s.Party?.name || 'N/A', amount, roundOff, type: 'Bulk' };
-    });
+    const bulkSalesBreakup = bulkPayments.map(p => ({
+        id: p.docId || p.id,
+        party: p.Party?.name || 'N/A',
+        amount: p.paidAmount || p.totalAmount || 0,
+        roundOff: 0,
+        type: 'Bulk',
+        paymentMode: p.paymentMode,
+        paidAmount: p.paidAmount
+    }));
 
     const bulkReturnsBreakup = bulkReturns.map(s => {
         const itemsSum = s.SalesReturnItems.reduce((acc, item) => acc + (parseFloat(item.qty || 0) * parseFloat(item.price || 0)), 0);
@@ -136,6 +134,7 @@ async function getSalesData(where, from, to) {
     const bulkReturnsTotal = bulkReturnsBreakup.reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
 
 
+    console.log(bulkSalesBreakup, "bulkSalesBreakup")
 
 
 
@@ -173,7 +172,22 @@ async function getSalesData(where, from, to) {
                     paymentBreakup: { cash, gpay, card, online, storeCredit }
                 };
             }),
-            ...bulkSalesBreakup
+            ...bulkSalesBreakup?.map(p => {
+                const cash = p.paymentMode == "Cash" ? p.paidAmount : 0
+                const gpay = p.paymentMode == "Upi" ? p.paidAmount : 0
+                const card = p.paymentMode == "Card" ? p.paidAmount : 0
+                const online = p.paymentMode == "Online" ? p.paidAmount : 0
+                const storeCredit = p.paymentMode == "Credit_Adjustment" ? p.paidAmount : 0
+
+                return {
+                    id: p.docId || p.id,
+                    party: p.party || 'Bulk_Sale',
+                    amount: parseFloat(p.amount || 0),
+                    roundOff: parseFloat(p.roundOff || 0),
+                    type: 'Bulk',
+                    paymentBreakup: { cash, gpay, card, online, storeCredit }
+                };
+            })
         ],
         returnsBreakup: [
             ...posReturns.map(p => ({ id: p.docId || p.id, party: p.Party?.name || 'Walk-in', amount: parseFloat(p.netAmount || 0), type: 'POS' })),
@@ -187,7 +201,7 @@ async function getCollectionData(where, from, to) {
         where: { ...where, date: { gte: from, lte: to }, isDeleted: false },
         include: { Party: { select: { name: true } } }
     });
-    
+
     const posRaw = await prisma.posPayments.findMany({
         where: { date: { gte: from, lte: to } },
         include: { Pos: { select: { Party: { select: { name: true } } } } }
@@ -485,7 +499,7 @@ async function getSalesAnalytics(query) {
                 PosPayments: true
             }
         });
-        
+
         const bulkSalesRaw = await prisma.salesDelivery.findMany({
             where: { ...commonWhere, createdAt: { gte: queryStartDate, lte: queryEndDate }, isDeleted: false },
             include: {
@@ -674,7 +688,7 @@ async function getSalesBreakup(query) {
                 where: { ...commonWhere, createdAt: { gte: startDate, lte: endDate } },
                 include: { Party: { select: { name: true } } }
             });
-            
+
             const bulkRaw = await prisma.salesDelivery.findMany({
                 where: { ...commonWhere, createdAt: { gte: startDate, lte: endDate }, isDeleted: false },
                 include: {

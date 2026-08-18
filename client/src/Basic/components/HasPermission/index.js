@@ -57,9 +57,10 @@ export function usePermissionForUsers() {
   };
 
 
-  console.log("currentPagePermissions", currentPagePermissions)
 
   const hasPermission = (callback, type, childRecord = 0) => {
+
+    console.log("currentPagePermissions", currentPagePermissions, type)
 
     const childRecordValidationActions = ["delete"]
 
