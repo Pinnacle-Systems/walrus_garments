@@ -189,7 +189,7 @@ const BarCodePrintFormat = ({
                       {code.itemName}
                     </Text>
 
-                    <Text style={{ fontSize: 9.5, textAlign: "center", fontWeight: "bold" }}>
+                    <Text style={{ fontSize: 10.5, textAlign: "center", fontWeight: "bold" }}>
                       Rs.{code.price} /-
                     </Text>
                   </>
@@ -215,7 +215,7 @@ const BarCodePrintFormat = ({
                         {code.sizeName ? `${code.sizeName} ` : ''} {code.colorName ? ` | ${code.colorName}  ` : ''}
                       </Text>
 
-                      <Text style={{ fontSize: 8.5, textAlign: "left", fontWeight: "bold", marginTop: 1 }}>
+                      <Text style={{ fontSize: 10.5, textAlign: "left", fontWeight: "bold", marginTop: 1 }}>
                         Rs.{code.price} /-
                       </Text>
                     </View>
