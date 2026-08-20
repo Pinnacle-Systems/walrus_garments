@@ -165,7 +165,8 @@ const BarCodePrintFormat = ({
                   alignItems: "center",
                   paddingLeft: 4,
                   paddingRight: 12, // Space for right pre-printed WALRUS logo
-                  paddingVertical: 2,
+                  paddingTop: 6,
+                  paddingBottom: 0,
                   fontFamily: "Arial Narrow",
                 }}
               >
@@ -177,19 +178,19 @@ const BarCodePrintFormat = ({
                   <>
                     <BarcodeGenerator
                       value={`${code.barCode}`}
-                      width={labelWidthPt * 0.40}
-                      height={labelHeightPt * 0.30}
+                      width={labelWidthPt * 0.50}
+                      height={labelHeightPt * 0.35}
                     />
 
-                    <Text style={{ fontSize: 9.5, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
+                    <Text style={{ fontSize: 8, textAlign: "center", marginTop: 1, fontWeight: "bold" }}>
                       {code.barCode}
                     </Text>
 
-                    <Text style={{ fontSize: 9.5, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
+                    <Text style={{ fontSize: 8, textAlign: "center", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold" }}>
                       {code.itemName}
                     </Text>
 
-                    <Text style={{ fontSize: 10.5, textAlign: "center", fontWeight: "bold" }}>
+                    <Text style={{ fontSize: 10, textAlign: "center", fontWeight: "bold", paddingBottom: 0 }}>
                       Rs.{code.price} /-
                     </Text>
                   </>

@@ -22,7 +22,7 @@ const BarcodeGenerator = ({ value, isUi = false, width = 100, height = 30 }) => 
 
   if (isUi)
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center items-center ">
         <img src={barcode} alt="barcode" style={{ width, height }} />
       </div>
     );
