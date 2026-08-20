@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `pos` ADD COLUMN `courierCharges` INTEGER NULL DEFAULT 0,
+    ADD COLUMN `packingCharges` INTEGER NULL DEFAULT 0,
+    ADD COLUMN `shippingCharges` INTEGER NULL DEFAULT 0;

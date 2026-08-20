@@ -257,7 +257,24 @@ const PosMultiCopyPrint = ({
             <Text style={tw('text-xxs')}>{purchaseTotal.toFixed(2)}</Text>
           </View>
         )}
-
+        {dataObj?.courierCharges > 0 && (
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>Courier Charges :</Text>
+            <Text style={tw('text-xxs ')}>{dataObj?.courierCharges.toFixed(2)}</Text>
+          </View>
+        )}
+        {dataObj?.packingCharges > 0 && (
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>Packing Charges :</Text>
+            <Text style={tw('text-xxs ')}>{dataObj?.packingCharges.toFixed(2)}</Text>
+          </View>
+        )}
+        {dataObj?.shippingCharges > 0 && (
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>Shipping charges :</Text>
+            <Text style={tw('text-xxs ')}>{dataObj?.shippingCharges.toFixed(2)}</Text>
+          </View>
+        )}
         {console.log({ returnTotal, purchaseTotal }, "purchaseTotal")}
 
 

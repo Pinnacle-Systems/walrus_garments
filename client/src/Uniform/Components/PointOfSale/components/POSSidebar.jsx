@@ -42,9 +42,16 @@ const POSSidebar = ({
     setSelectedReturnBills,
     isCancelBill,
     totalOfferReversal = 0,
-    totalOfferReapplied = 0
+    totalOfferReapplied = 0,
+    packingCharges,
+    setPackingCharges,
+    shippingCharges,
+    setShippingCharges,
+    courierCharges,
+    setCourierCharges,
+    additionalCharges
 }) => {
-    const transactionTotal = parseFloat(total) || 0;
+    const transactionTotal = parseFloat(total)
     const customerCredit = parseFloat(availableCredit) || 0;
 
     const appliedCredit = Math.min(Math.max(0, transactionTotal), customerCredit);
@@ -75,10 +82,10 @@ const POSSidebar = ({
         isPendingApproval,
         isUnpaidBill,
         isReturnMode,
-
-
-
-    })
+        packingCharges,
+        shippingCharges,
+        courierCharges
+    }, "Checking charges")
 
     /* console.log removed */
     /* console.log removed */
@@ -223,6 +230,13 @@ const POSSidebar = ({
                         totalOfferReversal={totalOfferReversal}
                         totalOfferReapplied={totalOfferReapplied}
                         currentBilStatus={currentBilStatus}
+                        packingCharges={packingCharges}
+                        setPackingCharges={setPackingCharges}
+                        shippingCharges={shippingCharges}
+                        setShippingCharges={setShippingCharges}
+                        courierCharges={courierCharges}
+                        setCourierCharges={setCourierCharges}
+                        additionalCharges={additionalCharges}
                     />
                 )}
 

@@ -257,7 +257,7 @@ async function create(body) {
     try {
         const {
             customerId, posItems, posPayments, finYearId, branchId, storeId, exchangeSalesNo,
-            netAmount, approvalStatus, transactionType, manualDiscount
+            netAmount, approvalStatus, transactionType, manualDiscount, packingCharges, shippingCharges, courierCharges, additionalCharges
         } = await body;
 
 
@@ -282,9 +282,9 @@ async function create(body) {
             .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
 
 
-        const billAmount = Math.round((grossPurchaseAmount || 0)) - Math.round((manualDiscount || 0))
+        const billAmount = Math.round((grossPurchaseAmount || 0)) - Math.round((manualDiscount || 0)) + Math.round((packingCharges || 0)) + Math.round((shippingCharges || 0)) + Math.round((courierCharges || 0))
 
-        const finalNetAmount = transactionType == "RETURN" ? (grossReturnAmount - totalOfferReversal) : netAmount
+        const finalNetAmount = transactionType == "RETURN" ? (grossReturnAmount - totalOfferReversal) : netAmount + (additionalCharges || 0)
 
 
 
@@ -320,6 +320,10 @@ async function create(body) {
                     offerPenalty: body.offerPenalty ? String(body.offerPenalty) : null,
                     offerRestored: body.offerRestored ? String(body.offerRestored) : null,
                     manualDiscount: manualDiscount ? String(manualDiscount) : null,
+                    packingCharges: packingCharges ? parseInt(packingCharges) : null,
+                    shippingCharges: shippingCharges ? parseInt(shippingCharges) : null,
+                    courierCharges: courierCharges ? parseInt(courierCharges) : null,
+
                     PosItems: {
                         createMany: {
                             data: (posItems || []).map((item) => ({
@@ -524,7 +528,8 @@ async function update(id, body) {
     try {
         const {
             customerId, posItems, posPayments, branchId, storeId,
-            netAmount, taxAmount, discountValue, transactionType, finYearId, bilStatus, manualDiscount
+            netAmount, taxAmount, discountValue, transactionType, finYearId, bilStatus, manualDiscount,
+            packingCharges, shippingCharges, courierCharges, additionalCharges
         } = await body;
 
 
@@ -543,7 +548,7 @@ async function update(id, body) {
         const totalOfferReversal = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
         const totalOfferReapplied = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
 
-        const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount - totalOfferReversal : netAmount
+        const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount - totalOfferReversal : netAmount + (additionalCharges || 0)
 
 
         if ((dataFound.docId === 'DRAFT')) {
@@ -590,7 +595,9 @@ async function update(id, body) {
                     offerPenalty: body.offerPenalty ? String(body.offerPenalty) : null,
                     offerRestored: body.offerRestored ? String(body.offerRestored) : null,
                     manualDiscount: manualDiscount ? String(manualDiscount) : null,
-
+                    packingCharges: packingCharges ? parseInt(packingCharges) : null,
+                    shippingCharges: shippingCharges ? parseInt(shippingCharges) : null,
+                    courierCharges: courierCharges ? parseInt(courierCharges) : null,
                 }
             });
 
@@ -722,7 +729,7 @@ async function update(id, body) {
                 .filter(i => !i.isReturn)
                 .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
 
-            const billAmount = grossPurchaseAmount - manualDiscount
+            const billAmount = (grossPurchaseAmount + (additionalCharges || 0)) - manualDiscount
 
             const currentDiscount = parseFloat(discountValue !== undefined ? discountValue : (updatedPos.discountValue || 0));
             const currentPenalty = parseFloat(body.offerPenalty !== undefined ? body.offerPenalty : (updatedPos.offerPenalty || 0));

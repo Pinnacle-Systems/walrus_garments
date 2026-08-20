@@ -5593,6 +5593,9 @@ model Pos {
   approver            User?         @relation("approver", fields: [approvedById], references: [id])
   offerPenalty        String?
   offerRestored       String?
+  packingCharges      Int?              @default(0)
+  shippingCharges      Int?             @default(0)
+  courierCharges      Int?              @default(0)
   Ledger              Ledger[]
 }
 

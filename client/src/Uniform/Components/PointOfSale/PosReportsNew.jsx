@@ -741,8 +741,9 @@ const PosReportsNew = ({
                                                             className="text-orange-600 flex items-center px-1 bg-orange-50 rounded hover:bg-orange-100 transition-colors"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
+                                                                const additionalCharges = (dataObj?.courierCharges || 0) + (dataObj?.packingCharges || 0) + (dataObj?.shippingCharges || 0)
                                                                 const received = dataObj.PosPayments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
-                                                                const total = parseFloat(dataObj.netAmount || 0);
+                                                                const total = parseFloat(dataObj.netAmount || 0) - additionalCharges
                                                                 const balance = received - total;
 
                                                                 // Reprint: reuses the already-saved invoice record only.
@@ -767,7 +768,7 @@ const PosReportsNew = ({
                                                                         subtotal: total / 1.05,
                                                                         tax: total - (total / 1.05),
                                                                         discount: parseFloat(dataObj.manualDiscount || 0),
-                                                                        total: total,
+                                                                        total: dataObj.netAmount,
                                                                         received: received,
                                                                         balance: balance,
                                                                         roundOff: parseFloat(dataObj.roundOff || 0)

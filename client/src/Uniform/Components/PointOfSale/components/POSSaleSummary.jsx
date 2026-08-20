@@ -27,7 +27,14 @@ const POSSaleSummary = ({
     totalOfferReversal = 0,
     totalOfferReapplied = 0,
     netPayableTotal,
-    currentBilStatus
+    currentBilStatus,
+    packingCharges,
+    setPackingCharges,
+    shippingCharges,
+    setShippingCharges,
+    courierCharges,
+    setCourierCharges,
+    additionalCharges
 }) => {
     return (
         <div className="space-y-2 shrink-0 bg-white border border-slate-100 p-3 rounded-2xl shadow-sm animate-in fade-in duration-200">
@@ -106,11 +113,68 @@ const POSSaleSummary = ({
                         <span>-₹{appliedCredit.toLocaleString()}</span>
                     </div>
                 )}
+                <div className="flex justify-between items-center  text-xs font-bold">
+                    <span className="text-[11px] uppercase tracking-wider">Packing Charges</span>
+                    <div className="flex items-center gap-1">
+                        <span>₹</span>
+                        <input
+                            type="number"
+                            value={packingCharges}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setPackingCharges(val < 0 ? 0 : val)
+                            }}
+                            min={0}
+                            disabled={selectedReportSaleId && currentBilStatus != "UNPAID" ? (!isAdmin || !isPendingApproval) : false}
+                            className="w-16 bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-right outline-none text-emerald-600 focus:border-emerald-500 transition-colors disabled:opacity-50"
+                        />
+
+                    </div>
+                </div>
+                <div className="flex justify-between items-center  text-xs font-bold">
+                    <span className="text-[11px] uppercase tracking-wider">Shipping Charges</span>
+                    <div className="flex items-center gap-1">
+                        <span>₹</span>
+                        <input
+                            type="number"
+                            value={shippingCharges}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setShippingCharges(val < 0 ? 0 : val)
+                            }}
+                            min={0}
+                            disabled={selectedReportSaleId && currentBilStatus != "UNPAID" ? (!isAdmin || !isPendingApproval) : false}
+                            className="w-16 bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-right outline-none text-emerald-600 focus:border-emerald-500 transition-colors disabled:opacity-50"
+                        />
+
+                    </div>
+                </div>
+                <div className="flex justify-between items-center  text-xs font-bold">
+                    <span className="text-[11px] uppercase tracking-wider">Courier Charges</span>
+                    <div className="flex items-center gap-1">
+                        <span>₹</span>
+                        <input
+                            type="number"
+                            value={courierCharges}
+                            onFocus={(e) => e.target.select()}
+                            onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setCourierCharges(val < 0 ? 0 : val)
+                            }}
+                            min={0}
+                            disabled={selectedReportSaleId && currentBilStatus != "UNPAID" ? (!isAdmin || !isPendingApproval) : false}
+                            className="w-16 bg-white border border-emerald-200 rounded px-1.5 py-0.5 text-right outline-none text-emerald-600 focus:border-emerald-500 transition-colors disabled:opacity-50"
+                        />
+
+                    </div>
+                </div>
                 <div className={`flex justify-between items-center font-black text-lg pt-2.5 border-t border-slate-200 mt-2 ${isRefund ? 'text-rose-600' : 'text-indigo-700'}`}>
                     <span className={`text-[12px] uppercase tracking-widest ${isRefund ? 'text-rose-400' : 'text-indigo-400'}`}>
                         {isRefund ? 'Issue Credit / Refund Amount' : 'Net Payable'}
                     </span>
-                    <span>₹{isRefund ? Math.abs(netPayable).toLocaleString() : Math.abs(netPayableTotal).toLocaleString()}</span>
+                    <span>₹{isRefund ? Math.abs(netPayable).toLocaleString() : Math.abs(netPayableTotal + additionalCharges).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center text-emerald-500 text-xs font-bold">
                     <span className="text-[11px] uppercase tracking-wider">Manual Disc</span>

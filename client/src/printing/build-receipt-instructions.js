@@ -237,6 +237,18 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     instructions.push({ type: 'leftRight', left: 'New Purchase :', right: purchaseTotal.toFixed(2) });
   }
 
+
+  if (dataObj?.courierCharges && dataObj?.courierCharges > 0) {
+    instructions.push({ type: 'leftRight', left: 'Courier Charges :', right: dataObj.courierCharges.toFixed(2) });
+  }
+  if (dataObj?.deliveryCharges && dataObj?.deliveryCharges > 0) {
+    instructions.push({ type: 'leftRight', left: 'Delivery Charges :', right: dataObj.deliveryCharges.toFixed(2) });
+  }
+  if (dataObj?.shippingCharges && dataObj?.shippingCharges > 0) {
+    instructions.push({ type: 'leftRight', left: 'Shipping Charges :', right: dataObj.shippingCharges.toFixed(2) });
+  }
+
+
   let totalLabel = '';
   if (returnTotal > overallPurchaseTotal) {
     totalLabel = 'Store Credit Issued :';

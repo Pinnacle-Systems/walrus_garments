@@ -44,7 +44,8 @@ const PosThermalPrint = ({
   summary = { subtotal: 0, tax: 0, discount: 0, total: 0, received: 0, balance: 0 },
   returnReferences = [],
   isExchange = false,
-  isRefund = false
+  isRefund = false,
+  dataObj
 }) => {
 
   const totalQty = items.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
@@ -52,6 +53,8 @@ const PosThermalPrint = ({
   const purchaseTotal = items.reduce((acc, item) => !item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
   const totalOfferReversal = items.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
   const totalOfferReapplied = items.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
+
+  console.log(dataObj, "dataObj")
 
   return (
     <Document title={`POS_RECEIPT_${docId}`}>
@@ -177,7 +180,24 @@ const PosThermalPrint = ({
               <Text style={tw('text-xxs text-green-600')}>-{totalOfferReapplied.toFixed(2)}</Text>
             </View>
           )}
-
+          {dataObj?.courierCharges > 0 && (
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>Courier Charges :</Text>
+              <Text style={tw('text-xxs text-green-600')}>-{dataObj?.courierCharges.toFixed(2)}</Text>
+            </View>
+          )}
+          {dataObj?.packingCharges > 0 && (
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>Packing Charges :</Text>
+              <Text style={tw('text-xxs text-green-600')}>-{dataObj?.packingCharges.toFixed(2)}</Text>
+            </View>
+          )}
+          {dataObj?.shippingCharges > 0 && (
+            <View style={tw('flex flex-row justify-between')}>
+              <Text style={tw('text-xxs')}>Shipping charges :</Text>
+              <Text style={tw('text-xxs text-green-600')}>-{dataObj?.shippingCharges.toFixed(2)}</Text>
+            </View>
+          )}
           <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
             <Text style={tw('text-sm font-black')}>
               {dataObj?.isExchange ? 'ISSUE CREDIT AMOUNT :' : 'NET PAYABLE :'}

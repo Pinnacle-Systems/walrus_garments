@@ -148,7 +148,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     // Cart & Product Search States
     const [cart, setCart] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchMode, setSearchMode] = useState('NAME'); // BARCODE or NAME
+    const [searchMode, setSearchMode] = useState('BARCODE'); // BARCODE or NAME
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('All'); // Keeps slot reserved for category alignment
@@ -191,6 +191,11 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const [selectedItemForOffers, setSelectedItemForOffers] = useState(null);
     const [salesPersonBarcode, setSalesPersonBarcode] = useState('');
     const [selectedOffersByRow, setSelectedOffersByRow] = useState({});
+
+
+    const [packingCharges, setPackingCharges] = useState("")
+    const [shippingCharges, setShippingCharges] = useState("")
+    const [courierCharges, setCourierCharges] = useState("")
 
     // Payments Breakdown States
     const [paidCash, setPaidCash] = useState(0);
@@ -392,6 +397,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setCurrentBilStatus("PAID");
             setIsCancelBill(false);
             setReturnBillId("")
+            setPackingCharges("")
+            setShippingCharges("")
+            setCourierCharges("")
             return;
         }
 
@@ -478,6 +486,10 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         setCurrentBilStatus(sale.bilStatus ? sale.bilStatus : "NA");
         setIsCancelBill(sale?.isCancel ? sale?.isCancel : false);
         setAvailableCredit(sale?.availableCredit ? sale?.availableCredit : 0)
+
+        setPackingCharges(sale.packingCharges ? sale.packingCharges : 0)
+        setShippingCharges(sale.shippingCharges ? sale.shippingCharges : 0)
+        setCourierCharges(sale.courierCharges ? sale.courierCharges : 0)
 
     }, [itemsData, retailStoreId, unifiedStockData]);
 
@@ -1085,6 +1097,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const returnTotal = cartWithOffers.reduce((sum, item) => item.isReturn ? sum + (parseFloat(item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
     const purchaseTotalBeforeOffer = cartWithOffers.reduce((sum, item) => !item.isReturn ? sum + (parseFloat(item.price || item.price || 0) * parseFloat(item.qty || 0)) : sum, 0);
 
+    const additionalCharges = Number(packingCharges || 0) + Number(shippingCharges || 0) + Number(courierCharges || 0)
+
     const totalBeforeDiscount = purchaseTotalBeforeOffer - totalOfferDiscount - returnTotal + totalOfferReversal - totalOfferReapplied;
     const totalWithoutRounding = totalBeforeDiscount;
 
@@ -1099,10 +1113,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         totalOfferDiscount,
         totalOfferReversal,
         totalOfferReapplied,
-        total
-
-
-    })
+        total, additionalCharges
+    },
+        "All totals")
 
     console.log(cartWithOffers, "cartWithOffers")
 
@@ -1120,7 +1133,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     // Settlement and Payout values
     const receivedAmount = paidCash + paidUPI + paidCard + paidOnline;
-    const netPayableValue = total - availableCredit;
+    const netPayableValue = (total + (additionalCharges || 0)) - availableCredit;
     const absNetPayableValue = Math.abs(netPayableValue);
     const balanceReturn = Math.max(0, receivedAmount - absNetPayableValue);
 
@@ -1194,7 +1207,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             return;
         }
 
-        if (total === 0) {
+        if ((total + parseFloat(additionalCharges || 0)) === 0) {
             Swal.fire({
                 title: 'Equal Exchange',
                 text: 'The return value matches the purchase value. Save this exchange?',
@@ -1296,7 +1309,11 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 transactionType,
                 offerPenalty: totalOfferReversal,
                 offerRestored: totalOfferReapplied,
-                isExchange: isExchangeFlag
+                isExchange: isExchangeFlag,
+                shippingCharges: shippingCharges,
+                packingCharges: packingCharges,
+                courierCharges: courierCharges,
+                additionalCharges: additionalCharges
                 // bilStatus: "UNPAID"
             };
 
@@ -1467,6 +1484,10 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 isRetrunBillId: selectedReturnBills?.value || null,
                 isExchange: isExchangeFlag,
                 isExchangeBillId: selectedReturnBills?.value || null,
+                shippingCharges: shippingCharges,
+                packingCharges: packingCharges,
+                courierCharges: courierCharges,
+                additionalCharges: additionalCharges,
 
                 availableCredit,
                 approvalStatus: (editMode && approvalStatus === 'PENDING' && isAdmin) ? "APPROVED" :
@@ -1495,6 +1516,12 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             Swal.fire({ title: getSuccessMessage(), icon: 'success', timer: 2000, showConfirmButton: false });
 
             if (transactionType !== 'RETURN') {
+
+                const additionalCharges = apiResponse?.data?.packingCharges + apiResponse?.data?.shippingCharges + apiResponse?.data?.courierCharges;
+                const netAmount = apiResponse?.data?.netAmount - additionalCharges
+
+                console.log(netAmount, "netAmountnetAmount")
+
                 const printPayload = {
                     docId: apiResponse?.data?.docId || docId,
                     date: new Date(),
@@ -1502,8 +1529,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     items: cartWithOffers,
                     payments: { cash: paidCash, upi: paidUPI, card: paidCard },
                     summary: {
-                        subtotal: apiResponse?.data?.netAmount / 1.05,
-                        tax: apiResponse?.data?.netAmount - (apiResponse?.data?.netAmount / 1.05),
+                        subtotal: netAmount / 1.05,
+                        tax: netAmount - (netAmount / 1.05),
                         discount,
                         total: apiResponse?.data?.netAmount,
                         received: Math.abs(receivedAmount),
@@ -1585,6 +1612,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setIsGuestCustomer(true);
             setSearchMode('NAME');
             setReturnBillId("")
+            setPackingCharges("")
+            setShippingCharges("")
+            setCourierCharges("")
             if (transactionType === 'RETURN') {
                 onGoToReports?.();
             } else {
@@ -1673,6 +1703,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         setCurrentBilStatus("PAID");
         setAvailableCredit(0);
         setReturnBillId("");
+        setPackingCharges("")
+        setShippingCharges("")
+        setCourierCharges("")
     };
 
     // Triggers stock viewer popup
@@ -1871,7 +1904,13 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                         isCancelBill={isCancelBill}
                         totalOfferReversal={totalOfferReversal}
                         totalOfferReapplied={totalOfferReapplied}
-
+                        packingCharges={packingCharges}
+                        setPackingCharges={setPackingCharges}
+                        shippingCharges={shippingCharges}
+                        setShippingCharges={setShippingCharges}
+                        courierCharges={courierCharges}
+                        setCourierCharges={setCourierCharges}
+                        additionalCharges={additionalCharges}
                     />
                 </div>
 
@@ -1911,6 +1950,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 isAdmin={isAdmin}
                 setIsProcessing={setIsProcessing}
                 availableCredit={availableCredit}
+                additionalCharges={additionalCharges}
             />
 
             <ReceiptViewerModal
