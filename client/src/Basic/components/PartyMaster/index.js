@@ -939,7 +939,14 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       header: 'Address',
       accessor: (item) => item.address,
       cellClass: () => 'font-medium text-gray-900',
-      className: 'text-gray-800 uppercase w-96',
+      className: 'text-gray-800 uppercase w-72',
+      enableSearch: true
+    },
+    {
+      header: 'contact Number',
+      accessor: (item) => item.contactPersonNumber,
+      cellClass: () => 'font-medium text-gray-900',
+      className: 'text-gray-800 uppercase w-44',
       enableSearch: true
     },
     {

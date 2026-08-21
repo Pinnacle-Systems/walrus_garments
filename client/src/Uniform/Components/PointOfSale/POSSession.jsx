@@ -104,9 +104,12 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const locations = locationsData?.data || [];
     const retailLocation = locations.find(l => l.storeName?.toLowerCase().includes('retail'));
     const retailStoreId = retailLocation?.id;
+    const discountLocation = locations.find(l => l.storeName?.toLowerCase().includes('discount'));
+    const discountLocationId = discountLocation?.id;
+
 
     const { data: unifiedStockData } = useGetUnifiedStockQuery({
-        params: { branchId }
+        params: { branchId, isRetunPosStockes: true, retailStoreId, discountLocationId }
     }, {
         skip: !branchId || !retailStoreId
     });
@@ -947,7 +950,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         setCart(prev => {
             let nextCart = [...prev];
             let itemIndex = nextCart.findIndex(item =>
-                (item.itemId === id || item.id === id) &&
+                // (item.itemId === id || item.id === id) &&
+                (item.id === id) &&
                 item.sizeId === sizeId &&
                 item.colorId === colorId &&
                 !!item.isReturn === !!isReturn &&
@@ -957,13 +961,14 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             if (itemIndex === -1) return prev;
 
             const item = nextCart[itemIndex];
+            console.log(item, "itemitem")
             const key = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}`;
             const othersReserved = (globalReservedStock[key] || 0) - (parseFloat(item.qty) || 0);
             const stockLimit = Math.max(0, (parseFloat(item.stockQty) || 0) - Math.max(0, othersReserved));
 
             let newQty;
             if (isReturn) {
-                newQty = isDirect ? Math.max(0, parseFloat(value) || 0) : Math.max(1, (parseFloat(item.qty) || 0) + (parseFloat(value) || 0));
+                newQty = isDirect ? (value === "" ? "" : Math.max(1, parseFloat(value) || 0)) : Math.max(1, (parseFloat(item.qty) || 0) + (parseFloat(value) || 0));
                 if (newQty > (item.maxReturnQty || 0)) {
                     Swal.fire({ title: "Warning", text: `Maximum return quantity is ${item.maxReturnQty}`, icon: "warning" });
                     newQty = (item.maxReturnQty || 0);
@@ -971,7 +976,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 const updatedFulfillments = allocateStock(newQty, item.stockDetails, retailStoreId);
                 nextCart[itemIndex] = { ...item, qty: newQty, fulfillments: updatedFulfillments };
             } else {
-                newQty = isDirect ? Math.max(0, parseFloat(value) || 0) : Math.max(1, (parseFloat(item.qty) || 0) + (parseFloat(value) || 0));
+                newQty = isDirect ? (value === "" ? "" : Math.max(1, parseFloat(value) || 0)) : Math.max(1, (parseFloat(item.qty) || 0) + (parseFloat(value) || 0));
 
                 if (newQty > stockLimit) {
                     Swal.fire({ title: "Warning", text: `Stock limit: ${stockLimit} (Reserved in other tabs)`, icon: "warning" });

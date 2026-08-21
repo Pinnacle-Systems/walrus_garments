@@ -190,7 +190,8 @@ async function getOne(id) {
                     Saleorder: true,
                     SalesDelivery: true,
                     SalesReturn: true,
-                    children: true
+                    children: true,
+                    Pos: true
 
 
 

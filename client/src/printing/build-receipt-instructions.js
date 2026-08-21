@@ -279,6 +279,16 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     });
   }
 
+  if (returnTotal > overallPurchaseTotal) {
+    instructions.push({
+      type: 'leftRight',
+      left: "Total Payable",
+      right: `Rs. 0.00`,
+      bold: true,
+    });
+  }
+
+
   instructions.push({ type: 'line' });
   instructions.push({ type: 'text', value: 'PAYMENT BREAKDOWN', bold: true, underline: true });
   if (payments.cash > 0) {

@@ -215,7 +215,7 @@ async function get(req) {
         pagination = false, dataPerPage = 5, pageNumber = 1,
         searchYarnAliasName,
         sizeId, colorId, uomId, itemId,
-        searchSize, searchItem, searchColor,
+        searchSize, searchItem, searchColor, isRetunPosStockes, retailStoreId, discountLocationId
     } = req.query
 
 
@@ -231,7 +231,9 @@ async function get(req) {
     data = await xprisma.stock.groupBy({
         where: {
             branchId: sanitizeInt(branchId),
-            storeId: sanitizeInt(storeId),
+            storeId: isRetunPosStockes ? {
+                in: [sanitizeInt(retailStoreId), sanitizeInt(discountLocationId)].filter(v => v !== undefined && v !== null)
+            } : sanitizeInt(storeId),
             itemId: sanitizeInt(itemId),
             sizeId: sanitizeInt(sizeId),
             colorId: sanitizeInt(colorId),
@@ -278,10 +280,14 @@ async function get(req) {
 
     let totalCount = data?.length
     if (pagination) {
-
-
         data = data.slice(((pageNumber - 1) * parseInt(dataPerPage)), pageNumber * dataPerPage)
     }
+
+    // if (isRetunPosStockes) {
+    //     return data?.filter((i) => )
+    // }
+
+
     return { statusCode: 0, data, totalCount };
 }
 
