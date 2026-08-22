@@ -241,10 +241,6 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const activeOffers = offersData?.data || EMPTY_ARRAY;
 
 
-    // =========================================================================
-    // CATEGORY 5: INITIALIZATION & DATA SYNC EFFECTS
-    // =========================================================================
-
     useEffect(() => {
         if (onCartUpdate && tabId !== undefined) {
             onCartUpdate(tabId, cart);
@@ -424,7 +420,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             return {
                 ...item,
                 id: item.itemId,
-                salesPrice: parseFloat(item.price),
+                salesPrice: parseFloat(item.originalSalesPrice || item.price),
                 price: parseFloat(item.price),
                 qty: parseFloat(item.qty),
                 taxPercent: masterItem?.Hsn?.tax || 5,
