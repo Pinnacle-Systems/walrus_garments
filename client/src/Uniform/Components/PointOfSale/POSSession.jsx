@@ -536,7 +536,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     // Recalculates item pricing based on selected promotions
     const { cartWithOffers, appliedOffers } = useMemo(() => {
-        if ((selectedReportSaleId && !editMode) || editingInvoiceId) {
+        if ((selectedReportSaleId && !editMode) || editingInvoiceId && currentBilStatus !== "UNPAID") {
             return { cartWithOffers: cart, appliedOffers: [] };
         }
 

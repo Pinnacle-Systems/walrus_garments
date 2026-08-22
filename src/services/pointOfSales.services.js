@@ -625,6 +625,7 @@ async function update(id, body) {
                     offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
                     priceType: item.priceType || null,
                     appliedOfferName: item.appliedOfferName || null,
+                    sourceStoreId: item?.sourceStoreId ? parseInt(item?.sourceStoreId) : null
                 }))
             });
 
