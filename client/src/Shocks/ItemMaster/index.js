@@ -33,6 +33,7 @@ import MasterPageLayout from "../../Basic/components/MasterPageLayout";
 import { toast } from "react-toastify";
 import ItemBarcodePrintModal from "./ItemBarcodePrintModal";
 import { Reports } from "./ItemMasterReport";
+import { useGetRoleByIdQuery } from "../../redux/services/RolesMasterService";
 
 
 
@@ -115,8 +116,15 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     branchId: secureLocalStorage.getItem(
       sessionStorage.getItem("sessionId") + "branchId"
     ),
+
   };
 
+  const userRoleId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userRoleId"
+  )
+  const userRole = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userRole"
+  )
   const {
     data: allData,
     isLoading,
@@ -130,7 +138,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     isLoading: isSingleLoading,
   } = useGetItemMasterByIdQuery(id, { skip: !id });
 
+  const { data: roleData } = useGetRoleByIdQuery(userRoleId, {
+    skip: !userRoleId,
+  });
 
+  const isSizeAddable = roleData?.data?.RoleOnPage?.filter((i) => i.page?.active == true && i.page?.name == "SIZE MASTER")?.[0]?.create == true
+  const isColorAddable = roleData?.data?.RoleOnPage?.filter((i) => i.page?.active == true && i.page?.name == "COLOR MASTER")?.[0]?.create == true
+
+  console.log(isSizeAddable, isColorAddable, "isSizeAddable", "isColorAddable", userRole)
 
   const [addData] = useAddItemMasterMutation();
   const [updateData] = useUpdateItemMasterMutation();
@@ -1370,14 +1385,17 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                   }}
                                 />
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => setShowSizeModal(true)}
-                                className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
-                                title="Add New Size"
-                              >
-                                <Plus size={16} />
-                              </button>
+
+                              {(userRole == "DEFAULT ADMIN" || isSizeAddable) && (
+                                <button
+                                  type="button"
+                                  onClick={() => setShowSizeModal(true)}
+                                  className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
+                                  title="Add New Size"
+                                >
+                                  <Plus size={16} />
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1396,14 +1414,17 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                                   }}
                                 />
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => setShowColorModal(true)}
-                                className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
-                                title="Add New Color"
-                              >
-                                <Plus size={16} />
-                              </button>
+                              {(userRole == "DEFAULT ADMIN" || isColorAddable) && (
+
+                                <button
+                                  type="button"
+                                  onClick={() => setShowColorModal(true)}
+                                  className="mb-1 p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 border border-indigo-200"
+                                  title="Add New Color"
+                                >
+                                  <Plus size={16} />
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}

@@ -183,12 +183,12 @@ const POSHeader = ({
                     )}
                     <input
                         ref={scannerRef}
-                        disabled={(isBarcodeLoading && searchMode === 'BARCODE') || (selectedReportSaleId && currentBilStatus != "UNPAID")}
+                        disabled={(isBarcodeLoading && searchMode === 'BARCODE') || (currentBilStatus == "PAID")}
                         // disabled={(isBarcodeLoading && searchMode === 'BARCODE') || selectedReportSaleId}
 
 
                         placeholder={selectedReportSaleId && currentBilStatus != "UNPAID" ? "View Only Mode" : (transactionType === 'RETURN' ? "Search Product Name..." : (searchMode === 'BARCODE' ? "Scan Barcode & Press Enter [F10]" : "Search Product Name..."))}
-                        className={`w-full pl-10 pr-4 py-1 rounded-lg text-sm transition-all font-medium border outline-none ${((isBarcodeLoading && searchMode === 'BARCODE') || selectedReportSaleId) ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 placeholder:text-slate-400'}`}
+                        className={`w-full pl-10 pr-4 py-1 rounded-lg text-sm transition-all font-medium border outline-none ${((isBarcodeLoading && searchMode === 'BARCODE') || selectedReportSaleId) ? ' border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 placeholder:text-slate-400'}`}
                         value={searchQuery}
                         onChange={(e) => {
                             setSearchQuery(e.target.value);

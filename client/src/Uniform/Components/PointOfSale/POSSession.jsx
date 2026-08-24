@@ -172,7 +172,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const [paymentMethod, setPaymentMethod] = useState('Cash');
     const [docId, setDocId] = useState("");
     const [approvalStatus, setApprovalStatus] = useState("NONE");
-    const [currentBilStatus, setCurrentBilStatus] = useState("PAID");
+    const [currentBilStatus, setCurrentBilStatus] = useState("");
     const [isCancelBill, setIsCancelBill] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [editingInvoiceId, setEditingInvoiceId] = useState(null);
@@ -393,7 +393,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             setDocId("");
             setUpiRefNo("");
             setApprovalStatus("NONE");
-            setCurrentBilStatus("PAID");
+            setCurrentBilStatus("");
             setIsCancelBill(false);
             setReturnBillId("")
             setPackingCharges("")
@@ -659,7 +659,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     // Triggers barcode resolution logic on enter
     const handleScan = async (e) => {
         if (e.key === 'Enter') {
-            if (selectedReportSaleId) return;
+            // if (selectedReportSaleId) return;
             const barcode = searchQuery.trim();
             if (!barcode) return;
 
@@ -1701,7 +1701,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         setSelectedCustomer(null);
         setTransactionType("SALE");
         setSearchQuery("");
-        setCurrentBilStatus("PAID");
+        setCurrentBilStatus("");
         setAvailableCredit(0);
         setReturnBillId("");
         setPackingCharges("")

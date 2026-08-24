@@ -625,7 +625,7 @@ async function update(id, body) {
                     offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
                     priceType: item.priceType || null,
                     appliedOfferName: item.appliedOfferName || null,
-                    sourceStoreId: item?.sourceStoreId ? parseInt(item?.sourceStoreId) : null
+                    sourceStoreId: item?.fulfillments?.length > 0 ? parseInt(item?.fulfillments[0]?.storeId) : item?.sourceStoreId
                 }))
             });
 
