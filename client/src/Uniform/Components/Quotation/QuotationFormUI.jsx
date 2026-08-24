@@ -38,7 +38,7 @@ import { printReceiptInstructions, mapLocalPrintAgentError } from "../../../Util
 
 const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setQuoteItems, quoteItems,
-  yarnList, colorList, uomList, termsData
+  yarnList, colorList, uomList, termsData, hasPermission
 
 
 }) => {
@@ -764,16 +764,18 @@ const Quotaion = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly
         <>
           <button
             className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-            onClick={() => {
-              // if (id && 
-              // singleData?.data?.minimumAdvancePayment !== null 
-              // && singleData?.data?.minimumAdvancePayment !== undefined
-              //  && singleData?.data?.minimumAdvancePayment !== "") {
-              //   setMinimumAdvancePayment(String(singleData.data.minimumAdvancePayment));
-              //   setIsMinimumAdvanceManuallyEdited(true);
-              // }
-              setReadOnly(false);
-            }}
+            // onClick={() => {
+            //   // if (id && 
+            //   // singleData?.data?.minimumAdvancePayment !== null 
+            //   // && singleData?.data?.minimumAdvancePayment !== undefined
+            //   //  && singleData?.data?.minimumAdvancePayment !== "") {
+            //   //   setMinimumAdvancePayment(String(singleData.data.minimumAdvancePayment));
+            //   //   setIsMinimumAdvanceManuallyEdited(true);
+            //   // }
+            //   setReadOnly(false);
+            // }}
+            onClick={() => hasPermission(() => setReadOnly(false), "edit")}
+
             disabled={childRecord}
           >
             <FiEdit2 className="w-4 h-4 mr-2" />

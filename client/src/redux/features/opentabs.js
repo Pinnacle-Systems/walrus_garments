@@ -25,25 +25,38 @@ export const openTabs = createSlice({
       state.tabs = state.tabs.map((tab) => {
         return { ...tab, active: false };
       });
+      // if (existingIndex >= 0) {
+      //   state.tabs[existingIndex] = {
+      //     ...state.tabs[existingIndex],
+      //     active: true,
+      //     id: action.payload.id,
+      //     projectId: action.payload.projectId,
+      //     projectForm: action.payload.projectForm,
+      //     transactionType: action.payload.transactionType,
+      //     data: action.payload.data,
+      //   };
+      // } else {
+      //   state.tabs.push({
+      //     id: action.payload.id,
+      //     name: action.payload.name,
+      //     active: true,
+      //     projectId: action.payload.projectId,
+      //     projectForm: action.payload.projectForm,
+      //     transactionType: action.payload.transactionType,
+      //     data: action.payload.data,
+      //   });
+      // }   
+      /////       change this for user Permissions editing mode 
       if (existingIndex >= 0) {
         state.tabs[existingIndex] = {
           ...state.tabs[existingIndex],
+          ...action.payload,
           active: true,
-          id: action.payload.id,
-          projectId: action.payload.projectId,
-          projectForm: action.payload.projectForm,
-          transactionType: action.payload.transactionType,
-          data: action.payload.data,
         };
       } else {
         state.tabs.push({
-          id: action.payload.id,
-          name: action.payload.name,
+          ...action.payload,
           active: true,
-          projectId: action.payload.projectId,
-          projectForm: action.payload.projectForm,
-          transactionType: action.payload.transactionType,
-          data: action.payload.data,
         });
       }
       localStorage.setItem("openTabs", JSON.stringify(state.tabs));

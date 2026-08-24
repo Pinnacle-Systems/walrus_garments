@@ -47,7 +47,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
   courierChargeEnabled, setCourierChargeEnabled,
   courierCharge, setCourierCharge, receivedAmount, setReceivedAmount,
   linkedSaleOrderId,
-  setLinkedSaleOrderId,
+  setLinkedSaleOrderId, hasPermission
 
 
 
@@ -811,12 +811,15 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       ]}
       leftActions={
         <>
-          <button onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-            <HiOutlineRefresh className="w-4 h-4 mr-2" />
+          <button disabled={readOnly} onClick={() => saveData("close")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <HiOutlineRefresh className="w-4 h-4 mr-2"
+            />
             Save & Close
           </button>
-          <button onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
-            <FiSave className="w-4 h-4 mr-2" />
+          <button disabled={readOnly} onClick={() => saveData("new")} className="bg-indigo-500 text-white px-4 py-1 rounded-md hover:bg-indigo-600 flex items-center text-sm">
+            <FiSave className="w-4 h-4 mr-2"
+
+            />
             Save & New
           </button>
 
@@ -825,7 +828,7 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       rightActions={
         <>
           <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-            onClick={() => setReadOnly(false)}
+            onClick={() => hasPermission(() => setReadOnly(false), "edit")}
           >
             <FiEdit2 className="w-4 h-4 mr-2" />
             Edit
@@ -860,6 +863,8 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
       }
     />
   );
+
+  console.log(readOnly, "readOnlyreadOnly")
 
 
   const handleThermalPrint = async () => {

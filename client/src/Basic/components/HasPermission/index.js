@@ -30,7 +30,7 @@ export function usePermissionForUsers() {
   } = useGetPagePermissionsByIdQuery({ currentPageId, userRoleId }, { skip: !(currentPageId && userRoleId) });
 
 
-  console.log(currentPagePermissions, "currentPagePermissions", userRoleId, currentPageId, "currentPageId")
+  console.log(currentPagePermissions, "currentPagePermissions", userRoleId, "currentPageId", currentPageId)
 
   const IsSuperAdmin = () => {
     return JSON.parse(

@@ -482,7 +482,7 @@ const PurchaseInwardFormReport = ({
                                   <Tooltip title="Edit" arrow>
                                     <button
                                       className="text-green-600 gap-1 px-1   bg-green-50 rounded"
-                                      onClick={() => onEdit(dataObj.id)}
+                                      onClick={() => hasPermission(() => onEdit(dataObj.id), "edit")}
                                     >
                                       <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -510,7 +510,7 @@ const PurchaseInwardFormReport = ({
                                           ? "bg-red-50 text-red-500 opacity-40 cursor-not-allowed"
                                           : "bg-red-50 text-red-800 hover:bg-red-100"
                                         }`}
-                                      onClick={() => onDelete(dataObj.id)}
+                                      onClick={() => hasPermission(() => onDelete(dataObj.id, dataObj?._count), "delete", dataObj?._count)}
                                       disabled={hasChildRecords}
                                     >
                                       <svg
@@ -532,7 +532,8 @@ const PurchaseInwardFormReport = ({
                               </div>
                             </div>
                           </td>
-                        )}
+                        )
+                        }
 
                       </tr>
                     )
@@ -552,7 +553,7 @@ const PurchaseInwardFormReport = ({
         </div>
       </>
 
-    </div>
+    </div >
   );
 };
 

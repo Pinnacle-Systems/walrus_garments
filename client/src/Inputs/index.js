@@ -1845,6 +1845,7 @@ export const ReusableTable = ({
 
   const [currentPage, setCurrentPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState({});
+  const [currentItemsPerPage, setCurrentItemsPerPage] = useState(itemsPerPage === 15 ? 16 : itemsPerPage);
 
   const filteredData = data?.filter(item => {
     return Object.keys(columnFilters).every(colHeader => {
@@ -1859,9 +1860,9 @@ export const ReusableTable = ({
     });
   }) || [];
 
-  const totalPages = Math?.ceil(filteredData?.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const totalPages = Math?.ceil(filteredData?.length / currentItemsPerPage);
+  const indexOfLastItem = currentPage * currentItemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - currentItemsPerPage;
   const currentItems = filteredData?.slice(indexOfFirstItem, indexOfLastItem);
   const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
 
@@ -1879,8 +1880,20 @@ export const ReusableTable = ({
   const Pagination = () => {
     return (
       <div className="h-10 shrink-0 flex w-full flex-col items-center justify-between border-t border-gray-200 bg-white p-2 sm:flex-row">
-        <div className="mb-2 text-sm text-gray-600 sm:mb-0">
-          Showing {filteredData?.length ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, filteredData?.length || 0)} of {filteredData?.length || 0} entries
+        <div className="mb-2 text-sm text-gray-600 sm:mb-0 flex items-center gap-2">
+          <span>Showing {filteredData?.length ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, filteredData?.length || 0)} of {filteredData?.length || 0} entries</span>
+          <select
+            value={currentItemsPerPage}
+            onChange={(e) => {
+              setCurrentItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border border-gray-300 rounded px-1 py-0.5 text-sm outline-none focus:border-indigo-500 cursor-pointer"
+          >
+            <option value={16}>16</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
         </div>
         <div className="flex gap-1">
           <button

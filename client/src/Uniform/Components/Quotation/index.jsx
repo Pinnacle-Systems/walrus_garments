@@ -19,7 +19,7 @@ import { useGetColorMasterQuery } from '../../../redux/uniformService/ColorMaste
 import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useDeleteQuotationMasterMutation, useDeleteQuotationMutation } from '../../../redux/uniformService/quotationServices';
 import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
-
+import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
 
 
 
@@ -52,6 +52,7 @@ const Quotation = () => {
     const params = {
         branchId, userId, finYearId
     };
+    const { hasPermission } = usePermissionForUsers()
 
     const { data: locationData } = useGetLocationMasterQuery({ params: { branchId } });
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
@@ -155,8 +156,10 @@ const Quotation = () => {
         setQuoteItems([])
     }
 
-    console.log(id, "quotationId")
-
+    function handleCreatefunction() {
+        setShowManufacturer(true)
+        onNew()
+    }
     return (
         <>
             {showManufacturer ? (
@@ -171,7 +174,7 @@ const Quotation = () => {
                         inwardItemSelection={inwardItemSelection} setInwardItemSelection={setInwardItemSelection}
                         quoteItems={quoteItems} setQuoteItems={setQuoteItems}
                         partyId={partyId} setPartyId={setPartyId} onNew={onNew} locationData={locationData} branchList={branchList}
-                        supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} termsData={termsData}
+                        supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} termsData={termsData} hasPermission={hasPermission}
                     />
                 </div>
 
@@ -183,7 +186,7 @@ const Quotation = () => {
 
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-xs"
-                            onClick={() => { setShowManufacturer(true); onNew() }}
+                            onClick={() => hasPermission(handleCreatefunction, "create")}
                         >
                             <FaPlus /> Create New
                         </button>
@@ -200,6 +203,7 @@ const Quotation = () => {
                             onConvertToInvoice={handleConvertToInvoice}
                             onMakePayment={handleMakePayment}
                             itemsPerPage={16}
+                            hasPermission={hasPermission}
                         />
                     </div>
                 </div>

@@ -21,6 +21,7 @@ import { useGetUomQuery } from '../../../redux/services/UomMasterService';
 import { useDeletesaleOrderMutation } from '../../../redux/uniformService/saleOrderServices';
 import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
 import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
 
 
 
@@ -68,6 +69,7 @@ const SaleOrder = () => {
     const { data: quotationToConvertData, isFetching: isQuotationFetching } =
         useGetQuotationByIdQuery(convertQuotationId, { skip: !convertQuotationId });
 
+    const { hasPermission } = usePermissionForUsers()
 
     const parseChargeAmount = (value) => {
         const parsedValue = parseFloat(value);
@@ -194,6 +196,12 @@ const SaleOrder = () => {
         setPartyId('');
     }
 
+    function handleCreatefunction() {
+        setShowManufacturer(true)
+        onNew()
+    }
+
+
     return (
         <>
             {showManufacturer ? (
@@ -229,6 +237,7 @@ const SaleOrder = () => {
                         courierCharge={courierCharge}
                         setCourierChargeEnabled={setCourierChargeEnabled}
                         setCourierCharge={setCourierCharge}
+                        hasPermission={hasPermission}
                     />
                 </div>
 
@@ -240,7 +249,7 @@ const SaleOrder = () => {
 
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-xs"
-                            onClick={() => { setShowManufacturer(true); onNew() }}
+                            onClick={() => hasPermission(handleCreatefunction, "create")}
                         >
                             <FaPlus /> Create New
                         </button>
@@ -253,6 +262,7 @@ const SaleOrder = () => {
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             onConvertToDelivery={handleConvertToDelivery}
+                            hasPermission={hasPermission}
                         />
                     </div>
 

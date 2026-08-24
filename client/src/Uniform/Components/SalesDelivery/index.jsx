@@ -18,6 +18,7 @@ import { useGetHsnMasterQuery } from '../../../redux/services/HsnMasterServices'
 import { useGetsaleOrderByIdQuery } from '../../../redux/uniformService/saleOrderServices';
 import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
 import { useGetTermsandCondtionsQuery } from '../../../redux/services/Term&ConditionsMasterService';
+import { usePermissionForUsers } from '../../../Basic/components/HasPermission';
 
 
 
@@ -66,6 +67,7 @@ const SalesDelivery = () => {
         useGetsaleOrderByIdQuery(convertSaleOrderId, { skip: !convertSaleOrderId });
 
     console.log(saleOrderToConvertData, "saleOrderToConvertData", convertSaleOrderId);
+    const { hasPermission } = usePermissionForUsers()
 
 
     const parseChargeAmount = (value) => {
@@ -187,6 +189,11 @@ const SalesDelivery = () => {
         setLinkedSaleOrderId("")
     }
 
+    function handleCreatefunction() {
+        setShowManufacturer(true)
+        onNew()
+    }
+
     return (
         <>
             {showManufacturer ? (
@@ -225,6 +232,7 @@ const SalesDelivery = () => {
 
                         linkedSaleOrderId={linkedSaleOrderId}
                         setLinkedSaleOrderId={setLinkedSaleOrderId}
+                        hasPermission={hasPermission}
 
                     />
 
@@ -239,7 +247,7 @@ const SalesDelivery = () => {
 
                         <button
                             className="hover:bg-green-700 bg-white border border-green-700 hover:text-white text-green-800 px-2 py-1 rounded-md flex items-center gap-2 text-xs"
-                            onClick={() => { setShowManufacturer(true); onNew() }}
+                            onClick={() => hasPermission(handleCreatefunction, "create")}
                         >
                             <FaPlus /> Create New
                         </button>
@@ -253,6 +261,8 @@ const SalesDelivery = () => {
                             onDelete={handleDelete}
                             onConvertToReturn={handleConvertToReturn}
                             finYearId={finYearId}
+                            hasPermission={hasPermission}
+
                         />
                     </div>
 

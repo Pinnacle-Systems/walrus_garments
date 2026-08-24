@@ -54,6 +54,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   courierCharge,
   setCourierChargeEnabled,
   setCourierCharge,
+  hasPermission
 }) => {
 
 
@@ -858,7 +859,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
       rightActions={
         <>
           <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
-            onClick={() => setReadOnly(false)}
+            onClick={() => hasPermission(() => setReadOnly(false), "edit")}
             disabled={childRecord}
           >
             <FiEdit2 className="w-4 h-4 mr-2" />
