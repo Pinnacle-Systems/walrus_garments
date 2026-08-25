@@ -448,9 +448,10 @@ async function update(id, body) {
         contactPersonName, department, contact, designation, isContact, isBranch, isBranchContact,
         landMark, contactPersonEmail,
         bankname, bankBranchName, accountNumber, ifscCode, msmeNo, cinNo,
-        PartyContactDetails, parentId, attachments, branchTypeId, aadharNo
+        PartyContactDetails, parentId, attachments, branchTypeId, aadharNo, isB2C
     } = body;
 
+    console.log(isB2C, "isB2CisB2CisB2C")
     // Fetch existing party with its current attachments
     const existing = await prisma.party.findUnique({
         where: { id: parseInt(id) },
@@ -537,6 +538,7 @@ async function update(id, body) {
                 department: department ? department : null,
                 contactPersonEmail: contactPersonEmail ? contactPersonEmail : null,
                 contactPersonNumber: contactNumber ? contactNumber : null,
+                isB2B: isB2C ? JSON.parse(isB2C) : false
             },
         });
     });

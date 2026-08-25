@@ -96,7 +96,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
   const [isBranch, setIsBranch] = useState(false);
   const [branchTypeId, setBranchTypeId] = useState("");
   const [aadharNo, setAadharNo] = useState("")
-
+  const [isB2C, setIsB2C] = useState(false);
 
 
 
@@ -301,6 +301,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
       setProcessDetails(data?.processDetails || []);
       setAadharNo(data?.aadharNo || "");
       setChildRecord(data?._count ? childRecordCountTotal(data?._count) : 0)
+      setIsB2C(data?.isB2C ? data?.isB2C : false)
       setStep(1);
     },
 
@@ -378,7 +379,8 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
 
     material, materialActive, rawMaterial, branchTypeId, parentId, isBranch,
 
-    attachments: attachments?.filter(i => i.name && i.filePath)
+    attachments: attachments?.filter(i => i.name && i.filePath),
+    isB2C
 
 
 
@@ -2002,7 +2004,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
                             setValue={setName}
                             required={true}
                             readOnly={readOnly}
-                            disabled={childRecord > 0}
+                            disabled={isB2C ? false : childRecord > 0}
                             onBlur={(e) => {
                               if (aliasName) return;
                               setAliasName(e.target.value);
