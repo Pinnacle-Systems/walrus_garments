@@ -59,6 +59,19 @@ const stockApi = createApi({
       },
       providesTags: ["Stock"],
     }),
+    getPosUnifiedStock: builder.query({
+      query: ({ params }) => {
+        return {
+          url: STOCK_API + "/pos-unified",
+          method: "GET",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+          },
+          params
+        };
+      },
+      providesTags: ["Stock"],
+    }),
     getUnifiedStockReport: builder.query({
       query: ({ params }) => {
         return {
@@ -171,6 +184,7 @@ export const {
 
   useGetMinStockAlertReportQuery,
   useGetUnifiedStockQuery,
+  useGetPosUnifiedStockQuery,
   useGetUnifiedStockReportQuery,
   useLazyGetUnifiedStockReportQuery,
   useGetUnifiedStockByBarcodeQuery,

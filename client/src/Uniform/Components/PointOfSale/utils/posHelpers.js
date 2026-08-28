@@ -38,6 +38,7 @@ export const buildResolutionLabel = (match) =>
  */
 export const allocateStock = (totalQty, stockDetails, retailStoreId) => {
     let remaining = parseFloat(totalQty) || 0;
+    console.log(stockDetails, "stockDetails")
     const fulfillments = [];
     const sortedStocks = [...(stockDetails || [])].sort((a, b) => {
         const isARetail = a.storeName?.toLowerCase().includes('retail') || parseInt(a.storeId) === parseInt(retailStoreId);
@@ -194,7 +195,7 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
     allMatches.sort((a, b) => {
         const aName = (a.item_name || "").toLowerCase();
         const bName = (b.item_name || "").toLowerCase();
-        
+
         const aWords = aName.split(/\s+/).filter(Boolean);
         const bWords = bName.split(/\s+/).filter(Boolean);
 
@@ -222,7 +223,7 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
         if (bName === query.toLowerCase().trim()) bScore += 50;
 
         // Sort descending (highest score first)
-        return bScore - aScore; 
+        return bScore - aScore;
     });
 
     return allMatches;

@@ -528,8 +528,10 @@ const StockAdjustmentFrom = ({ params, onClose, id, docId, date, setDate, readOn
                           onChange={(e) => updateRow(idx, "barcodeType", e.target.value)}
                         // disabled={}
                         >
-                          <option value="REGULAR" hidden={isDiscountStore}>REGULAR</option>
-                          <option value="CLEARANCE" hidden={!isDiscountStore}>CLEARANCE</option>
+                          {/* <option value="REGULAR" hidden={isDiscountStore}>REGULAR</option>
+                          <option value="CLEARANCE" hidden={!isDiscountStore}>CLEARANCE</option> */}
+                          <option value="REGULAR" >REGULAR</option>
+                          <option value="CLEARANCE" >CLEARANCE</option>
                         </select>{console.log(availableBarcodes, "availableBarcodes")}
                       </td>
                       <td className="w-40 border border-gray-300 p-0 text-[11px] text-right">

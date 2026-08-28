@@ -215,7 +215,8 @@ async function get(req) {
         pagination = false, dataPerPage = 5, pageNumber = 1,
         searchYarnAliasName,
         sizeId, colorId, uomId, itemId,
-        searchSize, searchItem, searchColor, isRetunPosStockes, retailStoreId, discountLocationId
+        searchSize, searchItem, searchColor, isRetunPosStockes, retailStoreId, discountLocationId,
+        isPosUnified
     } = req.query
 
 
@@ -258,6 +259,7 @@ async function get(req) {
             "colorId",
             "uomId",
             "barcode",
+            ...(isPosUnified === 'true' || isPosUnified === true ? ["storeId"] : []),
             ...STOCK_RUNTIME_FIELD_KEYS,
         ],
         _sum: {
@@ -296,6 +298,11 @@ export async function getUnifiedStock(req) {
     // When omitted, all stock for the branch is returned. This lets callers
     // such as the sales delivery form fetch stock for option-building without
     // requiring a store to have been selected first.
+    return await get(req);
+}
+
+export async function getPosUnifiedStock(req) {
+    req.query.isPosUnified = 'true';
     return await get(req);
 }
 

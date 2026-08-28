@@ -5647,6 +5647,7 @@ model PosItems {
   isExchangeItem        Boolean            @default(false)
   isAddedDuringExchange Boolean?           @default(false)
   sourceStoreId         Int?               @default(0)
+  fulfillments          Fulfillments[]
 }
 
 model PosPayments {
@@ -5879,4 +5880,12 @@ model PaymentAdjustment {
   updatedAt        DateTime  @updatedAt
   updatedBy        User?     @relation("updatedBy", fields: [updatedById], references: [id])
   updatedById      Int?
+}
+
+model Fulfillments{
+  id          Int    @id @default(autoincrement())
+  posItemId   Int?
+  PosItems    PosItems?         @relation(fields: [posItemId], references: [id], onDelete: Cascade)
+  storeId     Int?
+  qty         String?
 }

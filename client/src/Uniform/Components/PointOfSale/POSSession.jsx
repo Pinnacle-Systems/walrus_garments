@@ -8,7 +8,7 @@ import { useGetItemMasterQuery, useGetItemPriceListQuery } from '../../../redux/
 import { useGetPartyQuery, useAddPartyMutation } from '../../../redux/services/PartyMasterService';
 import { useAddSalesInvoiceMutation } from '../../../redux/uniformService/salesInvoiceServices';
 import { useGetLocationMasterQuery } from '../../../redux/uniformService/LocationMasterServices';
-import { useLazyGetUnifiedStockByBarcodeQuery, useGetUnifiedStockQuery } from '../../../redux/services/StockService';
+import { useLazyGetUnifiedStockByBarcodeQuery, useGetUnifiedStockQuery, useGetPosUnifiedStockQuery } from '../../../redux/services/StockService';
 import { findFromList, getCommonParams } from '../../../Utils/helper';
 import { printReceiptInstructions, mapLocalPrintAgentError } from '../../../Utils/localPrintAgent';
 import { buildReceiptInstructions } from '../../../printing/build-receipt-instructions';
@@ -109,6 +109,12 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
 
     const { data: unifiedStockData } = useGetUnifiedStockQuery({
+        params: { branchId, isRetunPosStockes: true, retailStoreId, discountLocationId }
+    }, {
+        skip: !branchId || !retailStoreId
+    });
+
+    const { data: unifiedPosStockData } = useGetPosUnifiedStockQuery({
         params: { branchId, isRetunPosStockes: true, retailStoreId, discountLocationId }
     }, {
         skip: !branchId || !retailStoreId
@@ -406,14 +412,19 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
         const mappedCart = (sale.PosItems || []).map(item => {
             const masterItem = itemsData?.data?.find(i => i.id === item.itemId);
-            console.log(item?.barcode, "itembarcode")
-            const stockItems = unifiedStockData?.data?.filter(s =>
+            console.log(item, "unifiedPosStockData", unifiedPosStockData)
+            const stockItems = unifiedPosStockData?.data?.filter(s =>
                 s.itemId === item.itemId &&
                 (s.sizeId || null) === (item.sizeId || null) &&
                 (s.colorId || null) === (item.colorId || null) &&
                 s.barcode === item?.barcode
             ) || [];
-
+            const stockDetails = stockItems.length > 0 ? stockItems.map(s => ({
+                storeId: s.storeId || retailStoreId,
+                storeName: s.storeId === retailStoreId ? "Retail Store" : "Discount Store",
+                stockQty: parseFloat(s._sum?.qty) || 0
+            })) : []
+            console.log(stockDetails, "stockDetails")
             const currentLiveStock = stockItems.reduce((sum, s) => sum + (parseFloat(s._sum?.qty) || 0), 0);
             const effectiveStockQty = currentLiveStock;
 
@@ -432,7 +443,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 offerReapplied: item.offerReapplied,
                 priceType: item.priceType,
                 appliedOfferName: item.appliedOfferName,
-                isExchangeItem: item.isExchangeItem === true
+                isExchangeItem: item.isExchangeItem === true,
+                stockDetails: stockDetails
             };
         });
 

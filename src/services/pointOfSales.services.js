@@ -178,7 +178,8 @@ async function getOne(id) {
                     Size: true,
                     ReturnItems: true,
                     Uom: true,
-                    Employee: true
+                    Employee: true,
+                    fulfillments: true
                 }
             },
             Party: {
@@ -325,32 +326,40 @@ async function create(body) {
                     courierCharges: courierCharges ? parseInt(courierCharges) : null,
 
                     PosItems: {
-                        createMany: {
-                            data: (posItems || []).map((item) => ({
-                                itemId: parseInt(item.itemId || item.id),
-                                sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                                colorId: item.colorId ? parseInt(item.colorId) : null,
-                                uomId: item.uomId ? parseInt(item.uomId) : null,
-                                qty: String(item.qty),
-                                price: String(item.price),
-                                salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
-                                isReturn: item.isReturn || false,
-                                isExchangeItem: item.isExchangeItem || false,
-                                isAddedDuringExchange: item.isAddedDuringExchange || false,
-                                originalItemId: item.originalItemId || null,
-                                retunBillId: item.retunBillId || null,
-                                barcode: item.barcode || null,
-                                barcodeType: item.barcodeType || null,
-                                appliedOfferId: item.appliedOfferId ? parseInt(item.appliedOfferId) : null,
-                                appliedOfferSnapshot: item.appliedOfferSnapshot ? JSON.stringify(item.appliedOfferSnapshot) : null,
-                                originalSalesPrice: item.salesPrice !== undefined ? parseFloat(item.salesPrice) : null,
-                                offerReversal: item.offerReversal ? String(item.offerReversal) : null,
-                                offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
-                                priceType: item.priceType || null,
-                                appliedOfferName: item.appliedOfferName || null,
-                                sourceStoreId: item?.fulfillments?.length > 0 ? parseInt(item?.fulfillments?.[0]?.storeId) : null,
-                            }))
-                        }
+                        create: (posItems || []).map((item) => ({
+                            itemId: parseInt(item.itemId || item.id),
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                            uomId: item.uomId ? parseInt(item.uomId) : null,
+                            qty: String(item.qty),
+                            price: String(item.price),
+                            salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+                            isReturn: item.isReturn || false,
+                            isExchangeItem: item.isExchangeItem || false,
+                            isAddedDuringExchange: item.isAddedDuringExchange || false,
+                            originalItemId: item.originalItemId || null,
+                            retunBillId: item.retunBillId || null,
+                            barcode: item.barcode || null,
+                            barcodeType: item.barcodeType || null,
+                            appliedOfferId: item.appliedOfferId ? parseInt(item.appliedOfferId) : null,
+                            appliedOfferSnapshot: item.appliedOfferSnapshot ? JSON.stringify(item.appliedOfferSnapshot) : null,
+                            originalSalesPrice: item.salesPrice !== undefined ? parseFloat(item.salesPrice) : null,
+                            offerReversal: item.offerReversal ? String(item.offerReversal) : null,
+                            offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
+                            priceType: item.priceType || null,
+                            appliedOfferName: item.appliedOfferName || null,
+                            sourceStoreId: item?.fulfillments?.length > 0 ? parseInt(item?.fulfillments?.[0]?.storeId) : null,
+                            ...(item?.fulfillments?.length > 0 ? {
+                                fulfillments: {
+                                    createMany: {
+                                        data: item.fulfillments?.filter((i) => i.qty > 0 && i.storeId)?.map((fulfillment) => ({
+                                            storeId: fulfillment.storeId ? parseInt(fulfillment.storeId) : null,
+                                            qty: fulfillment.qty ? String(fulfillment.qty) : null
+                                        }))
+                                    }
+                                }
+                            } : {})
+                        }))
                     },
 
                 }
@@ -445,7 +454,10 @@ async function create(body) {
 
                         const available = parseFloat(currentStock._sum.qty || 0);
                         if (available < fQty) {
-                            throw new Error(`Insufficient stock in ${f.storeName || 'Store'}. Available: ${available}, Required: ${fQty}`);
+                            const itemName = item.Item?.name || item.itemName || item.name || `Item ${itemId}`;
+                            const sizeName = item.Size?.name || item.sizeName || '-';
+                            const colorName = item.Color?.name || item.colorName || '-';
+                            throw new Error(`Insufficient stock for ${itemName} (Size: ${sizeName}, Color: ${colorName}) in ${f.storeName || 'Store'}. Available: ${available}, Required: ${fQty}`);
                         }
 
                         // Create Stock reduction/transfer
@@ -603,31 +615,46 @@ async function update(id, body) {
 
             await tx.posItems.deleteMany({ where: { PosId: parseInt(id) } });
 
-            await tx.posItems.createMany({
-                data: (posItems || []).map((item) => ({
-                    PosId: parseInt(id),
-                    itemId: parseInt(item.itemId || item.id),
-                    sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                    colorId: item.colorId ? parseInt(item.colorId) : null,
-                    uomId: item.uomId ? parseInt(item.uomId) : null,
-                    qty: String(item.qty),
-                    price: String(item.price),
-                    salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
-                    isReturn: item.isReturn || false,
-                    isExchangeItem: item.isExchangeItem || false,
-                    isAddedDuringExchange: item.isAddedDuringExchange || false,
-                    barcode: item.barcode || null,
-                    barcodeType: item.barcodeType || null,
-                    appliedOfferId: item.appliedOfferId ? parseInt(item.appliedOfferId) : null,
-                    appliedOfferSnapshot: item.appliedOfferSnapshot ? JSON.stringify(item.appliedOfferSnapshot) : null,
-                    originalSalesPrice: item.salesPrice !== undefined ? parseFloat(item.salesPrice) : null,
-                    offerReversal: item.offerReversal ? String(item.offerReversal) : null,
-                    offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
-                    priceType: item.priceType || null,
-                    appliedOfferName: item.appliedOfferName || null,
-                    sourceStoreId: item?.fulfillments?.length > 0 ? parseInt(item?.fulfillments[0]?.storeId) : item?.sourceStoreId
-                }))
-            });
+            await Promise.all(
+                (posItems || []).map((item) =>
+                    tx.posItems.create({
+                        data: {
+                            PosId: parseInt(id),
+                            itemId: parseInt(item.itemId || item.id),
+                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+                            colorId: item.colorId ? parseInt(item.colorId) : null,
+                            uomId: item.uomId ? parseInt(item.uomId) : null,
+                            qty: String(item.qty),
+                            price: String(item.price),
+                            salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
+                            isReturn: item.isReturn || false,
+                            isExchangeItem: item.isExchangeItem || false,
+                            isAddedDuringExchange: item.isAddedDuringExchange || false,
+                            barcode: item.barcode || null,
+                            barcodeType: item.barcodeType || null,
+                            appliedOfferId: item.appliedOfferId ? parseInt(item.appliedOfferId) : null,
+                            appliedOfferSnapshot: item.appliedOfferSnapshot ? JSON.stringify(item.appliedOfferSnapshot) : null,
+                            originalSalesPrice: item.salesPrice !== undefined ? parseFloat(item.salesPrice) : null,
+                            offerReversal: item.offerReversal ? String(item.offerReversal) : null,
+                            offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
+                            priceType: item.priceType || null,
+                            appliedOfferName: item.appliedOfferName || null,
+                            sourceStoreId: item?.fulfillments?.length > 0 ? parseInt(item?.fulfillments[0]?.storeId) : item?.sourceStoreId,
+                            ...(item?.fulfillments?.length > 0 ? {
+                                fulfillments: {
+                                    createMany: {
+                                        data: item.fulfillments?.filter((i) => i.qty > 0 && i.storeId)?.map((fulfillment) => ({
+                                            storeId: fulfillment.storeId ? parseInt(fulfillment.storeId) : null,
+                                            qty: fulfillment.qty ? String(fulfillment.qty) : null
+                                        }))
+                                    }
+                                }
+                            } : {})
+                        }
+                    })
+                )
+            );
+
 
             await tx.posPayments.deleteMany({ where: { PosId: parseInt(id) } });
             await tx.posPayments.createMany({
@@ -699,7 +726,10 @@ async function update(id, body) {
 
                             const available = parseFloat(currentStock._sum.qty || 0);
                             if (available < fQty) {
-                                throw new Error(`Insufficient stock in ${f.storeName || 'Store'}. Available: ${available}, Required: ${fQty}`);
+                                const itemName = item.Item?.name || item.itemName || item.name || `Item ${itemId}`;
+                                const sizeName = item.Size?.name || item.sizeName || '-';
+                                const colorName = item.Color?.name || item.colorName || '-';
+                                throw new Error(`Insufficient stock for ${itemName} (Size: ${sizeName}, Color: ${colorName}) in ${f.storeName || 'Store'}. Available: ${available}, Required: ${fQty}`);
                             }
 
                             if (fStoreId !== retailStoreId) {
