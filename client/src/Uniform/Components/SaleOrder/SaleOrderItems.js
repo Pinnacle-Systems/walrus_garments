@@ -59,7 +59,8 @@ const SaleOrderItems = ({
     setSelectedItemForOffers,
     setShowItemOfferModal,
     handlers,
-    movedToNextSaveNewRef
+    movedToNextSaveNewRef,
+    isAdmin
 }) => {
     const compactHeaderCellClassName = transactionTableHeaderCellClassName;
     const compactCellClassName = transactionTableCellClassName;
@@ -69,6 +70,7 @@ const SaleOrderItems = ({
     const compactDropdownClassName = "h-full w-full max-w-none rounded-none border-0 bg-transparent px-1 py-0 text-[10px] shadow-none outline-none focus:bg-transparent focus:outline-none";
 
     const [currentSelectedLotGrid, setCurrentSelectedLotGrid] = useState(false);
+
 
     const catalogItems = itemList?.data || [];
     const catalogPriceRows = itemPriceList?.data || [];
@@ -185,7 +187,7 @@ const SaleOrderItems = ({
                                 )
                             )
                         );
-                        
+
                         if (existingOffer && existingOffer.discountValue) {
                             finalPrice = existingOffer.discountValue;
                         }
@@ -519,7 +521,7 @@ const SaleOrderItems = ({
                                                         if (e.key === "Delete") handleInputChange("0.00", index, "price");
                                                     }}
                                                     min="0" type="number"
-                                                    disabled={readOnly || true}
+                                                    disabled={isAdmin ? false : (readOnly || true)}
                                                     className={compactNumberInputClassName}
                                                     onFocus={e => e.target.select()}
                                                     value={(!row.price) ? 0 : row.price}

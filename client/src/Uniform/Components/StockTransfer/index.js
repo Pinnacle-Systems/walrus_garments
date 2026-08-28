@@ -39,9 +39,9 @@ const StockTransfer = () => {
     const [tempStockItems, setTempStockItems] = useState([])
 
 
-    const { branchId, userId, finYearId } = getCommonParams()
+    const { branchId, userId, finYearId, userRole } = getCommonParams()
     const params = {
-        branchId, userId, finYearId
+        branchId, userId, finYearId, userRole
     };
 
     const { data: orderData, isLoading: sampelDataLoading, isFetching: sampelDataFetching } = useGetOrderQuery({ params });
@@ -151,7 +151,7 @@ const StockTransfer = () => {
                             onView={handleView}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
-                            itemsPerPage={10}
+                            itemsPerPage={15}
                         />
                     </div>
                 </div>

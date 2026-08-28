@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Loader } from "../../../Basic/components";
-import { getDateFromDateTimeToDisplay } from "../../../Utils/helper";
+import { getCommonParams, getDateFromDateTimeToDisplay } from "../../../Utils/helper";
 import secureLocalStorage from 'react-secure-storage';
 import { FaChevronLeft, FaChevronRight, FaEllipsisV } from 'react-icons/fa';
 import { useGetQuotationMasterQuery } from '../../../redux/uniformService/quotationServices';
-import { useGetsaleOrderQuery } from "../../../redux/uniformService/saleOrderServices";
+import { useGetsaleOrderQuery, useUpdatesaleOrderMutation, useUpdateSalesOrderIscompletedMutation } from "../../../redux/uniformService/saleOrderServices";
 import { Tooltip } from '@mui/material';
-import { Truck } from 'lucide-react';
+import { CheckCircle, Truck, XCircle } from 'lucide-react';
+import Swal from "sweetalert2";
 
 
 
@@ -41,6 +42,8 @@ const SaleOrderReport = ({
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const { userRole } = getCommonParams();
+  const isAdmin = userRole === "ADMIN" || userRole === "DEFAULT ADMIN"
 
   const searchFields = {
     serachDocNo,
@@ -64,7 +67,34 @@ const SaleOrderReport = ({
   ]);
 
 
+  const [updateSalesOrderIscomplted] = useUpdateSalesOrderIscompletedMutation();
 
+  const handleApprove = async (e, dataObj, isApprove, action) => {
+    e.stopPropagation();
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You want to approve this delivery? This will generate a final bill.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, approve it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        console.log(dataObj, "dataObjdataObj")
+        const response = await updateSalesOrderIscomplted({ id: dataObj.id, isCompleted: isApprove, action }).unwrap();
+        if (response.statusCode === 0) {
+          Swal.fire('Completed!', 'This Sale Order has been completed successfully .', 'success');
+        } else {
+          Swal.fire('Error', response.message || 'Failed to complete Sale Order', 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', err?.data?.message || 'Something went wrong', 'error');
+      }
+    }
+  };
 
 
   const { data: allData, isFetching, isLoading } = useGetsaleOrderQuery({
@@ -184,6 +214,8 @@ const SaleOrderReport = ({
       "Ready for Delivery": "bg-indigo-100 text-indigo-800 border-indigo-300",
       "Partially Delivered": "bg-orange-100 text-orange-800 border-orange-300",
       "Fully Delivered": "bg-green-100 text-green-800 border-green-300",
+      "Update SO Completed": "bg-green-300 text-green-800 border-red-300",
+      "SO Cancelled": "bg-red-100 text-red-800 border-red-300",
     };
     return (
       <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border whitespace-nowrap ${config[status] || "bg-gray-100 text-gray-700 border-gray-300"}`}>
@@ -341,7 +373,8 @@ const SaleOrderReport = ({
                       <td className="py-1.5 text-center text-green-500 font-bold">{parseFloat(dataObj?.totalReceivedAmount).toFixed(2)} </td>
 
                       <td className="py-1.5 text-center">
-                        <StatusBadge status={dataObj?.deliveryStatus} />
+                        <StatusBadge status={dataObj?.isCompleted ? "Update SO Completed" :
+                          dataObj?.isCanceled ? "SO Cancelled" : dataObj?.deliveryStatus} />
                       </td>
                       {rowActions && (
                         <td className="border-gray-200 px-2 h-8">
@@ -352,8 +385,8 @@ const SaleOrderReport = ({
                                 <Tooltip title={dataObj?.canConvertToDelivery ? "Create Sales Delivery" : (dataObj?.deliveryStatus || "Delivery blocked")} arrow>
                                   <span>
                                     <button
-                                      disabled={!dataObj?.canConvertToDelivery}
-                                      className={`p-1.5 rounded-md transition ${dataObj?.canConvertToDelivery
+                                      disabled={!dataObj?.canConvertToDelivery || dataObj?.isCompleted}
+                                      className={`p-1.5 rounded-md transition ${dataObj?.canConvertToDelivery && !dataObj?.isCompleted
                                         ? "bg-orange-50 text-orange-600 hover:bg-orange-100"
                                         : "bg-gray-100 text-gray-400 cursor-not-allowed"
                                         }`}
@@ -388,7 +421,7 @@ const SaleOrderReport = ({
                                 <Tooltip title={dataObj?.SalesDelivery?.length > 0 ? "Cannot Edit. Child Record Exists" : "Edit"} arrow>
                                   <span>
                                     <button
-                                      disabled={dataObj?.SalesDelivery?.length > 0}
+                                      disabled={isAdmin ? false : dataObj?.SalesDelivery?.length > 0}
                                       className={`flex items-center px-1 rounded transition-colors ${dataObj?.SalesDelivery?.length > 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "text-green-600 bg-green-50 hover:bg-green-100"}`}
                                       onClick={(e) => { e.stopPropagation(); if (!(dataObj?.SalesDelivery?.length > 0)) hasPermission(() => onEdit(dataObj.id), "edit"); }}
                                     >
@@ -403,7 +436,7 @@ const SaleOrderReport = ({
                                 <Tooltip title={dataObj?.SalesDelivery?.length > 0 ? "Cannot Delete. Child Record Exists" : "Delete"} arrow>
                                   <span>
                                     <button
-                                      disabled={dataObj?.SalesDelivery?.length > 0}
+                                      disabled={dataObj?.SalesDelivery?.length > 0 || dataObj?.isCompleted}
                                       className={`flex items-center px-1 rounded transition-colors ${dataObj?.SalesDelivery?.length > 0 ? "bg-red-50 text-red-500 opacity-40 cursor-not-allowed" : "text-red-800 bg-red-50 hover:bg-red-100"}`}
                                       onClick={(e) => { e.stopPropagation(); if (!(dataObj?.SalesDelivery?.length > 0)) hasPermission(() => onDelete(dataObj.id, dataObj?._count), "delete", dataObj?._count); }}
                                     >
@@ -414,7 +447,39 @@ const SaleOrderReport = ({
                                   </span>
                                 </Tooltip>
                               )}
+                              {isAdmin && (
+                                <div className=" flex items-center gap-1 pr-2 border-r border-gray-300">
+                                  <Tooltip title={`${dataObj?.deliveryStatus == "Fully Delivered" ? "Sales Order Already Completed" : "Complete This Sales Order"}`} arrow>
+                                    <span>
+                                      <button
+                                        className={`p-1.5 rounded-md transition ${dataObj?.deliveryStatus == "Fully Delivered" ? "bg-green-100 text-green-600 cursor-not-allowed" : "bg-green-50 text-green-600 hover:bg-green-100 cursor-pointer"}`}
+                                        onClick={(e) => handleApprove(e, dataObj, dataObj?.isCompleted === true ? false : true, "isCompleted")}
+                                        disabled={!isAdmin || dataObj?.deliveryStatus == "Fully Delivered"}
+                                      >
+                                        <CheckCircle size={16} />
+                                      </button>
+                                    </span>
+                                  </Tooltip>
+                                </div>
+                              )
 
+                              }
+                              {isAdmin && (
+
+                                <div className=" flex items-center gap-1 pr-2 border-r border-gray-300">
+                                  <Tooltip title={`${dataObj?.deliveryStatus == "Fully Delivered" ? "Sales Order Already Completed" : "Complete This Sales Order"}`} arrow>
+                                    <span>
+                                      <button
+                                        className={`p-1.5 rounded-md transition ${dataObj?.deliveryStatus == "Fully Delivered" ? "bg-red-100 text-red-600 cursor-not-allowed" : "bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer"}`}
+                                        onClick={(e) => handleApprove(e, dataObj, dataObj?.isCanceled === true ? false : true, "isCanceled")}
+                                        disabled={!isAdmin || dataObj?.deliveryStatus == "Fully Delivered"}
+                                      >
+                                        <XCircle size={16} />
+                                      </button>
+                                    </span>
+                                  </Tooltip>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -435,7 +500,7 @@ const SaleOrderReport = ({
         </div>
       </>
 
-    </div>
+    </div >
   );
 };
 

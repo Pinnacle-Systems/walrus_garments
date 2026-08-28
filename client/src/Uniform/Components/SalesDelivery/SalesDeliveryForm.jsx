@@ -1060,8 +1060,9 @@ const SalesDeliveryForm = ({ onClose, id, setId, docId, setDocId, date, setDate,
                       id
                         ? saleOrderList?.data
                         : saleOrderList?.data?.filter((item) =>
+
                           (item?.canConvertToDelivery || String(item?.id) === String(linkedSaleOrderId)) &&
-                          item?.customerId === customerId
+                          item?.customerId === customerId && !item.isCompleted && !item.isCanceled
                         ),
                       "docId",
                       "id"

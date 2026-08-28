@@ -54,7 +54,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
   courierCharge,
   setCourierChargeEnabled,
   setCourierCharge,
-  hasPermission
+  hasPermission,
+  isAdmin
 }) => {
 
 
@@ -139,9 +140,9 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
 
 
 
-  const { branchId, companyId, userId, finYearId } = getCommonParams()
+  const { branchId, companyId, userId, finYearId, userRole } = getCommonParams()
   const params = {
-    branchId, companyId, userId, finYearId
+    branchId, companyId, userId, finYearId, userRole
   };
   const parseChargeAmount = (value) => {
     const parsedValue = parseFloat(value);
@@ -860,7 +861,7 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
         <>
           <button className="bg-yellow-600 text-white px-4 py-1 rounded-md hover:bg-yellow-700 flex items-center text-sm"
             onClick={() => hasPermission(() => setReadOnly(false), "edit")}
-            disabled={childRecord}
+            disabled={isAdmin ? false : childRecord}
           >
             <FiEdit2 className="w-4 h-4 mr-2" />
             Edit
@@ -1122,6 +1123,8 @@ const SaleOrderForm = ({ onClose, id, setId, docId, setDocId, date, setDate, rea
               setSelectedOffersByRow={setSelectedOffersByRow}
               setSelectedItemForOffers={setSelectedItemForOffers}
               setShowItemOfferModal={setShowItemOfferModal}
+              params={params}
+              isAdmin={isAdmin}
             />
           </fieldset>
         </div>

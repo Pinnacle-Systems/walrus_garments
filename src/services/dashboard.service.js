@@ -273,12 +273,25 @@ async function getOrderPipeline(where) {
     });
 
     const orders = await prisma.saleorder.findMany({
-        where: { ...where, isDeleted: false },
+        where: {
+            ...where, isDeleted: false, OR: [
+                { isCompleted: null },
+                { isCompleted: false }
+            ],
+
+            AND: [
+                {
+                    OR: [
+                        { isCanceled: null },
+                        { isCanceled: false }
+                    ]
+                }
+            ]
+        },
         include: {
             Party: { select: { name: true } },
             SaleOrderItems: { include: { SalesDeliveryItems: { select: { deliveryQty: true } } } }
         },
-        take: 100
     });
 
     const deliveriesBreakup = orders.filter(so =>

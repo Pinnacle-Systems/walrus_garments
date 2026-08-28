@@ -1846,9 +1846,10 @@ export const ReusableTable = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [columnFilters, setColumnFilters] = useState({});
   const [currentItemsPerPage, setCurrentItemsPerPage] = useState(itemsPerPage === 15 ? 16 : itemsPerPage);
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const filteredData = data?.filter(item => {
-    return Object.keys(columnFilters).every(colHeader => {
+    const matchesColumns = Object.keys(columnFilters).every(colHeader => {
       const filterVal = columnFilters[colHeader];
       if (!filterVal) return true;
 
@@ -1858,6 +1859,13 @@ export const ReusableTable = ({
       const value = column.accessor(item);
       return String(value || "").toLowerCase().includes(filterVal.toLowerCase());
     });
+
+    if (!matchesColumns) return false;
+
+    if (statusFilter === 'Active') return item.active === true || item.active === 'Y' || item.active === 'Yes';
+    if (statusFilter === 'Inactive') return item.active === false || item.active === 'N' || item.active === 'No' || !item.active;
+
+    return true;
   }) || [];
 
   const totalPages = Math?.ceil(filteredData?.length / currentItemsPerPage);
@@ -2016,11 +2024,21 @@ export const ReusableTable = ({
                   </th>
                 )}
               </tr>
-              {enableSearch && (
+              {(enableSearch || columns?.some(c => c.header === "Status")) && (
                 <tr>
                   {columns?.map((column, index) => (
                     <th key={`search-${index}`} className={`px-2 py-1 ${column.header !== "" ? "border-r border-white/50" : ""}`}>
-                      {column.enableSearch && (
+                      {column.header === "Status" ? (
+                        <select
+                          className="w-full text-[12px] font-normal px-1 py-0.5 border border-gray-300 rounded text-gray-700 outline-none focus:border-blue-500 bg-white"
+                          value={statusFilter}
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                        >
+                          <option value="All">All</option>
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      ) : column.enableSearch && (
                         <input
                           type="text"
                           placeholder="Search..."

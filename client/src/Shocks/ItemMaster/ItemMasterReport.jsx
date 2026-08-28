@@ -22,6 +22,7 @@ export const Reports = ({
     const [itemNameFilter, setItemNameFilter] = useState("");
     const [barcodeFilter, setBarcodeFilter] = useState("");
     const [currentItemsPerPage, setCurrentItemsPerPage] = useState(itemsPerPage === 15 ? 16 : itemsPerPage);
+    const [statusFilter, setStatusFilter] = useState('All');
 
     const filteredData = data?.filter(item => {
         const matchesName = !itemNameFilter ||
@@ -35,7 +36,11 @@ export const Reports = ({
             ) ||
             item.barcode?.toLowerCase().includes(barcodeFilter.toLowerCase());
 
-        return matchesName && matchesBarcode;
+        const matchesStatus = statusFilter === 'All' ||
+            (statusFilter === 'Active' && item.active) ||
+            (statusFilter === 'Inactive' && !item.active);
+
+        return matchesName && matchesBarcode && matchesStatus;
     }) || [];
 
     const totalPages = Math?.ceil(filteredData?.length / currentItemsPerPage);
@@ -224,6 +229,21 @@ export const Reports = ({
                                                     }}
                                                     className="w-full text-xs font-normal px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                                                 />
+                                            </th>
+                                        );
+                                    }
+                                    if (column.header === "Status") {
+                                        return (
+                                            <th key={index} className="px-2 py-1 text-center">
+                                                <select
+                                                    className="w-full text-xs font-normal px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                                                    value={statusFilter}
+                                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                                >
+                                                    <option value="All">All</option>
+                                                    <option value="Active">Active</option>
+                                                    <option value="Inactive">Inactive</option>
+                                                </select>
                                             </th>
                                         );
                                     }

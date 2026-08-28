@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove } from '../services/saleOrder.services.js';
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, saleOrderIscompleted as _saleOrderIscompleted } from '../services/saleOrder.services.js';
 
 async function get(req, res, next) {
     try {
@@ -83,11 +83,21 @@ async function remove(req, res, next) {
     }
 }
 
+async function saleOrderIscompleted(req, res, next) {
+    try {
+        res.json(await _saleOrderIscompleted(req.params.id, req));
+    } catch (error) {
+        console.error(`Error`, error.message);
+        res.json({ statusCode: 1, message: error.message })
+    }
+}
+
 export {
     get,
     getOne,
     getSearch,
     create,
     update,
-    remove
+    remove,
+    saleOrderIscompleted
 };

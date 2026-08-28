@@ -451,6 +451,7 @@ const SalesDeliveryReport = ({
                                   </span>
                                 </Tooltip>
                               )}
+
                             </div>
                           </div>
                         </td>

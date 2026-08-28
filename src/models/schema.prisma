@@ -178,6 +178,7 @@ model Branch {
   DeliveryChallan                        DeliveryChallan[]
   expenses                               Expense[]
   DayBook                                DayBook[]
+  StockTransfer                          StockTransfer[]
 }
 
 model UserOnBranch {
@@ -333,6 +334,8 @@ model User {
   Pos                                 Pos[]                        @relation(name: "approver")
   DayBook                             DayBook[]
   PaymentAdjustmentCreatedBy          PaymentAdjustment[]          @relation(name: "createdBy")
+  PaymentAdjustmentUpdateBy             PaymentAdjustment[]          @relation(name: "updatedBy")
+
 }
 
 model Employee {
@@ -4374,6 +4377,8 @@ model StockTransfer {
   ToLocation                Location?                   @relation("toLocation", fields: [toLocationId], references: [id])
   toLocationId              Int?
   deliveryChallanNo         String?
+  Branch                    Branch?                     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  branchId                  Int?
   FromLocationTransferItems FromLocationTransferItems[]
   ToLocationTransferTtems   ToLocationTransferTtems[]
 }
@@ -5163,6 +5168,8 @@ model Saleorder {
   courierChargeEnabled  Boolean?               @default(false)
   courierCharge         String?
   deliveryMarginPercent Float?                 @default(50.0)
+  isCompleted           Boolean?   
+  isCanceled            Boolean?            
   SaleOrderItems        SaleOrderItems[]
   SalesDelivery         SalesDelivery[]
   SalesInvoice          SalesInvoice[]
@@ -5870,4 +5877,6 @@ model PaymentAdjustment {
   reason           String?   @db.VarChar(255)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  updatedBy        User?     @relation("updatedBy", fields: [updatedById], references: [id])
+  updatedById      Int?
 }

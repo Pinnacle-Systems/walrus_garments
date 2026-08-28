@@ -35,11 +35,22 @@ export const filterBillableParties = (data) => {
         );
 
         const creditValue = (party.Ledger || []).filter(l =>
-            (l.EntryType === 'Credit_Note' && l.creditOrDebit === 'Credit') ||
-            (l.EntryType === 'Debit_Note')
+            (l.EntryType === 'Customer_Payment' && l.creditOrDebit === 'Credit')
         ).reduce((acc, l) => acc + (l.amount || 0), 0);
 
-        const hasCredit = creditValue > 0;
+        const DebitValue = (party.Ledger || []).filter(l =>
+            (l.EntryType === 'Sales' && l.creditOrDebit === 'Debit')
+        ).reduce((acc, l) => acc + (l.amount || 0), 0);
+
+        const Credit_Adjustment = (party.Ledger || []).filter(l =>
+            l.EntryType === 'Credit_Adjustment'
+        ).reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        const Debit_Adjustment = (party.Ledger || []).filter(l =>
+            l.EntryType === 'Debit_Adjustment'
+        ).reduce((sum, l) => sum + (l.amount || 0), 0);
+
+        const hasCredit = creditValue - DebitValue + (Credit_Adjustment - Debit_Adjustment) > 0;
 
         console.log(party.name, party.Quotation?.length, party.Saleorder?.length, "party.Quotation");
 

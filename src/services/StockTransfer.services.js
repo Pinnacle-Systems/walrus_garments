@@ -627,7 +627,8 @@ async function create(req) {
                 fromLocationId: fromLocationId ? parseInt(fromLocationId) : undefined,
                 toLocationId: toLocationId ? parseInt(toLocationId) : undefined,
                 deliveryChallanNo: deliveryChallanNo ? deliveryChallanNo : undefined,
-
+                createdById: userId ? parseInt(userId) : undefined,
+                // branchId: branchId ? parseInt(branchId) : undefined,
             },
         });
         await createStocktransferItems(tx, data.id, stockItems, fromLocationId, toLocationId, branchId)

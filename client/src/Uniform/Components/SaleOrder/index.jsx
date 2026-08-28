@@ -58,13 +58,13 @@ const SaleOrder = () => {
     const [courierCharge, setCourierCharge] = useState("");
 
 
-    const { branchId, userId, companyId, finYearId } = getCommonParams();
+    const { branchId, userId, companyId, finYearId, userRole } = getCommonParams();
     const dispatch = useDispatch();
     const openTabsState = useSelector((state) => state.openTabs);
     const currentTab = openTabsState?.tabs?.find(t => t.active && t.name === "SALE ORDER");
     const convertQuotationId = currentTab?.projectId;
 
-    console.log(currentTab, "currentTab")
+    const isAdmin = userRole === "DEFAULT ADMIN" || userRole === "ADMIN"
 
     const { data: quotationToConvertData, isFetching: isQuotationFetching } =
         useGetQuotationByIdQuery(convertQuotationId, { skip: !convertQuotationId });
@@ -238,6 +238,7 @@ const SaleOrder = () => {
                         setCourierChargeEnabled={setCourierChargeEnabled}
                         setCourierCharge={setCourierCharge}
                         hasPermission={hasPermission}
+                        isAdmin={isAdmin}
                     />
                 </div>
 
@@ -263,6 +264,7 @@ const SaleOrder = () => {
                             onDelete={handleDelete}
                             onConvertToDelivery={handleConvertToDelivery}
                             hasPermission={hasPermission}
+                            isAdmin={isAdmin}
                         />
                     </div>
 

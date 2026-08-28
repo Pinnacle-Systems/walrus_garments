@@ -74,6 +74,13 @@ const saleOrderApi = createApi({
             }),
             invalidatesTags: ["saleOrder"],
         }),
+        updateSalesOrderIscompleted: builder.mutation({
+            query: ({ id, isCompleted, action }) => ({
+                url: `${SALE_ORDER_API}/iscompleted/${id}/${isCompleted}/${action}`,
+                method: "PUT",
+            }),
+            invalidatesTags: ["saleOrder"],
+        }),
     }),
 });
 
@@ -83,6 +90,7 @@ export const {
     useAddsaleOrderMutation,
     useUpdatesaleOrderMutation,
     useDeletesaleOrderMutation,
+    useUpdateSalesOrderIscompletedMutation,
 } = saleOrderApi;
 
 export default saleOrderApi;

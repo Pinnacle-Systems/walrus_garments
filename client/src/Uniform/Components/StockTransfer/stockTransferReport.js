@@ -3,7 +3,7 @@ import secureLocalStorage from "react-secure-storage";
 import { reactPaginateIndexToPageNumber } from "../../../Utils/helper";
 import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import { Loader } from "../../../Basic/components";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaStepBackward, FaStepForward } from "react-icons/fa";
 import { useGetStockTransferQuery } from "../../../redux/uniformService/StockTransferService";
 import moment from "moment";
 
@@ -96,7 +96,7 @@ const StockTransferReport = ({
 
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-    const indexOfLastItem = currentPage * parseInt(10);
+    const indexOfLastItem = currentPage * parseInt(itemsPerPage);
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
@@ -108,14 +108,23 @@ const StockTransferReport = ({
         }
     };
     const Pagination = () => {
-        // if (totalPages <= 1) return null;
-
         return (
             <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
                 <div className="text-sm text-gray-600 mb-2 sm:mb-0">
                     Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.length} entries
                 </div>
                 <div className="flex gap-1">
+                    <button
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
+                        className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        title="First Page"
+                    >
+                        <FaStepBackward size={12} className="inline" />
+                    </button>
                     <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
@@ -178,6 +187,17 @@ const StockTransferReport = ({
                             }`}
                     >
                         <FaChevronRight className="inline" />
+                    </button>
+                    <button
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        title="Last Page"
+                    >
+                        <FaStepForward size={12} className="inline" />
                     </button>
                 </div>
             </div>
@@ -287,7 +307,7 @@ const StockTransferReport = ({
 
                                 (
                                     <tbody className="border-2">
-                                        {(allData?.data ? allData?.data : []).map((dataObj, index) => (
+                                        {(currentItems ? currentItems : []).map((dataObj, index) => (
                                             <tr
                                                 onKeyDown={(e) => {
                                                     if (e.key === "Enter") {

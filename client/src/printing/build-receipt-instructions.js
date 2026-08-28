@@ -96,7 +96,7 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     date,
     customerData,
     items = [],
-    payments = { cash: 0, upi: 0, card: 0 },
+    payments = { cash: 0, upi: 0, card: 0, online: 0 },
     summary = { subtotal: 0, tax: 0, discount: 0, total: 0 },
     branchData,
     returnReferences = [],
@@ -299,6 +299,9 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
   }
   if (payments.card > 0) {
     instructions.push({ type: 'leftRight', left: 'Card Paid :', right: payments.card.toFixed(2) });
+  }
+  if (payments.online > 0) {
+    instructions.push({ type: 'leftRight', left: 'Online Paid :', right: payments.online.toFixed(2) });
   }
   instructions.push({ type: 'line' });
 

@@ -39,7 +39,7 @@ const PosMultiCopyPrint = ({
   branchData,
   customerData,
   items = [],
-  payments = { cash: 0, upi: 0, card: 0 },
+  payments = { cash: 0, upi: 0, card: 0, online: 0 },
   summary = { subtotal: 0, tax: 0, discount: 0, total: 0, received: 0, balance: 0 },
   returnReferences = [],
   showSummarySlip,
@@ -342,6 +342,12 @@ const PosMultiCopyPrint = ({
           <View style={tw('flex flex-row justify-between')}>
             <Text style={tw('text-xxs')}>Card Paid :</Text>
             <Text style={tw('text-xxs')}>{payments.card.toFixed(2)}</Text>
+          </View>
+        )}
+        {payments.online > 0 && (
+          <View style={tw('flex flex-row justify-between')}>
+            <Text style={tw('text-xxs')}>Online Paid :</Text>
+            <Text style={tw('text-xxs')}>{payments.online.toFixed(2)}</Text>
           </View>
         )}
       </View>

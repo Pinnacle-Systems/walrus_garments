@@ -430,6 +430,16 @@ const StockTransferForm = ({
         locationData?.data?.filter(item => parseInt(item.locationId) === parseInt(params.branchId)) :
         []
 
+    const filteredOrders = locationData?.data?.filter((order) => {
+        if (params.userRole === "DEFAULT ADMIN" || params.userRole === "ADMIN") {
+            return true; // admins see everything, including WAREHOUSE
+        } else {
+            return order.storeName !== "WAREHOUSE"; // non-admins: exclude WAREHOUSE
+        }
+    });
+
+
+    console.log(filteredOrders, "filteredOrders", params.userRole === "DEFAULT ADMIN" || params.userRole === "ADMIN")
 
     if (isBarcodeFetching || isBarcodeLoading) return <Loader />
 
@@ -525,7 +535,7 @@ const StockTransferForm = ({
                                     <div className="col-span-2">
 
                                         <DropdownInputNew name="To Location"
-                                            options={dropDownListObject(id ? storeOptions : storeOptions?.filter(item => item.active && item.id != fromLocationId), "storeName", "id")}
+                                            options={dropDownListObject(id ? filteredOrders : filteredOrders?.filter(item => item.active && item.id != fromLocationId), "storeName", "id")}
                                             value={toLocationId} setValue={setToLocationId} required={true}
                                             disabled={!fromLocationId || id}
                                             readOnly={readOnly || !fromLocationId}

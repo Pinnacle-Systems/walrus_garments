@@ -1528,7 +1528,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     date: new Date(),
                     customerData: selectedCustomer || { name: guestName, contactPersonNumber: guestMobile },
                     items: cartWithOffers,
-                    payments: { cash: paidCash, upi: paidUPI, card: paidCard },
+                    payments: { cash: paidCash, upi: paidUPI, card: paidCard, online: paidOnline },
                     summary: {
                         subtotal: netAmount / 1.05,
                         tax: netAmount - (netAmount / 1.05),

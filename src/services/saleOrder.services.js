@@ -372,7 +372,6 @@ async function get(req) {
             active: active ? Boolean(active) : undefined,
             isDeleted: false,
             branchId: branchId ? parseInt(branchId) : undefined,
-
             docId: serachDocNo ? {
                 contains: serachDocNo,
             } : undefined,
@@ -952,11 +951,57 @@ async function remove(id) {
     return { statusCode: 0, data };
 }
 
+async function saleOrderIscompleted(id, req) {
+
+
+    const isCompleted = req.params.iscompleted === "true";
+    const action = req.params.action
+
+
+    const dataFound = await prisma.saleorder.findUnique({
+        where: { id: parseInt(id) },
+
+    });
+
+    let updateData = {};
+
+    if (action === "isCompleted") {
+        updateData = {
+            isCompleted: Boolean(isCompleted)
+        };
+    } else if (action === "isCanceled") {
+        updateData = {
+            isCanceled: Boolean(isCompleted)
+        };
+    }
+
+
+    if (!dataFound) return NoRecordFound("Sales order");
+
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            await tx.saleorder.update({
+                where: { id: parseInt(id) },
+                data: updateData
+            });
+
+
+            `    `
+        });
+
+        return { statusCode: 0, message: `Sale Order is ${action} successfully.` };
+    } catch (error) {
+        return { statusCode: 1, message: error.message || `Failed to  ${action} Sale Order.` };
+    }
+}
+
 export {
     get,
     getOne,
     getSearch,
     create,
     update,
-    remove
+    remove,
+    saleOrderIscompleted
 }

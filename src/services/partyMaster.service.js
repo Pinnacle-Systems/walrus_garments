@@ -725,10 +725,20 @@ export async function getPartyCreditBalance(id) {
 
     if (!party) return NoRecordFound("party");
 
+    // const creditValue = (party.Ledger || []).filter(l =>
+    //     (l.EntryType === 'Credit_Note' && l.creditOrDebit === 'Credit') ||
+    //     (l.EntryType === 'Debit_Note')
+    // ).reduce((acc, l) => acc + (l.amount || 0), 0);
+
     const creditValue = (party.Ledger || []).filter(l =>
-        (l.EntryType === 'Credit_Note' && l.creditOrDebit === 'Credit') ||
-        (l.EntryType === 'Debit_Note')
+        (l.EntryType === 'Customer_Payment' && l.creditOrDebit === 'Credit')
     ).reduce((acc, l) => acc + (l.amount || 0), 0);
+
+    const DebitValue = (party.Ledger || []).filter(l =>
+        (l.EntryType === 'Sales' && l.creditOrDebit === 'Debit')
+    ).reduce((acc, l) => acc + (l.amount || 0), 0);
+
+    const finalValue = creditValue - DebitValue;
 
     const Credit_Adjustment = (party.Ledger || []).filter(l =>
         l.EntryType === 'Credit_Adjustment'
@@ -738,9 +748,9 @@ export async function getPartyCreditBalance(id) {
         l.EntryType === 'Debit_Adjustment'
     ).reduce((sum, l) => sum + (l.amount || 0), 0);
 
-    console.log(creditValue, Credit_Adjustment, 'creditValue')
+    console.log(finalValue, Credit_Adjustment, 'creditValue')
 
-    const creditAdjustmentAmount = creditValue - (Credit_Adjustment + Debit_Adjustment);
+    const creditAdjustmentAmount = finalValue - (Credit_Adjustment + Debit_Adjustment);
 
     return {
         statusCode: 0,

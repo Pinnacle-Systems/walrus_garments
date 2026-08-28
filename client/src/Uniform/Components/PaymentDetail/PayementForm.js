@@ -187,7 +187,7 @@ const PaymentForm = ({
     const getSalesOrderOutstandingAmount = (salesOrder) => {
         if (!salesOrder) return 0;
 
-
+        console.log(salesOrder, "salesOrder")
 
         const salesOrderNetAmount = calculateQuotationNetAmount(salesOrder?.SaleOrderItems, salesOrder);
         setPaymentHistory(salesOrder?.paymentData);
@@ -212,12 +212,13 @@ const PaymentForm = ({
             0
         );
 
-        console.log(receivedAmount, "receivedAmount")
+        console.log(receivedAmount, "receivedAmount", advanceReceivedAmount)
 
         // const actualNetReceived = (receivedAmount + advanceReceivedAmount) - (refundedAmount + advanceRefundedAmount);
         const actualNetReceived = (receivedAmount + advanceReceivedAmount);
 
-        console.log()
+        console.log(salesOrderNetAmount, actualNetReceived, "actualNetReceived")
+        console.log(salesOrderNetAmount, "salesOrderNetAmount")
 
         return Math.max(0, salesOrderNetAmount - actualNetReceived);
     };
@@ -692,7 +693,10 @@ const PaymentForm = ({
         console.log(list, 'list')
         // Filter by selected party if supplierId exists
         if (supplierId) {
-            list = list?.filter(item => String(item.customerId || item.partyId) === String(supplierId));
+            list = list?.filter(item => String(item.customerId || item.partyId) === String(supplierId) &&
+                !item.isCompleted && !item.isCanceled
+
+            );
         }
 
         return list?.map(item => ({ show: item.docId, value: item.id }));
