@@ -23,12 +23,15 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
             sessionStorage.getItem("sessionId") + "userCompanyId"
         ),
         branchId: secureLocalStorage.getItem(
-            sessionStorage.getItem("sessionId") + "branchId"
+            sessionStorage.getItem("sessionId") + "currentBranchId"
         ),
     };
 
     const { data: offersResponse } = useGetoffersPromotionsQuery({ params });
     const offersData = offersResponse?.data || [];
+
+    console.log(item, "SelectedItem")
+    console.log(offersResponse, "offersResponse")
 
     // Prepare a flat list of all barcodes with variant info for the table
     const variantBarcodes = useMemo(() => {

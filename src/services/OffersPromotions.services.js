@@ -258,7 +258,7 @@ async function remove(id) {
 }
 
 async function createClearanceOffers(body) {
-    const { items } = body;
+    const { items, branchId } = body;
 
     await prisma.$transaction(async (tx) => {
         for (const item of items) {
@@ -296,6 +296,7 @@ async function createClearanceOffers(body) {
                         OfferScope: {
                             create: [{ type: "Item", refId: parseInt(item.itemId) }]
                         },
+                        branchId: branchId ? parseInt(branchId) : null,
                         OfferRule: {
                             create: [{
                                 logic: "AND",

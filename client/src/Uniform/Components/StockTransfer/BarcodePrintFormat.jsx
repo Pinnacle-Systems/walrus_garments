@@ -1,11 +1,12 @@
-import React, { useEffect } from "react";
-import { Document, Page, View, Text, PDFViewer, Font } from "@react-pdf/renderer";
+import React, { useEffect, useState } from "react";
+import { Document, Page, View, Text, PDFViewer, Font, Image } from "@react-pdf/renderer";
 import tw from "../../../Utils/tailwind-react-pdf";
 import BarcodeGenerator from "../BarcodeGenerator";
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { findFromList } from "../../../Utils/helper";
 import secureLocalStorage from "react-secure-storage";
 import { useGetStyleMasterQuery } from "../../../redux/uniformService/StyleMasterService";
+import QRCode from "qrcode";
 
 // Register Arial Narrow / Narrow Condensed Font for Barcode Print
 Font.register({
@@ -29,6 +30,44 @@ const chunkArray = (arr, size) => {
     result.push(arr.slice(i, i + size));
   }
   return result;
+};
+
+const QRCodeImage = ({ value, width = 40, height = 40 }) => {
+  const [src, setSrc] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!value) {
+      setSrc("");
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    QRCode.toDataURL(String(value), {
+      margin: 1,
+      width: 200,
+      color: { dark: "#000000", light: "#FFFFFF" },
+    })
+      .then((dataUrl) => {
+        if (isMounted) {
+          setSrc(dataUrl);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setSrc("");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [value]);
+
+  if (!src) return null;
+
+  return <Image src={src} style={{ width, height }} />;
 };
 
 const BarCodePrintFormat = ({
@@ -136,22 +175,101 @@ const BarCodePrintFormat = ({
   const rows = chunkArray(allBarcodes, stickersPerRow);
   console.log(rows, "rows data")
 
+
+
+
   return (
+    // <PDFViewer style={tw("w-full h-full")}>
+    //   <Document>
+    //     {rows.map((row, rowIndex) => (
+    //       <Page
+    //         key={rowIndex}
+    //         size={{ width: pageWidthPt, height: pageHeightPt }}
+    //         style={{
+    //           flexDirection: "row",
+    //           justifyContent: "flex-start",
+    //           alignItems: "center",
+    //           padding: 0,
+    //           gap: gapX,
+    //         }}
+    //       >
+    //         {row.map((code, i) => (
+    //           <View
+    //             key={i}
+    //             style={{
+    //               width: labelWidthPt,
+    //               height: labelHeightPt,
+    //               justifyContent: "center",
+    //               alignItems: "center",
+    //               fontFamily: "Arial Narrow",
+    //             }}
+    //           >
+    //             <Text
+    //               style={{
+    //                 fontSize: 7,
+    //                 marginTop: 1,
+    //                 textAlign: "center",
+    //               }}
+    //             >
+    //               WALRUS
+    //             </Text>
+
+    //             {/* 🧾 Barcode */}
+    //             <BarcodeGenerator
+    //               value={`${code.code}${code.sizeName}`}
+    //               width={labelWidthPt * 0.85}
+    //               height={labelHeightPt * 0.45}
+    //             />
+
+    //             <Text
+    //               style={{
+    //                 fontSize: 7,
+    //                 marginTop: 1,
+    //                 textAlign: "center",
+    //               }}
+    //             >
+    //               {code.code ? code.code : ""}{code.sizeName ? `${code.sizeName}` : ""}
+    //             </Text>
+    //             <Text
+    //               style={{
+    //                 fontSize: 7,
+    //                 marginTop: 1,
+    //                 textAlign: "left",
+    //               }}
+    //             >
+    //               {code.itemName ? code.itemName : ""}
+    //             </Text>
+
+    //             {/* 📏 Size */}
+    //             <Text
+    //               style={{
+    //                 fontSize: 7,
+    //                 marginTop: 1,
+    //                 textAlign: "left",
+    //               }}
+    //             >
+    //               Sale Price {code.price ? code?.price : ""}
+    //             </Text>
+    //           </View>
+    //         ))}
+    //       </Page>
+    //     ))}
+    //   </Document>
+    // </PDFViewer>
     <PDFViewer style={tw("w-full h-full")}>
       <Document>
-        {rows.map((row, rowIndex) => (
+        {rows.map((page, pageIndex) => (
           <Page
-            key={rowIndex}
+            key={pageIndex}
             size={{ width: pageWidthPt, height: pageHeightPt }}
             style={{
               flexDirection: "row",
-              justifyContent: "flex-start",
               alignItems: "center",
-              padding: 0,
               gap: gapX,
+              padding: 0,
             }}
           >
-            {row.map((code, i) => (
+            {page.map((code, i) => (
               <View
                 key={i}
                 style={{
@@ -159,55 +277,45 @@ const BarCodePrintFormat = ({
                   height: labelHeightPt,
                   justifyContent: "center",
                   alignItems: "center",
+                  paddingLeft: 4,
+                  paddingRight: 12, // Space for right pre-printed WALRUS logo
+                  paddingTop: 6,
+                  paddingBottom: 0,
                   fontFamily: "Arial Narrow",
                 }}
               >
-                <Text
-                  style={{
-                    fontSize: 7,
-                    marginTop: 1,
-                    textAlign: "center",
-                  }}
-                >
+                {/* <Text style={{ fontSize: 7, textAlign: "center", fontWeight: "bold" }}>
                   WALRUS
-                </Text>
+                </Text> */}
 
-                {/* 🧾 Barcode */}
-                <BarcodeGenerator
-                  value={`${code.code}${code.sizeName}`}
-                  width={labelWidthPt * 0.85}
-                  height={labelHeightPt * 0.45}
-                />
 
-                <Text
-                  style={{
-                    fontSize: 7,
-                    marginTop: 1,
-                    textAlign: "center",
-                  }}
-                >
-                  {code.code ? code.code : ""}{code.sizeName ? `${code.sizeName}` : ""}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 7,
-                    marginTop: 1,
-                    textAlign: "left",
-                  }}
-                >
-                  {code.itemName ? code.itemName : ""}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", width: "100%", gap: 4 }}>
+                  <View style={{ flexShrink: 0 }}>
+                    <QRCodeImage
+                      value={`${code.barCode}`}
+                      width={labelHeightPt * 0.70}
+                      height={labelHeightPt * 0.70}
+                    />
+                  </View>
+                  <View style={{ flex: 1, flexDirection: "column", justifyContent: "center" }}>
+                    <Text style={{ fontSize: 8.5, textAlign: "left", fontWeight: "bold" }}>
+                      {code.barCode}
+                    </Text>
 
-                {/* 📏 Size */}
-                <Text
-                  style={{
-                    fontSize: 7,
-                    marginTop: 1,
-                    textAlign: "left",
-                  }}
-                >
-                  Sale Price {code.price ? code?.price : ""}
-                </Text>
+                    <Text style={{ fontSize: 8.5, textAlign: "left", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold", marginTop: 1 }}>
+                      {code.itemName}
+                    </Text>
+
+                    <Text style={{ fontSize: 8.5, textAlign: "left", maxLines: 1, textOverflow: "ellipsis", fontWeight: "bold", marginTop: 1 }}>
+                      {code.sizeName ? `${code.sizeName} ` : ''} {code.colorName ? ` | ${code.colorName}  ` : ''}
+                    </Text>
+
+                    <Text style={{ fontSize: 10.5, textAlign: "left", fontWeight: "bold", marginTop: 1 }}>
+                      Rs.{code.price} /-
+                    </Text>
+                  </View>
+                </View>
+
               </View>
             ))}
           </Page>

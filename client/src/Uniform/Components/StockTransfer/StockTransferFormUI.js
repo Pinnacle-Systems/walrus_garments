@@ -717,7 +717,7 @@ const StockTransferForm = ({
                                         }
 
                                         try {
-                                            const response = await createClearanceOffers({ items: itemsWithoutOffer }).unwrap();
+                                            const response = await createClearanceOffers({ items: itemsWithoutOffer, branchId: branchId }).unwrap();
                                             if (response.statusCode === 0) {
                                                 Swal.fire({
                                                     icon: "success",
