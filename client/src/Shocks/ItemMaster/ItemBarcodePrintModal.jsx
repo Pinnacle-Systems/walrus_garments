@@ -118,6 +118,8 @@ export default function ItemBarcodePrintModal({ isOpen, onClose, item, sizeData,
             }));
     }, [variantBarcodes, printQuantities, item]);
 
+    console.log(printData, "printDataprintData")
+
     if (showPreview) {
         return (
             <Modal

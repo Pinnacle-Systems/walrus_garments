@@ -107,7 +107,7 @@ const BarCodePrintFormat = ({
   const allBarcodes = data?.flatMap((item) => {
     const priceRow = getBarcodeFromList(item.itemId, item.sizeId, item.colorId);
     return Array.from({ length: parseInt(item?.qty || 0) }, () => ({
-      barCode: priceRow?.barcode || item?.barcode || item?.barCode || "",
+      barCode: item?.barcode || priceRow?.barcode || item?.barCode,
       code: findFromList(item.itemId, itemList?.data, "code"),
       itemName: item?.itemName || findFromList(item.itemId, itemList?.data, "name") || "",
       sizeName: item?.sizeName || findFromList(item.sizeId, sizeList?.data, "name") || "",
