@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, cancel as _cancel, checkReferenceNumber as _checkRef, getPartyCreditBalance as _getPartyCreditBalance, requestDiscount as _requestDiscount, approveDiscount as _approveDiscount } from '../services/pointOfSales.services.js';
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, remove as _remove, cancel as _cancel, checkReferenceNumber as _checkRef, getPartyCreditBalance as _getPartyCreditBalance, requestDiscount as _requestDiscount, approveDiscount as _approveDiscount, updatePosPayments as _updatePosPayments } from '../services/pointOfSales.services.js';
 
 async function get(req, res, next) {
     try {
@@ -187,6 +187,16 @@ async function approveDiscount(req, res, next) {
     }
 }
 
+async function updatePosPayments(req, res, next) {
+    try {
+        const responseData = await _updatePosPayments(req.params.id, req.body.payments);
+        res.json(responseData);
+    } catch (error) {
+        console.error(`Error`, error.message);
+        res.json({ statusCode: 1, message: error.message });
+    }
+}
+
 export {
     get,
     getOne,
@@ -198,5 +208,6 @@ export {
     checkReferenceNumber,
     getPartyCreditBalance,
     requestDiscount,
-    approveDiscount
+    approveDiscount,
+    updatePosPayments
 };

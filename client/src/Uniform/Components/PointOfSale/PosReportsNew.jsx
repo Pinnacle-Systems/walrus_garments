@@ -18,6 +18,7 @@ import { useGetPointOfSalesQuery, useCancelPointOfSalesMutation, useLazyGetPoint
 import { FiPrinter, FiXCircle, FiRefreshCw, FiCalendar, FiFileText } from 'react-icons/fi';
 import Modal from '../../../UiComponents/Modal';
 import ReceiptViewerModal from './components/ReceiptViewerModal';
+import PaymentUpdateModal from './components/PaymentUpdateModal';
 import POsDosPrinter from './POsDosPrinter';
 import { useGetBranchQuery } from '../../../redux/services/BranchMasterService';
 import Swal from 'sweetalert2';
@@ -137,6 +138,8 @@ const PosReportsNew = ({
     const [thermalPrintOpen, setThermalPrintOpen] = useState(false);
     const [dosPrintOpen, setDosPrintOpen] = useState(false);
     const [printData, setPrintData] = useState(null);
+    const [paymentUpdateModalOpen, setPaymentUpdateModalOpen] = useState(false);
+    const [paymentUpdateData, setPaymentUpdateData] = useState(null);
     const { branchId: currentBranchId, companyId } = getCommonParams();
     const { data: branchList } = useGetBranchQuery({ params: { companyId } });
     const [cancelPointOfSales] = useCancelPointOfSalesMutation();
@@ -167,7 +170,7 @@ const PosReportsNew = ({
         }
     };
 
-
+    console.log(paymentUpdateModalOpen, "paymentUpdateModalOpen")
     const searchFields = {
         serachDocNo,
         searchClientName,
@@ -427,7 +430,18 @@ const PosReportsNew = ({
                     Swal={Swal}
                 />
             )}
-
+            {paymentUpdateModalOpen && (
+                <PaymentUpdateModal
+                    isOpen={paymentUpdateModalOpen}
+                    dataObj={paymentUpdateData}
+                    onClose={(isSuccess) => {
+                        setPaymentUpdateModalOpen(false);
+                        if (isSuccess) {
+                            triggerGetPOS({ params: { branchId, currentPageNumber, dataPerPage, ...(serachDocNo && { docId: serachDocNo }), ...(searchDate && { date: searchDate }), ...(searchCustomerName && { searchCustomerName: searchCustomerName }), ...(billStatus && { billStatus: billStatus }), ...(returnBill && { returnBill: returnBill }), ...(exchangeBill && { exchangeBill: exchangeBill }) } });
+                        }
+                    }}
+                />
+            )}
             {dosPrintOpen && (
                 <Modal isOpen={dosPrintOpen} onClose={() => setDosPrintOpen(false)} widthClass="w-[300pt] h-[95%]">
                     <POsDosPrinter
@@ -601,16 +615,16 @@ const PosReportsNew = ({
                                 <tbody className="border-2">
                                     {(currentItems ? currentItems : []).map((dataObj, index) => (
                                         <tr
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    onClick(dataObj.id);
-                                                }
-                                            }}
+                                            // onKeyDown={(e) => {
+                                            //     if (e.key === "Enter") {
+                                            //         onClick(dataObj.id);
+                                            //     }
+                                            // }}
                                             tabIndex={0}
                                             key={dataObj.id}
                                             className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
                                                 }`}
-                                            onClick={() => onClick(dataObj.id)}
+                                        // onClick={() => onClick(dataObj.id)}
                                         >
                                             <td className="text-center " >
                                                 {index + 1}
@@ -695,6 +709,28 @@ const PosReportsNew = ({
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                                                </svg>
+                                                            </button>
+                                                        )}
+
+                                                        {dataObj?.docId !== "DRAFT" && (
+                                                            <button
+                                                                className="text-purple-600 flex items-center px-1 bg-purple-50 rounded hover:bg-purple-100 transition-colors"
+                                                                // onChange={(e) => {
+                                                                //     // e.stopPropagation();
+                                                                //     setPaymentUpdateData(dataObj);
+                                                                //     setPaymentUpdateModalOpen(true);
+                                                                // }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setPaymentUpdateModalOpen(true); setPaymentUpdateData(dataObj);
+                                                                }}
+
+                                                            // title="Update Payments"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                                                    <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
                                                                 </svg>
                                                             </button>
                                                         )}
@@ -805,6 +841,7 @@ const PosReportsNew = ({
 
                 </div>
             </>
+
 
         </div >
     );

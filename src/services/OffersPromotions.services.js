@@ -83,7 +83,7 @@ async function create(body) {
         applyOn, tiers,
         itemSelection, minQty, minBillAmount, comboItems,
         couponCode, usageLimit, perCustomerLimit,
-        freeItemId, freeItemQty, applyToClearance, applyToRegular ,branchId
+        freeItemId, freeItemQty, applyToClearance, applyToRegular, branchId
     } = await body
 
     const rawSelection = selectionIds || scopeSelection;

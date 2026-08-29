@@ -1140,6 +1140,53 @@ async function approveDiscount(id, body) {
     }
 }
 
+async function updatePosPayments(id, payments) {
+    try {
+        const posRecord = await prisma.pos.findUnique({
+            where: { id: parseInt(id) },
+            include: { PosPayments: true }
+        });
+
+        if (!posRecord) {
+            return { statusCode: 1, message: "POS Record not found" };
+        }
+
+        const totalBillAmount = parseFloat(posRecord.netAmount || 0);
+        const newTotalPayments = (payments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+
+        // Validation: Sum of new payments must match total bill amount
+        if (Math.abs(totalBillAmount - newTotalPayments) > 0.1) {
+            return { statusCode: 1, message: `Payment total (${newTotalPayments}) does not match bill amount (${totalBillAmount})` };
+        }
+
+        await prisma.$transaction(async (tx) => {
+            // Delete existing payments
+            await tx.posPayments.deleteMany({
+                where: { PosId: parseInt(id) }
+            });
+
+            // Create new payments
+            if (payments && payments.length > 0) {
+                await tx.posPayments.createMany({
+                    data: payments.map(p => ({
+                        PosId: parseInt(id),
+                        amount: String(p.amount),
+                        paymentMode: p.paymentMode,
+                        reference_no: p.reference_no || null,
+                        transaction_id: p.transaction_id || null,
+                        date: new Date()
+                    }))
+                });
+            }
+        });
+
+        return { statusCode: 0, message: "Payments updated successfully" };
+    } catch (error) {
+        console.error("updatePosPayments Error:", error);
+        return { statusCode: 1, message: "Payment update failed: " + error.message };
+    }
+}
+
 export {
     get,
     getOne,
@@ -1151,5 +1198,6 @@ export {
     checkReferenceNumber,
     getPartyCreditBalance,
     requestDiscount,
-    approveDiscount
+    approveDiscount,
+    updatePosPayments
 }
