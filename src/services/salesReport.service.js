@@ -54,7 +54,7 @@ async function getSalesReport(query) {
             });
         }
 
-        console.log(expenses, "expenses")
+        console.log(bulkSales, "bulkSales")
 
         // Format POS Sales
         const formattedPos = posSales.map(sale => {
@@ -105,7 +105,8 @@ async function getSalesReport(query) {
 
             const packingCharge = parseFloat(sale.packingCharge || 0);
             const shippingCharge = parseFloat(sale.shippingCharge || 0);
-            const netAmount = itemsAmount + packingCharge + shippingCharge;
+            const courierCharge = parseFloat(sale.courierCharge || 0);
+            const netAmount = itemsAmount + packingCharge + shippingCharge + courierCharge;
 
             return {
                 id: `bulk-${sale.id}`,
@@ -452,7 +453,8 @@ async function getOverAllSalesReport(query) {
 
             const packingCharge = sale.packingChargeEnabled ? parseFloat(sale.packingCharge || 0) : 0;
             const shippingCharge = sale.shippingChargeEnabled ? parseFloat(sale.shippingCharge || 0) : 0;
-            const netAmount = itemsAmount + packingCharge + shippingCharge;
+            const courierCharge = sale.courierChargeEnabled ? parseFloat(sale.courierCharge || 0) : 0;
+            const netAmount = Math.round(itemsAmount + packingCharge + shippingCharge + courierCharge);
 
             return {
                 id: `bulk-${sale.id}`,
