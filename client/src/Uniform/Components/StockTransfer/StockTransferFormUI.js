@@ -431,7 +431,7 @@ const StockTransferForm = ({
         []
 
     const filteredOrders = locationData?.data?.filter((order) => {
-        if (params.userRole === "DEFAULT ADMIN" || params.userRole === "ADMIN") {
+        if (params.userRole === "DEFAULT ADMIN" || params.userRole === "ADMIN" || params.userRole === "INVENTORY") {
             return true; // admins see everything, including WAREHOUSE
         } else {
             return order.storeName !== "WAREHOUSE"; // non-admins: exclude WAREHOUSE

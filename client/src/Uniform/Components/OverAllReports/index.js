@@ -46,7 +46,7 @@ export default function OverallSalesReports() {
     const [colFilters, setColFilters] = useState({});
     const [openMenuCol, setOpenMenuCol] = useState(null);
     const [sortKey, setSortKey] = useState("date");
-    const [sortDir, setSortDir] = useState(-1);
+    const [sortDir, setSortDir] = useState(1);
     const [page, setPage] = useState(1);
     const [activeTab, setActiveTab] = useState("all");
 
@@ -541,9 +541,9 @@ export default function OverallSalesReports() {
         // ── Footer row ───────────────────────────────────────────────────────────
         const footerRow = allKeys.map((k, i) => {
             if (i === 0) return cell("Total", { bold: true, align: "center", fgColor: "F3F4F6", fontColor: "000000" });
-            
+
             const totalsData = isSalesman ? salesmanTotals : transactionsTotals;
-            
+
             if (NUMBER_KEYS.has(k) || k === 'billCount') {
                 return numberCell(k, totalsData, "F3F4F6", true);
             }
@@ -690,11 +690,13 @@ export default function OverallSalesReports() {
             </div>
 
             {/* Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-2">
                 <MetricCard title="Total POS" value={metrics.totalPos} color="blue" />
                 <MetricCard title="Total Bulk" value={metrics.totalBulk} color="purple" />
                 {/* <MetricCard title="Total Online" value={metrics.totalOnline} color="cyan" /> */}
                 <MetricCard title="Total Expenses" value={metrics.totalExpense} color="red" />
+                <MetricCard title="Total POS Return" value={metrics.totalPosReturn} color="blue" />
+                <MetricCard title="Total Bulk Return" value={metrics.totalBulkReturn} color="purple" />
                 <MetricCard title="Net Profit" value={metrics.finalProfit} color="green" isPrimary />
             </div>
 

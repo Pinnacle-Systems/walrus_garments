@@ -364,7 +364,7 @@ async function getOverAllSalesReport(query) {
                     }
                 }
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'asc' }
         });
 
         // 2. Fetch Bulk Sales (Sales Delivery)
@@ -377,7 +377,20 @@ async function getOverAllSalesReport(query) {
                 Party: true,
                 SalesDeliveryItems: true
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'asc' }
+        });
+
+        // 2b. Fetch Bulk Returns (Sales Return)
+        const bulkReturns = await prisma.salesReturn.findMany({
+            where: {
+                ...commonWhere,
+                isDeleted: false
+            },
+            include: {
+                Party: true,
+                SalesReturnItems: true
+            },
+            orderBy: { createdAt: 'asc' }
         });
 
         // 3. Fetch Online Sales (Delivery Challan with platform)
@@ -390,7 +403,7 @@ async function getOverAllSalesReport(query) {
                 Party: true,
                 DeliveryChallanItems: true
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'asc' }
         });
 
         // 4. Fetch Expenses
@@ -399,7 +412,7 @@ async function getOverAllSalesReport(query) {
             include: {
                 ExpenseEntryItems: true
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'asc' }
         });
 
         // --- Formatting ---
@@ -414,6 +427,7 @@ async function getOverAllSalesReport(query) {
             return {
                 id: `pos-${sale.id}`,
                 date: sale.date || sale.createdAt,
+                createdAt: sale.createdAt,
                 docId: sale.docId,
                 customerName: sale.Party?.name || 'Walk-in',
                 type: sale?.isReturn === false ? 'POS Sales' : 'POS Return',
@@ -423,6 +437,52 @@ async function getOverAllSalesReport(query) {
                 online: getPayment('Online'),
                 totalAmount: parseFloat(sale.netAmount || 0),
                 salesman: sale.PosItems?.[0]?.Employee?.name || 'N/A',
+                platform: 'N/A'
+            };
+        });
+
+        const formattedBulkReturn = bulkReturns.map(sale => {
+            const itemsAmount = (sale.SalesReturnItems || []).reduce((acc, curr) => {
+                const price = parseFloat(curr.price || 0);
+                const qty = parseFloat(curr.qty || 0);
+                const taxPercent = parseFloat(curr.taxPercent || 0);
+                const taxMethod = curr.taxMethod || "Inclusive";
+                const lineDiscountType = curr.discountType;
+                const lineDiscountValue = parseFloat(curr.discountValue || 0);
+
+                let rowTotal = price * qty;
+                if (lineDiscountType === "Percentage") {
+                    rowTotal -= (rowTotal * lineDiscountValue) / 100;
+                } else if (lineDiscountType === "Flat") {
+                    rowTotal -= lineDiscountValue;
+                }
+                rowTotal = Math.max(0, rowTotal);
+
+                if (taxMethod === "Exclusive") {
+                    rowTotal += (rowTotal * taxPercent) / 100;
+                }
+
+                return acc + rowTotal;
+            }, 0);
+
+            const packingCharge = sale.packingChargeEnabled ? parseFloat(sale.packingCharge || 0) : 0;
+            const shippingCharge = sale.shippingChargeEnabled ? parseFloat(sale.shippingCharge || 0) : 0;
+            const returnCharge = sale.returnChargeEnabled ? parseFloat(sale.returnCharge || 0) : 0;
+            const netAmount = Math.round(itemsAmount + packingCharge + shippingCharge + returnCharge);
+
+            return {
+                id: `bulk-return-${sale.id}`,
+                date: sale.date || sale.createdAt,
+                createdAt: sale.createdAt,
+                docId: sale.docId,
+                customerName: sale.Party?.name || 'N/A',
+                type: 'Bulk Return',
+                cash: 0,
+                upi: 0,
+                card: 0,
+                online: 0,
+                totalAmount: netAmount,
+                salesman: 'N/A',
                 platform: 'N/A'
             };
         });
@@ -459,6 +519,7 @@ async function getOverAllSalesReport(query) {
             return {
                 id: `bulk-${sale.id}`,
                 date: sale.date || sale.createdAt,
+                createdAt: sale.createdAt,
                 docId: sale.docId,
                 customerName: sale.Party?.name || 'N/A',
                 type: 'Bulk Sales',
@@ -482,6 +543,7 @@ async function getOverAllSalesReport(query) {
             return {
                 id: `online-${sale.id}`,
                 date: sale.date || sale.createdAt,
+                createdAt: sale.createdAt,
                 docId: sale.docId,
                 customerName: sale.Party?.name || 'N/A',
                 type: 'Online',
@@ -501,6 +563,7 @@ async function getOverAllSalesReport(query) {
             return {
                 id: `expense-${expense.id}`,
                 date: expense.date || expense.createdAt,
+                createdAt: expense.createdAt,
                 docId: expense.docId,
                 customerName: 'Expense',
                 type: 'Expense',
@@ -519,9 +582,10 @@ async function getOverAllSalesReport(query) {
         const allTransactions = [
             ...formattedPos,
             ...formattedBulk,
+            ...formattedBulkReturn,
             ...formattedOnline,
             ...formattedExpenses
-        ].sort((a, b) => new Date(b.date) - new Date(a.date));
+        ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
         // --- Salesman Summary ---
         const salesmanMap = {};
@@ -562,12 +626,14 @@ async function getOverAllSalesReport(query) {
 
         // Summary Totals
         const summary = {
-            totalPos: formattedPos.reduce((acc, curr) => acc + curr.totalAmount, 0),
+            totalPos: formattedPos.filter(s => s.type === 'POS Sales').reduce((acc, curr) => acc + curr.totalAmount, 0),
+            totalPosReturn: formattedPos.filter(s => s.type === 'POS Return').reduce((acc, curr) => acc + curr.totalAmount, 0),
             totalBulk: formattedBulk.reduce((acc, curr) => acc + curr.totalAmount, 0),
+            totalBulkReturn: formattedBulkReturn.reduce((acc, curr) => acc + curr.totalAmount, 0),
             totalOnline: formattedOnline.reduce((acc, curr) => acc + curr.totalAmount, 0),
             totalExpense: formattedExpenses.reduce((acc, curr) => acc + curr.totalAmount, 0),
         };
-        summary.netSales = summary.totalPos + summary.totalBulk + summary.totalOnline;
+        summary.netSales = (summary.totalPos + summary.totalBulk + summary.totalOnline) - (summary.totalPosReturn + summary.totalBulkReturn);
         summary.finalProfit = summary.netSales - summary.totalExpense;
 
         return {
