@@ -616,7 +616,7 @@ const LedgerReportPrintFormat = ({ ledgerData, startDate, endDate, branchData, p
                         <View key={index} style={{ flexDirection: "row", }}>
                             <Text style={[styles.td, { flex: 0.5 }]}>{index + 1}</Text>
                             <Text style={[styles.td, { flex: 1 }]}>
-                                {getDateFromDateTimeToDisplay(r.txnDate) || ""}
+                                {getDateFromDateTimeToDisplay(r.txnDateTime) || ""}
                             </Text>
                             <Text style={[styles.td, { flex: 5 }]}>
                                 {r.txnType || ""}
