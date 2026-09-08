@@ -428,7 +428,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             const currentLiveStock = stockItems.reduce((sum, s) => sum + (parseFloat(s._sum?.qty) || 0), 0);
             const effectiveStockQty = currentLiveStock;
             const parsedSnapshot = typeof item.appliedOfferSnapshot === 'string'
-                ? JSON.parse(item.appliedOfferSnapshot)  // ← object ஆகுது!
+                ? JSON.parse(item.appliedOfferSnapshot)
                 : item.appliedOfferSnapshot;
             return {
                 ...item,
@@ -680,7 +680,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
             if (searchMode === 'BARCODE') {
                 try {
-                    const response = await getStockByBarcode({ params: { barcode, branchId } }).unwrap();
+                    const response = await getStockByBarcode({ params: { barcode, branchId, posSale: true } }).unwrap();
                     if (response.statusCode === 0) {
                         const { data, matches, needsResolution } = response;
 

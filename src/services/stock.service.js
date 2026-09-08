@@ -1002,7 +1002,7 @@ export async function getUnifiedStockReport(req) {
 
 
 export async function getUnifiedStockWithLegacyByBarcode(req) {
-    const { barcode, branchId, storeId } = req.query;
+    const { barcode, branchId, storeId, posSale } = req.query;
 
     if (!barcode) {
         return { statusCode: 1, message: "Barcode is required" };
@@ -1034,7 +1034,7 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
             branchId: normalizedBranchId,
             barcode: normalizedBarcode,
             Store: {
-                storeName: { in: ["RETAIL", "DISCOUNT SECTION"] },
+                storeName: { in: posSale ? ["RETAIL", "DISCOUNT SECTION"] : ['WAREHOUSE'] },
                 active: true
             }
         },
