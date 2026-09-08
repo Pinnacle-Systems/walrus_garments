@@ -73,7 +73,8 @@ async function get(req) {
 
 
     const { branchId, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus,
-        userRole, reportsTransactionType, pagination, currentPageNumber, dataPerPage, exchangeBill, filterDate
+        userRole, reportsTransactionType, pagination, currentPageNumber, dataPerPage, exchangeBill, filterDate,
+        billAmount
     } = req.query;
 
 
@@ -84,6 +85,7 @@ async function get(req) {
         approvalStatus: approvalStatus ? approvalStatus : undefined,
         customerId: req.query.customerId ? parseInt(req.query.customerId) : undefined,
         isReturn: reportsTransactionType === "RETURN" ? true : reportsTransactionType === "SALE" ? false : undefined,
+        netAmount: billAmount ? (billAmount) : undefined,
 
     };
 

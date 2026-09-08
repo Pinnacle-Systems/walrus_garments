@@ -427,7 +427,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             console.log(stockDetails, "stockDetails")
             const currentLiveStock = stockItems.reduce((sum, s) => sum + (parseFloat(s._sum?.qty) || 0), 0);
             const effectiveStockQty = currentLiveStock;
-
+            const parsedSnapshot = typeof item.appliedOfferSnapshot === 'string'
+                ? JSON.parse(item.appliedOfferSnapshot)  // ← object ஆகுது!
+                : item.appliedOfferSnapshot;
             return {
                 ...item,
                 id: item.itemId,
@@ -444,7 +446,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 priceType: item.priceType,
                 appliedOfferName: item.appliedOfferName,
                 isExchangeItem: item.isExchangeItem === true,
-                stockDetails: stockDetails
+                stockDetails: stockDetails,
+                appliedOfferSnapshot: parsedSnapshot,
             };
         });
 

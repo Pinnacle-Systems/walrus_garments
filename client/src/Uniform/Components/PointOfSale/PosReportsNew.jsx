@@ -114,6 +114,7 @@ const PosReportsNew = ({
     const [billStatus, setBillStatus] = useState("")
     const [returnBill, setReturnBill] = useState("")
     const [exchangeBill, setExchangeBill] = useState("")
+    const [billAmount, setBillAmount] = useState("")
 
     const searchInputRef = useRef(null);
 
@@ -180,7 +181,8 @@ const PosReportsNew = ({
         searchCustomerName,
         reportsTransactionType,
         exchangeBill,
-        returnBill
+        returnBill,
+        billAmount
 
     };
 
@@ -195,7 +197,8 @@ const PosReportsNew = ({
         searchCustomerName,
         reportsTransactionType,
         exchangeBill,
-        returnBill
+        returnBill,
+        billAmount
     ]);
 
     useEffect(() => {
@@ -471,8 +474,12 @@ const PosReportsNew = ({
                                         <div>Bill Date</div>
                                     </th>
                                     <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-36">
+                                        <div>Bill Amount</div>
+                                    </th>
+                                    <th className=" px-3  font-bold text-[13px]  text-gray-900  text-center w-36">
                                         <div>Bill Type</div>
                                     </th>
+
                                     <th className="w-44  px-3   font-bold text-[13px] text-gray-900  text-center ">
                                         <div>Return Bill</div>
                                     </th>
@@ -550,6 +557,17 @@ const PosReportsNew = ({
                                                 <FiCalendar className="h-3 w-3" />
                                             </div>
                                         </div>
+                                    </th>
+                                    <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
+                                        <input
+                                            type="text"
+                                            className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                            placeholder="Search"
+                                            value={billAmount}
+                                            onChange={(e) => {
+                                                setBillAmount(e.target.value);
+                                            }}
+                                        />
                                     </th>
                                     <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center ">
                                         <input
@@ -641,7 +659,12 @@ const PosReportsNew = ({
                                             <td className="py-1.5 text-left">
                                                 {getDateTimeFromDateTimeToDisplay(dataObj.createdAt)}
                                             </td>
+                                            <td className="px-2 py-0.5 text-center ">
 
+                                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border whitespace-nowrap bg-green-100 text-green-800 border-green-300`}>
+                                                    {parseFloat(dataObj?.netAmount || 0).toFixed(2)}
+                                                </span>
+                                            </td>
 
 
 
