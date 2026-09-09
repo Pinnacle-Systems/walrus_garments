@@ -1034,7 +1034,9 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
             branchId: normalizedBranchId,
             barcode: normalizedBarcode,
             Store: {
-                storeName: { in: posSale ? ["RETAIL", "DISCOUNT SECTION"] : ['WAREHOUSE'] },
+                // storeName: { in: posSale ? ["RETAIL", "DISCOUNT SECTION"] : ['WAREHOUSE'] },
+                storeName: { in: ["RETAIL", "DISCOUNT SECTION"] },
+
                 active: true
             }
         },
