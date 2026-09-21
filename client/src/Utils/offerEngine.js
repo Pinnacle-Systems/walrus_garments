@@ -5,6 +5,15 @@
  * for POS, Quotation, and Sale Order modules.
  */
 
+export const minimizeOfferSnapshot = (offer, item) => {
+    if (!offer) return null;
+    const minimized = { ...offer };
+    if (minimized.OfferScope && Array.isArray(minimized.OfferScope) && minimized.scopeMode === 'Item') {
+        minimized.OfferScope = minimized.OfferScope.filter(s => String(s.refId) === String(item.itemId || item.id));
+    }
+    return minimized;
+};
+
 const getOfferScopeQty = (item, cart, selectedOffer) => {
     const inScopeItems = cart.filter(cit => {
         if (cit.barcodeType === 'CLEARANCE' && !selectedOffer.applyToClearance) return false;
@@ -849,7 +858,7 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
 
         let finalAppliedOfferName = appliedOfferName;
         let finalAppliedOfferId = selectedOffer ? selectedOffer.id : null;
-        let finalAppliedOfferSnapshot = selectedOffer ? selectedOffer : null;
+        let finalAppliedOfferSnapshot = selectedOffer ? minimizeOfferSnapshot(selectedOffer, item) : null;
 
         // Cleanup: If the offer didn't reduce the price and wasn't reapplied, remove the ghost offer metadata
         if (!item.isReturn && currentItemPrice === salesPrice && offerReapplied === 0) {
@@ -952,7 +961,7 @@ export const calculateCartWithOffers = (cart, selectedOffersByRow, potentialOffe
             price: Math.round(Math.max(0, currentItemPrice) * 100) / 100,
             appliedOfferName: selectedOffer.name,
             appliedOfferId: selectedOffer.id,
-            appliedOfferSnapshot: selectedOffer
+            appliedOfferSnapshot: minimizeOfferSnapshot(selectedOffer, item)
         };
     });
 
