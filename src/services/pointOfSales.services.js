@@ -69,33 +69,138 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
     )
 }
 
+// async function get(req) {
+
+
+//     const { branchId, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus,
+//         userRole, reportsTransactionType, pagination, currentPageNumber, dataPerPage, exchangeBill, filterDate,
+//         billAmount
+//     } = req.query;
+
+
+//     let where = {
+//         branchId: branchId ? parseInt(branchId) : undefined,
+//         docId: serachDocNo ? { contains: serachDocNo } : undefined,
+//         Party: searchCustomerName ? { contactPersonNumber: { contains: searchCustomerName } } : undefined,
+//         approvalStatus: approvalStatus ? approvalStatus : undefined,
+//         customerId: req.query.customerId ? parseInt(req.query.customerId) : undefined,
+//         isReturn: reportsTransactionType === "RETURN" ? true : reportsTransactionType === "SALE" ? false : undefined,
+//         netAmount: billAmount ? (billAmount) : undefined,
+
+//     };
+
+
+
+//     let totalCount = 0;
+
+
+//     let data = await prisma.pos.findMany({
+//         where,
+//         include: {
+//             Party: {
+//                 select: {
+//                     id: true,
+//                     name: true,
+//                     contact: true,
+//                     isB2C: true,
+//                     contactPersonNumber: true
+//                 }
+//             },
+//             PosItems: {
+//                 include: {
+//                     Item: true,
+//                     Color: true,
+//                     Size: true
+//                 }
+//             },
+//             PosPayments: true,
+//         },
+//         orderBy: {
+//             id: "desc"
+//         },
+//     });
+
+//     data = await Promise.all(data.map(async (item) => {
+//         const [linkedReturn, linkedExchange] = await Promise.all([
+//             item.isRetrunBillId
+//                 ? prisma.pos.findUnique({
+//                     where: { id: item.isRetrunBillId },
+//                     select: { id: true, docId: true }
+//                 })
+//                 : null,
+//             item.isExchangeBillId
+//                 ? prisma.pos.findUnique({
+//                     where: { id: item.isExchangeBillId },
+//                     select: { id: true, docId: true }
+//                 })
+//                 : null
+//         ]);
+
+//         return {
+//             ...item,
+//             ...(linkedReturn && { LinkedReturnBill: linkedReturn }),
+//             ...(linkedExchange && { LinkedExchangeBill: linkedExchange })
+//         };
+//     }));
+
+
+//     if (approvalStatus) {
+
+//         if (userRole == "ADMIN" || userRole == "DEFAULT ADMIN") {
+//             data = data.filter(item => item.approvalStatus == "PENDING");
+//             // console.log(data, "data 1")
+//         } else {
+//             data = data.filter(item => item.approvalStatus == "APPROVED");
+//         }
+
+//     }
+//     data = manualFilterSearchData(searchDate || filterDate, "", "", data)
+//     // console.log(approvalStatus, "approvalStatus")
+
+//     if (pagination) {
+//         totalCount = data.length;
+//         data = data.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
+//     }
+
+//     return { statusCode: 0, data, totalCount };
+// }
 async function get(req) {
-
-
-    const { branchId, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus,
+    const {
+        branchId, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus,
         userRole, reportsTransactionType, pagination, currentPageNumber, dataPerPage, exchangeBill, filterDate,
         billAmount
     } = req.query;
-
 
     let where = {
         branchId: branchId ? parseInt(branchId) : undefined,
         docId: serachDocNo ? { contains: serachDocNo } : undefined,
         Party: searchCustomerName ? { contactPersonNumber: { contains: searchCustomerName } } : undefined,
-        approvalStatus: approvalStatus ? approvalStatus : undefined,
         customerId: req.query.customerId ? parseInt(req.query.customerId) : undefined,
         isReturn: reportsTransactionType === "RETURN" ? true : reportsTransactionType === "SALE" ? false : undefined,
         netAmount: billAmount ? (billAmount) : undefined,
-
     };
 
+    // 1. Optimized Filter: Move approval status check to the DB layer
+    if (approvalStatus) {
+        if (userRole === "ADMIN" || userRole === "DEFAULT ADMIN") {
+            where.approvalStatus = "PENDING";
+        } else {
+            where.approvalStatus = "APPROVED";
+        }
+    }
 
+    const activeDateFilter = searchDate || filterDate;
 
-    let totalCount = 0;
+    // Determine if we can do DB-level pagination (only if we don't have to manually filter dates in JS)
+    const canPaginateInDB = pagination && !activeDateFilter;
+    const take = canPaginateInDB ? parseInt(dataPerPage) : undefined;
+    const skip = canPaginateInDB ? (parseInt(currentPageNumber) - 1) * parseInt(dataPerPage) : undefined;
 
-
+    // 2. Fetch Data (with DB pagination if possible)
     let data = await prisma.pos.findMany({
         where,
+        take,
+        skip,
         include: {
             Party: {
                 select: {
@@ -120,46 +225,47 @@ async function get(req) {
         },
     });
 
-    data = await Promise.all(data.map(async (item) => {
-        const [linkedReturn, linkedExchange] = await Promise.all([
-            item.isRetrunBillId
-                ? prisma.pos.findUnique({
-                    where: { id: item.isRetrunBillId },
-                    select: { id: true, docId: true }
-                })
-                : null,
-            item.isExchangeBillId
-                ? prisma.pos.findUnique({
-                    where: { id: item.isExchangeBillId },
-                    select: { id: true, docId: true }
-                })
-                : null
-        ]);
+    let totalCount = canPaginateInDB ? await prisma.pos.count({ where }) : data.length;
+
+    // 3. Fix N+1 Problem: Fetch all linked bills in bulk instead of mapping and fetching one by one
+    const returnBillIds = data.map(item => item.isRetrunBillId).filter(Boolean);
+    const exchangeBillIds = data.map(item => item.isExchangeBillId).filter(Boolean);
+
+    const [linkedReturns, linkedExchanges] = await Promise.all([
+        returnBillIds.length > 0 ? prisma.pos.findMany({
+            where: { id: { in: returnBillIds } },
+            select: { id: true, docId: true }
+        }) : [],
+        exchangeBillIds.length > 0 ? prisma.pos.findMany({
+            where: { id: { in: exchangeBillIds } },
+            select: { id: true, docId: true }
+        }) : []
+    ]);
+
+    // Attach the linked bills back to the data array in memory instantly
+    data = data.map(item => {
+        const linkedReturn = linkedReturns.find(r => r.id === item.isRetrunBillId);
+        const linkedExchange = linkedExchanges.find(e => e.id === item.isExchangeBillId);
 
         return {
             ...item,
             ...(linkedReturn && { LinkedReturnBill: linkedReturn }),
             ...(linkedExchange && { LinkedExchangeBill: linkedExchange })
         };
-    }));
+    });
 
+    // 4. Handle remaining manual string date filtering if it exists
+    if (activeDateFilter) {
+        data = manualFilterSearchData(activeDateFilter, "", "", data);
+        totalCount = data.length; // Update count after filtering
 
-    if (approvalStatus) {
-
-        if (userRole == "ADMIN" || userRole == "DEFAULT ADMIN") {
-            data = data.filter(item => item.approvalStatus == "PENDING");
-            // console.log(data, "data 1")
-        } else {
-            data = data.filter(item => item.approvalStatus == "APPROVED");
+        // Perform memory pagination if we had to do manual date filtering
+        if (pagination) {
+            data = data.slice(
+                (parseInt(currentPageNumber) - 1) * parseInt(dataPerPage),
+                parseInt(currentPageNumber) * parseInt(dataPerPage)
+            );
         }
-
-    }
-    data = manualFilterSearchData(searchDate || filterDate, "", "", data)
-    // console.log(approvalStatus, "approvalStatus")
-
-    if (pagination) {
-        totalCount = data.length;
-        data = data.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
     }
 
     return { statusCode: 0, data, totalCount };
