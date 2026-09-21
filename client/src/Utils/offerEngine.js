@@ -552,7 +552,8 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
         })
 
         if (!item.isReturn && !rowOfferId) {
-            if (!item.isExchangeItem) {
+            const hasSameItemReturn = returnItems.some(r => (r.itemId || r.id) === (item.itemId || item.id));
+            if (!item.isExchangeItem && !hasSameItemReturn) {
                 const directMatch = activeOffers.find(off => {
                     if (!isOfferDateValid(off)) return false;
                     if (item.barcodeType === 'CLEARANCE' && !off.applyToClearance) return false;

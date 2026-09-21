@@ -430,17 +430,30 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             const parsedSnapshot = typeof item.appliedOfferSnapshot === 'string'
                 ? JSON.parse(item.appliedOfferSnapshot)
                 : item.appliedOfferSnapshot;
+
+            let originalQty = parseFloat(item.qty || 0);
+            let originalPrice = parseFloat(item.price || 0);
+            if (item.isReturn && parsedSnapshot?.inScopeItems) {
+                const snapItem = parsedSnapshot.inScopeItems.find(i => (i.itemId || i.id) === item.itemId);
+                if (snapItem) {
+                    originalQty = parseFloat(snapItem.qty || 0);
+                    originalPrice = parseFloat(snapItem.price || snapItem.salesPrice || 0);
+                }
+            }
+
             return {
                 ...item,
                 id: item.itemId,
                 salesPrice: parseFloat(item.originalSalesPrice || item.price),
                 price: parseFloat(item.price),
+                originalPrice: originalPrice,
                 qty: parseFloat(item.qty),
                 taxPercent: masterItem?.Hsn?.tax || 5,
                 salesPersonId: item.salesPersonId,
                 salesPersonBarcode: item?.Employee?.employeeId,
                 stockQty: effectiveStockQty,
                 // sourceStoreId: retailStoreId,
+                originalOfferId: item.offerId || item.appliedOfferId || item.originalOfferId || null,
                 offerReversal: item.offerReversal,
                 offerReapplied: item.offerReapplied,
                 priceType: item.priceType,
@@ -448,6 +461,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 isExchangeItem: item.isExchangeItem === true,
                 stockDetails: stockDetails,
                 appliedOfferSnapshot: parsedSnapshot,
+                originalQty: originalQty
             };
         });
 
