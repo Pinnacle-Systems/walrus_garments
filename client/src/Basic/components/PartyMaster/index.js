@@ -224,7 +224,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
     filterParty = allData?.data?.filter(item => item.isSupplier && !item.isB2C)
   }
   if (view == "All") {
-    filterParty = allData?.data?.filter(item => !item.isB2C)
+    filterParty = allData?.data
   }
   if (view == "B2C") {
     filterParty = allData?.data?.filter(item => item.isB2C)
@@ -1782,6 +1782,7 @@ export default function Form({ partyId, show, openModelForAddress, onCloseForm }
         onDelete={deleteData}
         itemsPerPage={17}
         enableSearch={true}
+        enableExcel={true}
       />
 
 

@@ -18,6 +18,8 @@ import Select, { components } from "react-select";
 import Modal from "../UiComponents/Modal";
 import { usePermissionForUsers } from "../Basic/components/HasPermission";
 import Swal from "sweetalert2";
+import { exportFileToCsv } from "../Utils/excelHelper";
+import { FaFileExcel } from "react-icons/fa";
 
 export const handleOnChange = (event, setValue) => {
   const inputValue = event.target.value;
@@ -1840,7 +1842,8 @@ export const ReusableTable = ({
   childRecordLabel = "",
   heightClass = "h-[calc(100%-0.75rem)]",
   printData,
-  enableSearch
+  enableSearch,
+  enableExcel
 }) => {
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -1904,6 +1907,44 @@ export const ReusableTable = ({
             <option value={500}>500</option>
 
           </select>
+          {enableExcel && (
+            <button
+              onClick={() => {
+                const excelData = (filteredData || []).map((item) => {
+                  const rowData = {};
+                  columns.forEach((col) => {
+                    if (col.header) {
+                      let val = "";
+                      if (typeof col.exportAccessor === "function") {
+                        val = col.exportAccessor(item);
+                      } else if (typeof col.accessor === "function") {
+                        val = col.accessor(item);
+                        if (React.isValidElement(val)) {
+                          if (col.header.toLowerCase() === "status") {
+                            val = item.active ? "Active" : "Inactive";
+                          } else {
+                            val = "";
+                          }
+                        } else if (Array.isArray(val)) {
+                          val = val.join(", ");
+                        } else if (val && typeof val === "object") {
+                          val = "";
+                        }
+                      }
+                      rowData[col.header] = val;
+                    }
+                  });
+                  return rowData;
+                });
+                exportFileToCsv("Export", excelData, "Master_Export", "Pinnacle");
+              }}
+              className="ml-2 px-2 py-0.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition flex items-center gap-1"
+            >
+              <FaFileExcel />
+              Export
+            </button>
+          )}
+
         </div>
         <div className="flex gap-1">
           <button
