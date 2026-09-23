@@ -76,8 +76,7 @@ const ReceiptViewerModal = ({
                     timer: 3000,
                     showConfirmButton: false
                 });
-            } catch (fallbackError) {
-                console.error('Direct Print Failed:', fallbackError);
+            } catch (fallbackError) {/* console.log removed */
                 Swal.fire({ title: "Print Error", text: fallbackError.message || "Failed to print.", icon: "error" });
             }
         }

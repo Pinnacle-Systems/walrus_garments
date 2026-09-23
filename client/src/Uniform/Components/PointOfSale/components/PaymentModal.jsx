@@ -307,8 +307,7 @@ const PaymentModal = ({
                                             }
                                         }
                                     }
-                                } catch (err) {
-                                    console.error("Ref Check Error:", err);
+                                } catch (err) {/* console.log removed */
                                 } finally {
                                     setIsProcessing(false);
                                 }

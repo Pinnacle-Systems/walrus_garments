@@ -66,26 +66,7 @@ const POSSidebar = ({
     const isUnpaidBill = currentBilStatus === 'UNPAID';
     const isReturnMode = cart.length > 0 && cart.every(item => item.isReturn)
 
-    const isCustomerEditable = cart.length > 0 && cart.some(item => item.isReturn)
-
-    console.log(netPayable, "netPayable", total, total < 0)
-
-    console.log({
-        transactionTotal,
-        customerCredit,
-        appliedCredit,
-        netPayableAmount,
-        refundAmount,
-        isRefund,
-        netPayable,
-        netPayableTotal,
-        isPendingApproval,
-        isUnpaidBill,
-        isReturnMode,
-        packingCharges,
-        shippingCharges,
-        courierCharges
-    }, "Checking charges")
+    const isCustomerEditable = cart.length > 0 && cart.some(item => item.isReturn)/* console.log removed *//* console.log removed */
 
     /* console.log removed */
     /* console.log removed */

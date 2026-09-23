@@ -169,9 +169,7 @@ const PosReportsNew = ({
                 Swal.fire('Error', err.data?.message || 'Something went wrong', 'error');
             }
         }
-    };
-
-    console.log(paymentUpdateModalOpen, "paymentUpdateModalOpen")
+    };/* console.log removed */
     const searchFields = {
         serachDocNo,
         searchClientName,
@@ -284,8 +282,7 @@ const PosReportsNew = ({
                     icon: "error",
                 });
             }
-        } catch (error) {
-            console.error("Error fetching bill by barcode:", error);
+        } catch (error) {/* console.log removed */
             Swal.fire({
                 title: "Error",
                 text: "Failed to fetch bill details.",

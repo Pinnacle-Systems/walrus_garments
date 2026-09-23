@@ -29,9 +29,7 @@ const POSSidebarFooter = ({
         if (isReturnMode) return "Save Return [F8]";
         if (isUnpaidBill) return "Complete Payment [F8]";
         return "Pay [F8]";
-    };
-
-    console.log(isUnpaidBill, "isUnpaidBill", isReturnMode)
+    };/* console.log removed */
 
 
     // Resolve Dynamic Button Styles & Icons

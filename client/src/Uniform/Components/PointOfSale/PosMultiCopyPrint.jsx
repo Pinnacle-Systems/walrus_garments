@@ -56,12 +56,7 @@ const PosMultiCopyPrint = ({
 
   const overallPurchaseTotal = purchaseTotal - totalOfferReversal + totalOfferReapplied
 
-  const overallPurchaseTotalNew = (purchaseTotal + totalOfferReversal) - (totalOfferReapplied + returnTotal)
-
-
-  console.log(summary, "summary", dataObj, purchaseTotal)
-
-  console.log(totalOfferReversal, "totalOfferReversal", totalOfferReapplied, "totalOfferReapplied", overallPurchaseTotalNew)
+  const overallPurchaseTotalNew = (purchaseTotal + totalOfferReversal) - (totalOfferReapplied + returnTotal)/* console.log removed *//* console.log removed */
 
   const qrCodePath = useMemo(() => {
     try {
@@ -275,7 +270,7 @@ const PosMultiCopyPrint = ({
             <Text style={tw('text-xxs ')}>{dataObj?.shippingCharges.toFixed(2)}</Text>
           </View>
         )}
-        {console.log({ returnTotal, purchaseTotal }, "purchaseTotal")}
+        {/* console.log removed */}
 
 
         <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
