@@ -1001,6 +1001,99 @@ export async function getUnifiedStockReport(req) {
 
 
 
+// export async function getUnifiedStockWithLegacyByBarcode(req) {
+//     const { barcode, branchId, storeId, posSale } = req.query;
+
+//     if (!barcode) {
+//         return { statusCode: 1, message: "Barcode is required" };
+//     }
+
+//     const normalizedBarcode = String(barcode).trim();
+//     const normalizedBranchId = Number(branchId);
+
+
+//     const stockRecords = await prisma.stock.findMany({
+//         where: {
+//             OR: [
+//                 { barcode: normalizedBarcode },
+//                 {
+//                     Item: {
+//                         ItemPriceList: {
+//                             some: {
+//                                 ItemBarcodes: {
+//                                     some: {
+//                                         barcode: normalizedBarcode,
+//                                         active: true
+//                                     }
+//                                 }
+//                             }
+//                         }
+//                     }
+//                 }
+//             ],
+//             branchId: normalizedBranchId,
+//             barcode: normalizedBarcode,
+//             Store: {
+//                 // storeName: { in: posSale ? ["RETAIL", "DISCOUNT SECTION"] : ['WAREHOUSE'] },
+//                 storeName: { in: ["RETAIL", "DISCOUNT SECTION"] },
+
+//                 active: true
+//             }
+//         },
+//         include: {
+//             Item: {
+//                 include: {
+//                     Hsn: true,
+//                     ItemPriceList: {
+//                         include: {
+//                             ItemBarcodes: true
+//                         }
+//                     }
+//                 }
+//             },
+//             Size: true,
+//             Color: true,
+//             Uom: true,
+//             Store: true,
+//         }
+//     });
+//     // console.log("stockRecords count:", stockRecords.length);
+//     // console.log("stockRecords barcodes:", stockRecords.map(r => ({ id: r.id, barcode: r.barcode, storeId: r.storeId })));
+//     // console.log(stockRecords, "stockRecords")
+
+//     if (!stockRecords.length) {
+//         return { statusCode: 1, message: "No stock found for this barcode" };
+//     }
+
+//     const matches = buildBarcodeSnapshotMatches(stockRecords);
+
+//     // Attach barcodeType from the matched barcode
+//     const matchedBarcodeRecord = stockRecords
+//         .flatMap(r => r.Item?.ItemPriceList || [])
+//         .flatMap(pl => pl.ItemBarcodes || [])
+//         .find(b => b.barcode === normalizedBarcode);
+
+//     matches.forEach(m => {
+//         m.barcodeType = matchedBarcodeRecord ? matchedBarcodeRecord.barcodeType : "REGULAR";
+//     });
+
+//     if (matches.length > 1) {
+//         return {
+//             statusCode: 0,
+//             needsResolution: true,
+//             message: "Barcode matched multiple stock combinations. Please choose the intended stock row.",
+//             matches,
+//         };
+//     }
+
+//     const first = matches[0];
+
+//     return {
+//         statusCode: 0,
+//         data: first
+//     };
+// }
+
 export async function getUnifiedStockWithLegacyByBarcode(req) {
     const { barcode, branchId, storeId, posSale } = req.query;
 
@@ -1011,55 +1104,80 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
     const normalizedBarcode = String(barcode).trim();
     const normalizedBranchId = Number(branchId);
 
+    let stockRecords = [];
 
-    const stockRecords = await prisma.stock.findMany({
+    // Step 1: Extremely fast lookup to see if the barcode exists in the ItemBarcodes table
+    const matchedItemBarcode = await prisma.itemBarcodes.findFirst({
         where: {
-            OR: [
-                { barcode: normalizedBarcode },
-                {
-                    Item: {
+            barcode: normalizedBarcode,
+            active: true
+        },
+        include: {
+            ItemPriceList: true
+        }
+    });
+
+    if (matchedItemBarcode && matchedItemBarcode.ItemPriceList) {
+        // Step 2a: If found in ItemBarcodes, query Stock instantly using the IDs
+        const { itemId, sizeId, colorId } = matchedItemBarcode.ItemPriceList;
+
+        stockRecords = await prisma.stock.findMany({
+            where: {
+                itemId: itemId,
+                ...(sizeId && { sizeId }),
+                ...(colorId && { colorId }),
+                branchId: normalizedBranchId,
+                Store: {
+                    storeName: { in: ["RETAIL", "DISCOUNT SECTION"] },
+                    active: true
+                }
+            },
+            include: {
+                Item: {
+                    include: {
+                        Hsn: true,
                         ItemPriceList: {
-                            some: {
-                                ItemBarcodes: {
-                                    some: {
-                                        barcode: normalizedBarcode,
-                                        active: true
-                                    }
-                                }
+                            include: {
+                                ItemBarcodes: true
                             }
                         }
                     }
-                }
-            ],
-            branchId: normalizedBranchId,
-            barcode: normalizedBarcode,
-            Store: {
-                // storeName: { in: posSale ? ["RETAIL", "DISCOUNT SECTION"] : ['WAREHOUSE'] },
-                storeName: { in: ["RETAIL", "DISCOUNT SECTION"] },
-
-                active: true
+                },
+                Size: true,
+                Color: true,
+                Uom: true,
+                Store: true,
             }
-        },
-        include: {
-            Item: {
-                include: {
-                    Hsn: true,
-                    ItemPriceList: {
-                        include: {
-                            ItemBarcodes: true
-                        }
-                    }
+        });
+    } else {
+        // Step 2b: Fallback - if it wasn't an ItemBarcode, check if it's a direct Stock barcode
+        stockRecords = await prisma.stock.findMany({
+            where: {
+                barcode: normalizedBarcode,
+                branchId: normalizedBranchId,
+                Store: {
+                    storeName: { in: ["RETAIL", "DISCOUNT SECTION"] },
+                    active: true
                 }
             },
-            Size: true,
-            Color: true,
-            Uom: true,
-            Store: true,
-        }
-    });
-    // console.log("stockRecords count:", stockRecords.length);
-    // console.log("stockRecords barcodes:", stockRecords.map(r => ({ id: r.id, barcode: r.barcode, storeId: r.storeId })));
-    // console.log(stockRecords, "stockRecords")
+            include: {
+                Item: {
+                    include: {
+                        Hsn: true,
+                        ItemPriceList: {
+                            include: {
+                                ItemBarcodes: true
+                            }
+                        }
+                    }
+                },
+                Size: true,
+                Color: true,
+                Uom: true,
+                Store: true,
+            }
+        });
+    }
 
     if (!stockRecords.length) {
         return { statusCode: 1, message: "No stock found for this barcode" };
@@ -1093,7 +1211,6 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
         data: first
     };
 }
-
 
 
 

@@ -37,8 +37,7 @@ export const buildResolutionLabel = (match) =>
  * Greedy stock allocation across stores/warehouses prioritizing retail location.
  */
 export const allocateStock = (totalQty, stockDetails, retailStoreId) => {
-    let remaining = parseFloat(totalQty) || 0;
-    console.log(stockDetails, "stockDetails")
+    let remaining = parseFloat(totalQty) || 0;/* console.log removed */
     const fulfillments = [];
     const sortedStocks = [...(stockDetails || [])].sort((a, b) => {
         const isARetail = a.storeName?.toLowerCase().includes('retail') || parseInt(a.storeId) === parseInt(retailStoreId);
@@ -64,9 +63,7 @@ export const allocateStock = (totalQty, stockDetails, retailStoreId) => {
 /**
  * Pure helper function to search and filter product item suggestions by name, code or barcode matches.
  */
-export const filterSearchSuggestions = ({ query, items, itemPriceList, retailStoreId, offersData }) => {
-
-    console.log("query", query);
+export const filterSearchSuggestions = ({ query, items, itemPriceList, retailStoreId, offersData }) => {/* console.log removed */
 
 
     let allMatches = [];
@@ -94,8 +91,7 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
 
 
     matchingItems.forEach(item => {
-        const variants = itemPriceList?.filter(p => p.itemId === item.id) || [];
-        console.log(variants, 'variants')
+        const variants = itemPriceList?.filter(p => p.itemId === item.id) || [];/* console.log removed */
         variants.forEach(variant => {
             variant.ItemBarcodes?.forEach(bc => {
                 let finalSalesPrice = variant.salesPrice || 0;
@@ -137,9 +133,7 @@ export const filterSearchSuggestions = ({ query, items, itemPriceList, retailSto
 
     const barcodeMatches = items.filter(i =>
         i.ItemPriceList?.some(row => row.ItemBarcodes?.some(b => b.barcode.toLowerCase().includes(query)))
-    );
-
-    console.log(barcodeMatches, "barcodeMatches")
+    );/* console.log removed */
 
 
     barcodeMatches.forEach(item => {
