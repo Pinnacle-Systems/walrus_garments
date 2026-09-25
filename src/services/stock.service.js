@@ -1107,7 +1107,7 @@ export async function getUnifiedStockWithLegacyByBarcode(req) {
     let stockRecords = [];
 
     // Step 1: Extremely fast lookup to see if the barcode exists in the ItemBarcodes table
-    const matchedItemBarcode = await prisma.itemBarcodes.findFirst({
+    const matchedItemBarcode = await prisma.ItemBarcode.findFirst({
         where: {
             barcode: normalizedBarcode,
             active: true
