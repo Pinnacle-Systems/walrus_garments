@@ -46,14 +46,17 @@ const pointOfSalesApi = createApi({
             providesTags: ["pointOfSales"],
         }),
         addPointOfSales: builder.mutation({
-            query: (payload) => ({
-                url: POINT_OF_SALES,
-                method: "POST",
-                body: payload,
-                headers: {
-                    "Content-type": "application/json; charset=UTF-8",
-                },
-            }),
+            query: (payload) => {
+                // console.log("addPointOfSales payload:", payload);
+                return {
+                    url: POINT_OF_SALES,
+                    method: "POST",
+                    body: payload,
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                    },
+                };
+            },
             invalidatesTags: ["pointOfSales"],
         }),
         requestDiscount: builder.mutation({

@@ -377,7 +377,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         } else {
             setTransactionType("SALE");
         }
-    }, [cart, selectedReportSaleId, editMode]);/* console.log removed */
+    }, [cart, selectedReportSaleId, editMode]);
+    /* console.log removed */
 
     const syncFormWithDb = useCallback((sale) => {
 
@@ -408,7 +409,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         const isUnpaidBill = sale.bilStatus === "UNPAID";
 
         const mappedCart = (sale.PosItems || []).map(item => {
-            const masterItem = itemsData?.data?.find(i => i.id === item.itemId);/* console.log removed */
+            const masterItem = itemsData?.data?.find(i => i.id === item.itemId);
+            /* console.log removed */
             const stockItems = unifiedPosStockData?.data?.filter(s =>
                 s.itemId === item.itemId &&
                 (s.sizeId || null) === (item.sizeId || null) &&
@@ -419,7 +421,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 storeId: s.storeId || retailStoreId,
                 storeName: s.storeId === retailStoreId ? "Retail Store" : "Discount Store",
                 stockQty: parseFloat(s._sum?.qty) || 0
-            })) : []/* console.log removed */
+            })) : []
+            /* console.log removed */
             const currentLiveStock = stockItems.reduce((sum, s) => sum + (parseFloat(s._sum?.qty) || 0), 0);
             const effectiveStockQty = currentLiveStock;
             const parsedSnapshot = typeof item.appliedOfferSnapshot === 'string'
@@ -629,7 +632,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
                 if (isCombo) {
                     cart.forEach(item => {
-                        const applicable = getItemApplicableOffers(item);/* console.log removed */
+                        const applicable = getItemApplicableOffers(item);
+                        /* console.log removed */
                         const isEligible = applicable.some(o => String(o.id) === String(offer.id));
                         if (!isEligible) return;
 
@@ -649,7 +653,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     // Auto-complete suggestion queries based on active search Mode
     useEffect(() => {
-        const query = searchQuery?.trim().toLowerCase();/* console.log removed */
+        const query = searchQuery?.trim().toLowerCase();
+        /* console.log removed */
 
         if (!query || query.length < 2 || searchMode !== 'NAME') {
             setSuggestions([]);
@@ -658,7 +663,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         }
         const items = itemsData?.data || [];
         const itemPriceList = ItemPriceListData?.data || [];
-        const allMatches = filterSearchSuggestions({ query, items, itemPriceList, retailStoreId, offersData: offersData?.data || offersData });/* console.log removed */
+        const allMatches = filterSearchSuggestions({ query, items, itemPriceList, retailStoreId, offersData: offersData?.data || offersData });
+        /* console.log removed */
 
         // Map stock details from the pre-loaded local stockMap
         const updated = allMatches.map(m => {
@@ -672,7 +678,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
         setSuggestions(updated);
         setShowSuggestions(updated.length > 0);
-    }, [searchQuery, itemsData, ItemPriceListData, selectedReportSaleId, searchMode, stockMap, retailStoreId, offersData]);/* console.log removed */
+    }, [searchQuery, itemsData, ItemPriceListData, selectedReportSaleId, searchMode, stockMap, retailStoreId, offersData]);
+    /* console.log removed */
 
     // Triggers barcode resolution logic on enter
     const handleScan = async (e) => {
@@ -714,7 +721,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     } else {
                         Swal.fire({ title: "Warning", text: response.message || "Barcode not found", icon: "warning" });
                     }
-                } catch (error) {/* console.log removed */
+                } catch (error) {
+                    /* console.log removed */
                     Swal.fire({ title: "Error", text: "Failed to fetch barcode details", icon: "error" });
                 }
             }
@@ -753,7 +761,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             } else {
                 addToCart(suggestion);
             }
-        } catch (error) {/* console.log removed */
+        } catch (error) {
+            /* console.log removed */
             addToCart(suggestion);
         }
         scannerRef.current?.focus();
@@ -866,7 +875,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
             let finalPrice = product.salesPrice || lookupPrice;
             let isOfferPrice = false;
-/* console.log removed */
+            /* console.log removed */
 
             if (barcodeDetails?.barcodeType === "CLEARANCE") {
                 const clearanceOffer = (offersData?.data || offersData || []).find(offer =>
@@ -971,7 +980,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
             if (itemIndex === -1) return prev;
 
-            const item = nextCart[itemIndex];/* console.log removed */
+            const item = nextCart[itemIndex];
+            /* console.log removed */
             const key = `${item.itemId || item.id}-${item.sizeId || 0}-${item.colorId || 0}-${item.uomId || 0}`;
             const othersReserved = (globalReservedStock[key] || 0) - (parseFloat(item.qty) || 0);
             const stockLimit = Math.max(0, (parseFloat(item.stockQty) || 0) - Math.max(0, othersReserved));
@@ -1120,7 +1130,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     // const total = Math.round(totalWithoutRounding) ;
 
     const total = Math.round(totalWithoutRounding) - discount;
-    const roundOff = parseFloat((total - totalWithoutRounding).toFixed(2));/* console.log removed *//* console.log removed */
+    const roundOff = parseFloat((total - totalWithoutRounding).toFixed(2));
+    /* console.log removed */
+    /* console.log removed */
 
     const tax = cartWithOffers.reduce((sum, item) => {
         const itemTaxPercent = parseFloat(item.taxPercent || item.Hsn?.tax || item.tax || 0);
@@ -1372,6 +1384,64 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     };
 
 
+    const cleanOfferSnapshot = (snapshot) => {
+        if (!snapshot) return null;
+        // Handle both stringified and object forms of the snapshot just in case
+        let clean = typeof snapshot === 'string' ? JSON.parse(snapshot) : { ...snapshot };
+
+        // Remove heavy temporary properties
+        delete clean.inScopeItems;
+        delete clean.calculatedDiscount;
+
+        return clean;
+    };
+
+    const formatPosItemsForBackend = (cartItems) => {
+        return cartItems.map(item => ({
+            itemId: item.itemId || item.id,
+            qty: item.qty,
+            price: item.price,
+            salesPrice: item.salesPrice,
+            sizeId: item.sizeId,
+            colorId: item.colorId,
+            uomId: item.uomId,
+            barcode: item.barcode,
+            barcodeType: item.barcodeType,
+            salesPersonId: item.salesPersonId,
+            priceType: item.priceType,
+
+            // Offers - Note the cleanOfferSnapshot call here
+            appliedOfferId: item.appliedOfferId,
+            appliedOfferName: item.appliedOfferName,
+            appliedOfferSnapshot: cleanOfferSnapshot(item.appliedOfferSnapshot),
+            offerReversal: item.offerReversal,
+            offerReapplied: item.offerReapplied,
+
+            // Returns & Exchanges
+            isReturn: item.isReturn,
+            isExchangeItem: item.isExchangeItem,
+            isAddedDuringExchange: item.isAddedDuringExchange,
+            originalItemId: item.originalItemId,
+            retunBillId: item.retunBillId,
+
+            // Fulfillments
+            sourceStoreId: item.sourceStoreId,
+            branchId: item.branchId,
+            fulfillments: item.fulfillments ? item.fulfillments.map(f => ({
+                storeId: f.storeId,
+                qty: f.qty
+            })) : undefined,
+
+            // Helpful for backend error messages (Stock checks)
+            itemName: item.itemName || item.name,
+            sizeName: item.sizeName,
+            colorName: item.colorName,
+        }));
+    };
+
+
+
+
 
     const handleSaveAndPrint = async () => {
         if (cart.length === 0 || isProcessing) return;
@@ -1388,7 +1458,6 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
         handleCheckout(true, false, "UNPAID", "DELIVERYRECEIPT");
     };
 
-    /* console.log removed */
 
 
     const handleCheckout = async (isApprovalOnly = false, isCreditSale = false, saleType = '', printType = '') => {
@@ -1475,7 +1544,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 netAmount: Math.max(0, total - appliedCredit),
                 taxAmount: tax, discountValue: discount, discountType: "Flat",
                 paidCash, paidUPI, paidCard, paidOnline, receivedAmount, balanceReturn,
-                posItems: cartWithOffers,
+                // posItems: cartWithOffers,
+                posItems: formatPosItemsForBackend(cartWithOffers),
+
                 posPayments,
                 promotionalDiscount: totalOfferDiscount,
                 manualDiscount: discount, roundOff, transactionType,
@@ -1497,7 +1568,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     (editMode && docId === 'DRAFT' && isAdmin) ? "APPROVED" :
                         (editMode && docId === 'PROCEED') ? "COMPLETED" : "NONE"
             };
-
+            console.log(invoicePayload, 'invoicePayload')
             let apiResponse;
             if (editMode) {
                 apiResponse = await updatePointOfSales({ id: editingInvoiceId, ...invoicePayload }).unwrap();
@@ -1521,7 +1592,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             if (transactionType !== 'RETURN') {
 
                 const additionalCharges = apiResponse?.data?.packingCharges + apiResponse?.data?.shippingCharges + apiResponse?.data?.courierCharges;
-                const netAmount = apiResponse?.data?.netAmount - additionalCharges/* console.log removed */
+                const netAmount = apiResponse?.data?.netAmount - additionalCharges
+                /* console.log removed */
 
                 const printPayload = {
                     docId: apiResponse?.data?.docId || docId,
