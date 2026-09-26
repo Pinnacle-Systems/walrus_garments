@@ -493,7 +493,7 @@ async function create(body) {
             });
 
 
-            console.log(discountSection?.id, retailStore?.id, "retailStore")
+            // console.log(discountSection?.id, retailStore?.id, "retailStore")
 
             if (retailStore && !isOverDeliveryDetected) {
                 for (const item of (deliveryItems || []).filter(i => i.itemId && parseAmount(i.deliveryQty) > 0)) {
@@ -558,32 +558,32 @@ async function create(body) {
                     }
                 }
 
-                if (!resolvedBarcode) {
-                    let effectiveStoreId;
-                    const isClearance = resolvedBarcodeType && (resolvedBarcodeType.toUpperCase() === "CLEARANCE" || resolvedBarcodeType.toUpperCase() === "CLEARENCE");
-                    if (isClearance) {
-                        effectiveStoreId = discountSection?.id;
-                    } else {
-                        effectiveStoreId = retailStore?.id;
-                    }
-                    effectiveStoreId = effectiveStoreId || (storeId ? parseInt(storeId) : undefined);
+                // if (!resolvedBarcode) {
+                //     let effectiveStoreId;
+                //     const isClearance = resolvedBarcodeType && (resolvedBarcodeType.toUpperCase() === "CLEARANCE" || resolvedBarcodeType.toUpperCase() === "CLEARENCE");
+                //     if (isClearance) {
+                //         effectiveStoreId = discountSection?.id;
+                //     } else {
+                //         effectiveStoreId = retailStore?.id;
+                //     }
+                //     effectiveStoreId = effectiveStoreId || (storeId ? parseInt(storeId) : undefined);
 
-                    const stockRow = await tx.stock.findFirst({
-                        where: {
-                            itemId: temp.itemId ? parseInt(temp.itemId) : undefined,
-                            sizeId: temp.sizeId ? parseInt(temp.sizeId) : null,
-                            colorId: temp.colorId ? parseInt(temp.colorId) : null,
-                            branchId: branchId ? parseInt(branchId) : undefined,
-                            storeId: effectiveStoreId,
-                            barcode: { not: null },
-                            qty: { gt: 0 },
-                        },
-                        select: { barcode: true },
-                    });
-                    if (stockRow?.barcode) {
-                        resolvedBarcode = stockRow.barcode;
-                    }
-                }
+                //     const stockRow = await tx.stock.findFirst({
+                //         where: {
+                //             itemId: temp.itemId ? parseInt(temp.itemId) : undefined,
+                //             sizeId: temp.sizeId ? parseInt(temp.sizeId) : null,
+                //             colorId: temp.colorId ? parseInt(temp.colorId) : null,
+                //             branchId: branchId ? parseInt(branchId) : undefined,
+                //             storeId: effectiveStoreId,
+                //             barcode: { not: null },
+                //             qty: { gt: 0 },
+                //         },
+                //         select: { barcode: true },
+                //     });
+                //     if (stockRow?.barcode) {
+                //         resolvedBarcode = stockRow.barcode;
+                //     }
+                // }
 
                 const savedItem = await tx.salesDeliveryItems.create({
                     data: {

@@ -108,7 +108,7 @@ async function getSearch(req) {
 async function create(body) {
     const {
         finYearId, branchId, customerId, challanType, platForm, storeId, date, description,
-        invoiceItems
+        invoiceItems, userRole
     } = body
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -117,6 +117,25 @@ async function create(body) {
 
 
     const data = await prisma.$transaction(async (tx) => {
+
+
+        const warehouse = await tx.location.findFirst({
+            where: { storeName: "WAREHOUSE" }
+        });
+        const retailStore = await tx.location.findFirst({
+            where: { storeName: "RETAIL" }
+        });
+
+        const discountSection = await tx.location.findFirst({
+            where: { storeName: "DISCOUNT SECTION" }
+        });
+
+        let finalStoreId = storeId;
+        if (userRole === "INVENTORY") {
+            finalStoreId = challanType == "DcOutward" ? warehouse.id : retailStore.id;
+        }
+
+
         // Validation: Check stock for outward challans
         if (challanType === "DcOutward") {
             for (const item of invoiceItems) {
@@ -126,7 +145,7 @@ async function create(body) {
                         itemId: item.itemId ? parseInt(item.itemId) : undefined,
                         sizeId: item.sizeId ? parseInt(item.sizeId) : undefined,
                         colorId: item.colorId ? parseInt(item.colorId) : undefined,
-                        storeId: storeId ? parseInt(storeId) : undefined,
+                        storeId: finalStoreId ? parseInt(finalStoreId) : undefined,
                     }
                 });
 
@@ -148,7 +167,7 @@ async function create(body) {
                     }) : null;
 
                     const fullName = `${itemInfo?.name || 'item'}${sizeInfo ? ` - ${sizeInfo.name}` : ''}${colorInfo ? ` - ${colorInfo.name}` : ''}`;
-                    throw new Error(`Insufficient stock for ${fullName}. Available: ${available}, Required: ${requested}`);
+                    throw new Error(`Insufficient stock for ${fullName}. Available: ${available}, Required: ${requested} IN ${warehouse}`);
                 }
             }
         }

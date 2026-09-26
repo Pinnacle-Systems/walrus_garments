@@ -34,23 +34,19 @@ const StockAdjustmentReport = ({
     const { hasPermission } = usePermissionForUsers()
 
 
-    const [dataPerPage, setDataPerPage] = useState("1");
+    const [dataPerPage, setDataPerPage] = useState("16");
     const [serachDocNo, setSerachDocNo] = useState("");
     const [searchClientName, setSearchClientName] = useState("");
     const [searchDate, setSearchDate] = useState("");
     const [supplier, setSupplier] = useState("");
     const [searchMaterial, setSearchMaterial] = useState("")
     const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
 
-    const [totalCount, setTotalCount] = useState(0);
     const [currentPageNumber, setCurrentPageNumber] = useState(1);
-    const [searchProjectValue, setSearchProjectValue] = useState("");
-    const [searchFollowedBy, setSearchFollowedBy] = useState("");
 
-    const handleOnclick = (e) => {
-        setCurrentPageNumber(reactPaginateIndexToPageNumber(e.selected));
-    };
+
     const searchFields = {
         serachDocNo,
         searchClientName,
@@ -90,7 +86,7 @@ const StockAdjustmentReport = ({
             ...searchFields,
             pagination: true,
             dataPerPage,
-            pageNumber: currentPageNumber,
+            pageNumber: currentPage,
         }
     });
 
@@ -98,26 +94,21 @@ const StockAdjustmentReport = ({
 
 
 
-    useEffect(() => {
-        if (allData?.totalCount) {
-            setTotalCount(allData?.totalCount);
-        }
-    }, [allData, isLoading, isFetching]);
+
 
     const isLoadingIndicator =
         isLoading || isFetching
 
 
 
-    console.log(allData, "entire");
+    // console.log(allData, "entire");
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math?.ceil(allData?.data?.length / itemsPerPage);
-    const indexOfLastItem = currentPage * parseInt(10);
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const totalPages = Math?.ceil((allData?.totalCount || 0) / parseInt(dataPerPage));
+    const indexOfFirstItem = 0;
+    const indexOfLastItem = Math.min(currentPageNumber * parseInt(dataPerPage), allData?.totalCount || 0);
     const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
 
-    console.log(indexOfLastItem, "indexOfLastItem")
+    console.log(currentItems, "currentItems")
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -288,7 +279,7 @@ const StockAdjustmentReport = ({
                                 </tbody>
                             ) : (
                                 <tbody className="border-2">
-                                    {(allData?.data ? allData?.data : []).map((dataObj, index) => (
+                                    {(currentItems ? currentItems : []).map((dataObj, index) => (
                                         <tr
                                             // onKeyDown={(e) => {
                                             //   if (e.key === "Enter") {

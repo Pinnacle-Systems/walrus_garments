@@ -34,7 +34,7 @@ import { useGetStockReportControlQuery } from "../../../redux/uniformService/Sto
 
 const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDate, readOnly, setReadOnly, transType, setTransType,
   dcNo, setDcNo, dcDate, setDcDate, customerId, setCustomerId, payTermId, setPayTermId, locationId, setLocationId, storeId, setStoreId, poInwardOrDirectInward, setPoInwardOrDirectInward, inwardItemSelection, setInwardItemSelection, onNew, branchList, locationData, supplierList, setInvoiceItems, invoiceItems,
-  yarnList, colorList, uomList, convertSaleOrderId, sourceSaleOrderDocId, sourceAdvanceReceived = 0, termsData, invalidateTagsDispatch, dispatch
+  yarnList, colorList, uomList, convertSaleOrderId, sourceSaleOrderDocId, sourceAdvanceReceived = 0, termsData, invalidateTagsDispatch, userRole
 
 
 }) => {
@@ -188,6 +188,7 @@ const DeliveryChallanForm = ({ onClose, id, setId, docId, setDocId, date, setDat
     challanType,
     platForm,
     storeId,
+    userRole,
     date,
     invoiceItems: invoiceItems.filter(i => i.itemId),
     branchId,

@@ -47,7 +47,7 @@ const DeliveryChallan = () => {
     const [invoiceItems, setInvoiceItems] = useState([]);
     const [partyId, setPartyId] = useState('')
 
-    const { branchId, userId, companyId, finYearId } = getCommonParams();
+    const { branchId, userId, companyId, finYearId, userRole } = getCommonParams();
 
     const dispatch = useDispatch();
     const openTabsState = useSelector((state) => state.openTabs);
@@ -58,22 +58,22 @@ const DeliveryChallan = () => {
     const { data: saleOrderToConvertData, isFetching: isSaleOrderFetching } =
         useGetsaleOrderByIdQuery(convertSaleOrderId, { skip: !convertSaleOrderId });
 
-    useEffect(() => {
-        if (saleOrderToConvertData?.data && convertSaleOrderId) {
-            const orderData = saleOrderToConvertData.data;
-            setId("");
-            setCustomerId(orderData.customerId);
-            setInvoiceItems(orderData.SaleOrderItems || []);
-            setPayTermId(orderData.payTermId || "");
-            setLocationId(orderData.branchId || "");
-            setStoreId(orderData.storeId || "");
-            setReadOnly(false);
-            setShowManufacturer(true);
+    // useEffect(() => {
+    //     if (saleOrderToConvertData?.data && convertSaleOrderId) {
+    //         const orderData = saleOrderToConvertData.data;
+    //         setId("");
+    //         setCustomerId(orderData.customerId);
+    //         setInvoiceItems(orderData.SaleOrderItems || []);
+    //         setPayTermId(orderData.payTermId || "");
+    //         setLocationId(orderData.branchId || "");
+    //         setStoreId(orderData.storeId || "");
+    //         setReadOnly(false);
+    //         setShowManufacturer(true);
 
-            // Important: Clear the conversion flag so it doesn't re-trigger
-            // dispatch(push({ name: "SALES INVOICE", id: null }));
-        }
-    }, [saleOrderToConvertData, convertSaleOrderId, dispatch]);
+    //         // Important: Clear the conversion flag so it doesn't re-trigger
+    //         // dispatch(push({ name: "SALES INVOICE", id: null }));
+    //     }
+    // }, [saleOrderToConvertData, convertSaleOrderId, dispatch]);
 
     const params = {
         branchId, userId, finYearId
@@ -176,7 +176,7 @@ const DeliveryChallan = () => {
                         supplierList={supplierList} yarnList={yarnList} colorList={colorList} uomList={uomList} convertSaleOrderId={convertSaleOrderId} invalidateTagsDispatch={invalidateTagsDispatch} dispatch={dispatch}
                         sourceSaleOrderDocId={saleOrderToConvertData?.data?.docId || ""}
                         sourceAdvanceReceived={(saleOrderToConvertData?.data?.Quotation?.paymentData || []).reduce((acc, curr) => acc + parseFloat(curr?.paidAmount || 0), 0)}
-                        termsData={termsData}
+                        termsData={termsData} userRole={userRole}
                     />
                 </div>
 

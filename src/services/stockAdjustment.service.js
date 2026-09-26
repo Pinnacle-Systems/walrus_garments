@@ -198,12 +198,12 @@ async function get(req) {
       String(getDateFromDateTime(item.createdAt)).includes(searchDocDate)
     );
   }
-  // if (pagination) {
-  //   data = data.slice(
-  //     (pageNumber - 1) * parseInt(dataPerPage),
-  //     pageNumber * dataPerPage
-  //   );
-  // }
+  if (pagination) {
+    data = data.slice(
+      (parseInt(pageNumber) - 1) * parseInt(dataPerPage),
+      parseInt(pageNumber) * parseInt(dataPerPage)
+    );
+  }
   return {
     statusCode: 0,
     data,
