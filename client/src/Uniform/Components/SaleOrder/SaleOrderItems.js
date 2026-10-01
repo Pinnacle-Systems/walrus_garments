@@ -239,6 +239,8 @@ const SaleOrderItems = ({
             return [...actualPrev, ...padding];
         });
     }, [transType, setSaleOrderItems, saleOrderItems?.length, isHeaderOpen, id]);
+
+
     const addNewRow = () => {
         const newRow = {
             itemId: "",

@@ -174,7 +174,7 @@ const POSSaleSummary = ({
                     <span className={`text-[12px] uppercase tracking-widest ${isRefund ? 'text-rose-400' : 'text-indigo-400'}`}>
                         {isRefund ? 'Issue Credit / Refund Amount' : 'Net Payable'}
                     </span>
-                    <span>₹{isRefund ? Math.abs(netPayable).toLocaleString() : Math.abs(netPayableTotal + additionalCharges).toLocaleString()}</span>
+                    <span>₹{isRefund ? Math.abs(netPayable).toLocaleString() : Math.abs(netPayableTotal).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center text-emerald-500 text-xs font-bold">
                     <span className="text-[11px] uppercase tracking-wider">Manual Disc</span>

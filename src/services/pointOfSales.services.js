@@ -393,9 +393,9 @@ async function create(body) {
 
         const billAmount = Math.round((grossPurchaseAmount || 0)) - Math.round((manualDiscount || 0)) + Math.round((packingCharges || 0)) + Math.round((shippingCharges || 0)) + Math.round((courierCharges || 0))
 
-        const finalNetAmount = transactionType == "RETURN" ? (grossReturnAmount - totalOfferReversal) : netAmount + (additionalCharges || 0)
+        // const finalNetAmount = transactionType == "RETURN" ? (grossReturnAmount - totalOfferReversal) : netAmount + (additionalCharges || 0)
 
-
+        const finalNetAmount = transactionType == "RETURN" ? (grossReturnAmount - totalOfferReversal) : netAmount
 
 
         console.log({
@@ -668,8 +668,9 @@ async function update(id, body) {
         const totalOfferReversal = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
         const totalOfferReapplied = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
 
-        const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount - totalOfferReversal : netAmount + (additionalCharges || 0)
+        // const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount - totalOfferReversal : netAmount + (additionalCharges || 0)
 
+        const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount - totalOfferReversal : netAmount
 
         if ((dataFound.docId === 'DRAFT')) {
             const finYearDate = await getFinYearStartTimeEndTime(finYearId);
@@ -807,7 +808,7 @@ async function update(id, body) {
                             const fStoreId = parseInt(f.storeId);
 
                             // Pessimistic Lock to prevent concurrent sales of the same item
-                            await tx.$executeRaw`SELECT id FROM item WHERE id = ${itemId} FOR UPDATE`;
+                            // await tx.$executeRaw`SELECT id FROM item WHERE id = ${itemId} FOR UPDATE`;
 
                             const currentStock = await tx.stock.aggregate({
                                 _sum: { qty: true },

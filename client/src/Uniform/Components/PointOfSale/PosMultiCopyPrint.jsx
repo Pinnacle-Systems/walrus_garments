@@ -43,10 +43,11 @@ const PosMultiCopyPrint = ({
   summary = { subtotal: 0, tax: 0, discount: 0, total: 0, received: 0, balance: 0 },
   returnReferences = [],
   showSummarySlip,
+  additionalCharges
 }) => {
 
 
-
+  console.log(items, "items in ReceiptViewer")
 
   const totalQty = items.filter((i) => !i.isReturn)?.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
   const returnTotal = items.reduce((acc, item) => item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
@@ -54,9 +55,16 @@ const PosMultiCopyPrint = ({
   const totalOfferReversal = items.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
   const totalOfferReapplied = items.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
 
-  const overallPurchaseTotal = purchaseTotal - totalOfferReversal + totalOfferReapplied
+  const overallPurchaseTotal = purchaseTotal - totalOfferReversal + totalOfferReapplied + additionalCharges
 
-  const overallPurchaseTotalNew = (purchaseTotal + totalOfferReversal) - (totalOfferReapplied + returnTotal)/* console.log removed *//* console.log removed */
+  const overallPurchaseTotalNew = (purchaseTotal + totalOfferReversal + additionalCharges) - (totalOfferReapplied + returnTotal)
+
+  console.log({
+    purchaseTotal,
+    additionalCharges,
+    returnTotal,
+    overallPurchaseTotal
+  }, "overallPurchaseTotal")
 
   const qrCodePath = useMemo(() => {
     try {
@@ -279,7 +287,7 @@ const PosMultiCopyPrint = ({
 
             {returnTotal > overallPurchaseTotal
               ? "Store Credit Issued"
-              : returnTotal <= overallPurchaseTotal
+              : returnTotal == overallPurchaseTotal ? "Grant Total" : returnTotal < overallPurchaseTotal
                 ? dataObj?.availableCredit < overallPurchaseTotal ? "Total Payable" : "Grant Total"
                 : ""
             }
@@ -292,7 +300,7 @@ const PosMultiCopyPrint = ({
               (
                 (overallPurchaseTotalNew).toFixed(2) > 0 ?
                   (overallPurchaseTotalNew).toFixed(2) :
-                  (Math.abs(purchaseTotal - returnTotal).toFixed(2))
+                  (Math.abs((purchaseTotal + additionalCharges) - returnTotal).toFixed(2))
               )}
           </Text>
         </View>

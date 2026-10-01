@@ -58,20 +58,22 @@ const POSSidebar = ({
     const netPayableAmount = Math.max(0, transactionTotal - appliedCredit);
     const refundAmount = transactionTotal < 0 ? Math.abs(transactionTotal) : 0;
 
-    const isRefund = refundAmount > 0;  // only return
-    const netPayable = isRefund ? -refundAmount : netPayableAmount;
+    const isRefund = (refundAmount) > 0;  // only return 
+    const netPayable = isRefund ? -(refundAmount) : netPayableAmount;
     const netPayableTotal = netPayableAmount;
 
     const isPendingApproval = approvalStatus === 'PENDING';
     const isUnpaidBill = currentBilStatus === 'UNPAID';
     const isReturnMode = cart.length > 0 && cart.every(item => item.isReturn)
 
-    const isCustomerEditable = cart.length > 0 && cart.some(item => item.isReturn)/* console.log removed *//* console.log removed */
+    const isCustomerEditable = cart.length > 0 && cart.some(item => item.isReturn)
+    /* console.log removed */
+    /* console.log removed */
 
     /* console.log removed */
     /* console.log removed */
     /* console.log removed */
-
+    console.log(netPayableAmount, "netPayableAmount", refundAmount - additionalCharges, packingCharges)
 
     const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval) && currentBilStatus === 'PAID';
 
@@ -182,6 +184,9 @@ const POSSidebar = ({
                         returnTotal={returnTotal}
                         purchaseTotal={purchaseTotal}
                         totalOfferReversal={totalOfferReversal}
+                        packingCharges={packingCharges}
+                        shippingCharges={shippingCharges}
+                        courierCharges={courierCharges}
                     />
                 ) : (
                     <POSSaleSummary

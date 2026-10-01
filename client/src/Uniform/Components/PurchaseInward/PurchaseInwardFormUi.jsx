@@ -285,80 +285,80 @@ const PurchaseInwardForm = ({
       "qty",
       "price",
     ];
-    if (!validateData(data)) {
-      Swal.fire({
-        title: "Please fill all required fields...!",
-        icon: "warning",
-      });
-      return;
-    }
+    // if (!validateData(data)) {
+    //   Swal.fire({
+    //     title: "Please fill all required fields...!",
+    //     icon: "warning",
+    //   });
+    //   return;
+    // }
 
 
 
 
-    function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = []) {
-      console.log(datas, "datas");
-      console.log(isRequiredAllData, "isRequiredAllData");
-      console.log(mandatoryFields, "mandatoryFields")
+    // function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = []) {
+    //   console.log(datas, "datas");
+    //   console.log(isRequiredAllData, "isRequiredAllData");
+    //   console.log(mandatoryFields, "mandatoryFields")
 
-      // If the array is empty, we consider it invalid because there must be at least one row.
-      if (!datas || datas.length === 0) {
-        return false;
-      }
+    //   // If the array is empty, we consider it invalid because there must be at least one row.
+    //   if (!datas || datas.length === 0) {
+    //     return false;
+    //   }
 
-      const isInvalidValue = (value) => {
-        if (value === "" || value === null || value === undefined || value === "NaN") return true;
-        if (typeof value === "number" && isNaN(value)) return true;
+    //   const isInvalidValue = (value) => {
+    //     if (value === "" || value === null || value === undefined || value === "NaN") return true;
+    //     if (typeof value === "number" && isNaN(value)) return true;
 
-        // Treat strictly numeric zero values (like 0, "0", "0.00") as invalid.
-        // Number(value) evaluates to NaN for strings like "WRNWITRED05" or "0ABC", 
-        // so this safely allows alphanumeric barcodes to pass validation.
-        if (String(value).trim() !== "" && !isNaN(Number(value)) && Number(value) === 0) {
-          return true;
-        }
+    //     // Treat strictly numeric zero values (like 0, "0", "0.00") as invalid.
+    //     // Number(value) evaluates to NaN for strings like "WRNWITRED05" or "0ABC", 
+    //     // so this safely allows alphanumeric barcodes to pass validation.
+    //     if (String(value).trim() !== "" && !isNaN(Number(value)) && Number(value) === 0) {
+    //       return true;
+    //     }
 
-        return false;
-      };
+    //     return false;
+    //   };
 
-      if (isRequiredAllData) {
-        return datas.every(obj => Object.values(obj).every(value => !isInvalidValue(value)));
-      } else {
-        return datas.every(obj =>
-          mandatoryFields.every(field => {
-            const value = obj[field];
-            return value !== undefined && !isInvalidValue(value);
-          })
-        );
-      }
-    }
+    //   if (isRequiredAllData) {
+    //     return datas.every(obj => Object.values(obj).every(value => !isInvalidValue(value)));
+    //   } else {
+    //     return datas.every(obj =>
+    //       mandatoryFields.every(field => {
+    //         const value = obj[field];
+    //         return value !== undefined && !isInvalidValue(value);
+    //       })
+    //     );
+    //   }
+    // }
 
 
-    const hasDuplicate = (arr) =>
-      new Set(arr.map(i => i.barcode)).size !== arr.length;
+    // const hasDuplicate = (arr) =>
+    //   new Set(arr.map(i => i.barcode)).size !== arr.length;
 
-    if (hasDuplicate(data?.directInwardReturnItems)) {
-      Swal.fire({
-        title: "Same Barcode Found in Multiple Lines",
-        icon: "warning",
-      });
-      return;
-    }
+    // if (hasDuplicate(data?.directInwardReturnItems)) {
+    //   Swal.fire({
+    //     title: "Same Barcode Found in Multiple Lines",
+    //     icon: "warning",
+    //   });
+    //   return;
+    // }
 
-    console.log(mandatoryFields, "mandatoryFields")
+    // console.log(mandatoryFields, "mandatoryFields")
 
-    if (
-      !isGridDatasValid(
-        data?.directInwardReturnItems?.filter((i) => i.itemId),
-        false,
-        mandatoryFields,
-      )
-    ) {
-      Swal.fire({
-        title: "Please fill all Po Items Mandatory fields...!",
-        icon: "warning",
-      });
-      return;
-    }
+    // if (
+    //   !isGridDatasValid(
+    //     data?.directInwardReturnItems?.filter((i) => i.itemId),
+    //     false,
+    //     mandatoryFields,
+    //   )
+    // ) {
+    //   Swal.fire({
+    //     title: "Please fill all Po Items Mandatory fields...!",
+    //     icon: "warning",
+    //   });
+    //   return;
+    // }
     if (!window.confirm("Are you sure save the details ...?")) return;
 
     if (nextProcess === "draft" && !id)

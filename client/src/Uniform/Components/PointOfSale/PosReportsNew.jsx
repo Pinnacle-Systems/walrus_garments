@@ -169,7 +169,8 @@ const PosReportsNew = ({
                 Swal.fire('Error', err.data?.message || 'Something went wrong', 'error');
             }
         }
-    };/* console.log removed */
+    };
+    /* console.log removed */
     const searchFields = {
         serachDocNo,
         searchClientName,
@@ -282,7 +283,8 @@ const PosReportsNew = ({
                     icon: "error",
                 });
             }
-        } catch (error) {/* console.log removed */
+        } catch (error) {
+            /* console.log removed */
             Swal.fire({
                 title: "Error",
                 text: "Failed to fetch bill details.",
@@ -833,7 +835,8 @@ const PosReportsNew = ({
                                                                     bilStatus: dataObj.bilStatus,
                                                                     printCopies: 2,
                                                                     showSummarySlip: false,
-                                                                    isDeliveryReceipt: isSummarySlip
+                                                                    isDeliveryReceipt: isSummarySlip,
+                                                                    additionalCharges
                                                                 });
 
                                                                 setThermalPrintOpen(true);

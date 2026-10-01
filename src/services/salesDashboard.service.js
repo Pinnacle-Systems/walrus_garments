@@ -1451,12 +1451,18 @@ async function getLowVelocityItems(req) {
             if (di.itemId) salesCount[di.itemId] = (salesCount[di.itemId] || 0) + parseFloat(di.deliveryQty || di.qty || 0);
         });
 
+        const { itemCategory } = req.query;
+
         const lowVelocityIds = Object.keys(salesCount)
-            .filter(id => salesCount[id] > 0 && salesCount[id] <= 20)
+            .filter(id => salesCount[id] > 0)
             .map(Number);
 
+        const itemWhere = { id: { in: lowVelocityIds }, active: true };
+        if (itemCategory === 'LEGACY') itemWhere.isLegacy = true;
+        if (itemCategory === 'NEW') itemWhere.isLegacy = false;
+
         const items = await prisma.item.findMany({
-            where: { id: { in: lowVelocityIds }, active: true },
+            where: itemWhere,
             include: {
                 MainCategory: true,
                 Stock: {
@@ -1483,7 +1489,7 @@ async function getLowVelocityItems(req) {
             };
         });
 
-        data.sort((a, b) => a.qtySold - b.qtySold);
+        data.sort((a, b) => b.qtySold - a.qtySold);
         return { statusCode: 0, data };
     } catch (error) {
         console.error("Error in getLowVelocityItems:", error.message);
@@ -1516,11 +1522,16 @@ async function getDeadStockItems(req) {
             select: { itemId: true }
         });
 
+        const { itemCategory } = req.query;
         const itemsWithStockIds = new Set(stockItems.map(s => s.itemId).filter(Boolean));
         const deadStockIds = [...itemsWithStockIds].filter(id => !soldItemIds.has(id));
 
+        const itemWhere = { id: { in: deadStockIds }, active: true };
+        if (itemCategory === 'LEGACY') itemWhere.isLegacy = true;
+        if (itemCategory === 'NEW') itemWhere.isLegacy = false;
+
         const items = await prisma.item.findMany({
-            where: { id: { in: deadStockIds }, active: true },
+            where: itemWhere,
             include: {
                 MainCategory: true,
                 Stock: {

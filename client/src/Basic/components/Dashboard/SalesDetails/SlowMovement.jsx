@@ -70,8 +70,23 @@ const SlowTypeDropdown = ({ slowType, setSlowType, autoBorder }) => (
     onChange={(e) => setSlowType(e.target.value)}
   >
     <option value="AGING">Aging</option>
-    <option value="VELOCITY">Low Velocity</option>
+    <option value="HIGHEST_SALES">Highest to Lowest Sales</option>
     <option value="DEADSTOCK">Dead Stock</option>
+  </select>
+);
+
+const ItemCategoryDropdown = ({ itemCategory, setItemCategory, autoBorder }) => (
+  <select
+    className={`${autoBorder
+      ? "border-2 border-blue-600"
+      : "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+      } p-1 w-32 h-6.5 text-gray-900 text-xs rounded-md`}
+    value={itemCategory}
+    onChange={(e) => setItemCategory(e.target.value)}
+  >
+    <option value="ALL">All Items</option>
+    <option value="LEGACY">Legacy Items</option>
+    <option value="NEW">New Items</option>
   </select>
 );
 
@@ -2032,6 +2047,7 @@ const SlowMovement = ({
     filterType || "ALL",
   );
   const [slowType, setSlowType] = useState("AGING");
+  const [itemCategory, setItemCategory] = useState("ALL");
 
   const [bucketModalOpen, setBucketModalOpen] = useState(false);
   const [bucketModalData, setBucketModalData] = useState(null);
@@ -2057,8 +2073,8 @@ const SlowMovement = ({
     isFetching: velFetching,
     isLoading: velLoading,
   } = useGetSlowMovingItemsByVelocityQuery(
-    { params: { selectedYear } },
-    { skip: !selectedYear || slowType !== "VELOCITY" },
+    { params: { selectedYear, itemCategory } },
+    { skip: !selectedYear || slowType !== "HIGHEST_SALES" },
   );
 
   const {
@@ -2066,7 +2082,7 @@ const SlowMovement = ({
     isFetching: dsFetching,
     isLoading: dsLoading,
   } = useGetDeadStockQuery(
-    { params: { selectedYear } },
+    { params: { selectedYear, itemCategory } },
     { skip: !selectedYear || slowType !== "DEADSTOCK" },
   );
 
@@ -2077,13 +2093,13 @@ const SlowMovement = ({
   const isLoading =
     slowType === "AGING"
       ? agingLoading
-      : slowType === "VELOCITY"
+      : slowType === "HIGHEST_SALES"
         ? velLoading
         : dsLoading;
   const isFetching =
     slowType === "AGING"
       ? agingFetching
-      : slowType === "VELOCITY"
+      : slowType === "HIGHEST_SALES"
         ? velFetching
         : dsFetching;
 
@@ -2104,6 +2120,11 @@ const SlowMovement = ({
           }}
           action={
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+              <ItemCategoryDropdown 
+                itemCategory={itemCategory}
+                setItemCategory={setItemCategory}
+                autoBorder
+              />
               <SlowTypeDropdown
                 slowType={slowType}
                 setSlowType={setSlowType}
@@ -2162,7 +2183,7 @@ const SlowMovement = ({
             />
           )}
 
-          {slowType === "VELOCITY" && (
+          {slowType === "HIGHEST_SALES" && (
             <LowVelocityChart
               data={velocityResponse?.data}
               onBarClick={() => { }}

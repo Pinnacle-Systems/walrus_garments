@@ -63,12 +63,13 @@ const PaymentOutStandingLedger = () => {
                                     </div>
                                 </td>
                                 <td className="table-data">
-                                    <div className='flex items-center justify-center' onClick={() => {
-                                        dispatch(push({
-                                            name: "LEDGER",
-                                            projectId: party.id
-                                        }))
-                                    }}>
+                                    <div className='flex items-center justify-center'
+                                        onClick={() => {
+                                            dispatch(push({
+                                                name: "LEDGER",
+                                                projectId: party.id
+                                            }))
+                                        }}>
                                         {VIEW}
                                     </div>
                                 </td>

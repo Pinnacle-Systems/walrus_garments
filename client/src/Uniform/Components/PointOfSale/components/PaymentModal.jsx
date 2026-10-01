@@ -28,7 +28,7 @@ const PaymentModal = ({
 }) => {
     if (!isOpen) return null;
 
-    const transactionTotal = parseFloat(total) + (parseFloat(additionalCharges) || 0);
+    const transactionTotal = parseFloat(total)
     const customerCredit = parseFloat(availableCredit) || 0;
 
     const appliedCredit = Math.min(Math.max(0, transactionTotal), customerCredit);
@@ -106,7 +106,7 @@ const PaymentModal = ({
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
                                     <span className="text-xs font-black text-slate-600 uppercase tracking-wider">Invoice Amount</span>
-                                    <span className="text-lg font-black text-slate-800">₹{Math.abs(total + (additionalCharges || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <span className="text-lg font-black text-slate-800">₹{Math.abs(total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
@@ -307,7 +307,8 @@ const PaymentModal = ({
                                             }
                                         }
                                     }
-                                } catch (err) {/* console.log removed */
+                                } catch (err) {
+                                    /* console.log removed */
                                 } finally {
                                     setIsProcessing(false);
                                 }

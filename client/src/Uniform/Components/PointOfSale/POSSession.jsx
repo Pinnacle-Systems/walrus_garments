@@ -1124,7 +1124,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     const additionalCharges = Number(packingCharges || 0) + Number(shippingCharges || 0) + Number(courierCharges || 0)
 
-    const totalBeforeDiscount = purchaseTotalBeforeOffer - totalOfferDiscount - returnTotal + totalOfferReversal - totalOfferReapplied;
+    const totalBeforeDiscount = purchaseTotalBeforeOffer - totalOfferDiscount - returnTotal + totalOfferReversal - totalOfferReapplied + additionalCharges;
     const totalWithoutRounding = totalBeforeDiscount;
 
     // const total = Math.round(totalWithoutRounding) ;
@@ -1148,7 +1148,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     // Settlement and Payout values
     const receivedAmount = paidCash + paidUPI + paidCard + paidOnline;
-    const netPayableValue = (total + (additionalCharges || 0)) - availableCredit;
+    const netPayableValue = (total) - availableCredit;
     const absNetPayableValue = Math.abs(netPayableValue);
     const balanceReturn = Math.max(0, receivedAmount - absNetPayableValue);
 
@@ -1617,7 +1617,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     isExchange: isExchangeFlag,
                     isRefund: isRefundMode,
                     availableCredit,
-                    dataObj: apiResponse?.data
+                    dataObj: apiResponse?.data,
+                    additionalCharges
 
                 };
 
@@ -1889,6 +1890,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                 setSalesNo={setReturnBillId}
                 setTransactionType={setTransactionType}
                 cart={cart}
+                setPackingCharges={setPackingCharges}
+                setCourierCharges={setCourierCharges}
+                setShippingCharges={setShippingCharges}
             />
 
             {/* Layout Wrapper */}

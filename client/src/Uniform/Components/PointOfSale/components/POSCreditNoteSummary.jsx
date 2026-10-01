@@ -1,7 +1,7 @@
 import React from 'react';
 import { CreditCard } from 'lucide-react';
 
-const POSCreditNoteSummary = ({ cart, total, returnTotal, purchaseTotal, totalOfferReversal }) => {
+const POSCreditNoteSummary = ({ cart, total, returnTotal, purchaseTotal, totalOfferReversal, packingCharges, shippingCharges, courierCharges }) => {
     // Dynamic returns-only tax calculation
     const returnTax = cart.reduce((sum, item) => {
         if (!item.isReturn) return sum;
@@ -42,7 +42,22 @@ const POSCreditNoteSummary = ({ cart, total, returnTotal, purchaseTotal, totalOf
                         <span>₹{purchaseTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                 )}
-
+                {packingCharges > 0 && (
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                        <span className="text-[11px] uppercase tracking-wider text-slate-400">Packing Charges</span>
+                        <span>₹{packingCharges.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                )}  {shippingCharges > 0 && (
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                        <span className="text-[11px] uppercase tracking-wider text-slate-400">Shipping Charges</span>
+                        <span>₹{shippingCharges.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                )}  {courierCharges > 0 && (
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-600">
+                        <span className="text-[11px] uppercase tracking-wider text-slate-400">Courier Charges</span>
+                        <span>₹{courierCharges.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                )}
 
 
                 {/* <div className="flex justify-between items-center text-xs font-bold text-slate-600">
