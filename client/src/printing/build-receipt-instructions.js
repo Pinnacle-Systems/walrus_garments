@@ -100,6 +100,7 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
     summary = { subtotal: 0, tax: 0, discount: 0, total: 0 },
     branchData,
     returnReferences = [],
+    additionalCharges
   } = printPayload || {};
 
   function formatDateTime(date) {
@@ -151,8 +152,8 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
   const purchaseTotal = items.reduce((acc, item) => !item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
   const totalOfferReversal = items.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
   const totalOfferReapplied = items.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
-  const overallPurchaseTotal = purchaseTotal - totalOfferReversal + totalOfferReapplied;
-  const overallPurchaseTotalNew = (purchaseTotal + totalOfferReversal) - (totalOfferReapplied + returnTotal);
+  const overallPurchaseTotal = purchaseTotal - totalOfferReversal + totalOfferReapplied + additionalCharges;
+  const overallPurchaseTotalNew = (purchaseTotal + totalOfferReversal) - (totalOfferReapplied + returnTotal) + additionalCharges;
 
   let totalQty = 0;
   items.forEach((item, index) => {

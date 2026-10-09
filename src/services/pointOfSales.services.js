@@ -818,7 +818,9 @@ async function update(id, body) {
                                     colorId: baseEntry.colorId,
                                     uomId: baseEntry.uomId,
                                     storeId: fStoreId,
-                                    branchId: baseEntry.branchId
+                                    branchId: baseEntry.branchId,
+                                    barcode: baseEntry.barcode
+
                                 }
                             });
 

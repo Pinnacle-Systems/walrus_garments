@@ -279,6 +279,7 @@ async function getExistingStockQty(tx, stockDetail, branchId, storeId) {
       sizeId: stockDetail?.sizeId ? parseInt(stockDetail.sizeId) : null,
       colorId: stockDetail?.colorId ? parseInt(stockDetail.colorId) : null,
       uomId: stockDetail?.uomId ? parseInt(stockDetail.uomId) : null,
+      barcode: stockDetail?.barcode ? stockDetail.barcode : null,
       // ...buildStockRuntimeFieldWhere(stockDetail),
     },
     _sum: {

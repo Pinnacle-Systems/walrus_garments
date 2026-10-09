@@ -59,12 +59,12 @@ const PosMultiCopyPrint = ({
 
   const overallPurchaseTotalNew = (purchaseTotal + totalOfferReversal + additionalCharges) - (totalOfferReapplied + returnTotal)
 
-  console.log({
-    purchaseTotal,
-    additionalCharges,
-    returnTotal,
-    overallPurchaseTotal
-  }, "overallPurchaseTotal")
+  // console.log({
+  //   purchaseTotal,
+  //   additionalCharges,
+  //   returnTotal,
+  //   overallPurchaseTotal
+  // }, "overallPurchaseTotal")
 
   const qrCodePath = useMemo(() => {
     try {

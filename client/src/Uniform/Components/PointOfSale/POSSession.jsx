@@ -583,6 +583,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
 
     const totalOfferDiscount = cartWithOffers.reduce((sum, item) => item.priceType === 'offerPrice' ? sum + Math.max(0, (parseFloat(item.price || item.price || 0) - parseFloat(item.price || 0)) * parseFloat(item.qty || 0)) : sum, 0);
 
+    console.log(cartWithOffers, 'cartWithOffers')
 
 
     const handleShowItemOffers = (item) => {
@@ -1384,17 +1385,21 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     };
 
 
-    const cleanOfferSnapshot = (snapshot) => {
+    const cleanOfferSnapshot = (snapshot, item) => {
         if (!snapshot) return null;
-        // Handle both stringified and object forms of the snapshot just in case
         let clean = typeof snapshot === 'string' ? JSON.parse(snapshot) : { ...snapshot };
 
-        // Remove heavy temporary properties
-        delete clean.inScopeItems;
-        delete clean.calculatedDiscount;
+        // Keep only the matching inScopeItem for this line item instead of deleting all of them
+        if (clean.inScopeItems && Array.isArray(clean.inScopeItems) && item) {
+            clean.inScopeItems = clean.inScopeItems.filter(i =>
+                String(i.barcode) === String(item.barcode)
+            );
+        }
 
+        delete clean.calculatedDiscount;
         return clean;
     };
+
 
     const formatPosItemsForBackend = (cartItems) => {
         return cartItems.map(item => ({
@@ -1413,7 +1418,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             // Offers - Note the cleanOfferSnapshot call here
             appliedOfferId: item.appliedOfferId,
             appliedOfferName: item.appliedOfferName,
-            appliedOfferSnapshot: cleanOfferSnapshot(item.appliedOfferSnapshot),
+            appliedOfferSnapshot: cleanOfferSnapshot(item.appliedOfferSnapshot, item),
             offerReversal: item.offerReversal,
             offerReapplied: item.offerReapplied,
 
@@ -1433,9 +1438,9 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             })) : undefined,
 
             // Helpful for backend error messages (Stock checks)
-            itemName: item.itemName || item.name,
-            sizeName: item.sizeName,
-            colorName: item.colorName,
+            itemName: item.Item?.name || item.name,
+            sizeName: item.Size?.name || item.sizeName,
+            colorName: item.Color?.name || item.colorName,
         }));
     };
 

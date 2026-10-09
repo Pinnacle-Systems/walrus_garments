@@ -54,9 +54,9 @@ const POSSidebar = ({
     const transactionTotal = parseFloat(total)
     const customerCredit = parseFloat(availableCredit) || 0;
 
-    const appliedCredit = Math.min(Math.max(0, transactionTotal), customerCredit);
-    const netPayableAmount = Math.max(0, transactionTotal - appliedCredit);
-    const refundAmount = transactionTotal < 0 ? Math.abs(transactionTotal) : 0;
+    const appliedCredit = Math.min(Math.max(0, total), customerCredit);
+    const netPayableAmount = Math.max(0, total - appliedCredit);
+    const refundAmount = total < 0 ? Math.abs(total) : 0;
 
     const isRefund = (refundAmount) > 0;  // only return 
     const netPayable = isRefund ? -(refundAmount) : netPayableAmount;
@@ -73,7 +73,7 @@ const POSSidebar = ({
     /* console.log removed */
     /* console.log removed */
     /* console.log removed */
-    console.log(netPayableAmount, "netPayableAmount", refundAmount - additionalCharges, packingCharges)
+    console.log(total, "total", availableCredit, "availableCredit")
 
     const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval) && currentBilStatus === 'PAID';
 

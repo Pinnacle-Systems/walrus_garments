@@ -636,8 +636,8 @@ export const calculateExchangeCartWithOffers = (cart, activeOffers, selectedOffe
             };
         }
 
-        const selectedOffer = item.isReturn 
-            ? item.appliedOfferSnapshot 
+        const selectedOffer = item.isReturn
+            ? item.appliedOfferSnapshot
             : (item.appliedOfferSnapshot || activeOffers.find(o => String(o.id) === String(rowOfferId)));
 
 
