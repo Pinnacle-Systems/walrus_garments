@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { push } from '../../../redux/features/opentabs';
 import POSSession from './POSSession';
@@ -71,6 +71,24 @@ const POSMultiTabWrapper = () => {
         setNextTabId(newId + 1);
         setCurrentView("SESSION");
     };
+
+    const handleAddTabRef = useRef(handleAddTab);
+    handleAddTabRef.current = handleAddTab;
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Alt + N (or Ctrl + N) to create and go to a new bill tab
+            const isNewBillShortcut = (e.altKey || e.ctrlKey || e.metaKey) && (e.key?.toLowerCase() === 'n' || e.code === 'KeyN');
+
+            if (isNewBillShortcut) {
+                e.preventDefault();
+                handleAddTabRef.current?.();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const handleAddEditTab = (sale, autoOpenPayment = false) => {
         const newId = nextTabId;

@@ -49,7 +49,8 @@ const POSSidebar = ({
     setShippingCharges,
     courierCharges,
     setCourierCharges,
-    additionalCharges
+    additionalCharges,
+    customerMobileRef
 }) => {
     const transactionTotal = parseFloat(total)
     const customerCredit = parseFloat(availableCredit) || 0;
@@ -98,6 +99,7 @@ const POSSidebar = ({
                                 <span className="text-[10px] font-black uppercase">🇮🇳 +91</span>
                             </div>
                             <input
+                                ref={customerMobileRef}
                                 type="text"
                                 placeholder="Mobile (10 Digits)"
                                 value={guestMobile}

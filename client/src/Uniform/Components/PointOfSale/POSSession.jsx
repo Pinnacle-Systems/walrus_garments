@@ -235,6 +235,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     const discountRef = useRef(null);
     const qtyInputRefs = useRef({});
     const salesPersonScannerRef = useRef(null);
+    const customerMobileRef = useRef(null);
 
     const EMPTY_ARRAY = useMemo(() => [], []);
 
@@ -1805,6 +1806,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
     // =========================================================================
     useEffect(() => {
         const handleKeyDown = (e) => {
+            console.log(e.key, "event key")
             if (!isActive) return;
             const tag = document.activeElement?.tagName?.toLowerCase();
             const isTyping = tag === 'input' || tag === 'textarea';
@@ -1812,7 +1814,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
             if (e.key === 'F10') { e.preventDefault(); scannerRef.current?.focus(); return; }
             if (e.key === 'F8') { e.preventDefault(); handlePayNow(); return; }
             if (e.key === 'F9') { e.preventDefault(); handleSaveUnpaid(); return; }
-            if (e.key === 'F7') { e.preventDefault(); handleSaveAndPrint(); return; }
+            if (e.key === 'F7') { e.preventDefault(); customerMobileRef?.current?.focus(); return; }
 
             if (e.key === 'F2') {
                 e.preventDefault();
@@ -1993,6 +1995,7 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                         courierCharges={courierCharges}
                         setCourierCharges={setCourierCharges}
                         additionalCharges={additionalCharges}
+                        customerMobileRef={customerMobileRef}
                     />
                 </div>
 
@@ -2008,6 +2011,8 @@ const POSSession = ({ isActive = true, tabId, onCartUpdate, globalReservedStock 
                     isAdmin={isAdmin}
                     approvalStatus={approvalStatus}
                     setSearchMode={setSearchMode}
+                    customerMobileRef={customerMobileRef}
+
                 />
             </div>
 

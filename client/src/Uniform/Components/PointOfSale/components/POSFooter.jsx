@@ -11,7 +11,8 @@ const POSFooter = ({
     scannerRef,
     isAdmin,
     approvalStatus,
-    setSearchMode
+    setSearchMode,
+    customerMobileRef
 }) => {
     const isPendingApproval = isAdmin && approvalStatus === 'PENDING';
 
@@ -34,6 +35,11 @@ const POSFooter = ({
         },
         {
             key: 'F4', label: 'Reports', action: () => setShowReports(prev => !prev)
+        },
+        {
+            key: 'F7', label: 'Mobile No', action: () => {
+                customerMobileRef?.current?.focus()
+            }
         },
         {
             key: 'F8', label: 'Pay', action: () => handlePayNow()
