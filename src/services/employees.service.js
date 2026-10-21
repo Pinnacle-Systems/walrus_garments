@@ -111,7 +111,7 @@ async function getEmployeeId(branchId, startTime, endTime) {
             id: 'desc'
         }
     });
-    console.log(lastObject, "lastObject")
+    // console.log(lastObject, "lastObject")
     const code = "EMP"
     const branchObj = await getTableRecordWithId(branchId, "branch")
     let newDocId = `${branchObj.branchCode}/${code}/1`
@@ -119,7 +119,7 @@ async function getEmployeeId(branchId, startTime, endTime) {
     if (lastObject) {
         newDocId = `${branchObj.branchCode}/${code}/${parseInt(lastObject.regNo.split("/").at(-1)) + 1}`
     }
-    console.log(newDocId, "newDocId")
+    // console.log(newDocId, "newDocId")
     return newDocId
 }
 async function get(req) {
@@ -162,7 +162,7 @@ async function get(req) {
     });
 
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-    console.log("Regno", finYearDate)
+    // console.log("Regno", finYearDate)
     let Regno = finYearDate ? (await getEmployeeId(branchId, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime)) : "";
 
     return { statusCode: 0, data: data.map((item) => exclude({ ...item }, ["image"])), Regno };

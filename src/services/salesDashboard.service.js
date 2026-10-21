@@ -57,7 +57,7 @@ function calculateHeaderTotal(items = [], header = {}, isReturn = false) {
         }
     }
 
-    console.log(header?.docId, returnChargeAmount, "returnChargeAmount", lineTotal)
+    // console.log(header?.docId, returnChargeAmount, "returnChargeAmount", lineTotal)
 
     const netTotal = isReturn ? (lineTotal - returnChargeAmount) : (lineTotal + packing + shipping + courier);
     return Math.round(netTotal);

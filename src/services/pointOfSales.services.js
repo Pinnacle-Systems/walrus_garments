@@ -177,10 +177,14 @@ async function get(req) {
         Party: searchCustomerName ? { contactPersonNumber: { contains: searchCustomerName } } : undefined,
         customerId: req.query.customerId ? parseInt(req.query.customerId) : undefined,
         isReturn: reportsTransactionType === "RETURN" ? true : reportsTransactionType === "SALE" ? false : undefined,
-        netAmount: billAmount ? (billAmount) : undefined,
+        ...(billAmount != undefined && billAmount != null && billAmount !== "" && {
+            OR: billAmount == 0
+                ? [{ netAmount: null }, { netAmount: "0" }]
+                : [{ netAmount: String(billAmount) }],
+        }),
+
     };
 
-    // 1. Optimized Filter: Move approval status check to the DB layer
     if (approvalStatus) {
         if (userRole === "ADMIN" || userRole === "DEFAULT ADMIN") {
             where.approvalStatus = "PENDING";

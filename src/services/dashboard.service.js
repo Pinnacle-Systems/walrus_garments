@@ -134,7 +134,7 @@ async function getSalesData(where, from, to) {
     const bulkReturnsTotal = bulkReturnsBreakup.reduce((acc, curr) => acc + Math.abs(parseFloat(curr.amount || 0)), 0);
 
 
-    console.log(bulkSalesBreakup, "bulkSalesBreakup")
+    // console.log(bulkSalesBreakup, "bulkSalesBreakup")
 
 
 
@@ -372,7 +372,7 @@ async function getExpenseData(where, from, to) {
         }
     });
 
-    console.log("raw", raw);
+    // console.log("raw", raw);
 
     const breakup = raw.map(e => ({
         id: e.Expense?.docId || String(e.id),
@@ -501,7 +501,7 @@ async function getSalesAnalytics(query) {
             queryStartDate = new Date(Date.UTC(startYr, 3, 1, 0, 0, 0, 0));     // April 1st UTC
             queryEndDate = new Date(Date.UTC(endYr, 2, 31, 23, 59, 59, 999));   // March 31st UTC
         }
-        console.log(queryStartDate, queryEndDate, "queryStartDate, queryEndDate")
+        // console.log(queryStartDate, queryEndDate, "queryStartDate, queryEndDate")
 
         // --- QUERY DATA ---
         const posSalesRaw = await prisma.pos.findMany({
