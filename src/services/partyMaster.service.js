@@ -731,7 +731,7 @@ export async function getPartyCreditBalance(id) {
     // ).reduce((acc, l) => acc + (l.amount || 0), 0);
 
     const creditValue = (party.Ledger || []).filter(l =>
-        (l.EntryType === 'Customer_Payment' && l.creditOrDebit === 'Credit')
+        (l.EntryType === 'Customer_Payment' && l.creditOrDebit === 'Credit') || (l.EntryType === 'Credit_Note' && l.creditOrDebit === 'Credit')
     ).reduce((acc, l) => acc + (l.amount || 0), 0);
 
     const DebitValue = (party.Ledger || []).filter(l =>
