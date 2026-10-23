@@ -687,7 +687,7 @@ async function getPartyOutstandingBalance(id) {
     // 🔹 Consolidated Delivery Value from Ledger (Now includes Sales Delivery, Returns, and POS)
     const totalDeliveryValue = ledgerDebit - ledgerCredit;
 
-    console.log(party.Payment, "party")
+    // console.log(party.Payment, "party")
 
     const totalReceiptAmount = (party.Payment || []).filter(pay => pay.paymentFlow !== "Payout").reduce((acc, pay) => acc + parseFloat(pay.paidAmount || 0), 0);
     const totalPayoutAmount = (party.Payment || []).filter(pay => pay.paymentFlow === "Payout").reduce((acc, pay) => acc + parseFloat(pay.paidAmount || 0), 0);
@@ -721,7 +721,7 @@ export async function getPartyCreditBalance(id) {
     });
 
 
-    console.log(party, 'party')
+    // console.log(party, 'party')
 
     if (!party) return NoRecordFound("party");
 
@@ -751,6 +751,14 @@ export async function getPartyCreditBalance(id) {
     console.log(finalValue, Credit_Adjustment, 'creditValue')
 
     const creditAdjustmentAmount = finalValue - (Credit_Adjustment + Debit_Adjustment);
+
+    console.log({
+        creditValue,
+        DebitValue,
+        Credit_Adjustment,
+        Debit_Adjustment,
+        creditAdjustmentAmount
+    }, "credit balance")
 
     return {
         statusCode: 0,
