@@ -16,6 +16,7 @@ const SearchableTableCellSelect = forwardRef(({
   addNewModalWidth = "w-[40%] h-[45%]",
   movedToNextSaveNewRef,
   handlers,
+  className = "",
 }, ref) => {
   const containerRef = useRef(null);
   const inputRef = useRef(null);
@@ -151,7 +152,7 @@ const SearchableTableCellSelect = forwardRef(({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full"
+      className={`relative h-full w-full ${className}`}
       onBlur={handleBlur}
     >
       <input
@@ -322,10 +323,10 @@ const SearchableTableCellSelect = forwardRef(({
                 key={option.value}
                 type="button"
                 className={`block w-full border-b border-slate-100 px-2 py-1 text-left text-[11px] transition-colors ${index === highlightedIndex
-                    ? "bg-blue-600 text-white"
-                    : String(option.value) === String(value)
-                      ? "bg-blue-50 font-medium text-blue-600"
-                      : "text-slate-700 hover:bg-slate-50"
+                  ? "bg-blue-600 text-white"
+                  : String(option.value) === String(value)
+                    ? "bg-blue-50 font-medium text-blue-600"
+                    : "text-slate-700 hover:bg-slate-50"
                   }`}
                 onMouseDown={(event) => {
                   event.preventDefault();

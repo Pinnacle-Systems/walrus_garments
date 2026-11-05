@@ -13,6 +13,7 @@ const ReceiptViewerModal = ({
     Swal
 }) => {
     if (!printData) return null;
+    console.log(printData, "printData")
 
     const isSummarySlip = !!printData.isDeliveryReceipt;
     const PrintComponent = isSummarySlip ? PosDeliveryReceiptPrint : PosMultiCopyPrint;
@@ -76,7 +77,8 @@ const ReceiptViewerModal = ({
                     timer: 3000,
                     showConfirmButton: false
                 });
-            } catch (fallbackError) {/* console.log removed */
+            } catch (fallbackError) {
+                /* console.log removed */
                 Swal.fire({ title: "Print Error", text: fallbackError.message || "Failed to print.", icon: "error" });
             }
         }

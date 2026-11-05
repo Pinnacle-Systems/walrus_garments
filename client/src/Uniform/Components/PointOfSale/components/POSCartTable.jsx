@@ -23,8 +23,9 @@ const POSCartTable = ({
 }) => {
 
     const isPendingApproval = approvalStatus === 'PENDING';
-    const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval) && currentBilStatus === 'PAID';
-    const [hoveredOfferName, setHoveredOfferName] = React.useState(null);/* console.log removed */
+    const isReportOnly = selectedReportSaleId && !(isAdmin && isPendingApproval) && (currentBilStatus === 'PAID' || currentBilStatus === 'UNPAID');
+    const [hoveredOfferName, setHoveredOfferName] = React.useState(null);
+    /* console.log removed */
     return (
         <main className="hidden md:flex flex-1 min-w-0 bg-white flex-col relative">
             {/* Barcode Search Loader Overlay */}

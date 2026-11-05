@@ -1,24 +1,33 @@
-import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font, Svg, Path } from '@react-pdf/renderer';
-import { createTw } from 'react-pdf-tailwind';
-import moment from 'moment';
-import BarcodeGenerator from '../BarcodeGenerator';
-import { useMemo } from 'react';
-import { qr } from 'mathjs';
+import React from "react";
+import {
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
+  Font,
+  Svg,
+  Path,
+} from "@react-pdf/renderer";
+import { createTw } from "react-pdf-tailwind";
+import moment from "moment";
+import BarcodeGenerator from "../BarcodeGenerator";
+import { useMemo } from "react";
+import { qr } from "mathjs";
 
 const tw = createTw({
   theme: {
     extend: {
       colors: {
-        primary: '#000000',
+        primary: "#000000",
       },
       fontSize: {
-        'xxs': '9pt',
-        'xs': '11pt',
-        'sm': '12pt',
-        'base': '13.5pt',
-        'lg': '15.5pt',
-      }
+        xxs: "9pt",
+        xs: "11pt",
+        sm: "12pt",
+        base: "13.5pt",
+        lg: "15.5pt",
+      },
     },
   },
 });
@@ -26,8 +35,8 @@ const tw = createTw({
 const styles = StyleSheet.create({
   dottedLine: {
     borderBottomWidth: 1,
-    borderBottomColor: '#000000',
-    borderBottomStyle: 'dashed',
+    borderBottomColor: "#000000",
+    borderBottomStyle: "dashed",
     marginVertical: 4,
   },
 });
@@ -40,24 +49,59 @@ const PosMultiCopyPrint = ({
   customerData,
   items = [],
   payments = { cash: 0, upi: 0, card: 0, online: 0 },
-  summary = { subtotal: 0, tax: 0, discount: 0, total: 0, received: 0, balance: 0 },
+  summary = {
+    subtotal: 0,
+    tax: 0,
+    discount: 0,
+    total: 0,
+    received: 0,
+    balance: 0,
+  },
   returnReferences = [],
   showSummarySlip,
-  additionalCharges
+  additionalCharges,
 }) => {
+  console.log(returnReferences, "items in ReceiptViewer");
 
+  const totalQty = items
+    .filter((i) => !i.isReturn)
+    ?.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
+  const returnTotal = items.reduce(
+    (acc, item) =>
+      item.isReturn
+        ? acc +
+        parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)
+        : acc,
+    0,
+  );
+  const purchaseTotal = items.reduce(
+    (acc, item) =>
+      !item.isReturn
+        ? acc +
+        parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)
+        : acc,
+    0,
+  );
+  const totalOfferReversal = items.reduce(
+    (acc, item) => acc + (parseFloat(item.offerReversal) || 0),
+    0,
+  );
+  const totalOfferReapplied = items.reduce(
+    (acc, item) => acc + (parseFloat(item.offerReapplied) || 0),
+    0,
+  );
 
-  console.log(items, "items in ReceiptViewer")
+  const overallPurchaseTotal =
+    purchaseTotal -
+    totalOfferReversal +
+    totalOfferReapplied +
+    additionalCharges;
 
-  const totalQty = items.filter((i) => !i.isReturn)?.reduce((acc, item) => acc + parseFloat(item.qty || 0), 0);
-  const returnTotal = items.reduce((acc, item) => item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
-  const purchaseTotal = items.reduce((acc, item) => !item.isReturn ? acc + (parseFloat(item.price || item.rate || 0) * parseFloat(item.qty || 0)) : acc, 0);
-  const totalOfferReversal = items.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
-  const totalOfferReapplied = items.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
-
-  const overallPurchaseTotal = purchaseTotal - totalOfferReversal + totalOfferReapplied + additionalCharges
-
-  const overallPurchaseTotalNew = (purchaseTotal + totalOfferReversal + additionalCharges) - (totalOfferReapplied + returnTotal)
+  const overallPurchaseTotalNew =
+    purchaseTotal +
+    totalOfferReversal +
+    additionalCharges -
+    (totalOfferReapplied + returnTotal);
 
   // console.log({
   //   purchaseTotal,
@@ -71,7 +115,7 @@ const PosMultiCopyPrint = ({
       if (!docId) return null;
       const qrcode = qr(docId);
       const cells = qrcode.modules;
-      let pathData = '';
+      let pathData = "";
       cells.forEach((row, rowIndex) => {
         row.forEach((cell, cellIndex) => {
           if (cell) {
@@ -85,91 +129,127 @@ const PosMultiCopyPrint = ({
     }
   }, [docId]);
 
-
   function formatDateTime(date) {
     const d = date ? new Date(date) : new Date();
-    const pad = (n) => String(n).padStart(2, '0');
+    const pad = (n) => String(n).padStart(2, "0");
 
     const hours = d.getHours();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const ampm = hours >= 12 ? "PM" : "AM";
     const formattedHours = hours % 12 || 12;
 
     return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(formattedHours)}:${pad(d.getMinutes())} ${ampm}`;
   }
 
-
   const BillPage = () => (
-    <Page size={[226, 1200]} style={tw('p-1 bg-white flex flex-col')}>
-
-      <View style={tw('flex flex-col items-center mb-2')}>
-        <Text style={tw('font-bold text-base')}>{branchData?.branchName || "WALRUS"}</Text>
-        <Text style={tw('text-xxs text-center w-full px-2')}>
+    <Page size={[226, 1200]} style={tw("p-1 bg-white flex flex-col")}>
+      <View style={tw("flex flex-col items-center mb-2")}>
+        <Text style={tw("font-bold text-base")}>
+          {branchData?.branchName || "WALRUS"}
+        </Text>
+        <Text style={tw("text-xxs text-center w-full px-2")}>
           {branchData?.address || ""}
         </Text>
-        <Text style={tw('text-xxs')}>Ph No.: {branchData?.phone || branchData?.contactMobile?.toString() || branchData?.contactPersonNumber || "9159477722"}</Text>
-        {branchData?.gstNo && <Text style={tw('text-xxs font-bold')}>GSTIN: {branchData.gstNo}</Text>}
+        <Text style={tw("text-xxs")}>
+          Ph No.:{" "}
+          {branchData?.phone ||
+            branchData?.contactMobile?.toString() ||
+            branchData?.contactPersonNumber ||
+            "9159477722"}
+        </Text>
+        {branchData?.gstNo && (
+          <Text style={tw("text-xxs font-bold")}>
+            GSTIN: {branchData.gstNo}
+          </Text>
+        )}
       </View>
 
-      <View style={tw('flex flex-col items-center my-1')}>
-        <Text style={tw('font-bold text-xs underline')}>
+      <View style={tw("flex flex-col items-center my-1")}>
+        <Text style={tw("font-bold text-xs underline")}>
           {/* {dataObj?.isExchange ? 'ISSUE CREDIT AMOUNT :' : 'TAX INVOICE'} */}
-          {'TAX INVOICE'}
-
+          {"TAX INVOICE"}
         </Text>
       </View>
 
       {/* Transaction Info */}
-      <View style={tw('flex flex-row justify-between mb-1 py-1 border-t border-b border-gray-200')}>
-        <View style={tw('flex flex-col w-1/2')}>
-          <Text style={tw('text-xxs font-bold')}>{customerData?.name?.toUpperCase() || "WALK-IN CUSTOMER"}</Text>
-          {customerData?.contactPersonNumber && <Text style={tw('text-xxs font-bold')}>{customerData.contactPersonNumber.toString()}</Text>}
+      <View
+        style={tw(
+          "flex flex-row justify-between mb-1 py-1 border-t border-b border-gray-200",
+        )}
+      >
+        <View style={tw("flex flex-col w-1/2")}>
+          <Text style={tw("text-xxs font-bold")}>
+            {customerData?.name?.toUpperCase() || "WALK-IN CUSTOMER"}
+          </Text>
+          {customerData?.contactPersonNumber && (
+            <Text style={tw("text-xxs font-bold")}>
+              {customerData.contactPersonNumber.toString()}
+            </Text>
+          )}
         </View>
 
-        <View style={tw('flex flex-col items-end w-1/2')}>
-          <Text style={tw('text-xxs')}># {docId}</Text>
-          {/* {returnReferences?.length > 0 && (
-            <Text style={tw('text-xxs font-bold italic')}>Against: {returnReferences.join(', ')}</Text>
-          )} */}
-          {/* <Text style={tw('text-xxs')}>Date: {moment(date).format('DD/MM/YYYY')}</Text> */}
-          <Text style={tw('text-xxs font-bold italic text-center')}>Date : {formatDateTime(date)}</Text>
-
+        <View style={tw("flex flex-col items-end w-3/2")}>
+          <Text style={tw("text-xxs")}># {docId}</Text>
+          <Text style={tw("text-xxs font-bold  text-center")}>
+            Date : {formatDateTime(date)}
+          </Text>
+          <View style={tw("flex flex-row justify-between mb-1 py-1 ")}>
+            {returnReferences?.length > 0 && (
+              <Text style={tw("text-xxs font-bold ")}>
+                {" "}
+                Against : {returnReferences?.[0]}
+              </Text>
+            )}
+          </View>
         </View>
+
       </View>
+
 
       {/* Items Table Header */}
       <View style={styles.dottedLine} />
-      <View style={tw('flex flex-row justify-between py-1')}>
-        <Text style={tw('text-xxs font-bold w-[50%]')}>Item</Text>
-        <Text style={tw('text-xxs font-bold w-[10%] text-right')}>Qty</Text>
-        <Text style={tw('text-xxs font-bold w-[20%] text-right')}>Rate</Text>
-        <Text style={tw('text-xxs font-bold w-[20%] text-right')}>Amt</Text>
+      <View style={tw("flex flex-row justify-between py-1")}>
+        <Text style={tw("text-xxs font-bold w-[50%]")}>Item</Text>
+        <Text style={tw("text-xxs font-bold w-[10%] text-right")}>Qty</Text>
+        <Text style={tw("text-xxs font-bold w-[20%] text-right")}>Rate</Text>
+        <Text style={tw("text-xxs font-bold w-[20%] text-right")}>Amt</Text>
       </View>
       <View style={styles.dottedLine} />
 
       {/* Items Rows */}
       {items.map((item, index) => {
-        const rowTotal = parseFloat(item.qty || 0) * parseFloat(item.price || item.rate || 0);
+        const rowTotal =
+          parseFloat(item.qty || 0) * parseFloat(item.price || item.rate || 0);
         const hasSize = item?.Size?.name || item?.sizeName;
         const hasColor = item?.Color?.name || item?.colorName;
 
         return (
-          <View key={index} style={tw('flex flex-col mb-2')}>
-            <View style={tw('flex flex-row justify-between')}>
-              <View style={tw('w-[50%] flex flex-col')}>
-                <Text style={tw('text-xxs font-bold')}>
+          <View key={index} style={tw("flex flex-col mb-2")}>
+            <View style={tw("flex flex-row justify-between")}>
+              <View style={tw("w-[50%] flex flex-col")}>
+                <Text style={tw("text-xxs font-bold")}>
                   {item?.Item?.name || item?.itemName}
-                  {item?.isReturn && <Text style={tw('text-red-600')}> [RETURN]</Text>}
-                  {(item?.isExchangeItem) && <Text style={tw('text-blue-600')}> [EXCHANGE]</Text>}
+                  {item?.isReturn && (
+                    <Text style={tw("text-red-600")}> [RETURN]</Text>
+                  )}
+                  {item?.isExchangeItem && (
+                    <Text style={tw("text-blue-600")}> [EXCHANGE]</Text>
+                  )}
                 </Text>
                 {(hasSize || hasColor) && (
-                  <Text style={tw('text-[7.5pt] text-gray-600')}>
-                    {[hasSize, hasColor].filter(Boolean).join(' | ')}
+                  <Text style={tw("text-[7.5pt] text-gray-600")}>
+                    {[hasSize, hasColor].filter(Boolean).join(" | ")}
                   </Text>
                 )}
               </View>
-              <Text style={tw('text-xxs w-[10%] text-right font-bold')}>{parseFloat(item.qty || 0)}</Text>
-              <Text style={tw('text-xxs w-[20%] text-right')}>{parseFloat(item.price || item.rate || 0).toFixed(0)}</Text>
-              <Text style={tw('text-xxs w-[20%] text-right font-bold')}>{rowTotal.toFixed(0)}</Text>
+              <Text style={tw("text-xxs w-[10%] text-right font-bold")}>
+                {parseFloat(item.qty || 0)}
+              </Text>
+              <Text style={tw("text-xxs w-[20%] text-right")}>
+                {parseFloat(item.price || item.rate || 0).toFixed(0)}
+              </Text>
+              <Text style={tw("text-xxs w-[20%] text-right font-bold")}>
+                {rowTotal.toFixed(0)}
+              </Text>
             </View>
           </View>
         );
@@ -178,179 +258,207 @@ const PosMultiCopyPrint = ({
       <View style={styles.dottedLine} />
 
       {/* Summary Table */}
-      <View style={tw('flex flex-col py-1 gap-1')}>
-
-
-        <View style={tw('flex flex-row justify-between py-1')}>
-
-          <Text style={tw('text-xs font-bold')}>
-
-            {dataObj?.availableCredit && returnTotal < purchaseTotal - totalOfferReversal + totalOfferReapplied ? "Credit Apllied" : ""}
+      <View style={tw("flex flex-col py-1 gap-1")}>
+        <View style={tw("flex flex-row justify-between py-1")}>
+          <Text style={tw("text-xs font-bold")}>
+            {dataObj?.availableCredit &&
+              returnTotal <
+              purchaseTotal - totalOfferReversal + totalOfferReapplied
+              ? "Credit Apllied"
+              : ""}
           </Text>
 
-
-          <Text style={tw('text-sm font-black')}>
-
-            {dataObj?.availableCredit && returnTotal < purchaseTotal - totalOfferReversal + totalOfferReapplied ? `Rs.${Math.min(Math.max(0, overallPurchaseTotal), dataObj?.availableCredit)}` : ""}
+          <Text style={tw("text-sm font-black")}>
+            {dataObj?.availableCredit &&
+              returnTotal <
+              purchaseTotal - totalOfferReversal + totalOfferReapplied
+              ? `Rs.${Math.min(Math.max(0, overallPurchaseTotal), dataObj?.availableCredit)}`
+              : ""}
           </Text>
         </View>
-        <View style={tw('flex flex-row justify-between')}>
-          <Text style={tw('text-xxs font-bold')}>Qty {totalQty} </Text>
+        <View style={tw("flex flex-row justify-between")}>
+          <Text style={tw("text-xxs font-bold")}>Qty {totalQty} </Text>
         </View>
         {summary.subtotal > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Subtotal (Excl. Tax) :</Text>
-            <Text style={tw('text-xxs')}>{summary.subtotal.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>Subtotal (Excl. Tax) :</Text>
+            <Text style={tw("text-xxs")}>{summary.subtotal.toFixed(2)}</Text>
           </View>
         )}
 
         {summary.tax > 0 && (
           <>
-            <View style={tw('flex flex-row justify-between')}>
-              <Text style={tw('text-xxs')}>Tax Amount :</Text>
-              <Text style={tw('text-xxs')}>{summary.tax.toFixed(2)}</Text>
+            <View style={tw("flex flex-row justify-between")}>
+              <Text style={tw("text-xxs")}>Tax Amount :</Text>
+              <Text style={tw("text-xxs")}>{summary.tax.toFixed(2)}</Text>
             </View>
           </>
         )}
 
         {summary.discount > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Discount :</Text>
-            <Text style={tw('text-xxs text-red-500')}>-{summary.discount.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>Discount :</Text>
+            <Text style={tw("text-xxs text-red-500")}>
+              -{summary.discount.toFixed(2)}
+            </Text>
           </View>
         )}
 
         {returnTotal > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Return Amount :</Text>
-            <Text style={tw('text-xxs text-red-500')}>{returnTotal.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>Return Amount :</Text>
+            <Text style={tw("text-xxs text-red-500")}>
+              {returnTotal.toFixed(2)}
+            </Text>
           </View>
         )}
-        {(totalOfferReversal && totalOfferReapplied) && totalOfferReversal !== totalOfferReapplied ?
+        {totalOfferReversal &&
+          totalOfferReapplied &&
+          totalOfferReversal !== totalOfferReapplied ? (
           <>
-            <View style={tw('flex flex-row justify-between')}>
-              <Text style={tw('text-xxs')}>Offer Reversal :</Text>
-              <Text style={tw('text-xxs')}>{totalOfferReversal.toFixed(2)}</Text>
+            <View style={tw("flex flex-row justify-between")}>
+              <Text style={tw("text-xxs")}>Offer Reversal :</Text>
+              <Text style={tw("text-xxs")}>
+                {totalOfferReversal.toFixed(2)}
+              </Text>
             </View>
-            <View style={tw('flex flex-row justify-between')}>
-              <Text style={tw('text-xxs')}>Offer Restored :</Text>
-              <Text style={tw('text-xxs text-green-600')}>-{totalOfferReapplied.toFixed(2)}</Text>
+            <View style={tw("flex flex-row justify-between")}>
+              <Text style={tw("text-xxs")}>Offer Restored :</Text>
+              <Text style={tw("text-xxs text-green-600")}>
+                -{totalOfferReapplied.toFixed(2)}
+              </Text>
             </View>
           </>
-          : <></>}
-        {totalOfferReversal && !totalOfferReapplied ?
+        ) : (
+          <></>
+        )}
+        {totalOfferReversal && !totalOfferReapplied ? (
           <>
-            <View style={tw('flex flex-row justify-between')}>
-              <Text style={tw('text-xxs')}>Offer Reversal :</Text>
-              <Text style={tw('text-xxs')}>{totalOfferReversal.toFixed(2)}</Text>
+            <View style={tw("flex flex-row justify-between")}>
+              <Text style={tw("text-xxs")}>Offer Reversal :</Text>
+              <Text style={tw("text-xxs")}>
+                {totalOfferReversal.toFixed(2)}
+              </Text>
             </View>
           </>
-          : <></>}
-        {totalOfferReapplied && !totalOfferReversal ?
+        ) : (
+          <></>
+        )}
+        {totalOfferReapplied && !totalOfferReversal ? (
           <>
-            <View style={tw('flex flex-row justify-between')}>
-              <Text style={tw('text-xxs')}>Offer Restored :</Text>
-              <Text style={tw('text-xxs text-green-600')}>-{totalOfferReapplied.toFixed(2)}</Text>
+            <View style={tw("flex flex-row justify-between")}>
+              <Text style={tw("text-xxs")}>Offer Restored :</Text>
+              <Text style={tw("text-xxs text-green-600")}>
+                -{totalOfferReapplied.toFixed(2)}
+              </Text>
             </View>
           </>
-          : <></>}
+        ) : (
+          <></>
+        )}
         {returnTotal > 0 && purchaseTotal > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>New Purchase :</Text>
-            <Text style={tw('text-xxs')}>{purchaseTotal.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>New Purchase :</Text>
+            <Text style={tw("text-xxs")}>{purchaseTotal.toFixed(2)}</Text>
           </View>
         )}
         {dataObj?.courierCharges > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Courier Charges :</Text>
-            <Text style={tw('text-xxs ')}>{dataObj?.courierCharges.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>Courier Charges :</Text>
+            <Text style={tw("text-xxs ")}>
+              {dataObj?.courierCharges.toFixed(2)}
+            </Text>
           </View>
         )}
         {dataObj?.packingCharges > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Packing Charges :</Text>
-            <Text style={tw('text-xxs ')}>{dataObj?.packingCharges.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>Packing Charges :</Text>
+            <Text style={tw("text-xxs ")}>
+              {dataObj?.packingCharges.toFixed(2)}
+            </Text>
           </View>
         )}
         {dataObj?.shippingCharges > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Shipping charges :</Text>
-            <Text style={tw('text-xxs ')}>{dataObj?.shippingCharges.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>Shipping charges :</Text>
+            <Text style={tw("text-xxs ")}>
+              {dataObj?.shippingCharges.toFixed(2)}
+            </Text>
           </View>
         )}
         {/* console.log removed */}
 
-
-        <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
-
-          <Text style={tw('text-sm font-black')}>
-
+        <View
+          style={tw(
+            "flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1",
+          )}
+        >
+          <Text style={tw("text-sm font-black")}>
             {returnTotal > overallPurchaseTotal
               ? "Store Credit Issued"
-              : returnTotal == overallPurchaseTotal ? "Grant Total" : returnTotal < overallPurchaseTotal
-                ? dataObj?.availableCredit < overallPurchaseTotal ? "Total Payable" : "Grant Total"
-                : ""
-            }
+              : returnTotal == overallPurchaseTotal
+                ? "Grant Total"
+                : returnTotal < overallPurchaseTotal
+                  ? dataObj?.availableCredit < overallPurchaseTotal
+                    ? "Total Payable"
+                    : "Grant Total"
+                  : ""}
           </Text>
 
-
-          <Text style={tw('text-sm font-black')}>Rs.
-
-            {parseFloat(summary.total) > 0 ? parseFloat(summary.total).toFixed(0) :
-              (
-                (overallPurchaseTotalNew).toFixed(2) > 0 ?
-                  (overallPurchaseTotalNew).toFixed(2) :
-                  (Math.abs((purchaseTotal + additionalCharges) - returnTotal).toFixed(2))
-              )}
+          <Text style={tw("text-sm font-black")}>
+            Rs.
+            {parseFloat(summary.total) > 0
+              ? parseFloat(summary.total).toFixed(0)
+              : overallPurchaseTotalNew.toFixed(2) > 0
+                ? overallPurchaseTotalNew.toFixed(2)
+                : Math.abs(
+                  purchaseTotal + additionalCharges - returnTotal,
+                ).toFixed(2)}
           </Text>
         </View>
-        <View style={tw('flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1')}>
-
+        <View
+          style={tw(
+            "flex flex-row justify-between py-1 border-t border-dotted border-gray-400 mt-1",
+          )}
+        >
           {returnTotal > overallPurchaseTotal && (
-            <Text style={tw('text-sm font-black')}>
-
-              Total Payable
-            </Text>
+            <Text style={tw("text-sm font-black")}>Total Payable</Text>
           )}
           {returnTotal > overallPurchaseTotal && (
-            <Text style={tw('text-sm font-black')}>
-              0.00
-            </Text>
+            <Text style={tw("text-sm font-black")}>0.00</Text>
           )}
-
-
-
         </View>
       </View>
-
 
       <View style={styles.dottedLine} />
 
       {/* Payment Logic Breakdown */}
-      <View style={tw('flex flex-col py-1 gap-1 bg-gray-50 p-1')}>
-        <Text style={tw('text-[7pt] font-black underline mb-1')}>PAYMENT BREAKDOWN</Text>
+      <View style={tw("flex flex-col py-1 gap-1 bg-gray-50 p-1")}>
+        <Text style={tw("text-[7pt] font-black underline mb-1")}>
+          PAYMENT BREAKDOWN
+        </Text>
         {payments.cash > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Cash Paid :</Text>
-            <Text style={tw('text-xxs')}>{payments.cash.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>Cash Paid :</Text>
+            <Text style={tw("text-xxs")}>{payments.cash.toFixed(2)}</Text>
           </View>
         )}
         {payments.upi > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>UPI / GPay :</Text>
-            <Text style={tw('text-xxs')}>{payments.upi.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>UPI / GPay :</Text>
+            <Text style={tw("text-xxs")}>{payments.upi.toFixed(2)}</Text>
           </View>
         )}
         {payments.card > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Card Paid :</Text>
-            <Text style={tw('text-xxs')}>{payments.card.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>Card Paid :</Text>
+            <Text style={tw("text-xxs")}>{payments.card.toFixed(2)}</Text>
           </View>
         )}
         {payments.online > 0 && (
-          <View style={tw('flex flex-row justify-between')}>
-            <Text style={tw('text-xxs')}>Online Paid :</Text>
-            <Text style={tw('text-xxs')}>{payments.online.toFixed(2)}</Text>
+          <View style={tw("flex flex-row justify-between")}>
+            <Text style={tw("text-xxs")}>Online Paid :</Text>
+            <Text style={tw("text-xxs")}>{payments.online.toFixed(2)}</Text>
           </View>
         )}
       </View>
@@ -358,48 +466,63 @@ const PosMultiCopyPrint = ({
       <View style={styles.dottedLine} />
 
       {/* Footer */}
-      <View style={tw('flex flex-col items-center mt-2')}>
+      <View style={tw("flex flex-col items-center mt-2")}>
+        <Text style={tw("text-xxs mt-2 italic")}>
+          Strictly No Return/Exchange of Discounted items.
+        </Text>
+        <Text style={tw("text-xxs mt-2 italic")}>
+          One Day Exchange On Size Issues
+        </Text>
+        <Text style={tw("text-xxs mt-2 italic")}>No Exchange On Inners</Text>
 
-        <Text style={tw('text-xxs mt-2 italic')}>Strictly No Return/Exchange of Discounted items.</Text>
-        <Text style={tw('text-xxs mt-2 italic')}>One Day Exchange On Size Issues</Text>
-        <Text style={tw('text-xxs mt-2 italic')}>No Exchange On Inners</Text>
-
-        <Text style={tw('text-xxs font-bold')}>THANK YOU!</Text>
-        <Text style={tw('text-xxs')}>Visit Again</Text>
-
+        <Text style={tw("text-xxs font-bold")}>THANK YOU!</Text>
+        <Text style={tw("text-xxs")}>Visit Again</Text>
       </View>
 
-      <View style={tw('flex flex-col items-center mt-4 border-t border-gray-100 pt-2')}>
-        <Text style={tw('text-[5pt] text-gray-400')}>Printed via Walrus ERP POS System</Text>
+      <View
+        style={tw(
+          "flex flex-col items-center mt-4 border-t border-gray-100 pt-2",
+        )}
+      >
+        <Text style={tw("text-[5pt] text-gray-400")}>
+          Printed via Walrus ERP POS System
+        </Text>
       </View>
     </Page>
   );
 
   const SummarySlip = () => (
-    <Page size={[226, 1200]} style={tw('p-2 bg-white flex flex-col')}>
-      <View style={tw('border-2 border-black p-3 items-center w-full')}>
-        <Text style={tw('text-[10pt] font-bold mb-1')}>BILL SUMMARY SLIP</Text>
-        <View style={tw('w-full border-b border-black mb-2')} />
+    <Page size={[226, 1200]} style={tw("p-2 bg-white flex flex-col")}>
+      <View style={tw("border-2 border-black p-3 items-center w-full")}>
+        <Text style={tw("text-[10pt] font-bold mb-1")}>BILL SUMMARY SLIP</Text>
+        <View style={tw("w-full border-b border-black mb-2")} />
 
-        <View style={tw('w-full flex-row justify-between items-center mb-2')}>
-          <View style={tw('flex-col items-start')}>
-            <Text style={tw('text-[8pt] font-bold uppercase')}>Bill Number</Text>
-            <Text style={tw('text-lg font-black')}>{docId}</Text>
+        <View style={tw("w-full flex-row justify-between items-center mb-2")}>
+          <View style={tw("flex-col items-start")}>
+            <Text style={tw("text-[8pt] font-bold uppercase")}>
+              Bill Number
+            </Text>
+            <Text style={tw("text-lg font-black")}>{docId}</Text>
           </View>
           {qrCodePath && (
-            <View style={tw('flex-col items-end justify-center mr-1')}>
-              <Svg viewBox={`0 0 ${qrCodePath.size} ${qrCodePath.size}`} style={{ width: 40, height: 40 }}>
+            <View style={tw("flex-col items-end justify-center mr-1")}>
+              <Svg
+                viewBox={`0 0 ${qrCodePath.size} ${qrCodePath.size}`}
+                style={{ width: 40, height: 40 }}
+              >
                 <Path d={qrCodePath.pathData} fill="#000000" />
               </Svg>
             </View>
           )}
         </View>
 
-        <Text style={tw('text-[8pt] font-bold uppercase')}>Total Quantity</Text>
-        <Text style={tw('text-xl font-black')}>{totalQty}</Text>
+        <Text style={tw("text-[8pt] font-bold uppercase")}>Total Quantity</Text>
+        <Text style={tw("text-xl font-black")}>{totalQty}</Text>
 
-        <View style={tw('h-2')} />
-        <Text style={tw('text-[7pt] italic')}>{moment(date).format('DD/MM/YYYY HH:mm')}</Text>
+        <View style={tw("h-2")} />
+        <Text style={tw("text-[7pt] italic")}>
+          {moment(date).format("DD/MM/YYYY HH:mm")}
+        </Text>
       </View>
     </Page>
   );

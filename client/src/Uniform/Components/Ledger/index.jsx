@@ -29,7 +29,7 @@ const Ledger = () => {
     const [printModalOpen, setPrintModalOpen] = useState(false);
     const { data } = useGetPartyQuery({ params: { isPartyLedgerReport: true, partyId, startDate, endDate } }, { skip: !partyId || !startDate || !endDate })
 
-    const { data: customerList } = useGetPartyQuery({ params: { ...params } });
+    // const { data: customerList } = useGetPartyQuery({ params: { ...params } });
     const { branchId, finYearId } = getCommonParams()
     const { data: partyList } = useGetPartyQuery({ params: { ...params } });
 
@@ -37,26 +37,29 @@ const Ledger = () => {
     const { data: finYearData } = useGetFinYearByIdQuery(finYearId, { skip: !finYearId });
 
 
-    console.log(openTabs.tabs.find(i => i.name === "LEDGER"), "finYearData")
+    const ledgerTab = openTabs.tabs.find(i => i.name === "LEDGER");
+    const currentTabPreviewId = ledgerTab?.projectId;
+    const currentTabPreviewDate = ledgerTab?.date;
 
     const ledgerData = data?.data;
     const dispatch = useDispatch();
 
 
     useEffect(() => {
-        const currentTabPreviewId = openTabs.tabs.find(i => i.name === "LEDGER")?.projectId
-        const currentTabPreviewDate = openTabs.tabs.find(i => i.name === "LEDGER")?.date || new Date()
 
-        console.log(openTabs.tabs.find(i => i.name === "LEDGER"), "currentTabPreviewDate", currentTabPreviewId)
+
+
+
         if (!currentTabPreviewId) return
         setPartyId(currentTabPreviewId);
-        setStartDate(moment(currentTabPreviewDate).startOf('month').format("YYYY-MM-DD"))
-        setEndDate(moment(currentTabPreviewDate).format("YYYY-MM-DD"))
+        const dateToUse = currentTabPreviewDate || new Date();
+        setStartDate(moment(dateToUse).startOf('month').format("YYYY-MM-DD"))
+        setEndDate(moment(dateToUse).format("YYYY-MM-DD"))
         dispatch(push({
             name: "LEDGER",
-            previewId: null
+            projectId: null
         }))
-    }, [openTabs, dispatch])
+    }, [currentTabPreviewId, currentTabPreviewDate, dispatch])
     console.log(ledgerData, "ledgerData")
     return (
         <>

@@ -183,7 +183,7 @@ const POSHeader = ({
                     )}
                     <input
                         ref={scannerRef}
-                        disabled={(isBarcodeLoading && searchMode === 'BARCODE') || (currentBilStatus == "PAID")}
+                        disabled={(isBarcodeLoading && searchMode === 'BARCODE') || (currentBilStatus == "PAID") || (currentBilStatus == "UNPAID")}
                         // disabled={(isBarcodeLoading && searchMode === 'BARCODE') || selectedReportSaleId}
 
 

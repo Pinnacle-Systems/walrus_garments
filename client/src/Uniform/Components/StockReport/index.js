@@ -21,6 +21,7 @@ import { useGetItemMasterQuery } from "../../../redux/uniformService/ItemMasterS
 import { useGetSizeMasterQuery } from "../../../redux/uniformService/SizeMasterService";
 import { useGetColorMasterQuery } from "../../../redux/uniformService/ColorMasterService";
 import { Plus } from 'lucide-react';
+import SearchableTableCellSelect from '../ReusableComponents/SearchableTableCellSelect';
 
 const StockReport = () => {
     const [poType, setPoType] = useState("")
@@ -85,9 +86,20 @@ const StockReport = () => {
         sizeId,
         colorId
     })
+    const itemOptions = (itemList?.data || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
 
+    const sizeOptions = (sizeList?.data || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
 
-
+    const colorOptions = (colorList?.data || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
     return (
         <>
             <Modal isOpen={parameter} onClose={() => {
@@ -114,33 +126,68 @@ const StockReport = () => {
                             </button>
                         </div>
                     </div>
-                    <div className='flex justify-center   flex-col text-center bg-gray-200 rounded-b-md mb-3 sticky top-0 '>
-                        <div className='grid grid-cols-8 gap-4 p-2'>
+                    <div className='flex justify-center   flex-col text-center bg-gray-200 rounded-b-md mb-3 sticky top-0 z-20'>
+                        <div className='grid grid-cols-8 gap-4 p-2 bg-white'>
 
-                            <DropdownInputSearch
+                            {/* <DropdownInputSearch
                                 name="Item"
                                 options={dropDownListObject(itemList?.data, "name", "id")}
                                 value={itemId}
                                 setValue={setItemId}
                                 placeholder="Select Item"
                                 className="col-span-2"
-                            />
+                            /> */}
+                            <div className="col-span-2 text-left">
+                                <label className="block text-xs font-bold text-center text-gray-600 mb-1">Item</label>
+                                <div className="relative h-[30px] border border-gray-300 rounded-md bg-white px-2 flex items-center shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+                                    <SearchableTableCellSelect
+                                        value={itemId}
+                                        options={itemOptions}
+                                        onChange={(nextValue) => setItemId(nextValue)}
+                                        placeholder="Select Item"
+                                    />
+                                </div>
+                            </div>
 
-                            <DropdownInputSearch
+                            {/* <DropdownInputSearch
                                 name="Size"
                                 options={dropDownListObject(sizeList?.data, "name", "id")}
                                 value={sizeId}
                                 setValue={setSizeId}
                                 placeholder="Select Size"
-                            />
+                            /> */}
 
-                            <DropdownInputSearch
+                            <div className="col-span-1 text-left">
+                                <label className="block text-xs font-bold text-center text-gray-600 mb-1">Size</label>
+                                <div className="relative h-[30px] border border-gray-300 rounded-md bg-white px-2 flex items-center shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+                                    <SearchableTableCellSelect
+                                        value={sizeId}
+                                        options={sizeOptions}
+                                        onChange={(nextValue) => setSizeId(nextValue)}
+                                        placeholder="Select Color"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* <DropdownInputSearch
                                 name="Color"
                                 options={dropDownListObject(colorList?.data, "name", "id")}
                                 value={colorId}
                                 setValue={setColorId}
                                 placeholder="Select Color"
-                            />
+                            /> */}
+
+                            <div className="col-span-1 text-left">
+                                <label className="block text-xs font-bold text-center text-gray-600 mb-1">Color</label>
+                                <div className="relative h-[30px] border border-gray-300 rounded-md bg-white px-2 flex items-center shadow-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+                                    <SearchableTableCellSelect
+                                        value={colorId}
+                                        options={colorOptions}
+                                        onChange={(nextValue) => setColorId(nextValue)}
+                                        placeholder="Select Color"
+                                    />
+                                </div>
+                            </div>
                             {/* <DropdownInput name="Location"
                                 options={branchList ? (dropDownListObject(branchList.data, "branchName", "id")) : []}
                                 value={localLocationId}
@@ -223,7 +270,7 @@ const StockReport = () => {
 
 
                                 <table className="min-w-[1250px] border-collapse table-fixed">
-                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-10 font-bold shadow-sm">
+                                    <thead className="bg-gray-200 text-gray-800 sticky top-0 z-0 font-bold shadow-sm">
 
                                         <tr>
 

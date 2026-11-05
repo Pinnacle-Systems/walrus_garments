@@ -125,6 +125,7 @@ async function get(req) {
 
     if (isPaymentOutstanding === true || isPaymentOutstanding === "true") {
         data = mapPaymentOutstandingParties(data);
+
     }
 
     if (isRetunBillable == "true" || isRetunBillable == true) {
@@ -150,6 +151,11 @@ async function get(req) {
 
         };
     });
+
+    if (isPaymentOutstanding === true || isPaymentOutstanding === "true") {
+        data = data?.filter((i) => i.outstandingBalance !== 0)
+
+    }
 
     return { statusCode: 0, data };
 }

@@ -320,7 +320,6 @@ const ReturnExchangeModal = ({
                                         </thead>
                                         <tbody>
                                             {selectedBill.PosItems?.filter(item => {
-                                                if (item.retunBillId) return false;
                                                 const itemNameStr = (item.item_name || item?.Item?.name || "").toLowerCase();
                                                 const barcodeStr = (item.barcode || "").toLowerCase();
                                                 const sizeStr = (item.size || item.Size?.name || "").toLowerCase();
@@ -333,23 +332,55 @@ const ReturnExchangeModal = ({
                                                     colorStr.includes(searchColor.toLowerCase()) &&
                                                     uomStr.includes(searchUom.toLowerCase());
                                             }).map((item, idx) => {
-                                                const isSelected = selectedItemIds.includes(item.id);
+                                                const isReturnItem = Boolean(item.isReturn);
                                                 const availableQty = parseFloat(item.qty || 0) - parseFloat(item.returnedQty || 0);
+                                                const isSelectable = !isReturnItem && availableQty > 0;
+                                                const isSelected = selectedItemIds.includes(item.id);
 
                                                 return (
                                                     <tr
                                                         key={item.id}
-                                                        onClick={() => availableQty > 0 && toggleItem(item.id)}
-                                                        className={`border-b border-slate-100 hover:bg-indigo-50/30 transition-colors cursor-pointer ${isSelected ? 'bg-indigo-50/50' : ''} ${availableQty <= 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}`}
+                                                        onClick={() => isSelectable && toggleItem(item.id)}
+                                                        className={`border-b border-slate-100 transition-colors ${!isSelectable
+                                                            ? 'opacity-60 cursor-not-allowed bg-slate-50/70 select-none'
+                                                            : isSelected
+                                                                ? 'bg-indigo-50/50 cursor-pointer hover:bg-indigo-50/70'
+                                                                : 'hover:bg-indigo-50/30 cursor-pointer'
+                                                            }`}
                                                     >
                                                         <td className="p-2 border-r border-slate-200 text-center">
-                                                            {isSelected ? <CheckSquare size={16} className="text-indigo-600 mx-auto" /> : <Square size={16} className="text-slate-500 mx-auto" />}
+                                                            {isSelectable ? (
+                                                                isSelected ? (
+                                                                    <CheckSquare size={16} className="text-indigo-600 mx-auto" />
+                                                                ) : (
+                                                                    <Square size={16} className="text-slate-500 mx-auto" />
+                                                                )
+                                                            ) : (
+                                                                <Square size={16} className="text-slate-300 mx-auto opacity-50 cursor-not-allowed" />
+                                                            )}
                                                         </td>
                                                         <td className="p-2 border-r border-slate-200 text-xs font-bold text-slate-800 text-center">{idx + 1}</td>
                                                         <td className="p-2 border-r border-slate-200">
                                                             <div className="flex flex-col">
-                                                                <span className="text-xs font-black text-slate-900 uppercase tracking-tight leading-none">{item.item_name || item?.Item?.name || "Item Name"}</span>
-                                                                {availableQty <= 0 && <span className="text-[9px] text-red-500 font-bold uppercase mt-1">Already Fully Returned</span>}
+                                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                                    <span className="text-xs font-black text-slate-900 uppercase tracking-tight leading-none">
+                                                                        {item.item_name || item?.Item?.name || "Item Name"}
+                                                                    </span>
+                                                                    {isReturnItem && (
+                                                                        <span className="px-1.5 py-0.5 text-[9px] font-black uppercase rounded bg-amber-100 text-amber-800 border border-amber-300">
+                                                                            Return Item
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                {isReturnItem ? (
+                                                                    <span className="text-[9px] text-amber-600 font-bold uppercase mt-1">
+                                                                        Previously Returned Item
+                                                                    </span>
+                                                                ) : availableQty <= 0 ? (
+                                                                    <span className="text-[9px] text-red-500 font-bold uppercase mt-1">
+                                                                        Already Fully Returned
+                                                                    </span>
+                                                                ) : null}
                                                             </div>
                                                         </td>
                                                         <td className="p-2 border-r border-slate-200 text-xs font-bold text-slate-800 text-center uppercase">
@@ -368,16 +399,16 @@ const ReturnExchangeModal = ({
                                                             {item.qty}
                                                         </td>
                                                         <td className="p-2 border-r border-slate-200 text-xs font-bold text-slate-800 text-center uppercase">
-                                                            {availableQty}
+                                                            {isReturnItem ? '-' : availableQty}
                                                         </td>
                                                     </tr>
                                                 );
                                             })}
 
-                                            {selectedBill.PosItems?.filter(i => !i.retunBillId).length === 0 && (
+                                            {(!selectedBill.PosItems || selectedBill.PosItems.length === 0) && (
                                                 <tr>
                                                     <td colSpan="9" className="p-8 text-center text-xs font-bold text-slate-600 uppercase italic">
-                                                        No returnable items found in this bill
+                                                        No items found in this bill
                                                     </td>
                                                 </tr>
                                             )}

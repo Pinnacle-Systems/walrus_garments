@@ -836,7 +836,8 @@ const PosReportsNew = ({
                                                                     printCopies: 2,
                                                                     showSummarySlip: false,
                                                                     isDeliveryReceipt: isSummarySlip,
-                                                                    additionalCharges
+                                                                    additionalCharges,
+                                                                    returnReferences: dataObj?.LinkedReturnBill?.id ? [dataObj?.LinkedReturnBill?.docId] : []
                                                                 });
 
                                                                 setThermalPrintOpen(true);
