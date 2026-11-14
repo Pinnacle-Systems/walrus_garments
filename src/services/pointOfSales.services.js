@@ -1,82 +1,83 @@
-import { NoRecordFound } from '../configs/Responses.js';
-import { prisma } from '../lib/prisma.js';
-import { getFinYearStartTimeEndTime } from '../utils/finYearHelper.js';
-import { getDateFromDateTime, getDateFromDateTimeYear, getRemovedItems, getYearShortCodeForFinYear } from '../utils/helper.js';
-import { getTableRecordWithId } from '../utils/helperQueries.js';
-
-
-
-
+import { NoRecordFound } from "../configs/Responses.js";
+import { prisma } from "../lib/prisma.js";
+import { getFinYearStartTimeEndTime } from "../utils/finYearHelper.js";
+import {
+  getDateFromDateTime,
+  getDateFromDateTimeYear,
+  getRemovedItems,
+  getYearShortCodeForFinYear,
+} from "../utils/helper.js";
+import { getTableRecordWithId } from "../utils/helperQueries.js";
 
 async function getNextDocId(branchId, shortCode, startTime, endTime, isReturn) {
-
-
-
-
-    let lastObject = await prisma.pos.findFirst({
-        where: {
-            branchId: parseInt(branchId),
-            isReturn: isReturn ? true : false,
-            docId: { not: "DRAFT" },
-            AND: [
-                {
-                    createdAt: {
-                        gte: startTime
-
-                    }
-                },
-                {
-                    createdAt: {
-                        lte: endTime
-                    }
-                }
-            ],
+  let lastObject = await prisma.pos.findFirst({
+    where: {
+      branchId: parseInt(branchId),
+      isReturn: isReturn ? true : false,
+      docId: { not: "DRAFT" },
+      AND: [
+        {
+          createdAt: {
+            gte: startTime,
+          },
         },
-        orderBy: {
-            id: 'desc'
-        }
-    });
+        {
+          createdAt: {
+            lte: endTime,
+          },
+        },
+      ],
+    },
+    orderBy: {
+      id: "desc",
+    },
+  });
 
-    let prefix = "POS"
+  let prefix = "POS";
 
-    if (isReturn) {
-        prefix = "RE"
-    }
+  if (isReturn) {
+    prefix = "RE";
+  }
 
-    const branchObj = await getTableRecordWithId(branchId, "branch")
+  const branchObj = await getTableRecordWithId(branchId, "branch");
 
-    // console.log(branchObj, 'branchObj')
+  // console.log(branchObj, 'branchObj')
 
-    let newDocId = `${branchObj.branchCode}/${shortCode}/${prefix}/1`
-    if (lastObject) {
-        newDocId = `${branchObj.branchCode}/${shortCode}/${prefix}/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`
-    }
-    return newDocId
+  let newDocId = `${branchObj.branchCode}/${shortCode}/${prefix}/1`;
+  if (lastObject) {
+    newDocId = `${branchObj.branchCode}/${shortCode}/${prefix}/${parseInt(lastObject.docId.split("/").at(-1)) + 1}`;
+  }
+  return newDocId;
 }
 
-
-function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data) {
-    return data.filter(item =>
-        (searchPoDate ? (
-            String(getDateFromDateTime(item.createdAt)).includes(searchPoDate) ||
-            String(getDateFromDateTimeYear(item.createdAt)).includes(searchPoDate)
-        ) : true) &&
-        (searchDueDate ? (
-            String(getDateFromDateTime(item.dueDate)).includes(searchDueDate) ||
-            String(getDateFromDateTimeYear(item.dueDate)).includes(searchDueDate)
-        ) : true) &&
-        (searchPoType ? (item.poType.toLowerCase().includes(searchPoType.toLowerCase())) : true)
-    )
+function manualFilterSearchData(
+  searchPoDate,
+  searchDueDate,
+  searchPoType,
+  data,
+) {
+  return data.filter(
+    (item) =>
+      (searchPoDate
+        ? String(getDateFromDateTime(item.createdAt)).includes(searchPoDate) ||
+          String(getDateFromDateTimeYear(item.createdAt)).includes(searchPoDate)
+        : true) &&
+      (searchDueDate
+        ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate) ||
+          String(getDateFromDateTimeYear(item.dueDate)).includes(searchDueDate)
+        : true) &&
+      (searchPoType
+        ? item.poType.toLowerCase().includes(searchPoType.toLowerCase())
+        : true),
+  );
 }
 
 // async function get(req) {
-
 
 //     const { branchId, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus,
 //         userRole, reportsTransactionType, pagination, currentPageNumber, dataPerPage, exchangeBill, filterDate,
 //         billAmount
 //     } = req.query;
-
 
 //     let where = {
 //         branchId: branchId ? parseInt(branchId) : undefined,
@@ -89,10 +90,7 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 
 //     };
 
-
-
 //     let totalCount = 0;
-
 
 //     let data = await prisma.pos.findMany({
 //         where,
@@ -143,7 +141,6 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 //         };
 //     }));
 
-
 //     if (approvalStatus) {
 
 //         if (userRole == "ADMIN" || userRole == "DEFAULT ADMIN") {
@@ -165,859 +162,1134 @@ function manualFilterSearchData(searchPoDate, searchDueDate, searchPoType, data)
 //     return { statusCode: 0, data, totalCount };
 // }
 async function get(req) {
-    const {
-        branchId, serachDocNo, searchDate, searchCustomerName, isExchnage, approvalStatus,
-        userRole, reportsTransactionType, pagination, currentPageNumber, dataPerPage, exchangeBill, filterDate,
-        billAmount
-    } = req.query;
+  const {
+    branchId,
+    serachDocNo,
+    searchDate,
+    searchCustomerName,
+    isExchnage,
+    approvalStatus,
+    userRole,
+    reportsTransactionType,
+    pagination,
+    currentPageNumber,
+    dataPerPage,
+    exchangeBill,
+    filterDate,
+    billAmount,
+  } = req.query;
 
-    let where = {
-        branchId: branchId ? parseInt(branchId) : undefined,
-        docId: serachDocNo ? { contains: serachDocNo } : undefined,
-        Party: searchCustomerName ? { contactPersonNumber: { contains: searchCustomerName } } : undefined,
-        customerId: req.query.customerId ? parseInt(req.query.customerId) : undefined,
-        isReturn: reportsTransactionType === "RETURN" ? true : reportsTransactionType === "SALE" ? false : undefined,
-        ...(billAmount != undefined && billAmount != null && billAmount !== "" && {
-            OR: billAmount == 0
-                ? [{ netAmount: null }, { netAmount: "0" }]
-                : [{ netAmount: String(billAmount) }],
-        }),
+  let where = {
+    branchId: branchId ? parseInt(branchId) : undefined,
+    docId: serachDocNo ? { contains: serachDocNo } : undefined,
+    Party: searchCustomerName
+      ? { contactPersonNumber: { contains: searchCustomerName } }
+      : undefined,
+    customerId: req.query.customerId
+      ? parseInt(req.query.customerId)
+      : undefined,
+    isReturn:
+      reportsTransactionType === "RETURN"
+        ? true
+        : reportsTransactionType === "SALE"
+          ? false
+          : undefined,
+    ...(billAmount != undefined &&
+      billAmount != null &&
+      billAmount !== "" && {
+        OR:
+          billAmount == 0
+            ? [{ netAmount: null }, { netAmount: "0" }]
+            : [{ netAmount: String(billAmount) }],
+      }),
+  };
 
-    };
-
-    if (approvalStatus) {
-        if (userRole === "ADMIN" || userRole === "DEFAULT ADMIN") {
-            where.approvalStatus = "PENDING";
-        } else {
-            where.approvalStatus = "APPROVED";
-        }
+  if (approvalStatus) {
+    if (userRole === "ADMIN" || userRole === "DEFAULT ADMIN") {
+      where.approvalStatus = "PENDING";
+    } else {
+      where.approvalStatus = "APPROVED";
     }
+  }
 
-    const activeDateFilter = searchDate || filterDate;
+  const activeDateFilter = searchDate || filterDate;
 
-    // Determine if we can do DB-level pagination (only if we don't have to manually filter dates in JS)
-    const canPaginateInDB = pagination && !activeDateFilter;
-    const take = canPaginateInDB ? parseInt(dataPerPage) : undefined;
-    const skip = canPaginateInDB ? (parseInt(currentPageNumber) - 1) * parseInt(dataPerPage) : undefined;
+  // Determine if we can do DB-level pagination (only if we don't have to manually filter dates in JS)
+  const canPaginateInDB = pagination && !activeDateFilter;
+  const take = canPaginateInDB ? parseInt(dataPerPage) : undefined;
+  const skip = canPaginateInDB
+    ? (parseInt(currentPageNumber) - 1) * parseInt(dataPerPage)
+    : undefined;
 
-    // 2. Fetch Data (with DB pagination if possible)
-    let data = await prisma.pos.findMany({
-        where,
-        take,
-        skip,
+  // 2. Fetch Data (with DB pagination if possible)
+  let data = await prisma.pos.findMany({
+    where,
+    take,
+    skip,
+    include: {
+      Party: {
+        select: {
+          id: true,
+          name: true,
+          contact: true,
+          isB2C: true,
+          contactPersonNumber: true,
+        },
+      },
+      PosItems: {
         include: {
-            Party: {
-                select: {
-                    id: true,
-                    name: true,
-                    contact: true,
-                    isB2C: true,
-                    contactPersonNumber: true
-                }
-            },
-            PosItems: {
-                include: {
-                    Item: true,
-                    Color: true,
-                    Size: true
-                }
-            },
-            PosPayments: true,
+          Item: true,
+          Color: true,
+          Size: true,
         },
-        orderBy: {
-            id: "desc"
-        },
-    });
+      },
+      PosPayments: true,
+    },
+    orderBy: {
+      id: "desc",
+    },
+  });
 
-    let totalCount = canPaginateInDB ? await prisma.pos.count({ where }) : data.length;
+  let totalCount = canPaginateInDB
+    ? await prisma.pos.count({ where })
+    : data.length;
 
-    // 3. Fix N+1 Problem: Fetch all linked bills in bulk instead of mapping and fetching one by one
-    const returnBillIds = data.map(item => item.isRetrunBillId).filter(Boolean);
-    const exchangeBillIds = data.map(item => item.isExchangeBillId).filter(Boolean);
+  // 3. Fix N+1 Problem: Fetch all linked bills in bulk instead of mapping and fetching one by one
+  const returnBillIds = data.map((item) => item.isRetrunBillId).filter(Boolean);
+  const exchangeBillIds = data
+    .map((item) => item.isExchangeBillId)
+    .filter(Boolean);
 
-    const [linkedReturns, linkedExchanges] = await Promise.all([
-        returnBillIds.length > 0 ? prisma.pos.findMany({
-            where: { id: { in: returnBillIds } },
-            select: { id: true, docId: true }
-        }) : [],
-        exchangeBillIds.length > 0 ? prisma.pos.findMany({
-            where: { id: { in: exchangeBillIds } },
-            select: { id: true, docId: true }
-        }) : []
-    ]);
+  const [linkedReturns, linkedExchanges] = await Promise.all([
+    returnBillIds.length > 0
+      ? prisma.pos.findMany({
+          where: { id: { in: returnBillIds } },
+          select: { id: true, docId: true },
+        })
+      : [],
+    exchangeBillIds.length > 0
+      ? prisma.pos.findMany({
+          where: { id: { in: exchangeBillIds } },
+          select: { id: true, docId: true },
+        })
+      : [],
+  ]);
 
-    // Attach the linked bills back to the data array in memory instantly
-    data = data.map(item => {
-        const linkedReturn = linkedReturns.find(r => r.id === item.isRetrunBillId);
-        const linkedExchange = linkedExchanges.find(e => e.id === item.isExchangeBillId);
+  // Attach the linked bills back to the data array in memory instantly
+  data = data.map((item) => {
+    const linkedReturn = linkedReturns.find(
+      (r) => r.id === item.isRetrunBillId,
+    );
+    const linkedExchange = linkedExchanges.find(
+      (e) => e.id === item.isExchangeBillId,
+    );
 
-        return {
-            ...item,
-            ...(linkedReturn && { LinkedReturnBill: linkedReturn }),
-            ...(linkedExchange && { LinkedExchangeBill: linkedExchange })
-        };
-    });
+    return {
+      ...item,
+      ...(linkedReturn && { LinkedReturnBill: linkedReturn }),
+      ...(linkedExchange && { LinkedExchangeBill: linkedExchange }),
+    };
+  });
 
-    // 4. Handle remaining manual string date filtering if it exists
-    if (activeDateFilter) {
-        data = manualFilterSearchData(activeDateFilter, "", "", data);
-        totalCount = data.length; // Update count after filtering
+  // 4. Handle remaining manual string date filtering if it exists
+  if (activeDateFilter) {
+    data = manualFilterSearchData(activeDateFilter, "", "", data);
+    totalCount = data.length; // Update count after filtering
 
-        // Perform memory pagination if we had to do manual date filtering
-        if (pagination) {
-            data = data.slice(
-                (parseInt(currentPageNumber) - 1) * parseInt(dataPerPage),
-                parseInt(currentPageNumber) * parseInt(dataPerPage)
-            );
-        }
+    // Perform memory pagination if we had to do manual date filtering
+    if (pagination) {
+      data = data.slice(
+        (parseInt(currentPageNumber) - 1) * parseInt(dataPerPage),
+        parseInt(currentPageNumber) * parseInt(dataPerPage),
+      );
     }
+  }
 
-    return { statusCode: 0, data, totalCount };
+  return { statusCode: 0, data, totalCount };
 }
 
-
 async function getOne(id) {
-    const childRecord = 0;
-    const data = await prisma.pos.findUnique({
-        where: {
-            id: parseInt(id)
-        },
+  const childRecord = 0;
+  const data = await prisma.pos.findUnique({
+    where: {
+      id: parseInt(id),
+    },
+    include: {
+      PosItems: {
         include: {
-            PosItems: {
-                include: {
-                    Item: true,
-                    Color: true,
-                    Size: true,
-                    ReturnItems: true,
-                    Uom: true,
-                    Employee: true,
-                    fulfillments: true
-                }
-            },
-            Party: {
-                select: {
-                    id: true,
-                    name: true,
-                    contactPersonNumber: true,
-                    isB2C: true,
+          Item: true,
+          Color: true,
+          Size: true,
+          ReturnItems: true,
+          Uom: true,
+          Employee: true,
+          fulfillments: true,
+        },
+      },
+      Party: {
+        select: {
+          id: true,
+          name: true,
+          contactPersonNumber: true,
+          isB2C: true,
+        },
+      },
+      PosPayments: true,
+    },
+  });
 
-                }
-            },
-            PosPayments: true
-        }
-    })
+  if (data && data.isRetrunBillId) {
+    data.LinkedReturnBill = await prisma.pos.findUnique({
+      where: { id: data.isRetrunBillId },
+      select: { id: true, docId: true },
+    });
+  }
 
-    if (data && data.isRetrunBillId) {
-        data.LinkedReturnBill = await prisma.pos.findUnique({
-            where: { id: data.isRetrunBillId },
-            select: { id: true, docId: true }
-        });
-    }
+  data.PosItems = data.PosItems.map((item) => ({
+    ...item,
+    returnedQty: item.ReturnItems.reduce(
+      (acc, curr) => acc + parseFloat(curr.qty || 0),
+      0,
+    ),
+  }));
 
-
-
-    data.PosItems = data.PosItems.map(item => ({
-        ...item,
-        returnedQty: item.ReturnItems.reduce((acc, curr) => acc + parseFloat(curr.qty || 0), 0)
-    }));
-
-    if (!data) return NoRecordFound("size");
-    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+  if (!data) return NoRecordFound("size");
+  return { statusCode: 0, data: { ...data, ...{ childRecord } } };
 }
 
 async function getSearch(req) {
-    const { searchKey } = req.params
-    const { companyId, active, } = req.query
-    const data = await prisma.saleOrder.findMany({
-        where: {
-            companyId: companyId ? parseInt(companyId) : undefined,
-            active: active ? Boolean(active) : undefined,
-            OR: [
-                {
-                    name: {
-                        contains: searchKey,
-                    },
-                }
-            ],
-        }
-    })
-    return { statusCode: 0, data: data };
+  const { searchKey } = req.params;
+  const { companyId, active } = req.query;
+  const data = await prisma.saleOrder.findMany({
+    where: {
+      companyId: companyId ? parseInt(companyId) : undefined,
+      active: active ? Boolean(active) : undefined,
+      OR: [
+        {
+          name: {
+            contains: searchKey,
+          },
+        },
+      ],
+    },
+  });
+  return { statusCode: 0, data: data };
 }
 
-
 function posPaymentsUpdate(tx, posId, posPayments) {
-    let promises = posPayments?.map(async (item) => await createOnePosPayment(tx, item, posId))
-    return Promise.all(promises)
+  let promises = posPayments?.map(
+    async (item) => await createOnePosPayment(tx, item, posId),
+  );
+  return Promise.all(promises);
 }
 
 async function createOnePosPayment(tx, posPayment = {}, posId) {
-    let { id, amount, paymentMode, reference_no, transaction_id, retunBillId, date } = await posPayment;
-    return await tx.PosPayments.create({
-        data: {
-            PosId: parseInt(posId),
-            amount: String(amount),
-            paymentMode: paymentMode,
-            reference_no: reference_no,
-            transaction_id: transaction_id,
-            retunBillId: retunBillId ? parseInt(retunBillId) : null,
-            date: date ? new Date(date) : new Date()
-        }
-    })
+  let {
+    id,
+    amount,
+    paymentMode,
+    reference_no,
+    transaction_id,
+    retunBillId,
+    date,
+  } = await posPayment;
+  return await tx.PosPayments.create({
+    data: {
+      PosId: parseInt(posId),
+      amount: String(amount),
+      paymentMode: paymentMode,
+      reference_no: reference_no,
+      transaction_id: transaction_id,
+      retunBillId: retunBillId ? parseInt(retunBillId) : null,
+      date: date ? new Date(date) : new Date(),
+    },
+  });
 }
 
-
 async function create(body) {
-    try {
-        const {
-            customerId, posItems, posPayments, finYearId, branchId, storeId, exchangeSalesNo,
-            netAmount, approvalStatus, transactionType, manualDiscount, packingCharges, shippingCharges, courierCharges, additionalCharges
-        } = await body;
+  try {
+    const {
+      customerId,
+      posItems,
+      posPayments,
+      finYearId,
+      branchId,
+      storeId,
+      exchangeSalesNo,
+      netAmount,
+      approvalStatus,
+      transactionType,
+      manualDiscount,
+      packingCharges,
+      shippingCharges,
+      courierCharges,
+      additionalCharges,
+    } = await body;
 
+    let finYearDate = await getFinYearStartTimeEndTime(finYearId);
+    const shortCode = finYearDate
+      ? getYearShortCodeForFinYear(
+          finYearDate?.startDateStartTime,
+          finYearDate?.endDateEndTime,
+        )
+      : "";
+    const isReturn =
+      transactionType === "RETURN" ||
+      (transactionType === "EXCHNAGE" && parseFloat(netAmount || 0) < 0);
+    let docId = await getNextDocId(
+      branchId,
+      shortCode,
+      finYearDate?.startDateStartTime,
+      finYearDate?.endDateEndTime,
+      isReturn,
+    );
 
-        let finYearDate = await getFinYearStartTimeEndTime(finYearId);
-        const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-        const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE" && parseFloat(netAmount || 0) < 0);
-        let docId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
+    const totalOfferReversal = posItems.reduce(
+      (acc, item) => acc + (parseFloat(item.offerReversal) || 0),
+      0,
+    );
+    const totalOfferReapplied = posItems.reduce(
+      (acc, item) => acc + (parseFloat(item.offerReapplied) || 0),
+      0,
+    );
 
+    const grossReturnAmount = (posItems || [])
+      .filter((i) => i.isReturn)
+      .reduce(
+        (sum, i) => sum + parseFloat(i.price || 0) * parseFloat(i.qty || 0),
+        0,
+      );
 
-        const totalOfferReversal = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
-        const totalOfferReapplied = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
+    const finalReturnAmount = grossReturnAmount - totalOfferReversal;
 
-        const grossReturnAmount = (posItems || [])
-            .filter(i => i.isReturn)
-            .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
+    const grossPurchaseAmount = (posItems || [])
+      .filter((i) => !i.isReturn)
+      .reduce(
+        (sum, i) => sum + parseFloat(i.price || 0) * parseFloat(i.qty || 0),
+        0,
+      );
 
-        const finalReturnAmount = grossReturnAmount - totalOfferReversal
+    const billAmount =
+      Math.round(grossPurchaseAmount || 0) -
+      Math.round(manualDiscount || 0) +
+      Math.round(packingCharges || 0) +
+      Math.round(shippingCharges || 0) +
+      Math.round(courierCharges || 0);
 
+    // const finalNetAmount = transactionType == "RETURN" ? (grossReturnAmount - totalOfferReversal) : netAmount + (additionalCharges || 0)
 
-        const grossPurchaseAmount = (posItems || [])
-            .filter(i => !i.isReturn)
-            .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
+    const finalNetAmount =
+      transactionType == "RETURN"
+        ? grossReturnAmount - totalOfferReversal
+        : netAmount;
 
+    console.log(
+      {
+        grossPurchaseAmount,
+        manualDiscount,
+        billAmount,
+        finalNetAmount,
+      },
+      "finalNetAmount",
+    );
 
-        const billAmount = Math.round((grossPurchaseAmount || 0)) - Math.round((manualDiscount || 0)) + Math.round((packingCharges || 0)) + Math.round((shippingCharges || 0)) + Math.round((courierCharges || 0))
+    const result = await prisma.$transaction(async (tx) => {
+      const finalDocId =
+        approvalStatus === "PENDING"
+          ? "DRAFT"
+          : approvalStatus === "APPROVED"
+            ? "PROCEED"
+            : docId;
 
-        // const finalNetAmount = transactionType == "RETURN" ? (grossReturnAmount - totalOfferReversal) : netAmount + (additionalCharges || 0)
+      const posRecord = await tx.pos.create({
+        data: {
+          customerId: customerId ? parseInt(customerId) : undefined,
+          docId: finalDocId,
+          branchId: branchId ? parseInt(branchId) : undefined,
+          createdById: body.userId ? parseInt(body.userId) : undefined,
+          netAmount:
+            finalNetAmount > 0
+              ? String(parseInt(finalNetAmount || 0))
+              : undefined,
+          approvalStatus: approvalStatus || "NONE",
+          bilStatus: body.bilStatus ? body?.bilStatus : "NA",
+          transactionType: transactionType ? transactionType : "NA",
+          isReturn: isReturn,
+          isRetrunBillId: body.returnBillId
+            ? parseInt(body.returnBillId)
+            : undefined,
+          availableCredit: body.availableCredit
+            ? parseInt(body.availableCredit)
+            : undefined,
+          isExchange: body.isExchange ? true : false,
+          isExchangeBillId: body.isExchangeBillId
+            ? parseInt(body.isExchangeBillId)
+            : undefined,
+          offerPenalty: body.offerPenalty ? String(body.offerPenalty) : null,
+          offerRestored: body.offerRestored ? String(body.offerRestored) : null,
+          manualDiscount: manualDiscount ? String(manualDiscount) : null,
+          packingCharges: packingCharges ? parseInt(packingCharges) : null,
+          shippingCharges: shippingCharges ? parseInt(shippingCharges) : null,
+          courierCharges: courierCharges ? parseInt(courierCharges) : null,
 
-        const finalNetAmount = transactionType == "RETURN" ? (grossReturnAmount - totalOfferReversal) : netAmount
-
-
-        console.log({
-            grossPurchaseAmount,
-            manualDiscount,
-            billAmount,
-            finalNetAmount
-        }, "finalNetAmount")
-
-
-
-        const result = await prisma.$transaction(async (tx) => {
-
-            const finalDocId = approvalStatus === 'PENDING' ? 'DRAFT' : (approvalStatus === 'APPROVED' ? 'PROCEED' : docId);
-
-            const posRecord = await tx.pos.create({
-                data: {
-                    customerId: customerId ? parseInt(customerId) : undefined,
-                    docId: finalDocId,
-                    branchId: branchId ? parseInt(branchId) : undefined,
-                    createdById: body.userId ? parseInt(body.userId) : undefined,
-                    netAmount: finalNetAmount > 0 ? String(parseInt(finalNetAmount || 0)) : undefined,
-                    approvalStatus: approvalStatus || "NONE",
-                    bilStatus: body.bilStatus ? body?.bilStatus : "NA",
-                    transactionType: transactionType ? transactionType : "NA",
-                    isReturn: isReturn,
-                    isRetrunBillId: body.returnBillId ? parseInt(body.returnBillId) : undefined,
-                    availableCredit: body.availableCredit ? parseInt(body.availableCredit) : undefined,
-                    isExchange: body.isExchange ? true : false,
-                    isExchangeBillId: body.isExchangeBillId ? parseInt(body.isExchangeBillId) : undefined,
-                    offerPenalty: body.offerPenalty ? String(body.offerPenalty) : null,
-                    offerRestored: body.offerRestored ? String(body.offerRestored) : null,
-                    manualDiscount: manualDiscount ? String(manualDiscount) : null,
-                    packingCharges: packingCharges ? parseInt(packingCharges) : null,
-                    shippingCharges: shippingCharges ? parseInt(shippingCharges) : null,
-                    courierCharges: courierCharges ? parseInt(courierCharges) : null,
-
-                    PosItems: {
-                        create: (posItems || []).map((item) => ({
-                            itemId: parseInt(item.itemId || item.id),
-                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                            colorId: item.colorId ? parseInt(item.colorId) : null,
-                            uomId: item.uomId ? parseInt(item.uomId) : null,
-                            qty: String(item.qty),
-                            price: String(item.price),
-                            salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
-                            isReturn: item.isReturn || false,
-                            isExchangeItem: item.isExchangeItem || false,
-                            isAddedDuringExchange: item.isAddedDuringExchange || false,
-                            originalItemId: item.originalItemId || null,
-                            retunBillId: item.retunBillId || null,
-                            barcode: item.barcode || null,
-                            barcodeType: item.barcodeType || null,
-                            appliedOfferId: item.appliedOfferId ? parseInt(item.appliedOfferId) : null,
-                            appliedOfferSnapshot: item.appliedOfferSnapshot ? JSON.stringify(item.appliedOfferSnapshot) : null,
-                            originalSalesPrice: item.salesPrice !== undefined ? parseFloat(item.salesPrice) : null,
-                            offerReversal: item.offerReversal ? String(item.offerReversal) : null,
-                            offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
-                            priceType: item.priceType || null,
-                            appliedOfferName: item.appliedOfferName || null,
-                            sourceStoreId: item?.fulfillments?.length > 0 ? parseInt(item?.fulfillments?.[0]?.storeId) : null,
-                            ...(item?.fulfillments?.length > 0 ? {
-                                fulfillments: {
-                                    createMany: {
-                                        data: item.fulfillments?.filter((i) => i.qty > 0 && i.storeId)?.map((fulfillment) => ({
-                                            storeId: fulfillment.storeId ? parseInt(fulfillment.storeId) : null,
-                                            qty: fulfillment.qty ? String(fulfillment.qty) : null
-                                        }))
-                                    }
-                                }
-                            } : {})
-                        }))
+          PosItems: {
+            create: (posItems || []).map((item) => ({
+              itemId: parseInt(item.itemId || item.id),
+              sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+              colorId: item.colorId ? parseInt(item.colorId) : null,
+              uomId: item.uomId ? parseInt(item.uomId) : null,
+              qty: String(item.qty),
+              price: String(item.price),
+              salesPersonId: item.salesPersonId
+                ? parseInt(item.salesPersonId)
+                : undefined,
+              isReturn: item.isReturn || false,
+              isExchangeItem: item.isExchangeItem || false,
+              isAddedDuringExchange: item.isAddedDuringExchange || false,
+              originalItemId: item.originalItemId || null,
+              retunBillId: item.retunBillId || null,
+              barcode: item.barcode || null,
+              barcodeType: item.barcodeType || null,
+              appliedOfferId: item.appliedOfferId
+                ? parseInt(item.appliedOfferId)
+                : null,
+              appliedOfferSnapshot: item.appliedOfferSnapshot
+                ? JSON.stringify(item.appliedOfferSnapshot)
+                : null,
+              originalSalesPrice:
+                item.salesPrice !== undefined
+                  ? parseFloat(item.salesPrice)
+                  : null,
+              offerReversal: item.offerReversal
+                ? String(item.offerReversal)
+                : null,
+              offerReapplied: item.offerReapplied
+                ? String(item.offerReapplied)
+                : null,
+              priceType: item.priceType || null,
+              appliedOfferName: item.appliedOfferName || null,
+              sourceStoreId:
+                item?.fulfillments?.length > 0
+                  ? parseInt(item?.fulfillments?.[0]?.storeId)
+                  : null,
+              ...(item?.fulfillments?.length > 0
+                ? {
+                    fulfillments: {
+                      createMany: {
+                        data: item.fulfillments
+                          ?.filter((i) => i.qty > 0 && i.storeId)
+                          ?.map((fulfillment) => ({
+                            storeId: fulfillment.storeId
+                              ? parseInt(fulfillment.storeId)
+                              : null,
+                            qty: fulfillment.qty
+                              ? String(fulfillment.qty)
+                              : null,
+                          })),
+                      },
                     },
+                  }
+                : {}),
+            })),
+          },
+        },
+      });
 
-                }
-            });
+      if (body?.bilStatus == "PAID") {
+        await posPaymentsUpdate(tx, posRecord.id, posPayments);
+      }
 
-            if (body?.bilStatus == "PAID") {
-                await posPaymentsUpdate(tx, posRecord.id, posPayments)
-            }
+      if (
+        body.transactionType == "SALE" &&
+        body.isExchange &&
+        body.isExchangeBillId
+      ) {
+        if (body.isExchangeBillId) {
+          await tx.pos.update({
+            where: { id: parseInt(body.isExchangeBillId) },
+            data: {
+              isBillClosed: true,
+            },
+          });
+        }
+      }
 
-
-
-            if (body.transactionType == "SALE" && body.isExchange && body.isExchangeBillId) {
-
-
-                if (body.isExchangeBillId) {
-                    await tx.pos.update({
-                        where: { id: parseInt(body.isExchangeBillId) },
-                        data: {
-                            isBillClosed: true,
-                        },
-                    });
-                }
-            }
-
-            if (parseInt(billAmount || 0) > 0) {
-                await tx.ledger.create({
-                    data: {
-                        EntryType: "Sales",
-                        LedgerType: "Customer",
-                        creditOrDebit: "Debit",
-                        partyId: parseInt(customerId),
-                        amount: billAmount,
-                        partyBillNo: posRecord.docId,
-                        partyBillDate: new Date(),
-                        posId: posRecord.id
-                    }
-                });
-            }
-
-            if (approvalStatus === 'PENDING' || body?.bilStatus == "UNPAID") {
-                return posRecord;
-            }
-
-            const stockEntries = [];
-            const retailStoreId = parseInt(storeId);
-
-            for (const item of (posItems || [])) {
-                if (!item.itemId && !item.id) continue;
-
-                const itemId = parseInt(item.itemId || item.id);
-                const fulfillments = item.fulfillments && !item.isReturn ? item.fulfillments : [{ storeId: item.sourceStoreId || retailStoreId, qty: item.qty }];
-                const price = parseFloat(item.price || 0);
-
-                console.log(fulfillments, "fulfillments")
-
-                const baseEntry = {
-                    itemId,
-                    sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                    colorId: item.colorId ? parseInt(item.colorId) : null,
-                    uomId: item.uomId ? parseInt(item.uomId) : null,
-                    branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
-                    barcode: item.barcode || null,
-                    transactionId: posRecord.id,
-                    price: price,
-                };
-
-                // VALIDATION: Check stock for each fulfillment
-                if (!item.isReturn) {
-                    for (const f of fulfillments) {
-                        const fQty = parseFloat(f.qty);
-                        if (fQty <= 0) continue;
-
-                        const fStoreId = parseInt(f.storeId);
-
-                        // Pessimistic Lock to prevent concurrent sales of the same item
-                        await tx.$executeRaw`SELECT id FROM item WHERE id = ${itemId} FOR UPDATE`;
-
-                        const currentStock = await tx.stock.aggregate({
-                            _sum: { qty: true },
-                            where: {
-                                itemId,
-                                sizeId: baseEntry.sizeId,
-                                colorId: baseEntry.colorId,
-                                uomId: baseEntry.uomId,
-                                storeId: fStoreId,
-                                branchId: baseEntry.branchId,
-                                barcode: baseEntry?.barcode
-                            }
-                        });
-
-
-
-                        const available = parseFloat(currentStock._sum.qty || 0);
-                        if (available < fQty) {
-                            const itemName = item.Item?.name || item.itemName || item.name || `Item ${itemId}`;
-                            const sizeName = item.Size?.name || item.sizeName || '-';
-                            const colorName = item.Color?.name || item.colorName || '-';
-                            throw new Error(`Insufficient stock for ${itemName} (Size: ${sizeName}, Color: ${colorName}) in ${f.storeName || 'Store'}. Available: ${available}, Required: ${fQty}`);
-                        }
-
-                        // Create Stock reduction/transfer
-                        if (fStoreId !== retailStoreId) {
-                            stockEntries.push({ ...baseEntry, qty: -fQty, storeId: fStoreId, inOrOut: "StockTransferOut" });
-                            stockEntries.push({ ...baseEntry, qty: fQty, storeId: retailStoreId, inOrOut: "StockTransferIn" });
-                        }
-
-                        stockEntries.push({ ...baseEntry, qty: -fQty, storeId: retailStoreId, inOrOut: "POS" });
-                    }
-                } else {
-                    // Return logic (Always to retailStoreId)
-                    stockEntries.push({ ...baseEntry, qty: parseFloat(item.qty), storeId: retailStoreId, inOrOut: "POSReturn" });
-                }
-            }
-
-            await tx.stock.createMany({
-                data: stockEntries
-            });
-
-
-            if (finalReturnAmount > 0) {
-                await tx.ledger.create({
-                    data: {
-                        EntryType: "Credit_Note",
-                        LedgerType: "Customer",
-                        creditOrDebit: "Credit",
-                        partyId: parseInt(customerId),
-                        amount: Math.round(finalReturnAmount),
-                        partyBillNo: posRecord.docId,
-                        partyBillDate: new Date(),
-                        posId: posRecord.id
-                    }
-                });
-            }
-
-
-
-            if (!isReturn) {
-                const actualPaymentAmount = (posPayments || [])
-                    .filter(p => p.paymentMode !== 'STORE_CREDIT')
-                    .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-
-                if (actualPaymentAmount > 0) {
-                    await tx.ledger.create({
-                        data: {
-                            EntryType: "Customer_Payment",
-                            LedgerType: "Customer",
-                            creditOrDebit: "Credit",
-                            partyId: parseInt(customerId),
-                            amount: Math.abs(parseInt(actualPaymentAmount)),
-                            partyBillNo: posRecord.docId,
-                            partyBillDate: new Date(),
-                            posId: posRecord.id
-                        }
-                    });
-                }
-            }
-
-
-
-
-
-            return posRecord;
+      if (parseInt(billAmount || 0) > 0) {
+        await tx.ledger.create({
+          data: {
+            EntryType: "Sales",
+            LedgerType: "Customer",
+            creditOrDebit: "Debit",
+            partyId: parseInt(customerId),
+            amount: billAmount,
+            partyBillNo: posRecord.docId,
+            partyBillDate: new Date(),
+            posId: posRecord.id,
+          },
         });
+      }
 
-        return { statusCode: 0, data: result };
+      if (approvalStatus === "PENDING" || body?.bilStatus == "UNPAID") {
+        return posRecord;
+      }
 
-    } catch (error) {
-        console.error("POS Creation Error:", error);
-        return {
-            statusCode: 1,
-            message: "Failed to process sale: " + error.message,
-            data: error?.fulfillmentResolution ? { fulfillmentResolution: error.fulfillmentResolution } : undefined,
+      const stockEntries = [];
+      const retailStoreId = parseInt(storeId);
+
+      for (const item of posItems || []) {
+        if (!item.itemId && !item.id) continue;
+
+        const itemId = parseInt(item.itemId || item.id);
+        const fulfillments =
+          item.fulfillments && !item.isReturn
+            ? item.fulfillments
+            : [{ storeId: item.sourceStoreId || retailStoreId, qty: item.qty }];
+        const price = parseFloat(item.price || 0);
+
+        console.log(fulfillments, "fulfillments");
+
+        const baseEntry = {
+          itemId,
+          sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+          colorId: item.colorId ? parseInt(item.colorId) : null,
+          uomId: item.uomId ? parseInt(item.uomId) : null,
+          branchId: item.branchId
+            ? parseInt(item.branchId)
+            : parseInt(branchId),
+          barcode: item.barcode || null,
+          transactionId: posRecord.id,
+          price: price,
         };
-    }
+
+        // VALIDATION: Check stock for each fulfillment
+        if (!item.isReturn) {
+          for (const f of fulfillments) {
+            const fQty = parseFloat(f.qty);
+            if (fQty <= 0) continue;
+
+            const fStoreId = parseInt(f.storeId);
+
+            // Pessimistic Lock to prevent concurrent sales of the same item
+            await tx.$executeRaw`SELECT id FROM item WHERE id = ${itemId} FOR UPDATE`;
+
+            const currentStock = await tx.stock.aggregate({
+              _sum: { qty: true },
+              where: {
+                itemId,
+                sizeId: baseEntry.sizeId,
+                colorId: baseEntry.colorId,
+                uomId: baseEntry.uomId,
+                storeId: fStoreId,
+                branchId: baseEntry.branchId,
+                barcode: baseEntry?.barcode,
+              },
+            });
+
+            const available = parseFloat(currentStock._sum.qty || 0);
+            if (available < fQty) {
+              const itemName =
+                item.Item?.name ||
+                item.itemName ||
+                item.name ||
+                `Item ${itemId}`;
+              const sizeName = item.Size?.name || item.sizeName || "-";
+              const colorName = item.Color?.name || item.colorName || "-";
+              throw new Error(
+                `Insufficient stock for ${itemName} (Size: ${sizeName}, Color: ${colorName}) in ${f.storeName || "Store"}. Available: ${available}, Required: ${fQty}`,
+              );
+            }
+
+            // Create Stock reduction/transfer
+            if (fStoreId !== retailStoreId) {
+              stockEntries.push({
+                ...baseEntry,
+                qty: -fQty,
+                storeId: fStoreId,
+                inOrOut: "StockTransferOut",
+              });
+              stockEntries.push({
+                ...baseEntry,
+                qty: fQty,
+                storeId: retailStoreId,
+                inOrOut: "StockTransferIn",
+              });
+            }
+
+            stockEntries.push({
+              ...baseEntry,
+              qty: -fQty,
+              storeId: retailStoreId,
+              inOrOut: "POS",
+            });
+          }
+        } else {
+          // Return logic (Always to retailStoreId)
+          stockEntries.push({
+            ...baseEntry,
+            qty: parseFloat(item.qty),
+            storeId: retailStoreId,
+            inOrOut: "POSReturn",
+          });
+        }
+      }
+
+      await tx.stock.createMany({
+        data: stockEntries,
+      });
+
+      if (finalReturnAmount > 0) {
+        await tx.ledger.create({
+          data: {
+            EntryType: "Credit_Note",
+            LedgerType: "Customer",
+            creditOrDebit: "Credit",
+            partyId: parseInt(customerId),
+            amount: Math.round(finalReturnAmount),
+            partyBillNo: posRecord.docId,
+            partyBillDate: new Date(),
+            posId: posRecord.id,
+          },
+        });
+      }
+
+      if (!isReturn) {
+        const actualPaymentAmount = (posPayments || [])
+          .filter((p) => p.paymentMode !== "STORE_CREDIT")
+          .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+        if (actualPaymentAmount > 0) {
+          await tx.ledger.create({
+            data: {
+              EntryType: "Customer_Payment",
+              LedgerType: "Customer",
+              creditOrDebit: "Credit",
+              partyId: parseInt(customerId),
+              amount: Math.abs(parseInt(actualPaymentAmount)),
+              partyBillNo: posRecord.docId,
+              partyBillDate: new Date(),
+              posId: posRecord.id,
+            },
+          });
+        }
+      }
+
+      return posRecord;
+    });
+
+    return { statusCode: 0, data: result };
+  } catch (error) {
+    console.error("POS Creation Error:", error);
+    return {
+      statusCode: 1,
+      message: "Failed to process sale: " + error.message,
+      data: error?.fulfillmentResolution
+        ? { fulfillmentResolution: error.fulfillmentResolution }
+        : undefined,
+    };
+  }
 }
 
 async function update(id, body) {
-    try {
-        const {
-            customerId, posItems, posPayments, branchId, storeId,
-            netAmount, taxAmount, discountValue, transactionType, finYearId, bilStatus, manualDiscount,
-            packingCharges, shippingCharges, courierCharges, additionalCharges
-        } = await body;
+  try {
+    const {
+      customerId,
+      posItems,
+      posPayments,
+      branchId,
+      storeId,
+      netAmount,
+      taxAmount,
+      discountValue,
+      transactionType,
+      finYearId,
+      bilStatus,
+      manualDiscount,
+      packingCharges,
+      shippingCharges,
+      courierCharges,
+      additionalCharges,
+    } = await body;
 
+    const dataFound = await prisma.pos.findUnique({
+      where: { id: parseInt(id) },
+      include: { PosItems: true },
+    });
 
+    if (!dataFound) return NoRecordFound("POS");
 
-        const dataFound = await prisma.pos.findUnique({ where: { id: parseInt(id) }, include: { PosItems: true } });
+    let finalDocId = dataFound.docId;
+    const isReturn =
+      transactionType === "RETURN" ||
+      (transactionType === "EXCHNAGE" && parseFloat(netAmount || 0) < 0);
 
-        if (!dataFound) return NoRecordFound("POS");
+    const grossReturnAmount = (posItems || [])
+      .filter((i) => i.isReturn)
+      .reduce(
+        (sum, i) => sum + parseFloat(i.price || 0) * parseFloat(i.qty || 0),
+        0,
+      );
 
-        let finalDocId = dataFound.docId;
-        const isReturn = transactionType === "RETURN" || (transactionType === "EXCHNAGE" && parseFloat(netAmount || 0) < 0);
+    const totalOfferReversal = posItems.reduce(
+      (acc, item) => acc + (parseFloat(item.offerReversal) || 0),
+      0,
+    );
+    const totalOfferReapplied = posItems.reduce(
+      (acc, item) => acc + (parseFloat(item.offerReapplied) || 0),
+      0,
+    );
 
-        const grossReturnAmount = (posItems || [])
-            .filter(i => i.isReturn)
-            .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
+    // const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount - totalOfferReversal : netAmount + (additionalCharges || 0)
 
-        const totalOfferReversal = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReversal) || 0), 0);
-        const totalOfferReapplied = posItems.reduce((acc, item) => acc + (parseFloat(item.offerReapplied) || 0), 0);
+    const finalNetAmount =
+      transactionType == "RETURN"
+        ? grossReturnAmount - totalOfferReversal
+        : netAmount;
 
-        // const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount - totalOfferReversal : netAmount + (additionalCharges || 0)
+    if (dataFound.docId === "DRAFT") {
+      const finYearDate = await getFinYearStartTimeEndTime(finYearId);
+      const shortCode = finYearDate
+        ? getYearShortCodeForFinYear(
+            finYearDate?.startDateStartTime,
+            finYearDate?.endDateEndTime,
+          )
+        : "";
+      finalDocId = await getNextDocId(
+        branchId,
+        shortCode,
+        finYearDate?.startDateStartTime,
+        finYearDate?.endDateEndTime,
+        isReturn,
+      );
+    }
 
-        const finalNetAmount = transactionType == "RETURN" ? grossReturnAmount - totalOfferReversal : netAmount
+    const result = await prisma.$transaction(async (tx) => {
+      if (
+        body.approvalStatus === "COMPLETED" ||
+        body.approvalStatus === "NONE" ||
+        body.bilStatus === "PAID" ||
+        body.bilStatus === "UNPAID" ||
+        dataFound.approvalStatus === "COMPLETED" ||
+        dataFound.approvalStatus === "NONE"
+      ) {
+        await tx.stock.deleteMany({
+          where: {
+            transactionId: parseInt(id),
+            OR: [
+              { inOrOut: "POS" },
+              { inOrOut: "StockTransferOut" },
+              { inOrOut: "StockTransferIn" },
+            ],
+          },
+        });
+      }
 
-        if ((dataFound.docId === 'DRAFT')) {
-            const finYearDate = await getFinYearStartTimeEndTime(finYearId);
-            const shortCode = finYearDate ? getYearShortCodeForFinYear(finYearDate?.startDateStartTime, finYearDate?.endDateEndTime) : "";
-            finalDocId = await getNextDocId(branchId, shortCode, finYearDate?.startDateStartTime, finYearDate?.endDateEndTime, isReturn);
+      const updatedPos = await tx.pos.update({
+        where: { id: parseInt(id) },
+        data: {
+          customerId: customerId ? parseInt(customerId) : undefined,
+          branchId: branchId ? parseInt(branchId) : undefined,
+          docId: finalDocId,
+          approvalStatus:
+            body.bilStatus === "PAID" || body.bilStatus === "UNPAID"
+              ? "COMPLETED"
+              : body.approvalStatus || dataFound.approvalStatus,
+          bilStatus: body.bilStatus || dataFound.bilStatus || "PAID",
+          discountValue: discountValue ? String(discountValue) : undefined,
+          netAmount: finalNetAmount
+            ? String(Math.abs(parseInt(finalNetAmount || 0)))
+            : undefined,
+          transactionType: transactionType ? transactionType : "DEFAULT",
+          isReturn: isReturn,
+          isRetrunBillId: body.isRetrunBillId
+            ? parseInt(body.isRetrunBillId)
+            : undefined,
+          availableCredit: body.availableCredit
+            ? parseInt(body.availableCredit)
+            : undefined,
+          offerPenalty: body.offerPenalty ? String(body.offerPenalty) : null,
+          offerRestored: body.offerRestored ? String(body.offerRestored) : null,
+          manualDiscount: manualDiscount ? String(manualDiscount) : null,
+          packingCharges: packingCharges ? parseInt(packingCharges) : null,
+          shippingCharges: shippingCharges ? parseInt(shippingCharges) : null,
+          courierCharges: courierCharges ? parseInt(courierCharges) : null,
+        },
+      });
+
+      await tx.posItems.deleteMany({ where: { PosId: parseInt(id) } });
+
+      await Promise.all(
+        (posItems || []).map((item) =>
+          tx.posItems.create({
+            data: {
+              PosId: parseInt(id),
+              itemId: parseInt(item.itemId || item.id),
+              sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+              colorId: item.colorId ? parseInt(item.colorId) : null,
+              uomId: item.uomId ? parseInt(item.uomId) : null,
+              qty: String(item.qty),
+              price: String(item.price),
+              salesPersonId: item.salesPersonId
+                ? parseInt(item.salesPersonId)
+                : undefined,
+              isReturn: item.isReturn || false,
+              isExchangeItem: item.isExchangeItem || false,
+              isAddedDuringExchange: item.isAddedDuringExchange || false,
+              barcode: item.barcode || null,
+              barcodeType: item.barcodeType || null,
+              appliedOfferId: item.appliedOfferId
+                ? parseInt(item.appliedOfferId)
+                : null,
+              appliedOfferSnapshot: item.appliedOfferSnapshot
+                ? JSON.stringify(item.appliedOfferSnapshot)
+                : null,
+              originalSalesPrice:
+                item.salesPrice !== undefined
+                  ? parseFloat(item.salesPrice)
+                  : null,
+              offerReversal: item.offerReversal
+                ? String(item.offerReversal)
+                : null,
+              offerReapplied: item.offerReapplied
+                ? String(item.offerReapplied)
+                : null,
+              priceType: item.priceType || null,
+              appliedOfferName: item.appliedOfferName || null,
+              sourceStoreId:
+                item?.fulfillments?.length > 0
+                  ? parseInt(item?.fulfillments[0]?.storeId)
+                  : item?.sourceStoreId,
+              ...(item?.fulfillments?.length > 0
+                ? {
+                    fulfillments: {
+                      createMany: {
+                        data: item.fulfillments
+                          ?.filter((i) => i.qty > 0 && i.storeId)
+                          ?.map((fulfillment) => ({
+                            storeId: fulfillment.storeId
+                              ? parseInt(fulfillment.storeId)
+                              : null,
+                            qty: fulfillment.qty
+                              ? String(fulfillment.qty)
+                              : null,
+                          })),
+                      },
+                    },
+                  }
+                : {}),
+            },
+          }),
+        ),
+      );
+
+      await tx.posPayments.deleteMany({ where: { PosId: parseInt(id) } });
+      await tx.posPayments.createMany({
+        data: (posPayments || []).map((p) => ({
+          PosId: parseInt(id),
+          amount: String(p.amount),
+          paymentMode: p.paymentMode,
+          reference_no: p.reference_no,
+          transaction_id: p.transaction_id,
+        })),
+      });
+
+      const stockEntries = [];
+      const retailStoreId = parseInt(storeId);
+
+      if (
+        body.approvalStatus === "COMPLETED" ||
+        body.approvalStatus === "NONE" ||
+        body.bilStatus === "PAID" ||
+        body.bilStatus === "UNPAID"
+      ) {
+        for (const item of posItems || []) {
+          if (!item.itemId && !item.id) continue;
+
+          const itemId = parseInt(item.itemId || item.id);
+          const fulfillments =
+            item.fulfillments && !item.isReturn
+              ? item.fulfillments
+              : [
+                  {
+                    storeId: item.sourceStoreId || retailStoreId,
+                    qty: item.qty,
+                  },
+                ];
+          const price = parseFloat(item.price || 0);
+
+          const baseEntry = {
+            itemId,
+            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+            colorId: item.colorId ? parseInt(item.colorId) : null,
+            uomId: item.uomId ? parseInt(item.uomId) : null,
+            branchId: item.branchId
+              ? parseInt(item.branchId)
+              : parseInt(branchId),
+            barcode: item.barcode || null,
+            transactionId: parseInt(id),
+            price: price,
+          };
+
+          console.log(fulfillments, "fulfillments");
+
+          if (!item.isReturn) {
+            for (const f of fulfillments) {
+              const fQty = parseFloat(f.qty);
+              if (fQty <= 0) continue;
+
+              const fStoreId = parseInt(f.storeId);
+
+              // Pessimistic Lock to prevent concurrent sales of the same item
+              // await tx.$executeRaw`SELECT id FROM item WHERE id = ${itemId} FOR UPDATE`;
+
+              const currentStock = await tx.stock.aggregate({
+                _sum: { qty: true },
+                where: {
+                  itemId,
+                  sizeId: baseEntry.sizeId,
+                  colorId: baseEntry.colorId,
+                  uomId: baseEntry.uomId,
+                  storeId: fStoreId,
+                  branchId: baseEntry.branchId,
+                  barcode: baseEntry.barcode,
+                },
+              });
+
+              console.log(
+                {
+                  itemId,
+                  sizeId: baseEntry.sizeId,
+                  colorId: baseEntry.colorId,
+                  uomId: baseEntry.uomId,
+                  storeId: fStoreId,
+                  branchId: baseEntry.branchId,
+                  barcode: baseEntry?.barcode,
+                  currentStock,
+                },
+                "currentStock",
+              );
+
+              const available = parseFloat(currentStock._sum.qty || 0);
+              if (available < fQty) {
+                const itemName =
+                  item.Item?.name ||
+                  item.itemName ||
+                  item.name ||
+                  `Item ${itemId}`;
+                const sizeName = item.Size?.name || item.sizeName || "-";
+                const colorName = item.Color?.name || item.colorName || "-";
+                throw new Error(
+                  `Insufficient stock for ${itemName} (Size: ${sizeName}, Color: ${colorName}) in ${f.storeName || "Store"}. Available: ${available}, Required: ${fQty}`,
+                );
+              }
+
+              if (fStoreId !== retailStoreId) {
+                stockEntries.push({
+                  ...baseEntry,
+                  qty: -fQty,
+                  storeId: fStoreId,
+                  inOrOut: "StockTransferOut",
+                });
+                stockEntries.push({
+                  ...baseEntry,
+                  qty: fQty,
+                  storeId: retailStoreId,
+                  inOrOut: "StockTransferIn",
+                });
+              }
+
+              stockEntries.push({
+                ...baseEntry,
+                qty: -fQty,
+                storeId: retailStoreId,
+                inOrOut: "POS",
+              });
+            }
+          } else {
+            stockEntries.push({
+              ...baseEntry,
+              qty: parseFloat(item.qty),
+              storeId: retailStoreId,
+              inOrOut: "POS",
+            });
+          }
         }
 
+        await tx.stock.createMany({ data: stockEntries });
+      }
 
+      // Refresh Ledger Entries
+      await tx.ledger.deleteMany({
+        where: { posId: parseInt(id) },
+      });
 
+      const grossReturnAmount = (posItems || [])
+        .filter((i) => i.isReturn)
+        .reduce(
+          (sum, i) => sum + parseFloat(i.price || 0) * parseFloat(i.qty || 0),
+          0,
+        );
 
+      const grossPurchaseAmount = (posItems || [])
+        .filter((i) => !i.isReturn)
+        .reduce(
+          (sum, i) => sum + parseFloat(i.price || 0) * parseFloat(i.qty || 0),
+          0,
+        );
 
-        const result = await prisma.$transaction(async (tx) => {
+      const billAmount =
+        grossPurchaseAmount + (additionalCharges || 0) - manualDiscount;
 
+      const currentDiscount = parseFloat(
+        discountValue !== undefined
+          ? discountValue
+          : updatedPos.discountValue || 0,
+      );
+      const currentPenalty = parseFloat(
+        body.offerPenalty !== undefined
+          ? body.offerPenalty
+          : updatedPos.offerPenalty || 0,
+      );
+      const currentRestored = parseFloat(
+        body.offerRestored !== undefined
+          ? body.offerRestored
+          : updatedPos.offerRestored || 0,
+      );
 
-            if (body.approvalStatus === 'COMPLETED' || body.approvalStatus === 'NONE' || body.bilStatus === 'PAID' || body.bilStatus === 'UNPAID' || dataFound.approvalStatus === 'COMPLETED' || dataFound.approvalStatus === 'NONE') {
-                await tx.stock.deleteMany({
-                    where: {
-                        transactionId: parseInt(id),
-                        OR: [
-                            { inOrOut: "POS" },
-                            { inOrOut: "StockTransferOut" },
-                            { inOrOut: "StockTransferIn" }
-                        ]
-                    }
-                });
-            }
-
-
-            const updatedPos = await tx.pos.update({
-                where: { id: parseInt(id) },
-                data: {
-                    customerId: customerId ? parseInt(customerId) : undefined,
-                    branchId: branchId ? parseInt(branchId) : undefined,
-                    docId: finalDocId,
-                    approvalStatus: (body.bilStatus === 'PAID' || body.bilStatus === 'UNPAID') ? "COMPLETED" : (body.approvalStatus || dataFound.approvalStatus),
-                    bilStatus: body.bilStatus || dataFound.bilStatus || "PAID",
-                    discountValue: discountValue ? String(discountValue) : undefined,
-                    netAmount: finalNetAmount ? String(Math.abs(parseInt(finalNetAmount || 0))) : undefined,
-                    transactionType: transactionType ? transactionType : "DEFAULT",
-                    isReturn: isReturn,
-                    isRetrunBillId: body.isRetrunBillId ? parseInt(body.isRetrunBillId) : undefined,
-                    availableCredit: body.availableCredit ? parseInt(body.availableCredit) : undefined,
-                    offerPenalty: body.offerPenalty ? String(body.offerPenalty) : null,
-                    offerRestored: body.offerRestored ? String(body.offerRestored) : null,
-                    manualDiscount: manualDiscount ? String(manualDiscount) : null,
-                    packingCharges: packingCharges ? parseInt(packingCharges) : null,
-                    shippingCharges: shippingCharges ? parseInt(shippingCharges) : null,
-                    courierCharges: courierCharges ? parseInt(courierCharges) : null,
-                }
-            });
-
-            await tx.posItems.deleteMany({ where: { PosId: parseInt(id) } });
-
-            await Promise.all(
-                (posItems || []).map((item) =>
-                    tx.posItems.create({
-                        data: {
-                            PosId: parseInt(id),
-                            itemId: parseInt(item.itemId || item.id),
-                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                            colorId: item.colorId ? parseInt(item.colorId) : null,
-                            uomId: item.uomId ? parseInt(item.uomId) : null,
-                            qty: String(item.qty),
-                            price: String(item.price),
-                            salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
-                            isReturn: item.isReturn || false,
-                            isExchangeItem: item.isExchangeItem || false,
-                            isAddedDuringExchange: item.isAddedDuringExchange || false,
-                            barcode: item.barcode || null,
-                            barcodeType: item.barcodeType || null,
-                            appliedOfferId: item.appliedOfferId ? parseInt(item.appliedOfferId) : null,
-                            appliedOfferSnapshot: item.appliedOfferSnapshot ? JSON.stringify(item.appliedOfferSnapshot) : null,
-                            originalSalesPrice: item.salesPrice !== undefined ? parseFloat(item.salesPrice) : null,
-                            offerReversal: item.offerReversal ? String(item.offerReversal) : null,
-                            offerReapplied: item.offerReapplied ? String(item.offerReapplied) : null,
-                            priceType: item.priceType || null,
-                            appliedOfferName: item.appliedOfferName || null,
-                            sourceStoreId: item?.fulfillments?.length > 0 ? parseInt(item?.fulfillments[0]?.storeId) : item?.sourceStoreId,
-                            ...(item?.fulfillments?.length > 0 ? {
-                                fulfillments: {
-                                    createMany: {
-                                        data: item.fulfillments?.filter((i) => i.qty > 0 && i.storeId)?.map((fulfillment) => ({
-                                            storeId: fulfillment.storeId ? parseInt(fulfillment.storeId) : null,
-                                            qty: fulfillment.qty ? String(fulfillment.qty) : null
-                                        }))
-                                    }
-                                }
-                            } : {})
-                        }
-                    })
-                )
-            );
-
-
-            await tx.posPayments.deleteMany({ where: { PosId: parseInt(id) } });
-            await tx.posPayments.createMany({
-                data: (posPayments || []).map(p => ({
-                    PosId: parseInt(id),
-                    amount: String(p.amount),
-                    paymentMode: p.paymentMode,
-                    reference_no: p.reference_no,
-                    transaction_id: p.transaction_id
-                }))
-            });
-
-            const stockEntries = [];
-            const retailStoreId = parseInt(storeId);
-
-            if (body.approvalStatus === 'COMPLETED' || body.approvalStatus === 'NONE' || body.bilStatus === 'PAID' || body.bilStatus === 'UNPAID') {
-                for (const item of (posItems || [])) {
-                    if (!item.itemId && !item.id) continue;
-
-                    const itemId = parseInt(item.itemId || item.id);
-                    const fulfillments = item.fulfillments && !item.isReturn ? item.fulfillments : [{ storeId: item.sourceStoreId || retailStoreId, qty: item.qty }];
-                    const price = parseFloat(item.price || 0);
-
-                    const baseEntry = {
-                        itemId,
-                        sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                        colorId: item.colorId ? parseInt(item.colorId) : null,
-                        uomId: item.uomId ? parseInt(item.uomId) : null,
-                        branchId: item.branchId ? parseInt(item.branchId) : parseInt(branchId),
-                        barcode: item.barcode || null,
-                        transactionId: parseInt(id),
-                        price: price,
-                    };
-
-                    console.log(fulfillments, "fulfillments")
-
-                    if (!item.isReturn) {
-                        for (const f of fulfillments) {
-                            const fQty = parseFloat(f.qty);
-                            if (fQty <= 0) continue;
-
-                            const fStoreId = parseInt(f.storeId);
-
-                            // Pessimistic Lock to prevent concurrent sales of the same item
-                            // await tx.$executeRaw`SELECT id FROM item WHERE id = ${itemId} FOR UPDATE`;
-
-                            const currentStock = await tx.stock.aggregate({
-                                _sum: { qty: true },
-                                where: {
-                                    itemId,
-                                    sizeId: baseEntry.sizeId,
-                                    colorId: baseEntry.colorId,
-                                    uomId: baseEntry.uomId,
-                                    storeId: fStoreId,
-                                    branchId: baseEntry.branchId,
-                                    barcode: baseEntry.barcode
-
-                                }
-                            });
-
-                            console.log({
-                                itemId,
-                                sizeId: baseEntry.sizeId,
-                                colorId: baseEntry.colorId,
-                                uomId: baseEntry.uomId,
-                                storeId: fStoreId,
-                                branchId: baseEntry.branchId,
-                                barcode: baseEntry?.barcode,
-                                currentStock
-                            }, "currentStock")
-
-                            const available = parseFloat(currentStock._sum.qty || 0);
-                            if (available < fQty) {
-                                const itemName = item.Item?.name || item.itemName || item.name || `Item ${itemId}`;
-                                const sizeName = item.Size?.name || item.sizeName || '-';
-                                const colorName = item.Color?.name || item.colorName || '-';
-                                throw new Error(`Insufficient stock for ${itemName} (Size: ${sizeName}, Color: ${colorName}) in ${f.storeName || 'Store'}. Available: ${available}, Required: ${fQty}`);
-                            }
-
-                            if (fStoreId !== retailStoreId) {
-                                stockEntries.push({ ...baseEntry, qty: -fQty, storeId: fStoreId, inOrOut: "StockTransferOut" });
-                                stockEntries.push({ ...baseEntry, qty: fQty, storeId: retailStoreId, inOrOut: "StockTransferIn" });
-                            }
-
-                            stockEntries.push({ ...baseEntry, qty: -fQty, storeId: retailStoreId, inOrOut: "POS" });
-                        }
-                    } else {
-                        stockEntries.push({ ...baseEntry, qty: parseFloat(item.qty), storeId: retailStoreId, inOrOut: "POS" });
-                    }
-                }
-
-                await tx.stock.createMany({ data: stockEntries });
-            }
-
-            // Refresh Ledger Entries
-            await tx.ledger.deleteMany({
-                where: { posId: parseInt(id) }
-            });
-
-            const grossReturnAmount = (posItems || [])
-                .filter(i => i.isReturn)
-                .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
-
-            const grossPurchaseAmount = (posItems || [])
-                .filter(i => !i.isReturn)
-                .reduce((sum, i) => sum + (parseFloat(i.price || 0) * parseFloat(i.qty || 0)), 0);
-
-            const billAmount = (grossPurchaseAmount + (additionalCharges || 0)) - manualDiscount
-
-            const currentDiscount = parseFloat(discountValue !== undefined ? discountValue : (updatedPos.discountValue || 0));
-            const currentPenalty = parseFloat(body.offerPenalty !== undefined ? body.offerPenalty : (updatedPos.offerPenalty || 0));
-            const currentRestored = parseFloat(body.offerRestored !== undefined ? body.offerRestored : (updatedPos.offerRestored || 0));
-
-
-            if (grossReturnAmount > 0) {
-                await tx.ledger.create({
-                    data: {
-                        EntryType: "Credit_Note",
-                        LedgerType: "Customer",
-                        creditOrDebit: "Credit",
-                        partyId: parseInt(customerId || updatedPos.customerId),
-                        amount: Math.round(grossReturnAmount),
-                        partyBillNo: updatedPos.docId,
-                        partyBillDate: new Date(),
-                        posId: parseInt(id)
-                    }
-                });
-            }
-
-            if (billAmount > 0) {
-                await tx.ledger.create({
-                    data: {
-                        EntryType: "Sales",
-                        LedgerType: "Customer",
-                        creditOrDebit: "Debit",
-                        partyId: parseInt(customerId || updatedPos.customerId),
-                        amount: Math.round(billAmount),
-                        partyBillNo: updatedPos.docId,
-                        partyBillDate: new Date(),
-                        posId: parseInt(id)
-                    }
-                });
-            }
-
-            if (!isReturn) {
-                const actualPaymentAmount = (posPayments || [])
-                    .filter(p => p.paymentMode !== 'STORE_CREDIT')
-                    .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-
-                if (actualPaymentAmount > 0) {
-                    await tx.ledger.create({
-                        data: {
-                            EntryType: "Customer_Payment",
-                            LedgerType: "Customer",
-                            creditOrDebit: "Credit",
-                            partyId: parseInt(customerId || updatedPos.customerId),
-                            amount: Math.abs(parseInt(actualPaymentAmount)),
-                            partyBillNo: updatedPos.docId,
-                            partyBillDate: new Date(),
-                            posId: updatedPos.id,
-                        }
-                    });
-                }
-            }
-
-
-
-            return updatedPos;
+      if (grossReturnAmount > 0) {
+        await tx.ledger.create({
+          data: {
+            EntryType: "Credit_Note",
+            LedgerType: "Customer",
+            creditOrDebit: "Credit",
+            partyId: parseInt(customerId || updatedPos.customerId),
+            amount: Math.round(grossReturnAmount),
+            partyBillNo: updatedPos.docId,
+            partyBillDate: new Date(),
+            posId: parseInt(id),
+          },
         });
+      }
 
-        return { statusCode: 0, data: result };
-    } catch (error) {
-        console.error("POS Update Error:", error);
-        return { statusCode: 1, message: "Failed to update sale: " + error.message };
-    }
+      if (billAmount > 0) {
+        await tx.ledger.create({
+          data: {
+            EntryType: "Sales",
+            LedgerType: "Customer",
+            creditOrDebit: "Debit",
+            partyId: parseInt(customerId || updatedPos.customerId),
+            amount: Math.round(billAmount),
+            partyBillNo: updatedPos.docId,
+            partyBillDate: new Date(),
+            posId: parseInt(id),
+          },
+        });
+      }
+
+      if (!isReturn) {
+        const actualPaymentAmount = (posPayments || [])
+          .filter((p) => p.paymentMode !== "STORE_CREDIT")
+          .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+        if (actualPaymentAmount > 0) {
+          await tx.ledger.create({
+            data: {
+              EntryType: "Customer_Payment",
+              LedgerType: "Customer",
+              creditOrDebit: "Credit",
+              partyId: parseInt(customerId || updatedPos.customerId),
+              amount: Math.abs(parseInt(actualPaymentAmount)),
+              partyBillNo: updatedPos.docId,
+              partyBillDate: new Date(),
+              posId: updatedPos.id,
+            },
+          });
+        }
+      }
+
+      return updatedPos;
+    });
+
+    return { statusCode: 0, data: result };
+  } catch (error) {
+    console.error("POS Update Error:", error);
+    return {
+      statusCode: 1,
+      message: "Failed to update sale: " + error.message,
+    };
+  }
 }
 
 async function remove(id) {
-    try {
-        const result = await prisma.$transaction(async (tx) => {
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const posDetails = await tx.pos.findUnique({
+        where: { id: parseInt(id) },
+      });
 
-            const posDetails = await tx.pos.findUnique({
-                where: { id: parseInt(id) },
+      console.log(posDetails, "posDetails");
 
-            });
+      const isReturn = posDetails?.isReturn ? true : false;
 
-            console.log(posDetails, "posDetails")
+      const stockDetails = await tx.stock.findMany({
+        where: {
+          transactionId: parseInt(id),
+          OR: [
+            { inOrOut: isReturn ? "POSReturn" : "POS" },
+            { inOrOut: "StockTransferOut" },
+            { inOrOut: "StockTransferIn" },
+          ],
+        },
+      });
 
+      // ✅ இப்போ delete பண்ணு
+      await tx.stock.deleteMany({
+        where: {
+          transactionId: parseInt(id),
+          OR: [
+            { inOrOut: isReturn ? "POSReturn" : "POS" },
+            { inOrOut: "StockTransferOut" },
+            { inOrOut: "StockTransferIn" },
+          ],
+        },
+      });
 
-            const isReturn = posDetails?.isReturn ? true : false
+      await tx.pos.delete({ where: { id: parseInt(id) } });
 
+      return {
+        deletedPos: posDetails,
+        deletedStock: stockDetails,
+      };
+    });
 
-            const stockDetails = await tx.stock.findMany({
-                where: {
-                    transactionId: parseInt(id),
-                    OR: [
-                        { inOrOut: isReturn ? "POSReturn" : "POS" },
-                        { inOrOut: "StockTransferOut" },
-                        { inOrOut: "StockTransferIn" }
-                    ]
-                }
-            });
+    console.log(result, "result");
 
-            // ✅ இப்போ delete பண்ணு
-            await tx.stock.deleteMany({
-                where: {
-                    transactionId: parseInt(id),
-                    OR: [
-                        { inOrOut: isReturn ? "POSReturn" : "POS" },
-                        { inOrOut: "StockTransferOut" },
-                        { inOrOut: "StockTransferIn" }
-                    ]
-                }
-            });
-
-            await tx.pos.delete({ where: { id: parseInt(id) } });
-
-            return {
-                deletedPos: posDetails,
-                deletedStock: stockDetails
-            };
-        });
-
-        console.log(result, "result")
-
-        return { statusCode: 0, data: result };
-
-    } catch (error) {
-        console.error("POS Deletion Error:", error);
-        return { statusCode: 1, message: "Failed to delete sale: " + error.message };
-    }
+    return { statusCode: 0, data: result };
+  } catch (error) {
+    console.error("POS Deletion Error:", error);
+    return {
+      statusCode: 1,
+      message: "Failed to delete sale: " + error.message,
+    };
+  }
 }
 
 async function checkReferenceNumber(req) {
-    const { refNo } = req.query;
-    if (!refNo) return { statusCode: 1, message: "Reference number is required" };
+  const { refNo } = req.query;
+  if (!refNo) return { statusCode: 1, message: "Reference number is required" };
 
-    const posPayment = await prisma.posPayments.findFirst({
-        where: { reference_no: refNo }
-    });
+  const posPayment = await prisma.posPayments.findFirst({
+    where: { reference_no: refNo },
+  });
 
-    const payment = await prisma.payment.findFirst({
-        where: { paymentRefNo: refNo }
-    });
+  const payment = await prisma.payment.findFirst({
+    where: { paymentRefNo: refNo },
+  });
 
-    return {
-        statusCode: 0,
-        exists: !!(posPayment || payment),
-        source: posPayment ? "POS" : (payment ? "Payments" : null)
-    };
+  return {
+    statusCode: 0,
+    exists: !!(posPayment || payment),
+    source: posPayment ? "POS" : payment ? "Payments" : null,
+  };
 }
 
 // async function getPartyCreditBalance(req) {
@@ -1041,7 +1313,6 @@ async function checkReferenceNumber(req) {
 //         },
 //         select: { amount: true, paymentMode: true }
 //     });
-
 
 //     console.log("ledgerCredit", ledgerCredit)
 //     console.log("ledgerDebit", ledgerDebit)
@@ -1069,250 +1340,293 @@ async function checkReferenceNumber(req) {
 //     return { statusCode: 0, data: Math.max(0, availableCredit) };
 // }
 
-
 async function getPartyCreditBalance(req) {
-    const { partyId } = req.query;
-    if (!partyId) return { statusCode: 0, data: 0 };
+  const { partyId } = req.query;
+  if (!partyId) return { statusCode: 0, data: 0 };
 
-    const Customer_Payment = await prisma.ledger.aggregate({
-        _sum: { amount: true },
-        where: { partyId: parseInt(partyId), creditOrDebit: 'Credit', EntryType: 'Customer_Payment', posId: { not: null } }
-    });
+  const Customer_Payment = await prisma.ledger.aggregate({
+    _sum: { amount: true },
+    where: {
+      partyId: parseInt(partyId),
+      creditOrDebit: "Credit",
+      EntryType: "Customer_Payment",
+      posId: { not: null },
+    },
+  });
 
-    const Sales = await prisma.ledger.aggregate({
-        _sum: { amount: true },
-        where: { partyId: parseInt(partyId), creditOrDebit: 'Debit', EntryType: 'Sales', posId: { not: null } }
-    });
+  const Sales = await prisma.ledger.aggregate({
+    _sum: { amount: true },
+    where: {
+      partyId: parseInt(partyId),
+      creditOrDebit: "Debit",
+      EntryType: "Sales",
+      posId: { not: null },
+    },
+  });
 
-    const Credit_Note = await prisma.ledger.aggregate({
-        _sum: { amount: true },
-        where: { partyId: parseInt(partyId), creditOrDebit: 'Credit', EntryType: 'Credit_Note' }
-    });
+  const Credit_Note = await prisma.ledger.aggregate({
+    _sum: { amount: true },
+    where: {
+      partyId: parseInt(partyId),
+      creditOrDebit: "Credit",
+      EntryType: "Credit_Note",
+    },
+  });
 
-    const Credit_Adjustment = await prisma.ledger.aggregate({
-        _sum: { amount: true },
-        where: { partyId: parseInt(partyId), creditOrDebit: 'Credit', EntryType: 'Credit_Adjustment' }
-    });
+  const Credit_Adjustment = await prisma.ledger.aggregate({
+    _sum: { amount: true },
+    where: {
+      partyId: parseInt(partyId),
+      creditOrDebit: "Credit",
+      EntryType: "Credit_Adjustment",
+    },
+  });
 
-    const Debit_Adjustment = await prisma.ledger.aggregate({
-        _sum: { amount: true },
-        where: { partyId: parseInt(partyId), creditOrDebit: 'Debit', EntryType: 'Debit_Adjustment' }
-    });
+  const Debit_Adjustment = await prisma.ledger.aggregate({
+    _sum: { amount: true },
+    where: {
+      partyId: parseInt(partyId),
+      creditOrDebit: "Debit",
+      EntryType: "Debit_Adjustment",
+    },
+  });
 
+  console.log("Customer_Payment", Customer_Payment);
+  console.log("Sales", Sales);
+  console.log("Credit_Note", Credit_Note);
+  console.log("Credit_Adjustment", Credit_Adjustment);
+  console.log("Debit_Adjustment", Debit_Adjustment);
 
-    console.log("Customer_Payment", Customer_Payment)
-    console.log("Sales", Sales)
-    console.log("Credit_Note", Credit_Note)
-    console.log("Credit_Adjustment", Credit_Adjustment)
-    console.log("Debit_Adjustment", Debit_Adjustment)
+  const totalCredit = Customer_Payment._sum.amount + Credit_Note._sum.amount;
+  const totalDebit =
+    Sales._sum.amount +
+    Debit_Adjustment._sum.amount +
+    Credit_Adjustment._sum.amount;
+  //   const availableCredit = totalCredit - totalDebit;
+  const availableCredit = totalDebit - totalCredit;
 
+  console.log(totalCredit, "totalCredit", totalDebit, "totalDebit");
 
-    const totalCredit = Customer_Payment._sum.amount + Credit_Note._sum.amount
-    const totalDebit = Sales._sum.amount + Debit_Adjustment._sum.amount + Credit_Adjustment._sum.amount;;
-    const availableCredit = totalCredit - totalDebit;
-
-
-
-
-
-    return {
-        statusCode: 0,
-        data: Math.max(0, availableCredit),
-        ledger: {
-            Customer_Payment: Customer_Payment._sum.amount || 0,
-            Sales: Sales._sum.amount || 0,
-            Credit_Note: Credit_Note._sum.amount || 0,
-            Credit_Adjustment: Credit_Adjustment._sum.amount || 0,
-            Debit_Adjustment: Debit_Adjustment._sum.amount || 0,
-            totalCredit,
-            totalDebit,
-            availableCredit
-
-        }
-    };
+  return {
+    statusCode: 0,
+    data: Math.max(0, availableCredit),
+    ledger: {
+      Customer_Payment: Customer_Payment._sum.amount || 0,
+      Sales: Sales._sum.amount || 0,
+      Credit_Note: Credit_Note._sum.amount || 0,
+      Credit_Adjustment: Credit_Adjustment._sum.amount || 0,
+      Debit_Adjustment: Debit_Adjustment._sum.amount || 0,
+      totalCredit,
+      totalDebit,
+      availableCredit,
+    },
+  };
 }
 async function cancel(id) {
-    try {
-        const dataFound = await prisma.pos.findUnique({
-            where: { id: parseInt(id) },
-            include: { PosItems: true }
-        });
+  try {
+    const dataFound = await prisma.pos.findUnique({
+      where: { id: parseInt(id) },
+      include: { PosItems: true },
+    });
 
-        if (!dataFound) return NoRecordFound("POS");
-        if (dataFound.bilStatus !== 'UNPAID') {
-            return { statusCode: 1, message: "Only unpaid bills can be canceled." };
-        }
-        if (dataFound.isCancel) {
-            return { statusCode: 1, message: "Bill is already canceled." };
-        }
-
-        const result = await prisma.$transaction(async (tx) => {
-            // 1. Mark as canceled
-            const updatedPos = await tx.pos.update({
-                where: { id: parseInt(id) },
-                data: { isCancel: true }
-            });
-
-            // 2. Reverse Stock
-            // We delete the existing stock entries for this POS transaction
-            await tx.stock.deleteMany({
-                where: {
-                    transactionId: parseInt(id),
-                    OR: [
-                        { inOrOut: "POS" },
-                        { inOrOut: "StockTransferOut" },
-                        { inOrOut: "StockTransferIn" }
-                    ]
-                }
-            });
-
-            // 3. Reverse Ledger
-            await tx.ledger.deleteMany({
-                where: { posId: parseInt(id) }
-            });
-
-            return updatedPos;
-        });
-
-        return { statusCode: 0, data: result };
-    } catch (error) {
-        console.error("POS Cancellation Error:", error);
-        return { statusCode: 1, message: "Failed to cancel sale: " + error.message };
+    if (!dataFound) return NoRecordFound("POS");
+    if (dataFound.bilStatus !== "UNPAID") {
+      return { statusCode: 1, message: "Only unpaid bills can be canceled." };
     }
+    if (dataFound.isCancel) {
+      return { statusCode: 1, message: "Bill is already canceled." };
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Mark as canceled
+      const updatedPos = await tx.pos.update({
+        where: { id: parseInt(id) },
+        data: { isCancel: true },
+      });
+
+      // 2. Reverse Stock
+      // We delete the existing stock entries for this POS transaction
+      await tx.stock.deleteMany({
+        where: {
+          transactionId: parseInt(id),
+          OR: [
+            { inOrOut: "POS" },
+            { inOrOut: "StockTransferOut" },
+            { inOrOut: "StockTransferIn" },
+          ],
+        },
+      });
+
+      // 3. Reverse Ledger
+      await tx.ledger.deleteMany({
+        where: { posId: parseInt(id) },
+      });
+
+      return updatedPos;
+    });
+
+    return { statusCode: 0, data: result };
+  } catch (error) {
+    console.error("POS Cancellation Error:", error);
+    return {
+      statusCode: 1,
+      message: "Failed to cancel sale: " + error.message,
+    };
+  }
 }
 
 async function requestDiscount(body) {
-    try {
-        const {
-            customerId, posItems, branchId, netAmount, transactionType
-        } = await body;
+  try {
+    const { customerId, posItems, branchId, netAmount, transactionType } =
+      await body;
 
-        const result = await prisma.pos.create({
-            data: {
-                customerId: customerId ? parseInt(customerId) : undefined,
-                docId: "DRAFT",
-                branchId: branchId ? parseInt(branchId) : undefined,
-                createdById: body.userId ? parseInt(body.userId) : undefined,
-                netAmount: netAmount ? String(netAmount) : "0",
-                approvalStatus: "PENDING",
-                bilStatus: "DRAFT",
-                transactionType: transactionType ? transactionType : "DEFAULT",
-                isReturn: false,
-                PosItems: {
-                    createMany: {
-                        data: (posItems || []).map((item) => ({
-                            itemId: parseInt(item.itemId || item.id),
-                            sizeId: item.sizeId ? parseInt(item.sizeId) : null,
-                            colorId: item.colorId ? parseInt(item.colorId) : null,
-                            uomId: item.uomId ? parseInt(item.uomId) : null,
-                            qty: String(item.qty),
-                            price: String(item.price),
-                            salesPersonId: item.salesPersonId ? parseInt(item.salesPersonId) : undefined,
-                            barcode: item.barcode || null,
-                            barcodeType: item.barcodeType || null,
-                        }))
-                    }
-                }
-            }
-        });
-        return { statusCode: 0, data: result };
-    } catch (error) {
-        console.error("Discount Request Creation Error:", error);
-        return { statusCode: 1, message: "Discount request failed: " + error.message };
-    }
+    const result = await prisma.pos.create({
+      data: {
+        customerId: customerId ? parseInt(customerId) : undefined,
+        docId: "DRAFT",
+        branchId: branchId ? parseInt(branchId) : undefined,
+        createdById: body.userId ? parseInt(body.userId) : undefined,
+        netAmount: netAmount ? String(netAmount) : "0",
+        approvalStatus: "PENDING",
+        bilStatus: "DRAFT",
+        transactionType: transactionType ? transactionType : "DEFAULT",
+        isReturn: false,
+        PosItems: {
+          createMany: {
+            data: (posItems || []).map((item) => ({
+              itemId: parseInt(item.itemId || item.id),
+              sizeId: item.sizeId ? parseInt(item.sizeId) : null,
+              colorId: item.colorId ? parseInt(item.colorId) : null,
+              uomId: item.uomId ? parseInt(item.uomId) : null,
+              qty: String(item.qty),
+              price: String(item.price),
+              salesPersonId: item.salesPersonId
+                ? parseInt(item.salesPersonId)
+                : undefined,
+              barcode: item.barcode || null,
+              barcodeType: item.barcodeType || null,
+            })),
+          },
+        },
+      },
+    });
+    return { statusCode: 0, data: result };
+  } catch (error) {
+    console.error("Discount Request Creation Error:", error);
+    return {
+      statusCode: 1,
+      message: "Discount request failed: " + error.message,
+    };
+  }
 }
 
 async function approveDiscount(id, body) {
-    try {
-        const { discountValue } = await body;
-        const posRecord = await prisma.pos.findUnique({
-            where: { id: parseInt(id) },
-            include: { PosItems: true }
-        });
+  try {
+    const { discountValue } = await body;
+    const posRecord = await prisma.pos.findUnique({
+      where: { id: parseInt(id) },
+      include: { PosItems: true },
+    });
 
-        if (!posRecord) return { statusCode: 1, message: "POS bill draft not found" };
+    if (!posRecord)
+      return { statusCode: 1, message: "POS bill draft not found" };
 
-        const itemsTotal = posRecord.PosItems.reduce((sum, item) => {
-            return sum + (parseFloat(item.price || 0) * parseFloat(item.qty || 0));
-        }, 0);
-        const finalNet = Math.max(0, Math.round(itemsTotal - parseFloat(discountValue || 0)));
+    const itemsTotal = posRecord.PosItems.reduce((sum, item) => {
+      return sum + parseFloat(item.price || 0) * parseFloat(item.qty || 0);
+    }, 0);
+    const finalNet = Math.max(
+      0,
+      Math.round(itemsTotal - parseFloat(discountValue || 0)),
+    );
 
-        const updated = await prisma.pos.update({
-            where: { id: parseInt(id) },
-            data: {
-                discountValue: String(discountValue),
-                netAmount: String(finalNet),
-                docId: "DRAFT",
-                approvalStatus: "APPROVED",
-                bilStatus: "DRAFT"
-            }
-        });
+    const updated = await prisma.pos.update({
+      where: { id: parseInt(id) },
+      data: {
+        discountValue: String(discountValue),
+        netAmount: String(finalNet),
+        docId: "DRAFT",
+        approvalStatus: "APPROVED",
+        bilStatus: "DRAFT",
+      },
+    });
 
-        return { statusCode: 0, data: updated };
-    } catch (error) {
-        console.error("Discount Request Approval Error:", error);
-        return { statusCode: 1, message: "Approval update failed: " + error.message };
-    }
+    return { statusCode: 0, data: updated };
+  } catch (error) {
+    console.error("Discount Request Approval Error:", error);
+    return {
+      statusCode: 1,
+      message: "Approval update failed: " + error.message,
+    };
+  }
 }
 
 async function updatePosPayments(id, payments) {
-    try {
-        const posRecord = await prisma.pos.findUnique({
-            where: { id: parseInt(id) },
-            include: { PosPayments: true }
-        });
+  try {
+    const posRecord = await prisma.pos.findUnique({
+      where: { id: parseInt(id) },
+      include: { PosPayments: true },
+    });
 
-        if (!posRecord) {
-            return { statusCode: 1, message: "POS Record not found" };
-        }
-
-        const totalBillAmount = parseFloat(posRecord.netAmount || 0);
-        const newTotalPayments = (payments || []).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
-
-        // Validation: Sum of new payments must match total bill amount
-        if (Math.abs(totalBillAmount - newTotalPayments) > 0.1) {
-            return { statusCode: 1, message: `Payment total (${newTotalPayments}) does not match bill amount (${totalBillAmount})` };
-        }
-
-        await prisma.$transaction(async (tx) => {
-            // Delete existing payments
-            await tx.posPayments.deleteMany({
-                where: { PosId: parseInt(id) }
-            });
-
-            // Create new payments
-            if (payments && payments.length > 0) {
-                await tx.posPayments.createMany({
-                    data: payments.map(p => ({
-                        PosId: parseInt(id),
-                        amount: String(p.amount),
-                        paymentMode: p.paymentMode,
-                        reference_no: p.reference_no || null,
-                        transaction_id: p.transaction_id || null,
-                        date: new Date()
-                    }))
-                });
-            }
-        });
-
-        return { statusCode: 0, message: "Payments updated successfully" };
-    } catch (error) {
-        console.error("updatePosPayments Error:", error);
-        return { statusCode: 1, message: "Payment update failed: " + error.message };
+    if (!posRecord) {
+      return { statusCode: 1, message: "POS Record not found" };
     }
+
+    const totalBillAmount = parseFloat(posRecord.netAmount || 0);
+    const newTotalPayments = (payments || []).reduce(
+      (sum, p) => sum + (parseFloat(p.amount) || 0),
+      0,
+    );
+
+    // Validation: Sum of new payments must match total bill amount
+    if (Math.abs(totalBillAmount - newTotalPayments) > 0.1) {
+      return {
+        statusCode: 1,
+        message: `Payment total (${newTotalPayments}) does not match bill amount (${totalBillAmount})`,
+      };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Delete existing payments
+      await tx.posPayments.deleteMany({
+        where: { PosId: parseInt(id) },
+      });
+
+      // Create new payments
+      if (payments && payments.length > 0) {
+        await tx.posPayments.createMany({
+          data: payments.map((p) => ({
+            PosId: parseInt(id),
+            amount: String(p.amount),
+            paymentMode: p.paymentMode,
+            reference_no: p.reference_no || null,
+            transaction_id: p.transaction_id || null,
+            date: new Date(),
+          })),
+        });
+      }
+    });
+
+    return { statusCode: 0, message: "Payments updated successfully" };
+  } catch (error) {
+    console.error("updatePosPayments Error:", error);
+    return {
+      statusCode: 1,
+      message: "Payment update failed: " + error.message,
+    };
+  }
 }
 
 export {
-    get,
-    getOne,
-    getSearch,
-    create,
-    update,
-    remove,
-    cancel,
-    checkReferenceNumber,
-    getPartyCreditBalance,
-    requestDiscount,
-    approveDiscount,
-    updatePosPayments
-}
+  get,
+  getOne,
+  getSearch,
+  create,
+  update,
+  remove,
+  cancel,
+  checkReferenceNumber,
+  getPartyCreditBalance,
+  requestDiscount,
+  approveDiscount,
+  updatePosPayments,
+};

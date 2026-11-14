@@ -311,14 +311,16 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   console.log(itemPriceList, "itemPriceList")
 
   useEffect(() => {
-    if (id && singleData?.data && !isSingleFetching && syncedIdRef.current !== id) {
+    // Forget the last sync when the modal is closed, so reopening the same item
+    // reloads saved values and discards unsaved edits.
+    if (!id || !form) {
+      syncedIdRef.current = null;
+    }
+    if (form && id && singleData?.data && !isSingleFetching && syncedIdRef.current !== id) {
       syncFormWithDb(singleData.data);
       syncedIdRef.current = id;
     }
-    if (!id) {
-      syncedIdRef.current = null;
-    }
-  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+  }, [form, isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
 
   // Sync the 'barcode' state with the primary barcode of the first price row (for UI conditions)
   useEffect(() => {
@@ -377,6 +379,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       }
     }
   }, [isSameSalesPrice, commonSalesPrice, itemPriceList]);
+
+  
 
   const data = {
     id,
@@ -696,6 +700,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     setGridIndex(null);
     setIsLegacyItem(false);
     setItemPriceList(barcodeGenerationMethod === "STANDARD" ? [createStandardPriceRow()] : []);
+    setIsSameSalesPrice(false)
+    setCommonSalesPrice("")
   };
 
   const ACTIVE = (
@@ -1797,7 +1803,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         onDelete={handleDelete}
         printData={handlePrintReport}
         itemsPerPage={15}
-      />
+      />{console.log(commonSalesPrice,"setCommonSalesPrice",isSameSalesPrice)}
 
       {form && (
         <Modal
@@ -1806,6 +1812,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           widthClass={"w-[90%] h-[95%]"}
           onClose={() => {
             setForm(false);
+            setIsSameSalesPrice(false)
+            setCommonSalesPrice("")
           }}
         >
           {formBody}
