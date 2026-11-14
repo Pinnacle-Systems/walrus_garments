@@ -265,7 +265,7 @@ function buildFullReceiptInstructions(printPayload, options = {}) {
   let totalAmountVal = '';
   if (numericTotal > 0) {
     totalAmountVal = numericTotal.toFixed(0);
-  } else if (overallPurchaseTotalNew > 0) {
+  } else if (overallPurchaseTotalNew >= 0) {
     totalAmountVal = overallPurchaseTotalNew.toFixed(2);
   } else {
     totalAmountVal = Math.abs(purchaseTotal - returnTotal).toFixed(2);
