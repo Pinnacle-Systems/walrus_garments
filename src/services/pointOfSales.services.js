@@ -60,11 +60,11 @@ function manualFilterSearchData(
     (item) =>
       (searchPoDate
         ? String(getDateFromDateTime(item.createdAt)).includes(searchPoDate) ||
-          String(getDateFromDateTimeYear(item.createdAt)).includes(searchPoDate)
+        String(getDateFromDateTimeYear(item.createdAt)).includes(searchPoDate)
         : true) &&
       (searchDueDate
         ? String(getDateFromDateTime(item.dueDate)).includes(searchDueDate) ||
-          String(getDateFromDateTimeYear(item.dueDate)).includes(searchDueDate)
+        String(getDateFromDateTimeYear(item.dueDate)).includes(searchDueDate)
         : true) &&
       (searchPoType
         ? item.poType.toLowerCase().includes(searchPoType.toLowerCase())
@@ -197,11 +197,11 @@ async function get(req) {
     ...(billAmount != undefined &&
       billAmount != null &&
       billAmount !== "" && {
-        OR:
-          billAmount == 0
-            ? [{ netAmount: null }, { netAmount: "0" }]
-            : [{ netAmount: String(billAmount) }],
-      }),
+      OR:
+        billAmount == 0
+          ? [{ netAmount: null }, { netAmount: "0" }]
+          : [{ netAmount: String(billAmount) }],
+    }),
   };
 
   if (approvalStatus) {
@@ -263,15 +263,15 @@ async function get(req) {
   const [linkedReturns, linkedExchanges] = await Promise.all([
     returnBillIds.length > 0
       ? prisma.pos.findMany({
-          where: { id: { in: returnBillIds } },
-          select: { id: true, docId: true },
-        })
+        where: { id: { in: returnBillIds } },
+        select: { id: true, docId: true },
+      })
       : [],
     exchangeBillIds.length > 0
       ? prisma.pos.findMany({
-          where: { id: { in: exchangeBillIds } },
-          select: { id: true, docId: true },
-        })
+        where: { id: { in: exchangeBillIds } },
+        select: { id: true, docId: true },
+      })
       : [],
   ]);
 
@@ -429,9 +429,9 @@ async function create(body) {
     let finYearDate = await getFinYearStartTimeEndTime(finYearId);
     const shortCode = finYearDate
       ? getYearShortCodeForFinYear(
-          finYearDate?.startDateStartTime,
-          finYearDate?.endDateEndTime,
-        )
+        finYearDate?.startDateStartTime,
+        finYearDate?.endDateEndTime,
+      )
       : "";
     const isReturn =
       transactionType === "RETURN" ||
@@ -574,21 +574,21 @@ async function create(body) {
                   : null,
               ...(item?.fulfillments?.length > 0
                 ? {
-                    fulfillments: {
-                      createMany: {
-                        data: item.fulfillments
-                          ?.filter((i) => i.qty > 0 && i.storeId)
-                          ?.map((fulfillment) => ({
-                            storeId: fulfillment.storeId
-                              ? parseInt(fulfillment.storeId)
-                              : null,
-                            qty: fulfillment.qty
-                              ? String(fulfillment.qty)
-                              : null,
-                          })),
-                      },
+                  fulfillments: {
+                    createMany: {
+                      data: item.fulfillments
+                        ?.filter((i) => i.qty > 0 && i.storeId)
+                        ?.map((fulfillment) => ({
+                          storeId: fulfillment.storeId
+                            ? parseInt(fulfillment.storeId)
+                            : null,
+                          qty: fulfillment.qty
+                            ? String(fulfillment.qty)
+                            : null,
+                        })),
                     },
-                  }
+                  },
+                }
                 : {}),
             })),
           },
@@ -849,9 +849,9 @@ async function update(id, body) {
       const finYearDate = await getFinYearStartTimeEndTime(finYearId);
       const shortCode = finYearDate
         ? getYearShortCodeForFinYear(
-            finYearDate?.startDateStartTime,
-            finYearDate?.endDateEndTime,
-          )
+          finYearDate?.startDateStartTime,
+          finYearDate?.endDateEndTime,
+        )
         : "";
       finalDocId = await getNextDocId(
         branchId,
@@ -960,21 +960,21 @@ async function update(id, body) {
                   : item?.sourceStoreId,
               ...(item?.fulfillments?.length > 0
                 ? {
-                    fulfillments: {
-                      createMany: {
-                        data: item.fulfillments
-                          ?.filter((i) => i.qty > 0 && i.storeId)
-                          ?.map((fulfillment) => ({
-                            storeId: fulfillment.storeId
-                              ? parseInt(fulfillment.storeId)
-                              : null,
-                            qty: fulfillment.qty
-                              ? String(fulfillment.qty)
-                              : null,
-                          })),
-                      },
+                  fulfillments: {
+                    createMany: {
+                      data: item.fulfillments
+                        ?.filter((i) => i.qty > 0 && i.storeId)
+                        ?.map((fulfillment) => ({
+                          storeId: fulfillment.storeId
+                            ? parseInt(fulfillment.storeId)
+                            : null,
+                          qty: fulfillment.qty
+                            ? String(fulfillment.qty)
+                            : null,
+                        })),
                     },
-                  }
+                  },
+                }
                 : {}),
             },
           }),
@@ -1009,11 +1009,11 @@ async function update(id, body) {
             item.fulfillments && !item.isReturn
               ? item.fulfillments
               : [
-                  {
-                    storeId: item.sourceStoreId || retailStoreId,
-                    qty: item.qty,
-                  },
-                ];
+                {
+                  storeId: item.sourceStoreId || retailStoreId,
+                  qty: item.qty,
+                },
+              ];
           const price = parseFloat(item.price || 0);
 
           const baseEntry = {
@@ -1402,8 +1402,8 @@ async function getPartyCreditBalance(req) {
     Sales._sum.amount +
     Debit_Adjustment._sum.amount +
     Credit_Adjustment._sum.amount;
-  //   const availableCredit = totalCredit - totalDebit;
-  const availableCredit = totalDebit - totalCredit;
+  const availableCredit = totalCredit - totalDebit;
+  // const availableCredit = totalDebit - totalCredit;
 
   console.log(totalCredit, "totalCredit", totalDebit, "totalDebit");
 
